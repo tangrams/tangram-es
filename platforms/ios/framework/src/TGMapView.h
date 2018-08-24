@@ -195,7 +195,7 @@ TG_EXPORT
  The default minimum zoom is 0. Values less than the default will be clamped. Assigning a value greater than the current
  maximum zoom will set the maximum zoom to this value.
  */
-@property (assign, nonatomic) float minimumZoomLevel;
+@property (assign, nonatomic) CGFloat minimumZoomLevel;
 
 /**
  The maximum zoom level for the map view.
@@ -203,7 +203,7 @@ TG_EXPORT
  The default maximum zoom is 20.5. Values greater than the default will be clamped. Assigning a value less than the
  current minimum zoom will set the minimum zoom to this value.
  */
-@property (assign, nonatomic) float maximumZoomLevel;
+@property (assign, nonatomic) CGFloat maximumZoomLevel;
 
 /**
  Assign a `TGCameraType` to the view camera
@@ -437,7 +437,7 @@ TG_EXPORT
 
  @param pixels The pick radius in logical pixels.
  */
-- (void)setPickRadius:(float)pixels;
+- (void)setPickRadius:(CGFloat)pixels;
 
 /**
  Select a visible feature marked as `interactive` from the map view.

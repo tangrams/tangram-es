@@ -580,7 +580,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 #pragma mark Picking Map Objects
 
-- (void)setPickRadius:(float)logicalPixels
+- (void)setPickRadius:(CGFloat)logicalPixels
 {
     if (!self.map) { return; }
 
@@ -711,25 +711,25 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 #pragma mark Changing the Map Viewport
 
-- (float)minimumZoomLevel
+- (CGFloat)minimumZoomLevel
 {
     if (!self.map) { return 0; }
     return self.map->getMinZoom();
 }
 
-- (void)setMinimumZoomLevel:(float)minimumZoomLevel
+- (void)setMinimumZoomLevel:(CGFloat)minimumZoomLevel
 {
     if (!self.map) { return; }
     self.map->setMinZoom(minimumZoomLevel);
 }
 
-- (float)maximumZoomLevel
+- (CGFloat)maximumZoomLevel
 {
     if (!self.map) { return 0; }
     return self.map->getMaxZoom();
 }
 
-- (void)setMaximumZoomLevel:(float)maximumZoomLevel
+- (void)setMaximumZoomLevel:(CGFloat)maximumZoomLevel
 {
     if (!self.map) { return; }
     self.map->setMaxZoom(maximumZoomLevel);
