@@ -21,6 +21,8 @@ public class MapView extends FrameLayout {
     protected MapController mapController;
     protected AsyncTask<Void, Void, MapController> getMapAsyncTask;
 
+    private final Object lock = new Object();
+
     /**
      * MapReadyCallback interface
      * onMapReady gets invoked on the ui thread when {@link MapController} is instantiated and ready to be used
@@ -82,8 +84,10 @@ public class MapView extends FrameLayout {
         getMapAsyncTask = new AsyncTask<Void, Void, MapController>() {
             @Override
             protected MapController doInBackground(Void... voids) {
-                if (mapController != null) {
-                    return mapController;
+                synchronized (lock) {
+                    if (mapController != null) {
+                        return mapController;
+                    }
                 }
                 MapController controller = getMapInstance();
                 controller.init(ctx, handler);
@@ -93,13 +97,15 @@ public class MapView extends FrameLayout {
 
             @Override
             protected void onPostExecute(MapController controller) {
-                if (mapController != null) {
-                    mapController.dispose();
+                synchronized (lock) {
+                    if (mapController != null) {
+                        mapController.dispose();
+                    }
+                    mapController = controller;
+                    mapController.postInit();
+                    mapController.setSceneLoadListener(sceneLoadListener);
+                    readyCallback.onMapReady(mapController);
                 }
-                mapController = controller;
-                mapController.postInit();
-                mapController.setSceneLoadListener(sceneLoadListener);
-                readyCallback.onMapReady(mapController);
             }
 
             @Override
@@ -138,10 +144,12 @@ public class MapView extends FrameLayout {
     protected void disposeMap() {
         disposeMapReadyTask();
 
-        if (mapController != null) {
-            // MapController has been initialized, so we'll dispose it now.
-            mapController.dispose();
-            mapController = null;
+        synchronized (lock) {
+            if (mapController != null) {
+                // MapController has been initialized, so we'll dispose it now.
+                mapController.dispose();
+                mapController = null;
+            }
         }
     }
 
@@ -178,7 +186,9 @@ public class MapView extends FrameLayout {
      * You must call this method from the parent Activity/Fragment's corresponding method.
      */
     public void onLowMemory() {
-        mapController.onLowMemory();
+        synchronized (lock) {
+            mapController.onLowMemory();
+        }
     }
 
 }
