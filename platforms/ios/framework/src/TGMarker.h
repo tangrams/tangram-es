@@ -87,7 +87,7 @@ TG_EXPORT
  ```swift
  TGMarker marker;
  marker.styling = "{ style: 'points', color: 'white', size: [25px, 25px], order:500 }"
- marker.point = TGGeoPointMake(longitude, latitude)
+ marker.point = CLLocationCoordinate2DMake(longitude, latitude)
  marker.icon = UIIMage(name: "marker-icon.png")
  ```
  @note An icon marker must be styled with a

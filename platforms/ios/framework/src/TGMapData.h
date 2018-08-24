@@ -47,8 +47,8 @@ typedef NSDictionary<NSString *, NSString *> TGFeatureProperties;
  var line = TGGeoPolyline()
 
  // Add some coordinates to the polyline
- line.add(latlon: TGGeoPointMake(longitude0, latitude0))
- line.add(latlon: TGGeoPointMake(longitude1, latitude1))
+ line.addPoint(point: CLLocationCoordinate2DMake(longitude0, latitude0))
+ line.addPoint(point: CLLocationCoordinate2DMake(longitude1, latitude1))
 
  // Set the data properties
  var properties = ["type": "line", "color": "#D2655F"]
