@@ -3,12 +3,13 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 10/27/16.
+//  Updated by Matt Blair on 8/21/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
+#import <CoreLocation/CoreLocation.h>
 #import <Foundation/Foundation.h>
 #import "TGExport.h"
-#import "TGGeoPoint.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -26,14 +27,14 @@ TG_EXPORT
 /**
  Inits a `TGGeoPolyline` and allocate enough memory to hold `size` geographic coordinates.
  */
-- (instancetype)initWithSize:(unsigned int)size;
+- (instancetype)initWithSize:(NSUInteger)size;
 
 /**
  Adds a geographic coordinate to the polyline.
 
- @param latlon the geographic coordinate to add to this polyline
+ @param point the geographic coordinate to add to this polyline
  */
-- (void)addPoint:(TGGeoPoint)latlon;
+- (void)addPoint:(CLLocationCoordinate2D)point;
 
 /**
  Gets the number of geographic coordinates describing this polyline.
@@ -47,7 +48,7 @@ TG_EXPORT
 
  @return a pointer to the list of geographic coordinates describing this polyline
  */
-- (TGGeoPoint*)coordinates;
+- (CLLocationCoordinate2D *)coordinates;
 
 /**
  Removes all coordinates of this polyline.

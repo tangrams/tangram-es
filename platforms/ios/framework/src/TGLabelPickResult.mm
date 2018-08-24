@@ -11,7 +11,7 @@
 
 @interface TGLabelPickResult ()
 
-@property (assign, nonatomic) TGGeoPoint coordinates;
+@property (assign, nonatomic) CLLocationCoordinate2D coordinate;
 @property (assign, nonatomic) TGLabelType type;
 @property (strong, nonatomic) TGFeatureProperties* properties;
 
@@ -19,12 +19,12 @@
 
 @implementation TGLabelPickResult
 
-- (instancetype) initWithCoordinates:(TGGeoPoint)coordinates type:(TGLabelType)type properties:(TGFeatureProperties *)properties
+- (instancetype) initWithCoordinate:(CLLocationCoordinate2D)coordinate type:(TGLabelType)type properties:(TGFeatureProperties *)properties
 {
     self = [super init];
 
     if (self) {
-        self.coordinates = coordinates;
+        self.coordinate = coordinate;
         self.type = type;
         self.properties = properties;
     }

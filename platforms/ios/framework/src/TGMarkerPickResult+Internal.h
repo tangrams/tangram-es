@@ -3,6 +3,7 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 2/27/17.
+//  Updated by Matt Blair on 8/21/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
@@ -15,7 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Initializes a `TGMarkerPickResult`.
 
- @param coordinates the geographic coordinates of the label pick result
+ @param coordinate the geographic coordinates of the label pick result
  @param marker the marker object selected
 
  @return an initialized `TGMarkerPickResult`
@@ -23,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
  @note You shouldn't have to create a `TGMarkerPickResult` yourself, those are returned as a result to
  a selection query on the `TGMapView` and initialized by the latter.
  */
-- (instancetype) initWithCoordinates:(TGGeoPoint)coordinates marker:(TGMarker *)marker;
+- (instancetype) initWithCoordinate:(CLLocationCoordinate2D)coordinate marker:(TGMarker *)marker;
 
 NS_ASSUME_NONNULL_END
 

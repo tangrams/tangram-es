@@ -3,13 +3,14 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 2/24/16.
-//  Updated by Matt Blair on 7/13/18.
+//  Updated by Matt Blair on 8/21/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
-#import "TGExport.h"
-#import "TGGeoPoint.h"
+#import <CoreLocation/CoreLocation.h>
 #import <Foundation/Foundation.h>
+#import "TGExport.h"
+
 
 /**
  Dictionary of feature properties keyed by their property name
@@ -46,8 +47,8 @@ typedef NSDictionary<NSString *, NSString *> TGFeatureProperties;
  var line = TGGeoPolyline()
 
  // Add some coordinates to the polyline
- line.add(latlon: TGGeoPointMake(longitude0, latitude0))
- line.add(latlon: TGGeoPointMake(longitude1, latitude1))
+ line.addPoint(point: CLLocationCoordinate2DMake(longitude0, latitude0))
+ line.addPoint(point: CLLocationCoordinate2DMake(longitude1, latitude1))
 
  // Set the data properties
  var properties = ["type": "line", "color": "#D2655F"]
@@ -64,10 +65,10 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Adds a point coordinate to the data source.
 
- @param coordinates the geographic coordinates of the point to add to the data source
+ @param point the geographic coordinates of the point to add to the data source
  @param properties the feature properties
  */
-- (void)addPoint:(TGGeoPoint)coordinates withProperties:(TGFeatureProperties *)properties;
+- (void)addPoint:(CLLocationCoordinate2D)point withProperties:(TGFeatureProperties *)properties;
 
 /**
  Adds a polygon geometry to the data source.

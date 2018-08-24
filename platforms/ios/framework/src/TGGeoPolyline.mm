@@ -3,6 +3,7 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 10/27/16.
+//  Updated by Matt Blair on 8/21/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
@@ -11,14 +12,14 @@
 #include <vector>
 
 @interface TGGeoPolyline () {
-    std::vector<TGGeoPoint> coordinates;
+    std::vector<CLLocationCoordinate2D> coordinates;
 }
 
 @end
 
 @implementation TGGeoPolyline
 
-- (instancetype)initWithSize:(unsigned int)size
+- (instancetype)initWithSize:(NSUInteger)size
 {
     self = [super init];
 
@@ -29,9 +30,9 @@
     return self;
 }
 
-- (void)addPoint:(TGGeoPoint)latlon
+- (void)addPoint:(CLLocationCoordinate2D)point
 {
-    coordinates.push_back(latlon);
+    coordinates.push_back(point);
 }
 
 - (NSUInteger)count
@@ -39,7 +40,7 @@
     return coordinates.size();
 }
 
-- (TGGeoPoint*)coordinates
+- (CLLocationCoordinate2D *)coordinates
 {
     return coordinates.data();
 }

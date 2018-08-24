@@ -3,6 +3,7 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 10/27/16.
+//  Updated by Matt Blair on 8/21/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
@@ -11,7 +12,7 @@
 #include <vector>
 
 @interface TGGeoPolygon () {
-    std::vector<TGGeoPoint> coordinates;
+    std::vector<CLLocationCoordinate2D> coordinates;
     std::vector<int> rings;
 }
 
@@ -19,7 +20,7 @@
 
 @implementation TGGeoPolygon
 
-- (instancetype)initWithSize:(unsigned int)size
+- (instancetype)initWithSize:(NSUInteger)size
 {
     self = [super init];
 
@@ -30,24 +31,24 @@
     return self;
 }
 
-- (void)startPath:(TGGeoPoint)latlon withSize:(unsigned int)size
+- (void)startPath:(CLLocationCoordinate2D)point withSize:(NSUInteger)size
 {
     coordinates.reserve(coordinates.size() + size);
-    coordinates.push_back(latlon);
+    coordinates.push_back(point);
 
     rings.emplace_back(1);
 }
 
-- (void)startPath:(TGGeoPoint)latlon
+- (void)startPath:(CLLocationCoordinate2D)point
 {
-    [self startPath:latlon withSize:0];
+    [self startPath:point withSize:0];
 }
 
-- (void)addPoint:(TGGeoPoint)latlon
+- (void)addPoint:(CLLocationCoordinate2D)point
 {
     if (rings.size() == 0) { return; }
 
-    coordinates.push_back(latlon);
+    coordinates.push_back(point);
     rings.back()++;
 }
 
@@ -61,7 +62,7 @@
     return rings.size();
 }
 
-- (TGGeoPoint *)coordinates
+- (CLLocationCoordinate2D *)coordinates
 {
     return coordinates.data();
 }

@@ -5,13 +5,14 @@
 //  Created by Matt Blair on 7/9/18.
 //
 
-#import "TGExport.h"
-#import "TGGeoPoint.h"
-#import "TGMapData.h"
-#import "TGTypes.h"
 #import <CoreLocation/CoreLocation.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+
+#import "TGExport.h"
+#import "TGGeometry.h"
+#import "TGMapData.h"
+#import "TGTypes.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -194,7 +195,7 @@ TG_EXPORT
  The default minimum zoom is 0. Values less than the default will be clamped. Assigning a value greater than the current
  maximum zoom will set the maximum zoom to this value.
  */
-@property (assign, nonatomic) float minimumZoomLevel;
+@property (assign, nonatomic) CGFloat minimumZoomLevel;
 
 /**
  The maximum zoom level for the map view.
@@ -202,7 +203,7 @@ TG_EXPORT
  The default maximum zoom is 20.5. Values greater than the default will be clamped. Assigning a value less than the
  current minimum zoom will set the minimum zoom to this value.
  */
-@property (assign, nonatomic) float maximumZoomLevel;
+@property (assign, nonatomic) CGFloat maximumZoomLevel;
 
 /**
  Assign a `TGCameraType` to the view camera
@@ -249,47 +250,45 @@ TG_EXPORT
  @param bounds The map bounds to enclose
  @param padding The minimum distance to keep between the bounds and the edges of the view
  */
-- (TGCameraPosition*)cameraThatFitsBounds:(TGCoordinateBounds)bounds withPadding:(UIEdgeInsets)padding;
+- (TGCameraPosition *)cameraThatFitsBounds:(TGCoordinateBounds)bounds withPadding:(UIEdgeInsets)padding;
 
 /**
- Assign a longitude and latitude to the map view camera
+ The longitude and latitude of the center of the map view
  */
-@property (assign, nonatomic) TGGeoPoint position;
+@property (assign, nonatomic) CLLocationCoordinate2D position;
 
 /**
- Assign a floating point zoom to the map view camera
+ The zoom level of the map view
  */
-@property (assign, nonatomic) float zoom;
+@property (assign, nonatomic) CGFloat zoom;
 
 /**
- Assign a rotation angle in radians to the map view camera
+ The orientation of to the map view clockwise from true North
  */
-@property (assign, nonatomic) float rotation;
+@property (assign, nonatomic) CLLocationDirection bearing;
 
 /**
- Assign a tilt angle in radians to the map view camera
+ The tilt angle of the map view in degrees away from straight down
  */
-@property (assign, nonatomic) float tilt;
+@property (assign, nonatomic) CGFloat pitch;
 
 #pragma mark Coordinate Conversions
 
 /**
  Convert a longitude and latitude to a view position.
 
- @param lngLat The geographic coordinate to convert
+ @param coordinate The geographic coordinate to convert
  @return The view position of the input coordinate
  */
-- (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat;
+- (CGPoint)viewPositionFromCoordinate:(CLLocationCoordinate2D)coordinate;
 
 /**
- Given coordinates in screen space (`x` right, `y` down), set the output longitude and latitude to the geographic
- location corresponding to that point.
+ Convert a position in view coordinates into the longitude and latitude of the corresponding geographic location.
 
- @param viewPosition the 2d screen position to convert
+ @param viewPosition the position in view coordinates to convert
  @return the longitude and latitude
  */
-- (TGGeoPoint)screenPositionToLngLat:(CGPoint)viewPosition;
-
+- (CLLocationCoordinate2D)coordinateFromViewPosition:(CGPoint)viewPosition;
 
 #pragma mark Markers
 
@@ -438,7 +437,7 @@ TG_EXPORT
 
  @param pixels The pick radius in logical pixels.
  */
-- (void)setPickRadius:(float)pixels;
+- (void)setPickRadius:(CGFloat)pixels;
 
 /**
  Select a visible feature marked as `interactive` from the map view.
