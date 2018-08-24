@@ -225,11 +225,7 @@ public class MapController implements Renderer {
         }
         markers = new LongSparseArray<>();
 
-        // Set up MapView
         mapView = view;
-        view.setRenderer(this);
-        view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-        view.setPreserveEGLContextOnPause(true);
     }
 
     /**
@@ -268,6 +264,11 @@ public class MapController implements Renderer {
      * Must be called from the ui thread post instantiation of {@link MapController}
      */
     void postInit() {
+        // Set up MapView
+        mapView.setRenderer(this);
+        mapView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        mapView.setPreserveEGLContextOnPause(true);
+
         touchInput = new TouchInput(mapView.getContext());
         mapView.setOnTouchListener(touchInput);
 

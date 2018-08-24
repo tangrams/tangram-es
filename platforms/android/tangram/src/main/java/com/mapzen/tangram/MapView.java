@@ -33,12 +33,10 @@ public class MapView extends FrameLayout {
 
     public MapView(@NonNull final Context context) {
         super(context);
-        configureGLSurfaceView();
     }
 
     public MapView(@NonNull final Context context, @Nullable final AttributeSet attrs) {
         super(context, attrs);
-        configureGLSurfaceView();
     }
 
     /**
@@ -46,22 +44,11 @@ public class MapView extends FrameLayout {
      * Map instance uses {@link DefaultHttpHandler} for retrieving remote map resources
      * @param readyCallback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
      * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
-     */
-    public void getMapAsync(@Nullable final MapReadyCallback readyCallback) {
-        getMapAsync(readyCallback, null, null);
-    }
-
-    /**
-     * Construct a {@code MapController} in an async thread; may only be called from the UI thread
-     * Map instance uses {@link DefaultHttpHandler} for retrieving remote map resources
-     * @param readyCallback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
-     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
-     * @param sceneLoadListener The listener to receive to receive scene load events;
      * the callback will be made on the UI thread
      */
-    public void getMapAsync(@Nullable final MapReadyCallback readyCallback,
-                            @Nullable final MapController.SceneLoadListener sceneLoadListener) {
-        getMapAsync(readyCallback, sceneLoadListener, null);
+    @Nullable
+    public void getMapAsync(@Nullable final MapReadyCallback readyCallback) {
+        getMapAsync(readyCallback, null);
     }
 
     /**
@@ -69,16 +56,17 @@ public class MapView extends FrameLayout {
      * Map instance uses {@link DefaultHttpHandler} for retrieving remote map resources
      * @param readyCallback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
      * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
-     * @param sceneLoadListener The listener to receive to receive scene load events;
      * @param handler Set the client implemented {@link HttpHandler} for retrieving remote map resources
      *                when null {@link DefaultHttpHandler} is used
      */
+    @Nullable
     public void getMapAsync(@Nullable final MapReadyCallback readyCallback,
-                            @Nullable final MapController.SceneLoadListener sceneLoadListener,
                             @Nullable final HttpHandler handler) {
 
         disposeMapReadyTask();
-
+        if (glSurfaceView == null) {
+            glSurfaceView = new GLSurfaceView(getContext());
+        }
         final Context ctx = glSurfaceView.getContext();
 
         getMapAsyncTask = new AsyncTask<Void, Void, MapController>() {
@@ -98,12 +86,11 @@ public class MapView extends FrameLayout {
             @Override
             protected void onPostExecute(MapController controller) {
                 synchronized (lock) {
-                    if (mapController != null) {
-                        mapController.dispose();
+                    if (mapController == null) {
+                        mapController = controller;
+                        configureGLSurfaceView();
+                        mapController.postInit();
                     }
-                    mapController = controller;
-                    mapController.postInit();
-                    mapController.setSceneLoadListener(sceneLoadListener);
                     readyCallback.onMapReady(mapController);
                 }
             }
@@ -115,7 +102,6 @@ public class MapView extends FrameLayout {
                 }
             }
         }.execute();
-
     }
 
     @NonNull
@@ -124,7 +110,6 @@ public class MapView extends FrameLayout {
     }
 
     protected void configureGLSurfaceView() {
-        glSurfaceView = new GLSurfaceView(getContext());
         glSurfaceView.setEGLContextClientVersion(2);
         glSurfaceView.setPreserveEGLContextOnPause(true);
         glSurfaceView.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 0, 16, 8));
@@ -132,7 +117,7 @@ public class MapView extends FrameLayout {
     }
 
     /**
-     * Responsible to dispose any getMapReadyTask
+     * Responsible to dispose any prior running getMapReadyTask
      */
     protected void disposeMapReadyTask() {
         if (getMapAsyncTask != null) {
