@@ -250,10 +250,17 @@ void View::update(bool _constrainToWorldBounds) {
     m_changed = false;
 
     if (_constrainToWorldBounds) {
-        m_constraint.setRadius(0.5 * std::fmax(getWidth(), getHeight()) / pixelsPerMeter() / pixelScale());
+        // Approximate the view diameter in pixels by taking the maximum dimension.
+        double viewDiameterPixels = std::fmax(getWidth(), getHeight()) / pixelScale();
+        // Approximate the minimum zoom that keeps with view span within the drawable projection area. [1]
+        double minZoom = std::log(viewDiameterPixels / s_pixelsPerTile + 2) / std::log(2);
+        if (m_zoom < minZoom) {
+            m_zoom = static_cast<float>(minZoom);
+        }
+        // Constrain by moving map center to keep view in bounds.
+        m_constraint.setRadius(0.5 * viewDiameterPixels / pixelsPerMeter());
         m_pos.x = m_constraint.getConstrainedX(m_pos.x);
         m_pos.y = m_constraint.getConstrainedY(m_pos.y);
-        m_zoom -= std::log(m_constraint.getConstrainedScale()) / std::log(2);
     }
 
     // Ensure valid pitch angle.
@@ -585,3 +592,14 @@ void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
 }
 
 }
+
+// [1]
+// The maximum visible span horizontally is the span covered by 2^z - 2 tiles. We consider one tile to be
+// effectively not visible because at the 180th meridian it will be drawn on one side or the other, not half
+// on both sides. Tile coverage is calculated from the floor() of our zoom value but here we operate on the
+// continuous zoom value, so we remove one more tile to under-approximate the coverage. Algebraically we get:
+// (span of view in meters) = (view diameter in pixels) * (earth circumference) / ((tile size in pixels) * 2^z)
+// If we substitute the desired view span at the minimum zoom:
+// (span of view in meters) = (earth circumference) * (2^z - 2) / 2^z
+// We can solve for the minimum zoom:
+// z = log2((view diameter in pixels) / (tile size in pixels) + 2)
