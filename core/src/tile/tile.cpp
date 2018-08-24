@@ -20,8 +20,7 @@ Tile::Tile(TileID _id, const MapProjection& _projection, const TileSource* _sour
 
     m_scale = bounds.width();
     m_inverseScale = 1.0/m_scale;
-
-    updateTileOrigin(_id.wrap);
+    m_tileOrigin = { bounds.min.x, -bounds.max.y };
 
     // Init model matrix to size of tile
     m_modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(m_scale));
@@ -39,32 +38,20 @@ glm::dvec2 Tile::coordToLngLat(const glm::vec2& _tileCoord) const {
 
 Tile::~Tile() {}
 
-//Note: This could set tile origin to be something different than the one if TileID's wrap is used.
-// But, this is required for wrapped tiles which are picked up from the cache
-void Tile::updateTileOrigin(const int _wrap) {
-    BoundingBox bounds(m_projection->TileBounds(m_id));
-
-    m_tileOrigin = { bounds.min.x, bounds.max.y }; // South-West corner
-    // negative y coordinate: to change from y down to y up
-    // (tile system has y down and gl context we use has y up).
-    m_tileOrigin.y *= -1.0;
-
-    auto mapBound = m_projection->MapBounds();
-    auto mapSpan = mapBound.max.x - mapBound.min.x;
-
-    m_tileOrigin.x += (mapSpan * _wrap);
-}
-
 void Tile::initGeometry(uint32_t _size) {
     m_geometry.resize(_size);
 }
 
 void Tile::update(float _dt, const View& _view) {
+    // Get the relative position of the *center* of the tile, to ensure that the result places the tile as close to
+    // the view center as possible.
+    auto centerOffset = glm::dvec2(m_scale / 2.0);
+    auto centerRelativeMeters = _view.getRelativeMeters(m_tileOrigin + centerOffset);
+    auto originRelativeMeters = centerRelativeMeters - centerOffset;
 
     // Apply tile-view translation to the model matrix
-    const auto& viewOrigin = _view.getPosition();
-    m_modelMatrix[3][0] = m_tileOrigin.x - viewOrigin.x;
-    m_modelMatrix[3][1] = m_tileOrigin.y - viewOrigin.y;
+    m_modelMatrix[3][0] = static_cast<float>(originRelativeMeters.x);
+    m_modelMatrix[3][1] = static_cast<float>(originRelativeMeters.y);
 
     m_mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
 }

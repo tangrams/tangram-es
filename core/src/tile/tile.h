@@ -84,9 +84,6 @@ public:
     /* Update the Tile considering the current view */
     void update(float _dt, const View& _view);
 
-    /* Update tile origin based on wraping for this tile */
-    void updateTileOrigin(const int _wrap);
-
     void resetState();
 
     /* Get the sum in bytes of static <Mesh>es */

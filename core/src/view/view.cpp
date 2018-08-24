@@ -180,13 +180,17 @@ float View::getMaxPitch() const {
 
 }
 
-
 void View::setPosition(double _x, double _y) {
-
-    m_pos.x = _x;
-    m_pos.y = _y;
+    // Wrap horizontal position around the 180th meridian, which corresponds to +/- HALF_CIRCUMFERENCE meters.
+    m_pos.x = _x - std::round(_x / MapProjection::CIRCUMFERENCE) * MapProjection::CIRCUMFERENCE;
+    // Clamp vertical position to the span of the map, which is +/- HALF_CIRCUMFERENCE meters.
+    m_pos.y = glm::clamp(_y, -MapProjection::HALF_CIRCUMFERENCE, MapProjection::HALF_CIRCUMFERENCE);
     m_dirtyTiles = true;
+}
 
+void View::setCenterCoordinates(Tangram::LngLat center) {
+    auto meters = m_projection->LonLatToMeters({center.longitude, center.latitude});
+    setPosition(meters.x, meters.y);
 }
 
 void View::setZoom(float _z) {
@@ -236,15 +240,27 @@ void View::pitch(float _dpitch) {
 
 }
 
+LngLat View::getCenterCoordinates() const {
+    auto center = m_projection->MetersToLonLat({m_pos.x, m_pos.y});
+    return LngLat(center.x, center.y);
+}
+
 void View::update(bool _constrainToWorldBounds) {
 
     m_changed = false;
 
     if (_constrainToWorldBounds) {
-        m_constraint.setRadius(0.5 * std::fmax(getWidth(), getHeight()) / pixelsPerMeter() / pixelScale());
+        // Approximate the view diameter in pixels by taking the maximum dimension.
+        double viewDiameterPixels = std::fmax(getWidth(), getHeight()) / pixelScale();
+        // Approximate the minimum zoom that keeps with view span within the drawable projection area. [1]
+        double minZoom = std::log(viewDiameterPixels / s_pixelsPerTile + 2) / std::log(2);
+        if (m_zoom < minZoom) {
+            m_zoom = static_cast<float>(minZoom);
+        }
+        // Constrain by moving map center to keep view in bounds.
+        m_constraint.setRadius(0.5 * viewDiameterPixels / pixelsPerMeter());
         m_pos.x = m_constraint.getConstrainedX(m_pos.x);
         m_pos.y = m_constraint.getConstrainedY(m_pos.y);
-        m_zoom -= std::log(m_constraint.getConstrainedScale()) / std::log(2);
     }
 
     // Ensure valid pitch angle.
@@ -442,15 +458,25 @@ void View::updateMatrices() {
 }
 
 glm::vec2 View::lonLatToScreenPosition(double lon, double lat, bool& clipped) const {
-    glm::dvec2 meters = m_projection->LonLatToMeters({lon, lat});
-    glm::dvec4 lonLat(meters, 0.0, 1.0);
+    glm::dvec2 absoluteMeters = m_projection->LonLatToMeters({lon, lat});
+    glm::dvec2 relativeMeters = getRelativeMeters(absoluteMeters);
+    glm::dvec4 worldPosition(relativeMeters, 0.0, 1.0);
 
-    lonLat.x = lonLat.x - m_pos.x;
-    lonLat.y = lonLat.y - m_pos.y;
-
-    glm::vec2 screenPosition = worldToScreenSpace(m_viewProj, lonLat, {m_vpWidth, m_vpHeight}, clipped);
+    glm::vec2 screenPosition = worldToScreenSpace(m_viewProj, worldPosition, {m_vpWidth, m_vpHeight}, clipped);
 
     return screenPosition;
+}
+
+glm::dvec2 View::getRelativeMeters(glm::dvec2 projectedMeters) const {
+    double dx = projectedMeters.x - m_pos.x;
+    double dy = projectedMeters.y - m_pos.y;
+    // If the position is closer when wrapped around the 180th meridian, then wrap it.
+    if (dx > MapProjection::HALF_CIRCUMFERENCE) {
+        dx -= MapProjection::CIRCUMFERENCE;
+    } else if (dx < -MapProjection::HALF_CIRCUMFERENCE) {
+        dx += MapProjection::CIRCUMFERENCE;
+    }
+    return {dx, dy};
 }
 
 void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
@@ -547,12 +573,11 @@ void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
         // Wrap x to the range [0, (1 << z))
         tile.x = x & ((1 << tile.z) - 1);
         tile.y = y;
-        tile.w = (x - tile.x) >> opt.zoom; // wrap
 
         if (tile != opt.last) {
             opt.last = tile;
 
-            _tileCb(TileID(tile.x, tile.y, tile.z, tile.z, tile.w));
+            _tileCb(TileID(tile.x, tile.y, tile.z, tile.z));
         }
     };
 
@@ -567,3 +592,14 @@ void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
 }
 
 }
+
+// [1]
+// The maximum visible span horizontally is the span covered by 2^z - 2 tiles. We consider one tile to be
+// effectively not visible because at the 180th meridian it will be drawn on one side or the other, not half
+// on both sides. Tile coverage is calculated from the floor() of our zoom value but here we operate on the
+// continuous zoom value, so we remove one more tile to under-approximate the coverage. Algebraically we get:
+// (span of view in meters) = (view diameter in pixels) * (earth circumference) / ((tile size in pixels) * 2^z)
+// If we substitute the desired view span at the minimum zoom:
+// (span of view in meters) = (earth circumference) * (2^z - 2) / 2^z
+// We can solve for the minimum zoom:
+// z = log2((view diameter in pixels) / (tile size in pixels) + 2)

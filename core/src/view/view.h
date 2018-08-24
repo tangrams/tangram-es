@@ -2,6 +2,7 @@
 
 #include "tile/tileID.h"
 #include "util/mapProjection.h"
+#include "util/types.h"
 #include "view/viewConstraint.h"
 
 #include "glm/mat4x4.hpp"
@@ -115,6 +116,8 @@ public:
     void setPosition(const glm::dvec3 pos) { setPosition(pos.x, pos.y); }
     void setPosition(const glm::dvec2 pos) { setPosition(pos.x, pos.y); }
 
+    void setCenterCoordinates(LngLat center);
+
     /* Sets the zoom level of the view */
     void setZoom(float _z);
 
@@ -150,6 +153,8 @@ public:
 
     /* Gets the position of the view in projection units (z is the effective 'height' determined from zoom) */
     const glm::dvec3& getPosition() const { return m_pos; }
+
+    LngLat getCenterCoordinates() const;
 
     /* Gets the transformation from global space into view (camera) space; Due to precision limits, this
        does not contain the translation of the view from the global origin (you must apply that separately) */
@@ -191,6 +196,10 @@ public:
 
     /* Gets the screen position from a latitude/longitude */
     glm::vec2 lonLatToScreenPosition(double lon, double lat, bool& clipped) const;
+
+    // For a position on the map in projected meters, this returns the displacement vector *from* the view *to* that
+    // position, accounting for wrapping around the 180th meridian to get the smallest magnitude displacement.
+    glm::dvec2 getRelativeMeters(glm::dvec2 projectedMeters) const;
 
     /* Returns the set of all tiles visible at the current position and zoom */
     void getVisibleTiles(const std::function<void(TileID)>& _tileCb) const;

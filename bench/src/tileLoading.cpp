@@ -73,7 +73,7 @@ struct TestContext {
     }
 
     void parseTile() {
-        Tile tile({0,0,10,10,0}, s_projection);
+        Tile tile({0,0,10,10}, s_projection);
         source = *scene->tileSources().begin();
         auto task = source->createTask(tile.getID());
         auto& t = dynamic_cast<BinaryTileTask&>(*task);
@@ -105,7 +105,7 @@ BENCHMARK_DEFINE_F(TileLoadingFixture, BuildTest)(benchmark::State& st) {
         ctx.parseTile();
         if (!ctx.tileData) { break; }
 
-        result = ctx.tileBuilder->build({0,0,10,10,0}, *ctx.tileData, *ctx.source);
+        result = ctx.tileBuilder->build({0,0,10,10}, *ctx.tileData, *ctx.source);
 
         LOG("ok %d / bytes - %d", bool(result), result->getMemoryUsage());
     }

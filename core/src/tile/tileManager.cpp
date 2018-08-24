@@ -521,11 +521,7 @@ bool TileManager::addTile(TileSet& _tileSet, const TileID& _tileID) {
         if (tile->sourceGeneration() == _tileSet.source->generation()) {
             m_tiles.push_back(tile);
 
-            // Update tile origin based on wrap (set in the new tileID)
-            tile->updateTileOrigin(_tileID.wrap);
-
             // Reset tile on potential internal dynamic data set
-            // TODO rename to resetState() to avoid ambiguity
             tile->resetState();
         } else {
             // Clear stale tile data

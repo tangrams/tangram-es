@@ -260,66 +260,13 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
         // Single tap recognized
         Tangram::LngLat p;
         map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
+        double xx, yy;
+        map->lngLatToScreenPosition(p.longitude, p.latitude, &xx, &yy);
 
-
-        if (!marker) {
-            marker = map->markerAdd();
-
-            map->markerSetStylingFromPath(marker, markerStylingPath.c_str());
-            map->markerSetPoint(marker, p);
-            map->markerSetDrawOrder(marker, mods);
-            logMsg("Added Marker with zOrder: %d\n", mods);
-        } else {
-            static bool visible = true;
-            map->markerSetPoint(marker, p);
-            map->markerSetVisible(marker, visible);
-            visible = !visible;
-        }
-
-        map->pickFeatureAt(x, y, [](const Tangram::FeaturePickResult* featurePickResult) {
-            if (!featurePickResult) { return; }
-            std::string name;
-            if (featurePickResult->properties->getString("name", name)) {
-                logMsg("Selected %s", name.c_str());
-            }
-        });
-
-        map->pickLabelAt(x, y, [&](const Tangram::LabelPickResult* labelPickResult) {
-            if (!labelPickResult) { return; }
-            std::string type = labelPickResult->type == Tangram::LabelType::text ? "text" : "icon";
-            std::string name;
-            if (labelPickResult->touchItem.properties->getString("name", name)) {
-                logMsg("Touched label %s %s", type.c_str(), name.c_str());
-            }
-            map->markerSetPoint(marker, labelPickResult->coordinates);
-            map->markerSetVisible(marker, true);
-        });
-
-        map->pickMarkerAt(x, y, [](const Tangram::MarkerPickResult* markerPickResult) {
-            if (!markerPickResult) { return; }
-            logMsg("Selected marker id %d", markerPickResult->id);
-        });
-
-        static double last_x = 0, last_y = 0;
-
-        if (!polyline) {
-            polyline = map->markerAdd();
-            map->markerSetStylingFromString(polyline, polylineStyle.c_str());
-        }
-
-        if (last_x != 0) {
-            Tangram::LngLat coords[2];
-            map->screenPositionToLngLat(x, y, &coords[0].longitude, &coords[0].latitude);
-            map->screenPositionToLngLat(last_x, last_y, &coords[1].longitude, &coords[1].latitude);
-
-            map->markerSetPolyline(polyline, coords, 2);
-            auto cam = map->getEnclosingCameraPosition(coords[0], coords[1], EdgePadding(200, 100, 200, 100));
-
-            map->setCameraPosition(cam);
-        }
-
-        last_x = x;
-        last_y = y;
+        logMsg("------\n");
+        logMsg("LngLat: %f, %f\n", p.longitude, p.latitude);
+        logMsg("Clicked:  %f, %f\n", x, y);
+        logMsg("Remapped: %f, %f\n", xx, yy);
 
         platform->requestRender();
     }
