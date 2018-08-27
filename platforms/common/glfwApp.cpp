@@ -24,6 +24,9 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void dropCallback(GLFWwindow* window, int count, const char** paths);
 void framebufferResizeCallback(GLFWwindow* window, int fWidth, int fHeight);
 
+// Forward-declare GUI functions.
+void showDebugFlagsGUI();
+
 constexpr double double_tap_time = 0.5; // seconds
 constexpr double scroll_span_multiplier = 0.05; // scaling for zoom and rotation
 constexpr double scroll_distance_multiplier = 5.0; // scaling for shove
@@ -203,7 +206,9 @@ void run() {
         ImGui::NewFrame();
 
         // Create ImGui interface.
-        ImGui::ShowDemoWindow();
+        // ImGui::ShowDemoWindow();
+        showDebugFlagsGUI();
+
 
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
@@ -398,33 +403,6 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
     if (action == GLFW_PRESS) {
         switch (key) {
-            case GLFW_KEY_1:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::freeze_tiles);
-                break;
-            case GLFW_KEY_2:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::proxy_colors);
-                break;
-            case GLFW_KEY_3:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::tile_bounds);
-                break;
-            case GLFW_KEY_4:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::tile_infos);
-                break;
-            case GLFW_KEY_5:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::labels);
-                break;
-            case GLFW_KEY_6:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::draw_all_labels);
-                break;
-            case GLFW_KEY_7:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_infos);
-                break;
-            case GLFW_KEY_8:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_stats);
-                break;
-            case GLFW_KEY_9:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::selection_buffer);
-                break;
             case GLFW_KEY_BACKSPACE:
                 recreate_context = true;
                 break;
@@ -546,6 +524,48 @@ void framebufferResizeCallback(GLFWwindow* window, int fWidth, int fHeight) {
     }
     map->setPixelScale(density);
     map->resize(fWidth, fHeight);
+}
+
+void showDebugFlagsGUI() {
+    if (ImGui::CollapsingHeader("Debug Flags")) {
+        bool flag;
+        flag = getDebugFlag(DebugFlags::freeze_tiles);
+        if (ImGui::Checkbox("Freeze Tiles", &flag)) {
+            setDebugFlag(DebugFlags::freeze_tiles, flag);
+        }
+        flag = getDebugFlag(DebugFlags::proxy_colors);
+        if (ImGui::Checkbox("Recolor Proxy Tiles", &flag)) {
+            setDebugFlag(DebugFlags::proxy_colors, flag);
+        }
+        flag = getDebugFlag(DebugFlags::tile_bounds);
+        if (ImGui::Checkbox("Show Tile Bounds", &flag)) {
+            setDebugFlag(DebugFlags::tile_bounds, flag);
+        }
+        flag = getDebugFlag(DebugFlags::tile_infos);
+        if (ImGui::Checkbox("Show Tile Info", &flag)) {
+            setDebugFlag(DebugFlags::tile_infos, flag);
+        }
+        flag = getDebugFlag(DebugFlags::labels);
+        if (ImGui::Checkbox("Show Label Debug Info", &flag)) {
+            setDebugFlag(DebugFlags::labels, flag);
+        }
+        flag = getDebugFlag(DebugFlags::tangram_infos);
+        if (ImGui::Checkbox("Show Map Info", &flag)) {
+            setDebugFlag(DebugFlags::tangram_infos, flag);
+        }
+        flag = getDebugFlag(DebugFlags::draw_all_labels);
+        if (ImGui::Checkbox("Show All Labels", &flag)) {
+            setDebugFlag(DebugFlags::draw_all_labels, flag);
+        }
+        flag = getDebugFlag(DebugFlags::tangram_stats);
+        if (ImGui::Checkbox("Show Frame Stats", &flag)) {
+            setDebugFlag(DebugFlags::tangram_stats, flag);
+        }
+        flag = getDebugFlag(DebugFlags::selection_buffer);
+        if (ImGui::Checkbox("Show Selection Buffer", &flag)) {
+            setDebugFlag(DebugFlags::selection_buffer, flag);
+        }
+    }
 }
 
 } // namespace GlfwApp
