@@ -13,10 +13,14 @@ add_executable(tangram
   platforms/osx/src/main.mm
   platforms/osx/src/osxPlatform.mm
   platforms/common/platform_gl.cpp
+  platforms/common/imgui_impl_glfw.cpp
+  platforms/common/imgui_impl_opengl3.cpp
   platforms/common/glfwApp.cpp
   platforms/common/appleAllowedFonts.mm
   ${RESOURCES}
 )
+
+add_subdirectory(platforms/common/imgui)
 
 target_include_directories(tangram
   PRIVATE
@@ -26,6 +30,7 @@ target_include_directories(tangram
 target_link_libraries(tangram
   PRIVATE
   tangram-core
+  imgui
   glfw
   ${GLFW_LIBRARIES}
   ${OPENGL_LIBRARIES}
