@@ -167,6 +167,8 @@ void create(std::shared_ptr<Platform> p, int w, int h) {
     glfwSetKeyCallback(main_window, keyCallback);
     glfwSetDropCallback(main_window, dropCallback);
 
+    glfwSetCharCallback(main_window, ImGui_ImplGlfw_CharCallback);
+
     // Setup graphics
     map->setupGL();
     int fWidth = 0, fHeight = 0;
@@ -201,8 +203,7 @@ void run() {
         ImGui::NewFrame();
 
         // Create ImGui interface.
-        ImGui::Text("Hello, world!");
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::ShowDemoWindow();
 
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
@@ -253,6 +254,8 @@ void destroy() {
         delete map;
         map = nullptr;
     }
+    ImGui_ImplGlfw_Shutdown();
+    ImGui_ImplOpenGL3_Shutdown();
     if (main_window) {
         glfwDestroyWindow(main_window);
         main_window = nullptr;
@@ -266,6 +269,11 @@ static constexpr T clamp(T val, T min, T max) {
 }
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+
+    ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+    if (ImGui::GetIO().WantCaptureMouse) {
+        return; // Imgui is handling this event.
+    }
 
     if (button != GLFW_MOUSE_BUTTON_1) {
         return; // This event is for a mouse button that we don't care about
@@ -326,6 +334,10 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 
 void cursorMoveCallback(GLFWwindow* window, double x, double y) {
 
+    if (ImGui::GetIO().WantCaptureMouse) {
+        return; // Imgui is handling this event.
+    }
+
     x *= density;
     y *= density;
 
@@ -352,6 +364,11 @@ void cursorMoveCallback(GLFWwindow* window, double x, double y) {
 
 void scrollCallback(GLFWwindow* window, double scrollx, double scrolly) {
 
+    ImGui_ImplGlfw_ScrollCallback(window, scrollx, scrolly);
+    if (ImGui::GetIO().WantCaptureMouse) {
+        return; // Imgui is handling this event.
+    }
+
     double x, y;
     glfwGetCursorPos(window, &x, &y);
     x *= density;
@@ -371,6 +388,11 @@ void scrollCallback(GLFWwindow* window, double scrollx, double scrolly) {
 }
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+
+    ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+    if (ImGui::GetIO().WantCaptureKeyboard) {
+        return; // Imgui is handling this event.
+    }
 
     CameraPosition camera = map->getCameraPosition();
 
