@@ -2,6 +2,7 @@ package com.mapzen.tangram.android;
 
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Window;
@@ -109,7 +110,10 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     }
 
     @Override
-    public void onMapReady(MapController mapController) {
+    public void onMapReady(@Nullable MapController mapController) {
+        if (mapController == null) {
+            return;
+        }
         map = mapController;
         String sceneUrl = sceneSelector.getCurrentString();
         map.setSceneLoadListener(this);

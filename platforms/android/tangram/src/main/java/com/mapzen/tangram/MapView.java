@@ -30,7 +30,7 @@ public class MapView extends FrameLayout {
      * onMapReady gets invoked on the ui thread when {@link MapController} is instantiated and ready to be used
      */
     public interface MapReadyCallback {
-        void onMapReady(MapController mapController);
+        void onMapReady(@Nullable MapController mapController);
     }
 
     public MapView(@NonNull final Context context) {
@@ -83,6 +83,10 @@ public class MapView extends FrameLayout {
      */
     protected MapController mapInitInBackground(@NonNull final Context context, @Nullable final HttpHandler handler) {
         synchronized (lock) {
+            if (NativeLibraryLoader.sNativeLibraryLoaded == false) {
+                android.util.Log.e("Tangram", "Unable to initialize MapController, because failed to initialize native libraries");
+                return null;
+            }
             if (mapController != null) {
                 return mapController;
             }
@@ -95,9 +99,9 @@ public class MapView extends FrameLayout {
      * @param controller {@link MapController} created in a background thread
      * @param callback {@link MapReadyCallback}
      */
-    protected void onMapInitOnUIThread(@NonNull final MapController controller, @Nullable final MapReadyCallback callback) {
+    protected void onMapInitOnUIThread(@Nullable final MapController controller, @Nullable final MapReadyCallback callback) {
         synchronized (lock) {
-            if (mapController == null) {
+            if (mapController == null && controller != null) {
                 mapController = controller;
                 configureGLSurfaceView();
                 mapController.UIThreadInit();
@@ -112,7 +116,7 @@ public class MapView extends FrameLayout {
      * To be executed by the async task implementation during cancellation of a mapInit task
      * @param controller {@link MapController} created by a background task which is no longer required
      */
-    protected void onMapInitCancelled(MapController controller) {
+    protected void onMapInitCancelled(@Nullable final MapController controller) {
         if (controller != null) {
             controller.dispose();
         }
