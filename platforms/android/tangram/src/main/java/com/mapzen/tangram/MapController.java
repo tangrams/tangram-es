@@ -217,7 +217,8 @@ public class MapController implements Renderer {
      * bundle for this activity must contain all the local files that the map
      * will need.
      */
-    protected MapController(@NonNull final GLSurfaceView view) {
+    protected MapController(@NonNull final GLSurfaceView view, @NonNull final Context context,
+                            @Nullable final HttpHandler handler) {
         if (Build.VERSION.SDK_INT > 18) {
             clientTileSources = new ArrayMap<>();
         } else {
@@ -226,17 +227,7 @@ public class MapController implements Renderer {
         markers = new LongSparseArray<>();
 
         mapView = view;
-    }
 
-    /**
-     * Initialize native Tangram component. This must be called before any use
-     * of the MapController!
-     * This function is separated from MapController constructor to allow usage of underlying GLSurfaceView
-     * context on a non-ui thread
-     * @param context Context from underlying GLSurfaceView
-     * @param handler {@link HttpHandler} to use for retrieving remote map resources
-     */
-    void init(@NonNull final Context context, @Nullable final HttpHandler handler) {
         // Get configuration info from application
         displayMetrics = context.getResources().getDisplayMetrics();
         assetManager = context.getAssets();

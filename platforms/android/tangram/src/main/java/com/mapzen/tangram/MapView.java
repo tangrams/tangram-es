@@ -77,8 +77,7 @@ public class MapView extends FrameLayout {
                         return mapController;
                     }
                 }
-                MapController controller = getMapInstance();
-                controller.init(ctx, handler);
+                MapController controller = getMapInstance(ctx, handler);
 
                 return controller;
             }
@@ -105,8 +104,8 @@ public class MapView extends FrameLayout {
     }
 
     @NonNull
-    protected MapController getMapInstance() {
-        return new MapController(glSurfaceView);
+    protected MapController getMapInstance(@NonNull final Context context, @Nullable final HttpHandler handler) {
+        return new MapController(glSurfaceView, context, handler);
     }
 
     protected void configureGLSurfaceView() {
