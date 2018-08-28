@@ -105,22 +105,14 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
         // Grab a reference to our map view.
         view = (MapView)findViewById(R.id.map);
-    }
-
-    @Override
-    public void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        // The AutoCompleteTextView preserves its contents from previous instances, so if a URL was
-        // set previously we want to apply it again. The text is restored in onRestoreInstanceState,
-        // which occurs after onCreate and onStart, but before onPostCreate, so we get the URL here.
-
-        view.getMapAsync(this, this, getHttpHandler());
+        view.getMapAsync(this, getHttpHandler());
     }
 
     @Override
     public void onMapReady(MapController mapController) {
         map = mapController;
         String sceneUrl = sceneSelector.getCurrentString();
+        map.setSceneLoadListener(this);
         map.loadSceneFile(sceneUrl, sceneUpdates);
         map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
         map.setTapResponder(this);
