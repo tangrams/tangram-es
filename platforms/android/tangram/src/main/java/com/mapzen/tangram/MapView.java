@@ -12,6 +12,8 @@ import android.widget.FrameLayout;
 import com.mapzen.tangram.networking.DefaultHttpHandler;
 import com.mapzen.tangram.networking.HttpHandler;
 
+import java.lang.ref.WeakReference;
+
 /**
  * {@code MapView} is a View for displaying a Tangram map.
  */
@@ -19,7 +21,7 @@ public class MapView extends FrameLayout {
 
     protected GLSurfaceView glSurfaceView;
     protected MapController mapController;
-    protected AsyncTask<Void, Void, MapController> getMapAsyncTask;
+    protected MapAsyncTask getMapAsyncTask;
 
     private final Object lock = new Object();
 
@@ -39,6 +41,53 @@ public class MapView extends FrameLayout {
         super(context, attrs);
     }
 
+    private static class MapAsyncTask extends AsyncTask<Void, Void, MapController> {
+        MapReadyCallback mapReadyCallback;
+        HttpHandler httpHandler;
+
+        WeakReference<MapView> mapViewRef;
+        WeakReference<Context> contextRef;
+
+        MapAsyncTask(@NonNull final MapView mapView, @Nullable final MapReadyCallback callback, @Nullable final HttpHandler handler) {
+            mapViewRef = new WeakReference<>(mapView);
+            contextRef = new WeakReference<>(mapView.glSurfaceView.getContext());
+            httpHandler = handler;
+            mapReadyCallback = callback;
+        }
+
+        @Override
+        protected MapController doInBackground(Void... voids) {
+            MapView view = mapViewRef.get();
+            Context ctx = contextRef.get();
+            synchronized (view.lock) {
+                if (view.mapController != null) {
+                    return view.mapController;
+                }
+            }
+            return view.getMapInstance(ctx, httpHandler);
+        }
+
+        @Override
+        protected void onPostExecute(MapController controller) {
+            MapView view = mapViewRef.get();
+            synchronized (view.lock) {
+                if (view.mapController == null) {
+                    view.mapController = controller;
+                    view.configureGLSurfaceView();
+                    view.mapController.postInit();
+                }
+                mapReadyCallback.onMapReady(view.mapController);
+            }
+        }
+
+        @Override
+        protected void onCancelled(MapController controller) {
+            if (controller != null) {
+                controller.dispose();
+            }
+        }
+    }
+
     /**
      * Construct a {@code MapController} in an async thread; may only be called from the UI thread
      * Map instance uses {@link DefaultHttpHandler} for retrieving remote map resources
@@ -46,7 +95,6 @@ public class MapView extends FrameLayout {
      * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
      * the callback will be made on the UI thread
      */
-    @Nullable
     public void getMapAsync(@Nullable final MapReadyCallback readyCallback) {
         getMapAsync(readyCallback, null);
     }
@@ -59,7 +107,6 @@ public class MapView extends FrameLayout {
      * @param handler Set the client implemented {@link HttpHandler} for retrieving remote map resources
      *                when null {@link DefaultHttpHandler} is used
      */
-    @Nullable
     public void getMapAsync(@Nullable final MapReadyCallback readyCallback,
                             @Nullable final HttpHandler handler) {
 
@@ -67,40 +114,8 @@ public class MapView extends FrameLayout {
         if (glSurfaceView == null) {
             glSurfaceView = new GLSurfaceView(getContext());
         }
-        final Context ctx = glSurfaceView.getContext();
-
-        getMapAsyncTask = new AsyncTask<Void, Void, MapController>() {
-            @Override
-            protected MapController doInBackground(Void... voids) {
-                synchronized (lock) {
-                    if (mapController != null) {
-                        return mapController;
-                    }
-                }
-                MapController controller = getMapInstance(ctx, handler);
-
-                return controller;
-            }
-
-            @Override
-            protected void onPostExecute(MapController controller) {
-                synchronized (lock) {
-                    if (mapController == null) {
-                        mapController = controller;
-                        configureGLSurfaceView();
-                        mapController.postInit();
-                    }
-                    readyCallback.onMapReady(mapController);
-                }
-            }
-
-            @Override
-            protected void onCancelled(MapController controller) {
-                if (controller != null) {
-                    controller.dispose();
-                }
-            }
-        }.execute();
+        getMapAsyncTask = new MapAsyncTask(this, readyCallback, handler);
+        getMapAsyncTask.execute();
     }
 
     @NonNull
