@@ -254,7 +254,7 @@ public class MapController implements Renderer {
      * Responsible to configure {@link MapController} configuration on the ui thread.
      * Must be called from the ui thread post instantiation of {@link MapController}
      */
-    void postInit() {
+    void UIThreadInit() {
         // Set up MapView
         mapView.setRenderer(this);
         mapView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);

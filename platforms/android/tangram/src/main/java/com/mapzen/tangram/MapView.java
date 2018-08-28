@@ -100,7 +100,7 @@ public class MapView extends FrameLayout {
             if (mapController == null) {
                 mapController = controller;
                 configureGLSurfaceView();
-                mapController.postInit();
+                mapController.UIThreadInit();
             }
             if (callback != null) {
                 callback.onMapReady(mapController);
