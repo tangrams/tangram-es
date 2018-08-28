@@ -26,6 +26,7 @@ void framebufferResizeCallback(GLFWwindow* window, int fWidth, int fHeight);
 
 // Forward-declare GUI functions.
 void showDebugFlagsGUI();
+void showViewportGUI();
 
 constexpr double double_tap_time = 0.5; // seconds
 constexpr double scroll_span_multiplier = 0.05; // scaling for zoom and rotation
@@ -207,8 +208,8 @@ void run() {
 
         // Create ImGui interface.
         // ImGui::ShowDemoWindow();
+        showViewportGUI();
         showDebugFlagsGUI();
-
 
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
@@ -524,6 +525,25 @@ void framebufferResizeCallback(GLFWwindow* window, int fWidth, int fHeight) {
     }
     map->setPixelScale(density);
     map->resize(fWidth, fHeight);
+}
+
+void showViewportGUI() {
+    if (ImGui::CollapsingHeader("Viewport")) {
+        CameraPosition camera = map->getCameraPosition();
+        float lngLatZoom[3] = {static_cast<float>(camera.longitude), static_cast<float>(camera.latitude), camera.zoom};
+        if (ImGui::InputFloat3("Lng/Lat/Zoom", lngLatZoom, "%.5f", ImGuiInputTextFlags_EnterReturnsTrue)) {
+            camera.longitude = lngLatZoom[0];
+            camera.latitude = lngLatZoom[1];
+            camera.zoom = lngLatZoom[2];
+            map->setCameraPosition(camera);
+        }
+        if (ImGui::SliderAngle("Tilt", &camera.tilt, 0.f, 90.f)) {
+            map->setCameraPosition(camera);
+        }
+        if (ImGui::SliderAngle("Rotation", &camera.rotation, 0.f, 360.f)) {
+            map->setCameraPosition(camera);
+        }
+    }
 }
 
 void showDebugFlagsGUI() {
