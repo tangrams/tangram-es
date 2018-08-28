@@ -3,6 +3,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "GL/gl3w.h"
+#define GLFW_INCLUDE_GLEXT
 #include <GLFW/glfw3.h>
 #include <cstdlib>
 #include <atomic>
@@ -65,6 +66,23 @@ std::atomic<bool> wireframe_mode;
 Tangram::MarkerID marker = 0;
 Tangram::MarkerID poiMarker = 0;
 Tangram::MarkerID polyline = 0;
+
+void LogGLErrors(const char* tag) {
+    GLenum error = glGetError();
+    while (error != GL_NO_ERROR) {
+        const char* message = "???";
+        switch(error) {
+        case GL_INVALID_ENUM: message = "GL_INVALID_ENUM"; break;
+        case GL_INVALID_VALUE: message = "GL_INVALID_VALUE"; break;
+        case GL_INVALID_OPERATION: message = "GL_INVALID_OPERATION"; break;
+        case GL_OUT_OF_MEMORY: message = "GL_OUT_OF_MEMORY"; break;
+        case GL_INVALID_FRAMEBUFFER_OPERATION: message = "GL_INVALID_FRAMEBUFFER_OPERATION"; break;
+        default: break;
+        }
+        logMsg("GL Error: %s at tag: %s\n", message, tag);
+        error = glGetError();
+    }
+}
 
 void loadSceneFile(bool setPosition) {
     std::vector<SceneUpdate> updates;
@@ -173,6 +191,8 @@ void create(std::shared_ptr<Platform> p, int w, int h) {
 
     glfwSetCharCallback(main_window, ImGui_ImplGlfw_CharCallback);
 
+    LogGLErrors("Before Map Init");
+
     // Setup graphics
     map->setupGL();
     int fWidth = 0, fHeight = 0;
@@ -191,6 +211,8 @@ void create(std::shared_ptr<Platform> p, int w, int h) {
     // Setup style
     ImGui::StyleColorsDark();
 
+    LogGLErrors("After ImGui Init");
+
 }
 
 void run() {
@@ -205,6 +227,8 @@ void run() {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+
+        LogGLErrors("After ImGui New Frame");
 
         // Create ImGui interface.
         // ImGui::ShowDemoWindow();
@@ -231,6 +255,8 @@ void run() {
         // Render ImGui interface.
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        LogGLErrors("After ImGui Render");
 
         // Swap front and back buffers
         glfwSwapBuffers(main_window);
