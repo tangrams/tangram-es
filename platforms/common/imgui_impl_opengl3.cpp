@@ -92,6 +92,23 @@ static int          g_AttribLocationPosition = 0, g_AttribLocationUV = 0, g_Attr
 static unsigned int g_VboHandle = 0, g_ElementsHandle = 0;
 
 // Functions
+void CheckGLErrors(const char* tag) {
+    GLenum error = glGetError();
+    while (error != GL_NO_ERROR) {
+        const char* message = "???";
+        switch(error) {
+        case GL_INVALID_ENUM: message = "GL_INVALID_ENUM"; break;
+        case GL_INVALID_VALUE: message = "GL_INVALID_VALUE"; break;
+        case GL_INVALID_OPERATION: message = "GL_INVALID_OPERATION"; break;
+        case GL_OUT_OF_MEMORY: message = "GL_OUT_OF_MEMORY"; break;
+        case GL_INVALID_FRAMEBUFFER_OPERATION: message = "GL_INVALID_FRAMEBUFFER_OPERATION"; break;
+        default: break;
+        }
+        fprintf(stderr, "GL Error: %s at: %s\n", message, tag);
+        error = glGetError();
+    }
+}
+
 bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
 {
     // Store GLSL version string so we can refer to it later in case we recreate shaders. Note: GLSL version is NOT the same as GL version. Leave this to NULL if unsure.
@@ -111,12 +128,14 @@ bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
 void    ImGui_ImplOpenGL3_Shutdown()
 {
     ImGui_ImplOpenGL3_DestroyDeviceObjects();
+    CheckGLErrors("ImGui_ImplOpenGL3_Shutdown");
 }
 
 void    ImGui_ImplOpenGL3_NewFrame()
 {
     if (!g_FontTexture)
         ImGui_ImplOpenGL3_CreateDeviceObjects();
+    CheckGLErrors("ImGui_ImplOpenGL3_NewFrame");
 }
 
 // OpenGL3 Render function.
@@ -256,6 +275,7 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
 #endif
     glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2], (GLsizei)last_viewport[3]);
     glScissor(last_scissor_box[0], last_scissor_box[1], (GLsizei)last_scissor_box[2], (GLsizei)last_scissor_box[3]);
+    CheckGLErrors("ImGui_ImplOpenGL3_RenderDrawData");
 }
 
 bool ImGui_ImplOpenGL3_CreateFontsTexture()
@@ -282,6 +302,7 @@ bool ImGui_ImplOpenGL3_CreateFontsTexture()
     // Restore state
     glBindTexture(GL_TEXTURE_2D, last_texture);
 
+    CheckGLErrors("ImGui_ImplOpenGL3_CreateFontsTexture");
     return true;
 }
 
@@ -294,6 +315,7 @@ void ImGui_ImplOpenGL3_DestroyFontsTexture()
         io.Fonts->TexID = 0;
         g_FontTexture = 0;
     }
+    CheckGLErrors("ImGui_ImplOpenGL3_DestroyFontsTexture");
 }
 
 // If you get an error please report on github. You may try different GL context version or GLSL version.
@@ -502,6 +524,7 @@ bool    ImGui_ImplOpenGL3_CreateDeviceObjects()
     glBindTexture(GL_TEXTURE_2D, last_texture);
     glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
 
+    CheckGLErrors("ImGui_ImplOpenGL3_CreateDeviceObjects");
     return true;
 }
 
@@ -523,4 +546,5 @@ void    ImGui_ImplOpenGL3_DestroyDeviceObjects()
     g_ShaderHandle = 0;
 
     ImGui_ImplOpenGL3_DestroyFontsTexture();
+    CheckGLErrors("ImGui_ImplOpenGL3_DestroyDeviceObjects");
 }
