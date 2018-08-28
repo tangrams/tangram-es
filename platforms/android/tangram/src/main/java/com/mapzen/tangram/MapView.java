@@ -59,33 +59,87 @@ public class MapView extends FrameLayout {
         protected MapController doInBackground(Void... voids) {
             MapView view = mapViewRef.get();
             Context ctx = contextRef.get();
-            synchronized (view.lock) {
-                if (view.mapController != null) {
-                    return view.mapController;
-                }
-            }
-            return view.getMapInstance(ctx, httpHandler);
+            return view.mapInitInBackground(ctx, httpHandler);
         }
 
         @Override
         protected void onPostExecute(MapController controller) {
             MapView view = mapViewRef.get();
-            synchronized (view.lock) {
-                if (view.mapController == null) {
-                    view.mapController = controller;
-                    view.configureGLSurfaceView();
-                    view.mapController.postInit();
-                }
-                mapReadyCallback.onMapReady(view.mapController);
-            }
+            view.onMapInitOnUIThread(controller, mapReadyCallback);
         }
 
         @Override
         protected void onCancelled(MapController controller) {
-            if (controller != null) {
-                controller.dispose();
+            MapView view = mapViewRef.get();
+            view.onMapInitCancelled(controller);
+        }
+    }
+
+    /**
+     * Responsible for doing the actual map init. Should be executed from a non-ui thread.
+     * @param context {@link GLSurfaceView} context used for MapController initialization
+     * @param handler {@link HttpHandler} required for network handling
+     * @return new or previously initialized {@link MapController}
+     */
+    protected MapController mapInitInBackground(@NonNull final Context context, @Nullable final HttpHandler handler) {
+        synchronized (lock) {
+            if (mapController != null) {
+                return mapController;
+            }
+            return getMapInstance(context, handler);
+        }
+    }
+
+    /**
+     * Should be executed from the UI thread
+     * @param controller {@link MapController} created in a background thread
+     * @param callback {@link MapReadyCallback}
+     */
+    protected void onMapInitOnUIThread(@NonNull final MapController controller, @Nullable final MapReadyCallback callback) {
+        synchronized (lock) {
+            if (mapController == null) {
+                mapController = controller;
+                configureGLSurfaceView();
+                mapController.postInit();
+            }
+            if (callback != null) {
+                callback.onMapReady(mapController);
             }
         }
+    }
+
+    /**
+     * To be executed by the async task implementation during cancellation of a mapInit task
+     * @param controller {@link MapController} created by a background task which is no longer required
+     */
+    protected void onMapInitCancelled(MapController controller) {
+        if (controller != null) {
+            controller.dispose();
+        }
+    }
+
+    /**
+     * Responsible for creating and executing an async task to initialize the Map
+     * Note: Can be overridden to support other ways of implementing async tasks (e.g. when using observable with RxJava)
+     * @param callback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
+     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
+     * @param handler Set the client implemented {@link HttpHandler} for retrieving remote map resources
+     *                when null {@link DefaultHttpHandler} is used
+     */
+    protected void executeMapAsyncTask(@Nullable final MapReadyCallback callback, @Nullable final HttpHandler handler) {
+        getMapAsyncTask = new MapAsyncTask(this, callback, handler);
+        getMapAsyncTask.execute();
+    }
+
+    /**
+     * Responsible to dispose any prior running getMapReadyTask
+     * Note: Can be overriden to support other ways of implementing async tasks (e.g. when using observable with RxJava)
+     */
+    protected void disposeMapReadyTask() {
+        if (getMapAsyncTask != null) {
+            getMapAsyncTask.cancel(true);
+        }
+        getMapAsyncTask = null;
     }
 
     /**
@@ -114,8 +168,7 @@ public class MapView extends FrameLayout {
         if (glSurfaceView == null) {
             glSurfaceView = new GLSurfaceView(getContext());
         }
-        getMapAsyncTask = new MapAsyncTask(this, readyCallback, handler);
-        getMapAsyncTask.execute();
+        executeMapAsyncTask(readyCallback, handler);
     }
 
     @NonNull
@@ -128,16 +181,6 @@ public class MapView extends FrameLayout {
         glSurfaceView.setPreserveEGLContextOnPause(true);
         glSurfaceView.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 0, 16, 8));
         addView(glSurfaceView);
-    }
-
-    /**
-     * Responsible to dispose any prior running getMapReadyTask
-     */
-    protected void disposeMapReadyTask() {
-        if (getMapAsyncTask != null) {
-            getMapAsyncTask.cancel(true);
-        }
-        getMapAsyncTask = null;
     }
 
     protected void disposeMap() {
