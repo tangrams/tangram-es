@@ -216,6 +216,8 @@ public class MapController implements Renderer {
      * It also provides the Context in which the map will function; the asset
      * bundle for this activity must contain all the local files that the map
      * will need.
+     * @param context glsurfaceview's context used in the background thread for initialization
+     * @param handler {@link HttpHandler} to initialize httpHandler for network handling
      */
     protected MapController(@NonNull final GLSurfaceView view, @NonNull final Context context,
                             @Nullable final HttpHandler handler) {
