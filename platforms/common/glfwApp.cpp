@@ -2,7 +2,6 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "GL/gl3w.h"
 #define GLFW_INCLUDE_GLEXT
 #include <GLFW/glfw3.h>
 #include <cstdlib>
@@ -179,7 +178,6 @@ void create(std::shared_ptr<Platform> p, int w, int h) {
     // Make the main_window's context current
     glfwMakeContextCurrent(main_window);
     glfwSwapInterval(1); // Enable vsync
-    gl3wInit();
 
     // Set input callbacks
     glfwSetFramebufferSizeCallback(main_window, framebufferResizeCallback);
