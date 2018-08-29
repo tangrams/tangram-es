@@ -2,13 +2,13 @@ package com.mapzen.tangram.android;
 
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Window;
 import android.widget.Toast;
 
 import com.mapzen.tangram.CameraPosition;
-import com.mapzen.tangram.CameraUpdate;
 import com.mapzen.tangram.CameraUpdateFactory;
 import com.mapzen.tangram.LabelPickResult;
 import com.mapzen.tangram.LngLat;
@@ -44,7 +44,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
 public class MainActivity extends AppCompatActivity implements MapController.SceneLoadListener, TapResponder,
-        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener {
+        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener,
+        MapView.MapReadyCallback {
 
     private static final String NEXTZEN_API_KEY = BuildConfig.NEXTZEN_API_KEY;
 
@@ -69,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     PresetSelectionTextView sceneSelector;
 
     String pointStylingPath = "layers.touch.point.draw.icons";
-    ArrayList<Marker> pointMarkers = new ArrayList<Marker>();
+    ArrayList<Marker> pointMarkers = new ArrayList<>();
 
     boolean showTileInfo = false;
 
@@ -104,17 +105,17 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
         // Grab a reference to our map view.
         view = (MapView)findViewById(R.id.map);
+        view.getMapAsync(this, getHttpHandler());
     }
 
     @Override
-    public void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        // The AutoCompleteTextView preserves its contents from previous instances, so if a URL was
-        // set previously we want to apply it again. The text is restored in onRestoreInstanceState,
-        // which occurs after onCreate and onStart, but before onPostCreate, so we get the URL here.
+    public void onMapReady(@Nullable MapController mapController) {
+        if (mapController == null) {
+            return;
+        }
+        map = mapController;
         String sceneUrl = sceneSelector.getCurrentString();
-
-        map = view.getMap(this, getHttpHandler());
+        map.setSceneLoadListener(this);
         map.loadSceneFile(sceneUrl, sceneUpdates);
         map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
         map.setTapResponder(this);

@@ -1,5 +1,6 @@
 package com.mapzen.tangram;
 
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
@@ -215,8 +216,9 @@ public class MapController implements Renderer {
      * It also provides the Context in which the map will function; the asset
      * bundle for this activity must contain all the local files that the map
      * will need.
+     * @param handler {@link HttpHandler} to initialize httpHandler for network handling
      */
-    protected MapController(@NonNull final GLSurfaceView view) {
+    protected MapController(@NonNull final GLSurfaceView view, @Nullable final HttpHandler handler) {
         if (Build.VERSION.SDK_INT > 18) {
             clientTileSources = new ArrayMap<>();
         } else {
@@ -224,37 +226,8 @@ public class MapController implements Renderer {
         }
         markers = new LongSparseArray<>();
 
-        // Set up MapView
         mapView = view;
-        view.setRenderer(this);
-        view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-        view.setPreserveEGLContextOnPause(true);
 
-        touchInput = new TouchInput(view.getContext());
-        view.setOnTouchListener(touchInput);
-
-        setPanResponder(null);
-        setScaleResponder(null);
-        setRotateResponder(null);
-        setShoveResponder(null);
-
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.ROTATE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.ROTATE, Gestures.SHOVE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.SCALE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.PAN, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.LONG_PRESS, false);
-
-        uiThreadHandler = new Handler(view.getContext().getMainLooper());
-    }
-
-    /**
-     * Initialize native Tangram component. This must be called before any use
-     * of the MapController!
-     * This function is separated from MapController constructor to allow
-     * initialization and loading of the Scene on a background thread.
-     * @param handler {@link HttpHandler} to use for retrieving remote map resources
-     */
-    void init(@Nullable final HttpHandler handler) {
         // Get configuration info from application
         displayMetrics = mapView.getContext().getResources().getDisplayMetrics();
         assetManager = mapView.getContext().getAssets();
@@ -275,6 +248,33 @@ public class MapController implements Renderer {
         if (mapPointer <= 0) {
             throw new RuntimeException("Unable to create a native Map object! There may be insufficient memory available.");
         }
+    }
+
+    /**
+     * Responsible to configure {@link MapController} configuration on the ui thread.
+     * Must be called from the ui thread post instantiation of {@link MapController}
+     */
+    void UIThreadInit() {
+        // Set up MapView
+        mapView.setRenderer(this);
+        mapView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        mapView.setPreserveEGLContextOnPause(true);
+
+        touchInput = new TouchInput(mapView.getContext());
+        mapView.setOnTouchListener(touchInput);
+
+        setPanResponder(null);
+        setScaleResponder(null);
+        setRotateResponder(null);
+        setShoveResponder(null);
+
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.ROTATE, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.ROTATE, Gestures.SHOVE, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.SCALE, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.PAN, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.LONG_PRESS, false);
+
+        uiThreadHandler = new Handler(mapView.getContext().getMainLooper());
     }
 
     void dispose() {
@@ -1312,11 +1312,6 @@ public class MapController implements Renderer {
 
     // Native methods
     // ==============
-
-    static {
-        System.loadLibrary("c++_shared");
-        System.loadLibrary("tangram");
-    }
 
     private synchronized native void nativeOnLowMemory(long mapPtr);
     private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
