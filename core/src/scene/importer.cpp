@@ -144,13 +144,15 @@ std::vector<Url> Importer::getResolvedImportUrls(const Node& sceneNode, const Ur
         base = getBaseUrlForZipArchive(baseUrl);
     }
 
-    if (const Node& import = sceneNode["import"]) {
-        if (import.IsScalar()) {
-            sceneUrls.push_back(Url(import.Scalar()).resolved(base));
-        } else if (import.IsSequence()) {
-            for (const auto& path : import) {
-                if (path.IsScalar()) {
-                    sceneUrls.push_back(Url(path.Scalar()).resolved(base));
+    if (sceneNode.IsMap()) {
+        if (const Node& import = sceneNode["import"]) {
+            if (import.IsScalar()) {
+                sceneUrls.push_back(Url(import.Scalar()).resolved(base));
+            } else if (import.IsSequence()) {
+                for (const auto &path : import) {
+                    if (path.IsScalar()) {
+                        sceneUrls.push_back(Url(path.Scalar()).resolved(base));
+                    }
                 }
             }
         }
