@@ -9,7 +9,6 @@ import android.view.Window;
 import android.widget.Toast;
 
 import com.mapzen.tangram.CameraPosition;
-import com.mapzen.tangram.CameraUpdate;
 import com.mapzen.tangram.CameraUpdateFactory;
 import com.mapzen.tangram.LabelPickResult;
 import com.mapzen.tangram.LngLat;
@@ -71,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     PresetSelectionTextView sceneSelector;
 
     String pointStylingPath = "layers.touch.point.draw.icons";
-    ArrayList<Marker> pointMarkers = new ArrayList<Marker>();
+    ArrayList<Marker> pointMarkers = new ArrayList<>();
 
     boolean showTileInfo = false;
 

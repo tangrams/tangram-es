@@ -83,7 +83,7 @@ public class MapView extends FrameLayout {
      */
     protected MapController mapInitInBackground(@NonNull final Context context, @Nullable final HttpHandler handler) {
         synchronized (lock) {
-            if (NativeLibraryLoader.sNativeLibraryLoaded == false) {
+            if (!NativeLibraryLoader.sNativeLibraryLoaded) {
                 android.util.Log.e("Tangram", "Unable to initialize MapController, because failed to initialize native libraries");
                 return null;
             }
