@@ -47,7 +47,7 @@ public class MapView extends FrameLayout {
 
         WeakReference<MapView> mapViewRef;
 
-        MapAsyncTask(@NonNull final MapView mapView, @Nullable final MapReadyCallback callback, @Nullable final HttpHandler handler) {
+        MapAsyncTask(@NonNull final MapView mapView, @NonNull final MapReadyCallback callback, @Nullable final HttpHandler handler) {
             mapViewRef = new WeakReference<>(mapView);
             httpHandler = handler;
             mapReadyCallback = callback;
@@ -102,16 +102,14 @@ public class MapView extends FrameLayout {
      * @param controller {@link MapController} created in a background thread
      * @param callback {@link MapReadyCallback}
      */
-    protected void onMapInitOnUIThread(@Nullable final MapController controller, @Nullable final MapReadyCallback callback) {
+    protected void onMapInitOnUIThread(@Nullable final MapController controller, @NonNull final MapReadyCallback callback) {
         synchronized (lock) {
             if (mapController == null && controller != null) {
                 mapController = controller;
                 configureGLSurfaceView();
                 mapController.UIThreadInit();
             }
-            if (callback != null) {
-                callback.onMapReady(mapController);
-            }
+            callback.onMapReady(mapController);
         }
     }
 
@@ -133,7 +131,7 @@ public class MapView extends FrameLayout {
      * @param handler Set the client implemented {@link HttpHandler} for retrieving remote map resources
      *                when null {@link DefaultHttpHandler} is used
      */
-    protected void executeMapAsyncTask(@Nullable final MapReadyCallback callback, @Nullable final HttpHandler handler) {
+    protected void executeMapAsyncTask(@NonNull final MapReadyCallback callback, @Nullable final HttpHandler handler) {
         getMapAsyncTask = new MapAsyncTask(this, callback, handler);
         getMapAsyncTask.execute();
     }
@@ -156,7 +154,7 @@ public class MapView extends FrameLayout {
      * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
      * the callback will be made on the UI thread
      */
-    public void getMapAsync(@Nullable final MapReadyCallback readyCallback) {
+    public void getMapAsync(@NonNull final MapReadyCallback readyCallback) {
         getMapAsync(readyCallback, null);
     }
 
@@ -168,7 +166,7 @@ public class MapView extends FrameLayout {
      * @param handler Set the client implemented {@link HttpHandler} for retrieving remote map resources
      *                when null {@link DefaultHttpHandler} is used
      */
-    public void getMapAsync(@Nullable final MapReadyCallback readyCallback,
+    public void getMapAsync(@NonNull final MapReadyCallback readyCallback,
                             @Nullable final HttpHandler handler) {
 
         disposeMapReadyTask();
