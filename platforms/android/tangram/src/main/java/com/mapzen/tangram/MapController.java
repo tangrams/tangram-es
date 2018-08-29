@@ -216,11 +216,9 @@ public class MapController implements Renderer {
      * It also provides the Context in which the map will function; the asset
      * bundle for this activity must contain all the local files that the map
      * will need.
-     * @param context glsurfaceview's context used in the background thread for initialization
      * @param handler {@link HttpHandler} to initialize httpHandler for network handling
      */
-    protected MapController(@NonNull final GLSurfaceView view, @NonNull final Context context,
-                            @Nullable final HttpHandler handler) {
+    protected MapController(@NonNull final GLSurfaceView view, @Nullable final HttpHandler handler) {
         if (Build.VERSION.SDK_INT > 18) {
             clientTileSources = new ArrayMap<>();
         } else {
@@ -231,8 +229,8 @@ public class MapController implements Renderer {
         mapView = view;
 
         // Get configuration info from application
-        displayMetrics = context.getResources().getDisplayMetrics();
-        assetManager = context.getAssets();
+        displayMetrics = mapView.getContext().getResources().getDisplayMetrics();
+        assetManager = mapView.getContext().getAssets();
 
         fontFileParser = new FontFileParser();
 

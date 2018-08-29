@@ -46,11 +46,9 @@ public class MapView extends FrameLayout {
         HttpHandler httpHandler;
 
         WeakReference<MapView> mapViewRef;
-        WeakReference<Context> contextRef;
 
         MapAsyncTask(@NonNull final MapView mapView, @Nullable final MapReadyCallback callback, @Nullable final HttpHandler handler) {
             mapViewRef = new WeakReference<>(mapView);
-            contextRef = new WeakReference<>(mapView.glSurfaceView.getContext());
             httpHandler = handler;
             mapReadyCallback = callback;
         }
@@ -58,8 +56,7 @@ public class MapView extends FrameLayout {
         @Override
         protected MapController doInBackground(Void... voids) {
             MapView view = mapViewRef.get();
-            Context ctx = contextRef.get();
-            return view.mapInitInBackground(ctx, httpHandler);
+            return view.mapInitInBackground(httpHandler);
         }
 
         @Override
@@ -77,11 +74,10 @@ public class MapView extends FrameLayout {
 
     /**
      * Responsible for doing the actual map init. Should be executed from a non-ui thread.
-     * @param context {@link GLSurfaceView} context used for MapController initialization
      * @param handler {@link HttpHandler} required for network handling
      * @return new or previously initialized {@link MapController}
      */
-    protected MapController mapInitInBackground(@NonNull final Context context, @Nullable final HttpHandler handler) {
+    protected MapController mapInitInBackground(@Nullable final HttpHandler handler) {
         synchronized (lock) {
             if (!NativeLibraryLoader.sNativeLibraryLoaded) {
                 android.util.Log.e("Tangram", "Unable to initialize MapController, because failed to initialize native libraries");
@@ -91,7 +87,7 @@ public class MapView extends FrameLayout {
                 return mapController;
             }
         }
-        return getMapInstance(context, handler);
+        return getMapInstance(handler);
     }
 
     /**
@@ -176,8 +172,8 @@ public class MapView extends FrameLayout {
     }
 
     @NonNull
-    protected MapController getMapInstance(@NonNull final Context context, @Nullable final HttpHandler handler) {
-        return new MapController(glSurfaceView, context, handler);
+    protected MapController getMapInstance(@Nullable final HttpHandler handler) {
+        return new MapController(glSurfaceView, handler);
     }
 
     protected void configureGLSurfaceView() {
