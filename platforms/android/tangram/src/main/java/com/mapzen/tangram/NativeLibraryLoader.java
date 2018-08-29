@@ -1,14 +1,14 @@
 package com.mapzen.tangram;
 
-public class NativeLibraryLoader {
-    public static final boolean sNativeLibraryLoaded = loadLibrary();
+class NativeLibraryLoader {
+    static final boolean sNativeLibraryLoaded = loadLibrary();
 
     private static synchronized boolean loadLibrary() {
         try {
             System.loadLibrary("c++_shared");
             System.loadLibrary("tangram");
             return true;
-        } catch (final Exception e) {
+        } catch (final SecurityException | UnsatisfiedLinkError | NullPointerException e) {
             android.util.Log.e("Tangram", "Failed to load native tangram libraries", e);
             return false;
         }
