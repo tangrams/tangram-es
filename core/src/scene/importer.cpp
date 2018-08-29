@@ -127,6 +127,10 @@ void Importer::addSceneString(const Url& sceneUrl, const std::string& sceneStrin
         LOGE("Parsing scene config '%s'", e.what());
         return;
     }
+    if (!sceneNode.IsDefined() || !sceneNode.IsMap()) {
+        LOGE("Scene is not a valid YAML map: %s", sceneUrl.string().c_str());
+        return;
+    }
 
     m_importedScenes[sceneUrl] = sceneNode;
 
