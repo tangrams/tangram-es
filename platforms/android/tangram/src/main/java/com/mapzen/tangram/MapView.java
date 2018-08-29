@@ -90,8 +90,8 @@ public class MapView extends FrameLayout {
             if (mapController != null) {
                 return mapController;
             }
-            return getMapInstance(context, handler);
         }
+        return getMapInstance(context, handler);
     }
 
     /**
