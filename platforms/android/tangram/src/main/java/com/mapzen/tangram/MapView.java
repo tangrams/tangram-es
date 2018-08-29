@@ -56,19 +56,26 @@ public class MapView extends FrameLayout {
         @Override
         protected MapController doInBackground(Void... voids) {
             MapView view = mapViewRef.get();
+            if (view == null) {
+                return null;
+            }
             return view.mapInitInBackground(httpHandler);
         }
 
         @Override
         protected void onPostExecute(MapController controller) {
             MapView view = mapViewRef.get();
-            view.onMapInitOnUIThread(controller, mapReadyCallback);
+            if (view != null) {
+                view.onMapInitOnUIThread(controller, mapReadyCallback);
+            }
         }
 
         @Override
         protected void onCancelled(MapController controller) {
             MapView view = mapViewRef.get();
-            view.onMapInitCancelled(controller);
+            if (view != null) {
+                view.onMapInitCancelled(controller);
+            }
         }
     }
 
