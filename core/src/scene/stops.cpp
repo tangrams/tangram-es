@@ -90,7 +90,7 @@ auto Stops::Sizes(const YAML::Node& _node, UnitSet _units) -> Stops {
     float lastKey = 0;
 
     auto constructFrame = [&](const auto& _frameNode, StyleParam::ValueUnitPair& _result) -> bool {
-        if (StyleParam::parseSizeUnitPair(_frameNode.Scalar(), 0, _result)) {
+        if (StyleParam::parseSizeUnitPair(_frameNode.Scalar(), _result)) {
             if ( !_units.contains(_result.unit) ) {
                 LOGW("Size StyleParam can only take in pixel, %% or auto values in: %s", Dump(_node).c_str());
                 return false;
@@ -206,16 +206,13 @@ auto Stops::Widths(const YAML::Node& _node, UnitSet _units) -> Stops {
         lastKey = key;
 
         StyleParam::ValueUnitPair width;
-        width.unit = Unit::meter;
-        size_t start = 0;
-
-        if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, width)) {
+        if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), width)) {
 
             if (! _units.contains(width.unit) ) {
                 LOGW("Invalid unit is being used for stop %s", Dump(frameNode[1]).c_str());
             }
 
-            if (width.unit == Unit::meter) {
+            if (width.unit == Unit::meter || width.unit == Unit::none) {
                 float w = widthMeterToPixel(key, tileSize, width.value);
                 stops.frames.emplace_back(key, w);
 

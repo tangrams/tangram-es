@@ -190,22 +190,29 @@ StyleParam::Value StyleParam::parseNode(StyleParamKey key, const YAML::Node& nod
     }
     case StyleParamKey::text_offset:
     case StyleParamKey::offset: {
-        UnitVec<glm::vec2> vec;
-        if (!parseVec2(node, allowedUnits, vec) || std::isnan(vec.value.y)) {
-            LOGW("Invalid offset parameter '%s'.", Dump(node).c_str());
+        ValueUnitPair scalar;
+        if (node.IsScalar() && (parseValueUnitPair(node.Scalar(), scalar) && allowedUnits.contains(scalar.unit))) {
+            return glm::vec2(scalar.value);
         }
-        return vec.value;
+        UnitVec<glm::vec2> vec;
+        if (parseVec2(node, allowedUnits, vec)) {
+            return vec.value;
+        }
+        LOGW("Invalid offset parameter '%s'.", Dump(node).c_str());
+        return Value();
     }
     case StyleParamKey::text_buffer:
     case StyleParamKey::buffer: {
+        ValueUnitPair scalar;
+        if (node.IsScalar() && (parseValueUnitPair(node.Scalar(), scalar) && allowedUnits.contains(scalar.unit))) {
+            return glm::vec2(scalar.value);
+        }
         UnitVec<glm::vec2> vec;
-        if (!parseVec2(node, allowedUnits, vec)) {
-            LOGW("Invalid buffer parameter '%s'.", Dump(node).c_str());
+        if (parseVec2(node, allowedUnits, vec)) {
+            return vec.value;
         }
-        if (std::isnan(vec.value.y)) {
-            vec.value.y = vec.value.x;
-        }
-        return vec.value;
+        LOGW("Invalid buffer parameter '%s'.", Dump(node).c_str());
+        return Value();
     }
     case StyleParamKey::size: {
         SizeValue vec;
@@ -1045,7 +1052,9 @@ bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
 
     double num;
     int index = parseFloat(_str, num);
-    if (index < 0) { return false; }
+    if (index < 0) {
+        return false;
+    }
 
     _pxSize = static_cast<float>(num);
 
@@ -1058,6 +1067,8 @@ bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
     if (_str.compare(index, end, "px") == 0) {
         return true;
     } else if (_str.compare(index, end, "em") == 0) {
+        // FIXME: Number strings ending with 'em' fail to match this.
+        // The float parser consumes the 'e' (for scientific notation like '1.2e6').
         _pxSize *= 16.f;
     } else if (_str.compare(index, end, "pt") == 0) {
         _pxSize /= 0.75f;
@@ -1159,7 +1170,7 @@ UnitSet StyleParam::unitSetForStyleParam(StyleParamKey key) {
         return UnitSet{ Unit::pixel, Unit::percentage, Unit::sizeauto };
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
-        return UnitSet{ Unit::pixel, Unit::meter };
+        return UnitSet{ Unit::none, Unit::pixel, Unit::meter };
     default:
         return UnitSet{};
     }

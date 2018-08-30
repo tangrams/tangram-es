@@ -120,7 +120,7 @@ struct UnitSet {
         }
     }
     bool contains(Unit unit) {
-        return (bits & static_cast<int>(unit)) != 0;
+        return (bits & (1 << static_cast<int>(unit))) != 0;
     }
 };
 
