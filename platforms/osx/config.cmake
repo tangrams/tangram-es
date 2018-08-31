@@ -40,6 +40,7 @@ target_compile_options(tangram
   PRIVATE
   -std=c++1y
   -stdlib=libc++
+  -fobjc-arc
   -Wall
   -Wreturn-type
   -Wsign-compare
