@@ -537,6 +537,9 @@ void showSceneGUI() {
             apiKey.assign(buffer);
             loadSceneFile();
         }
+        if (ImGui::Button("Reload Scene")) {
+            loadSceneFile();
+        }
     }
 }
 
