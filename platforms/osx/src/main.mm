@@ -12,13 +12,7 @@ using namespace Tangram;
 
 @interface TGPreferences : NSObject
 + (void)setup;
-+ (void)startApiKeyInput;
-+ (void)startFileOpen;
-+ (void)startFileEdit;
-+ (void)startFileReload;
-+ (void)copyEditorTextToClipboard;
-+ (void)pasteEditorTextFromClipboard;
-+ (NSString*) apiKeyDefaultsName;
++ (void)shutdown;
 @end
 
 @implementation TGPreferences
@@ -34,13 +28,6 @@ using namespace Tangram;
 
     // Set up menu shortcuts.
     NSMenu *mainMenu = [[NSApplication sharedApplication] mainMenu];
-
-    // Set up Tangram ES menu.
-    NSMenu *appMenu = [[mainMenu itemAtIndex:0] submenu];
-    [appMenu insertItemWithTitle:@"API Key..."
-                          action:@selector(startApiKeyInput)
-                   keyEquivalent:@"k"
-                         atIndex:1].target = self;
 
     // Set up File menu.
     NSMenuItem* fileMenuItem = [mainMenu insertItemWithTitle:@"" action:nil keyEquivalent:@"" atIndex:1];
@@ -60,35 +47,12 @@ using namespace Tangram;
                 keyEquivalent:@"r"].target = self;
 }
 
-+ (void)startApiKeyInput
++ (void)shutdown
 {
-    NSString* defaultsKeyString = [self apiKeyDefaultsName];
+    // Save API key in user defaults
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    NSString* defaultsValueString = [defaults stringForKey:defaultsKeyString];
-
-    NSTextField *input = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 200, 24)];
-    input.translatesAutoresizingMaskIntoConstraints = YES;
-    input.editable = YES;
-    input.selectable = YES;
-    if (defaultsValueString != nil) {
-        [input setStringValue:defaultsValueString];
-    }
-
-    NSAlert* alert = [[NSAlert alloc] init];
-    [alert setMessageText:@"Set API key default"];
-    [alert setAccessoryView: input];
-    [alert addButtonWithTitle:@"Ok"];
-    [alert addButtonWithTitle:@"Cancel"];
-    [alert layout];
-    [alert.window makeFirstResponder:alert.accessoryView];
-
-    [alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] completionHandler:^(NSModalResponse returnCode) {
-        if (returnCode == NSAlertFirstButtonReturn) {
-            [defaults setValue:[input stringValue] forKey:defaultsKeyString];
-            GlfwApp::apiKey = std::string([[input stringValue] UTF8String]);
-            GlfwApp::loadSceneFile();
-        }
-    }];
+    NSString* apiKeyString = [NSString stringWithUTF8String:GlfwApp::apiKey.data()];
+    [defaults setValue:apiKeyString forKey:[self apiKeyDefaultsName]];
 }
 
 + (void)startFileOpen
@@ -98,14 +62,15 @@ using namespace Tangram;
     openPanel.canChooseDirectories = NO;
     openPanel.allowsMultipleSelection = NO;
 
-    NSInteger button = [openPanel runModal];
-    if (button == NSModalResponseOK) {
-        NSURL* url = [openPanel URLs].firstObject;
-        LOG("Got URL to open: %s", [[url absoluteString] UTF8String]);
-        GlfwApp::sceneFile = [[url absoluteString] UTF8String];
-        GlfwApp::sceneYaml.clear();
-        GlfwApp::loadSceneFile();
-    }
+    [openPanel beginWithCompletionHandler:^(NSModalResponse result){
+        if (result == NSModalResponseOK) {
+            NSURL *url = openPanel.URLs.firstObject;
+            LOG("Got URL to open: %s", [[url absoluteString] UTF8String]);
+            GlfwApp::sceneFile = [[url absoluteString] UTF8String];
+            GlfwApp::sceneYaml.clear();
+            GlfwApp::loadSceneFile();
+        }
+    }];
 }
 
 + (void)startFileEdit
@@ -118,25 +83,6 @@ using namespace Tangram;
 + (void)startFileReload
 {
     GlfwApp::loadSceneFile();
-}
-
-+ (void)copyEditorTextToClipboard
-{
-    NSText* fieldEditor = [[[NSApplication sharedApplication] keyWindow] fieldEditor:NO forObject:nil];
-    if (fieldEditor) {
-        NSPasteboard* pasteboard = [NSPasteboard generalPasteboard];
-        [pasteboard clearContents];
-        [pasteboard setString:[fieldEditor string] forType:NSPasteboardTypeString];
-    }
-}
-
-+ (void)pasteEditorTextFromClipboard
-{
-    NSText* fieldEditor = [[[NSApplication sharedApplication] keyWindow] fieldEditor:NO forObject:nil];
-    if (fieldEditor) {
-        NSPasteboard* pasteboard = [NSPasteboard generalPasteboard];
-        [fieldEditor setString:[pasteboard stringForType:NSPasteboardTypeString]];
-    }
 }
 
 + (NSString*)apiKeyDefaultsName
@@ -181,4 +127,5 @@ int main(int argc, char* argv[]) {
     // Clean up.
     GlfwApp::destroy();
 
+    [TGPreferences shutdown];
 }
