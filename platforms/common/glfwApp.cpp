@@ -27,6 +27,7 @@ void framebufferResizeCallback(GLFWwindow* window, int fWidth, int fHeight);
 // Forward-declare GUI functions.
 void showDebugFlagsGUI();
 void showViewportGUI();
+void showSceneGUI();
 
 constexpr double double_tap_time = 0.5; // seconds
 constexpr double scroll_span_multiplier = 0.05; // scaling for zoom and rotation
@@ -207,6 +208,7 @@ void run() {
 
         // Create ImGui interface.
         // ImGui::ShowDemoWindow();
+        showSceneGUI();
         showViewportGUI();
         showDebugFlagsGUI();
 
@@ -524,6 +526,22 @@ void framebufferResizeCallback(GLFWwindow* window, int fWidth, int fHeight) {
     }
     map->setPixelScale(density);
     map->resize(fWidth, fHeight);
+}
+
+void showSceneGUI() {
+    if (ImGui::CollapsingHeader("Scene")) {
+        char buffer[256];
+        std::strncpy(buffer, sceneFile.data(), sizeof(buffer));
+        if (ImGui::InputText("Scene URL", buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
+            sceneFile.assign(buffer);
+            loadSceneFile();
+        }
+        std::strncpy(buffer, apiKey.data(), sizeof(buffer));
+        if (ImGui::InputText("API key", buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
+            apiKey.assign(buffer);
+            loadSceneFile();
+        }
+    }
 }
 
 void showViewportGUI() {
