@@ -61,7 +61,7 @@ double last_y_down = 0.0;
 double last_x_velocity = 0.0;
 double last_y_velocity = 0.0;
 
-std::atomic<bool> wireframe_mode;
+bool wireframe_mode = false;
 
 Tangram::MarkerID marker = 0;
 Tangram::MarkerID poiMarker = 0;
@@ -104,10 +104,6 @@ void parseArgs(int argc, char* argv[]) {
             break;
         }
     }
-}
-
-void setWireframeMode(bool state) {
-    wireframe_mode = state;
 }
 
 void setScene(const std::string& _path, const std::string& _yaml) {
@@ -602,6 +598,7 @@ void showDebugFlagsGUI() {
         if (ImGui::Checkbox("Show Selection Buffer", &flag)) {
             setDebugFlag(DebugFlags::selection_buffer, flag);
         }
+        ImGui::Checkbox("Wireframe Mode", &wireframe_mode);
     }
 }
 

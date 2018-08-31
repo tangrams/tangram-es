@@ -58,31 +58,6 @@ using namespace Tangram;
     [fileMenu addItemWithTitle:@"Reload Scene"
                        action:@selector(startFileReload)
                 keyEquivalent:@"r"].target = self;
-
-    // Set up Edit menu.
-    NSMenuItem* editMenuItem = [mainMenu insertItemWithTitle:@"" action:nil keyEquivalent:@"" atIndex:2];
-    NSMenu* editMenu = [[NSMenu alloc] init];
-    [editMenuItem setSubmenu:editMenu];
-    [editMenu setTitle:@"Edit"];
-
-    [editMenu addItemWithTitle:@"Copy"
-                        action:@selector(copyEditorTextToClipboard)
-                 keyEquivalent:@"c"].target = self;
-
-    [editMenu addItemWithTitle:@"Paste"
-                        action:@selector(pasteEditorTextFromClipboard)
-                 keyEquivalent:@"v"].target = self;
-
-    // Set up Debug menu.
-    NSMenuItem* debugMenuItem = [mainMenu insertItemWithTitle:@"" action:nil keyEquivalent:@"" atIndex:3];
-    NSMenu* debugMenu = [[NSMenu alloc] init];
-    [debugMenuItem setSubmenu:debugMenu];
-    [debugMenu setTitle:@"Debug"];
-
-    [debugMenu addItemWithTitle:@"Toggle Wireframe Mode"
-                        action:@selector(toggleWireFrameMode)
-                 keyEquivalent:@""].target = self;
-
 }
 
 + (void)startApiKeyInput
@@ -143,13 +118,6 @@ using namespace Tangram;
 + (void)startFileReload
 {
     GlfwApp::loadSceneFile();
-}
-
-+ (void)toggleWireFrameMode
-{
-    static bool wireframe_mode = false;
-    wireframe_mode = !wireframe_mode;
-    GlfwApp::setWireframeMode(wireframe_mode);
 }
 
 + (void)copyEditorTextToClipboard
