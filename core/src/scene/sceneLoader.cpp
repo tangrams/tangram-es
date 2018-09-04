@@ -1803,13 +1803,12 @@ void SceneLoader::loadBackground(Node background, const std::shared_ptr<Scene>& 
     if (!background) { return; }
 
     if (Node colorNode = background["color"]) {
-        std::string str;
-        if (colorNode.IsScalar()) {
-            str = colorNode.Scalar();
-        } else if (colorNode.IsSequence()) {
-            str = YamlUtil::parseSequence(colorNode);
+        Color colorResult;
+        if (StyleParam::parseColor(colorNode, colorResult)) {
+            scene->background() = colorResult;
+        } else {
+            LOGW("Cannot parse color: %s", Dump(colorNode).c_str());
         }
-        scene->background().abgr = StyleParam::parseColor(str);
     }
 }
 

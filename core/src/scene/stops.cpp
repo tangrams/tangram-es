@@ -163,7 +163,7 @@ auto Stops::Offsets(const YAML::Node& _node, UnitSet _units) -> Stops {
             for (const auto& sequenceNode : frameNode[1]) {
                 StyleParam::ValueUnitPair width;
                 width.unit = Unit::pixel; // default to pixel
-                if (StyleParam::parseValueUnitPair(sequenceNode.Scalar(), 0, width)) {
+                if (sequenceNode.IsScalar() && StyleParam::parseValueUnitPair(sequenceNode.Scalar(), width)) {
                     widths.push_back(width);
                     if (lastUnit != width.unit) {
                         LOGW("Mixed units not allowed for stop values", Dump(frameNode[1]).c_str());

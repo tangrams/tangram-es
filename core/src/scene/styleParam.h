@@ -273,19 +273,7 @@ struct StyleParam {
     /* parse a font size (in em, pt, %) and give the appropriate size in pixel */
     static bool parseFontSize(const std::string& _size, float& _pxSize);
 
-    static uint32_t parseColor(const std::string& _color);
-
     static bool parseTime(const std::string& _value, float& _time);
-
-    // values within _value string parameter must be delimited by ','
-//    static bool parseSize(const std::string& _value, uint8_t _allowedUnits, SizeValue& _vec2);
-//    static bool parseVec2(const std::string& _value, uint8_t _allowedUnits, UnitVec<glm::vec2>& _vec2);
-//    static bool parseVec3(const std::string& _value, uint8_t _allowedUnits, UnitVec<glm::vec3>& _vec3);
-
-    static int parseSizeUnitPair(const std::string& _value, size_t start,
-                                 StyleParam::ValueUnitPair& _result);
-    static int parseValueUnitPair(const std::string& _value, size_t start,
-                                  StyleParam::ValueUnitPair& _result);
 
     static Value parseString(StyleParamKey key, const std::string& _value);
 
@@ -307,8 +295,6 @@ struct StyleParam {
     static bool isNumberType(StyleParamKey _key);
     static bool isFontSize(StyleParamKey _key);
     static bool isRequired(StyleParamKey _key);
-
-//    static uint8_t unitsForStyleParam(StyleParamKey _key);
 
     static UnitSet unitSetForStyleParam(StyleParamKey key);
 
