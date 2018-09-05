@@ -68,14 +68,12 @@ public:
 
 
 RasterSource::RasterSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
-                           TextureOptions _options, TileSource::ZoomOptions _zoomOptions,
-                           bool _genMipmap)
+                           TextureOptions _options, TileSource::ZoomOptions _zoomOptions)
     : TileSource(_name, std::move(_sources), _zoomOptions),
-      m_texOptions(_options),
-      m_genMipmap(_genMipmap) {
+      m_texOptions(_options) {
 
     std::vector<char> data = {};
-    m_emptyTexture = std::make_shared<Texture>(data, m_texOptions, m_genMipmap);
+    m_emptyTexture = std::make_shared<Texture>(data, m_texOptions);
 }
 
 std::shared_ptr<Texture> RasterSource::createTexture(const std::vector<char>& _rawTileData) {
@@ -83,7 +81,7 @@ std::shared_ptr<Texture> RasterSource::createTexture(const std::vector<char>& _r
         return m_emptyTexture;
     }
 
-    auto texture = std::make_shared<Texture>(_rawTileData, m_texOptions, m_genMipmap);
+    auto texture = std::make_shared<Texture>(_rawTileData, m_texOptions);
 
     return texture;
 }

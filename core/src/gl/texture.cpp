@@ -21,19 +21,17 @@
 
 namespace Tangram {
 
-Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _options,
-        bool _generateMipmaps, float _density)
-    : m_options(_options), m_generateMipmaps(_generateMipmaps) {
+Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _options)
+    : m_options(_options) {
 
-    m_invDensity = 1.f/_density;
     m_glHandle = 0;
     m_shouldResize = false;
     m_target = GL_TEXTURE_2D;
     resize(_width, _height);
 }
 
-Texture::Texture(const std::vector<char>& _data, TextureOptions options, bool generateMipmaps, float density)
-    : Texture(0u, 0u, options, generateMipmaps, density) {
+Texture::Texture(const std::vector<char>& _data, TextureOptions options)
+    : Texture(0u, 0u, options) {
 
     loadImageFromMemory(_data);
 }
@@ -93,7 +91,6 @@ Texture& Texture::operator=(Texture&& _other) {
     m_width = _other.m_width;
     m_height = _other.m_height;
     m_target = _other.m_target;
-    m_generateMipmaps = _other.m_generateMipmaps;
     m_rs = _other.m_rs;
 
     return *this;
@@ -182,11 +179,11 @@ void Texture::generate(RenderState& rs, GLuint _textureUnit) {
 
     bind(rs, _textureUnit);
 
-    GL::texParameteri(m_target, GL_TEXTURE_MIN_FILTER, m_options.filtering.min);
-    GL::texParameteri(m_target, GL_TEXTURE_MAG_FILTER, m_options.filtering.mag);
+    GL::texParameteri(m_target, GL_TEXTURE_MIN_FILTER, static_cast<GLint>(m_options.minFilter));
+    GL::texParameteri(m_target, GL_TEXTURE_MAG_FILTER, static_cast<GLint>(m_options.magFilter));
 
-    GL::texParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.wrapping.wraps);
-    GL::texParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.wrapping.wrapt);
+    GL::texParameteri(m_target, GL_TEXTURE_WRAP_S, static_cast<GLint>(m_options.wrapS));
+    GL::texParameteri(m_target, GL_TEXTURE_WRAP_T, static_cast<GLint>(m_options.wrapT));
 
     m_rs = &rs;
 }
@@ -230,17 +227,18 @@ void Texture::update(RenderState& rs, GLuint _textureUnit, const GLuint* data) {
         bind(rs, _textureUnit);
     }
 
+    auto format = static_cast<GLenum>(m_options.pixelFormat);
+
     // resize or push data
     if (m_shouldResize) {
         if (Hardware::maxTextureSize < m_width || Hardware::maxTextureSize < m_height) {
             LOGW("The hardware maximum texture size is currently reached");
         }
 
-        GL::texImage2D(m_target, 0, m_options.internalFormat,
-                       m_width, m_height, 0, m_options.format,
-                       GL_UNSIGNED_BYTE, data);
 
-        if (data && m_generateMipmaps) {
+        GL::texImage2D(m_target, 0, format, m_width, m_height, 0, format, GL_UNSIGNED_BYTE, data);
+
+        if (data && m_options.generateMipmaps) {
             // generate the mipmaps for this texture
             GL::generateMipmap(m_target);
         }
@@ -254,8 +252,7 @@ void Texture::update(RenderState& rs, GLuint _textureUnit, const GLuint* data) {
     for (auto& range : m_dirtyRanges) {
         size_t offset =  (range.min * m_width) / divisor;
         GL::texSubImage2D(m_target, 0, 0, range.min, m_width, range.max - range.min,
-                          m_options.format, GL_UNSIGNED_BYTE,
-                          data + offset);
+                          format, GL_UNSIGNED_BYTE, data + offset);
     }
     m_dirtyRanges.clear();
 }
@@ -266,19 +263,16 @@ void Texture::resize(const unsigned int _width, const unsigned int _height) {
 
     if (!(Hardware::supportsTextureNPOT) &&
         !(isPowerOfTwo(m_width) && isPowerOfTwo(m_height)) &&
-        (m_generateMipmaps || isRepeatWrapping(m_options.wrapping))) {
+        (m_options.generateMipmaps || (m_options.wrapS == TextureWrap::REPEAT || m_options.wrapT == TextureWrap::REPEAT))) {
         LOGW("OpenGL ES doesn't support texture repeat wrapping for NPOT textures nor mipmap textures");
         LOGW("Falling back to LINEAR Filtering");
-        m_options.filtering = {GL_LINEAR, GL_LINEAR};
-        m_generateMipmaps = false;
+        m_options.minFilter =TextureMinFilter::LINEAR;
+        m_options.magFilter = TextureMagFilter::LINEAR;
+        m_options.generateMipmaps = false;
     }
 
     m_shouldResize = true;
     m_dirtyRanges.clear();
-}
-
-bool Texture::isRepeatWrapping(TextureWrapping _wrapping) {
-    return _wrapping.wraps == GL_REPEAT || _wrapping.wrapt == GL_REPEAT;
 }
 
 size_t Texture::bufferSize() {
@@ -286,13 +280,13 @@ size_t Texture::bufferSize() {
 }
 
 size_t Texture::bytesPerPixel() {
-    switch (m_options.internalFormat) {
-        case GL_ALPHA:
-        case GL_LUMINANCE:
+    switch (m_options.pixelFormat) {
+        case PixelFormat::ALPHA:
+        case PixelFormat::LUMINANCE:
             return 1;
-        case GL_LUMINANCE_ALPHA:
+        case PixelFormat::LUMINANCE_ALPHA:
             return 2;
-        case GL_RGB:
+        case PixelFormat::RGB:
             return 3;
         default:
             return 4;
