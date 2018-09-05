@@ -1107,14 +1107,17 @@ void SceneLoader::loadSourceRasters(const std::shared_ptr<Platform>& platform, s
     }
 }
 
-void SceneLoader::parseLightPosition(Node position, PointLight& light) {
-
-    if (position.IsSequence()) {
-        UnitVec<glm::vec3> lightPos;
-        StyleParam::parseVec3(position, UnitSet{Unit::pixel, Unit::meter}, lightPos);
-        light.setPosition(lightPos);
+void SceneLoader::parseLightPosition(Node positionNode, PointLight& light) {
+    UnitVec<glm::vec3> positionResult;
+    if (StyleParam::parseVec3(positionNode, UnitSet{Unit::pixel, Unit::meter}, positionResult)) {
+        for (auto& unit : positionResult.units) {
+            if (unit == Unit::none) {
+                unit = Unit::meter;
+            }
+        }
+        light.setPosition(positionResult);
     } else {
-        LOGNode("Wrong light position parameter", position);
+        LOGNode("Invalid light position parameter:", positionNode);
     }
 }
 

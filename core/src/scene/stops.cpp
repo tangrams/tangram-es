@@ -93,7 +93,10 @@ auto Stops::Sizes(const YAML::Node& _node, UnitSet _units) -> Stops {
         if (StyleParam::parseSizeUnitPair(_frameNode.Scalar(), _result)) {
             if ( !_units.contains(_result.unit) ) {
                 LOGW("Size StyleParam can only take in pixel, %% or auto values in: %s", Dump(_node).c_str());
-                return false;
+                _result.unit = Unit::pixel;
+            }
+            if (_result.unit == Unit::none) {
+                _result.unit = Unit::pixel;
             }
         } else {
             LOGW("could not parse node %s\n", Dump(_frameNode).c_str());

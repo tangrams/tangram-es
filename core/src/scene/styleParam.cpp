@@ -628,9 +628,13 @@ bool StyleParam::parseSizeUnitPair(const std::string& value, StyleParam::ValueUn
 
 bool StyleParam::parseValueUnitPair(const std::string& value, StyleParam::ValueUnitPair& result) {
     int offset = 0;
-    float number = ff::stof(&value[0], value.size(), &offset);
+    float number = ff::stof(value.data(), value.size(), &offset);
     if (offset <= 0) {
         return false;
+    }
+    // Skip any leading whitespace.
+    while (std::isspace(value[offset])) {
+        offset++;
     }
     Unit unit = stringToUnit(value, offset, value.size() - offset);
     result.value = number;

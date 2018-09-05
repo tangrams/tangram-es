@@ -86,7 +86,7 @@ struct SceneLoader {
     static bool parseStyleUniforms(const std::shared_ptr<Platform>& platform, const Node& value,
                                    const std::shared_ptr<Scene>& scene, StyleUniform& styleUniform);
 
-    static void parseLightPosition(Node position, PointLight& light);
+    static void parseLightPosition(Node positionNode, PointLight& light);
 
     static bool loadStyle(const std::shared_ptr<Platform>& platform, const std::string& styleName,
                           Node config, const std::shared_ptr<Scene>& scene);
