@@ -137,6 +137,10 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
      * Interface for responding to a scaling (pinching) gesture
      */
     public interface ScaleResponder {
+        boolean onScaleBegin();
+
+        boolean onScaleEnd();
+
         /**
          * Called repeatedly while two touch points are moved closer to or further from each other
          * @param x The x screen coordinate of the point between the two touch points
@@ -152,6 +156,10 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
      * Interface for responding to a rotation gesture
      */
     public interface RotateResponder {
+        boolean onRotateBegin();
+
+        boolean onRotateEnd();
+
         /**
          * Called repeatedly while two touch points are rotated around a point
          * @param x The x screen coordinate of the center of rotation
@@ -167,6 +175,10 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
      * Interface for responding to a shove (two-finger vertical drag) gesture
      */
     public interface ShoveResponder {
+        boolean onShoveBegin();
+
+        boolean onShoveEnd();
+
         /**
          * Called repeatedly while two touch points are moved together vertically
          * @param distance The vertical distance moved by the two touch points relative to the last
@@ -192,13 +204,10 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     private RotateResponder rotateResponder;
     private ShoveResponder shoveResponder;
 
-    private MapController.MapChangeListener mapChangeListener;
-
     private EnumSet<Gestures> detectedGestures;
     private EnumMap<Gestures, EnumSet<Gestures>> allowedSimultaneousGestures;
 
     private long lastMultiTouchEndTime = -MULTITOUCH_BUFFER_TIME;
-    private boolean panWillStart = false;
 
     /**
      * Construct a new touch input manager; this may only be called on the UI thread
@@ -302,29 +311,6 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         return allowedSimultaneousGestures.get(second).contains(first);
     }
 
-    void setMapChangeListener(MapController.MapChangeListener listener) {
-        mapChangeListener = listener;
-    }
-
-    //Convenience member functions
-    private void onRegionWillChangeAnimated(boolean animated) {
-        if (mapChangeListener != null) {
-            mapChangeListener.onRegionWillChangeAnimated(animated);
-        }
-    }
-
-    private void onRegionDidChangeAnimated(boolean animated) {
-        if (mapChangeListener != null) {
-            mapChangeListener.onRegionDidChangeAnimated(animated);
-        }
-    }
-
-    private void onRegionIsChanging() {
-        if (mapChangeListener != null) {
-            mapChangeListener.onRegionIsChanging();
-        }
-    }
-
     private boolean isDetectionAllowed(Gestures g) {
         if (!allowedSimultaneousGestures.get(g).containsAll(detectedGestures)) {
             return false;
@@ -360,11 +346,6 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         scaleGestureDetector.onTouchEvent(event);
         shoveGestureDetector.onTouchEvent(event);
         rotateGestureDetector.onTouchEvent(event);
-
-        // Infer ending of a onScroll/onFling (pan) gesture
-        if (detectedGestures.contains(Gestures.PAN) && event.getActionMasked() == MotionEvent.ACTION_UP) {
-            onRegionDidChangeAnimated(true);
-        }
 
         return true;
     }
@@ -412,8 +393,6 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         // When new touch is placed, dispatch a zero-distance pan;
         // this provides an opportunity to halt any current motion.
         if (isDetectionAllowed(Gestures.PAN) && panResponder != null) {
-            // Could start a PAN gesture if next motion event results in onScroll or onFling
-            panWillStart = true;
             final float x = e.getX();
             final float y = e.getY();
             return panResponder.onPan(x, y, x, y);
@@ -428,8 +407,6 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
 
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
-        // onDown was a result of single tap, not pan
-        panWillStart = false;
         if (isDetectionAllowed(Gestures.TAP) && tapResponder != null) {
             return tapResponder.onSingleTapUp(e.getX(), e.getY());
         }
@@ -439,12 +416,6 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
         if (isDetectionAllowed(Gestures.PAN)) {
-
-            // Make sure previous motion event was a down event, to infer start of a motion gesture
-            if (panWillStart) {
-                panWillStart = false;
-                onRegionWillChangeAnimated(true);
-            }
 
             int action = e2.getActionMasked();
             boolean detected = !(action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP);
@@ -463,7 +434,6 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
                 x += e2.getX(i) / n;
                 y += e2.getY(i) / n;
             }
-            onRegionIsChanging();
             return panResponder.onPan(x + distanceX, y + distanceY, x, y);
         }
         return false;
@@ -479,12 +449,6 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
         if (isDetectionAllowed(Gestures.PAN) && panResponder != null) {
-            // Make sure previous motion event was a down event, to infer start of a motion gesture
-            if (panWillStart) {
-                panWillStart = false;
-                onRegionWillChangeAnimated(true);
-            }
-            onRegionIsChanging();
             return panResponder.onFling(e2.getX(), e2.getY(), velocityX, velocityY);
         }
         return false;
@@ -499,7 +463,6 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
             float rotation = -detector.getRotationRadiansDelta();
             float x = detector.getFocusX();
             float y = detector.getFocusY();
-            onRegionIsChanging();
             return rotateResponder.onRotate(x, y, rotation);
         }
         return false;
@@ -508,16 +471,16 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     @Override
     public boolean onRotateBegin(RotateGestureDetector detector) {
         if (isDetectionAllowed(Gestures.ROTATE)) {
-            onRegionWillChangeAnimated(true);
             setGestureDetected(Gestures.ROTATE, true);
+            rotateResponder.onRotateBegin();
         }
         return true;
     }
 
     @Override
     public void onRotateEnd(RotateGestureDetector detector) {
-        onRegionDidChangeAnimated(true);
         setGestureDetected(Gestures.ROTATE, false);
+        rotateResponder.onRotateEnd();
     }
 
     // ScaleGestureDetector.OnScaleGestureListener implementation
@@ -532,7 +495,6 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
             float velocity = (scale - 1.f) / dt;
             float x = detector.getFocusX();
             float y = detector.getFocusY();
-            onRegionIsChanging();
             return scaleResponder.onScale(x, y, scale, velocity);
         }
         return false;
@@ -541,16 +503,16 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     @Override
     public boolean onScaleBegin(ScaleGestureDetector detector) {
         if (isDetectionAllowed(Gestures.SCALE)) {
-            onRegionWillChangeAnimated(true);
             setGestureDetected(Gestures.SCALE, true);
+            scaleResponder.onScaleBegin();
         }
         return true;
     }
 
     @Override
     public void onScaleEnd(ScaleGestureDetector detector) {
-        onRegionDidChangeAnimated(true);
         setGestureDetected(Gestures.SCALE, false);
+        scaleResponder.onScaleEnd();
     }
 
     // ShoveGestureDetector.OnShoveGestureListener implementation
@@ -559,7 +521,6 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     @Override
     public boolean onShove(ShoveGestureDetector detector) {
         if (isDetectionAllowed(Gestures.SHOVE) && shoveResponder != null) {
-            onRegionIsChanging();
             return shoveResponder.onShove(detector.getShovePixelsDelta());
         }
         return false;
@@ -567,16 +528,16 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
 
     @Override
     public boolean onShoveBegin(ShoveGestureDetector detector) {
-        onRegionWillChangeAnimated(true);
         if (isDetectionAllowed(Gestures.SHOVE)) {
             setGestureDetected(Gestures.SHOVE, true);
+            shoveResponder.onShoveBegin();
         }
         return true;
     }
 
     @Override
     public void onShoveEnd(ShoveGestureDetector detector) {
-        onRegionDidChangeAnimated(true);
         setGestureDetected(Gestures.SHOVE, false);
+        shoveResponder.onShoveEnd();
     }
 }

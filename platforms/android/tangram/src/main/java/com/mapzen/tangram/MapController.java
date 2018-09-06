@@ -847,10 +847,31 @@ public class MapController implements Renderer {
     public void setRotateResponder(@Nullable final TouchInput.RotateResponder responder) {
         touchInput.setRotateResponder(new TouchInput.RotateResponder() {
             @Override
+            public boolean onRotateBegin() {
+                if (responder == null || !responder.onRotateBegin()) {
+                    if (rotateGesturesEnabled) {
+                        mapChangeListener.onRegionWillChangeAnimated(true);
+                    }
+                }
+                return true;
+            }
+
+            @Override
             public boolean onRotate(final float x, final float y, final float rotation) {
                 if (responder == null || !responder.onRotate(x, y, rotation)) {
                     if (rotateGesturesEnabled) {
+                        mapChangeListener.onRegionIsChanging();
                         nativeHandleRotateGesture(mapPointer, x, y, rotation);
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public boolean onRotateEnd() {
+                if (responder == null || !responder.onRotateEnd()) {
+                    if (rotateGesturesEnabled) {
+                        mapChangeListener.onRegionDidChangeAnimated(true);
                     }
                 }
                 return true;
@@ -865,10 +886,31 @@ public class MapController implements Renderer {
     public void setScaleResponder(@Nullable final TouchInput.ScaleResponder responder) {
         touchInput.setScaleResponder(new TouchInput.ScaleResponder() {
             @Override
+            public boolean onScaleBegin() {
+                if (responder == null || !responder.onScaleBegin()) {
+                    if (zoomGesturesEnabled) {
+                        mapChangeListener.onRegionWillChangeAnimated(true);
+                    }
+                }
+                return true;
+            }
+
+            @Override
             public boolean onScale(final float x, final float y, final float scale, final float velocity) {
                 if (responder == null || !responder.onScale(x, y, scale, velocity)) {
                     if (zoomGesturesEnabled) {
+                        mapChangeListener.onRegionIsChanging();
                         nativeHandlePinchGesture(mapPointer, x, y, scale, velocity);
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public boolean onScaleEnd() {
+                if (responder == null || !responder.onScaleEnd()) {
+                    if (zoomGesturesEnabled) {
+                        mapChangeListener.onRegionDidChangeAnimated(true);
                     }
                 }
                 return true;
@@ -883,10 +925,31 @@ public class MapController implements Renderer {
     public void setShoveResponder(@Nullable final TouchInput.ShoveResponder responder) {
         touchInput.setShoveResponder(new TouchInput.ShoveResponder() {
             @Override
+            public boolean onShoveBegin() {
+                if (responder == null || !responder.onShoveBegin()) {
+                    if (tiltGesturesEnabled) {
+                        mapChangeListener.onRegionWillChangeAnimated(true);
+                    }
+                }
+                return true;
+            }
+
+            @Override
             public boolean onShove(final float distance) {
                 if (responder == null || !responder.onShove(distance)) {
                     if (tiltGesturesEnabled) {
+                        mapChangeListener.onRegionIsChanging();
                         nativeHandleShoveGesture(mapPointer, distance);
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public boolean onShoveEnd() {
+                if (responder == null || !responder.onShoveEnd()) {
+                    if (tiltGesturesEnabled) {
+                        mapChangeListener.onRegionDidChangeAnimated(true);
                     }
                 }
                 return true;
@@ -1208,7 +1271,6 @@ public class MapController implements Renderer {
                 });
             }
         };
-        touchInput.setMapChangeListener(mapChangeListener);
     }
 
     //Convenience member functions
