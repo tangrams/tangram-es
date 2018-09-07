@@ -16,7 +16,7 @@ import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapController.FeaturePickListener;
 import com.mapzen.tangram.MapController.LabelPickListener;
 import com.mapzen.tangram.MapController.MarkerPickListener;
-import com.mapzen.tangram.MapController.MapChangeListener;
+import com.mapzen.tangram.MapChangeListener;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.Marker;
@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
             }
 
             @Override
-            public void onRegionWillChangeAnimated(boolean animated) {
+            public void onRegionWillChange(boolean animated) {
                 Log.d(TAG, "On Region Will Change Animated: " + animated);
             }
 
@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
             }
 
             @Override
-            public void onRegionDidChangeAnimated(boolean animated) {
+            public void onRegionDidChange(boolean animated) {
                 Log.d(TAG, "On Region Did Change Animated: " + animated);
             }
         });
