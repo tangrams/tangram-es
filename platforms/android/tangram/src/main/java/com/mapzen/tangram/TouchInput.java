@@ -380,7 +380,7 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     public boolean onDown(MotionEvent e) {
         // When new touch is placed, dispatch a zero-distance pan;
         // this provides an opportunity to halt any current motion.
-        if (isDetectionAllowed(Gestures.PAN) && panResponder != null) {
+        if (isDetectionAllowed(Gestures.PAN) && panResponder != null && !detectedGestures.isEmpty()) {
             final float x = e.getX();
             final float y = e.getY();
             return panResponder.onPan(x, y, x, y);
