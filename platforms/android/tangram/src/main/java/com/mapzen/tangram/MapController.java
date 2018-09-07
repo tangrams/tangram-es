@@ -464,7 +464,27 @@ public class MapController implements Renderer {
 
         checkPointer(mapPointer);
 
-        onRegionWillChange(true);
+        final boolean animated = (duration != 0);
+        onRegionWillChange(animated);
+
+        CameraAnimationCallback callback = new CameraAnimationCallback() {
+            @Override
+            public void onFinish() {
+                onRegionDidChange(animated);
+                if (cb != null) {
+                    cb.onFinish();
+                }
+            }
+
+            @Override
+            public void onCancel() {
+                // Possible camera update was cancelled in between, so should account for this map change
+                onRegionDidChange(animated);
+                if (cb != null) {
+                    cb.onCancel();
+                }
+            }
+        };
 
         if (cameraAnimationCallback != null) {
             // NB: Prevent recursion loop when updateCameraPosition is called from onCancel callback
@@ -480,15 +500,11 @@ public class MapController implements Renderer {
                 update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.padding,
                 seconds, ease.ordinal());
 
-        if (cb != null) {
-            if (duration > 0) {
-                cameraAnimationCallback = cb;
-            } else {
-                cb.onFinish();
-            }
+        if (duration > 0) {
+            cameraAnimationCallback = callback;
+        } else {
+            callback.onFinish();
         }
-
-        onRegionDidChange(true);
     }
 
     /**
@@ -570,7 +586,7 @@ public class MapController implements Renderer {
      */
     public void flyTo(@NonNull final LngLat position, final float zoom, final int duration, final float speed) {
         checkPointer(mapPointer);
-        boolean animated = (duration == 0) ? false : true;
+        boolean animated = (duration != 0);
         onRegionWillChange(animated);
         final float seconds = duration / 1000.f;
         // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
