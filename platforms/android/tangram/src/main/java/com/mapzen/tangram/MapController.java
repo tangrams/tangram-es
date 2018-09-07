@@ -1220,6 +1220,13 @@ public class MapController implements Renderer {
      * @param listener The {@link MapChangeListener} to call when the map change events occur due to camera updates or user interaction
      */
     public void setMapChangeListener(@Nullable final MapChangeListener listener) {
+        final Runnable regionIsChanging = new Runnable() {
+            @Override
+            public void run() {
+                listener.onRegionIsChanging();
+            }
+        };
+
         mapChangeListener = (listener == null) ? null : new MapChangeListener() {
             @Override
             public void onViewComplete() {
@@ -1243,12 +1250,7 @@ public class MapController implements Renderer {
 
             @Override
             public void onRegionIsChanging() {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onRegionIsChanging();
-                    }
-                });
+                uiThreadHandler.post(regionIsChanging);
             }
 
             @Override
