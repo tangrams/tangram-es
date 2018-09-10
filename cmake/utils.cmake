@@ -124,7 +124,7 @@ macro(add_resources TARGET RESOURCE_DIR)
 
     add_custom_command(TARGET ${TARGET}
         POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${RESOURCE_DIR} ${CMAKE_BINARY_DIR}/bin)
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${RESOURCE_DIR} ${CMAKE_BINARY_DIR})
 
 endmacro(add_resources)
 
