@@ -384,7 +384,7 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     @Override
     public boolean onTouch(View v, MotionEvent event) {
 
-        if (event.getAction() == MotionEvent.ACTION_UP) {
+        if (event.getActionMasked() == MotionEvent.ACTION_UP) {
             if (detectedGestures.contains(Gestures.PAN)) {
                 setGestureDetected(Gestures.PAN, false);
                 panResponder.onPanEnd();
