@@ -113,6 +113,12 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
      */
     public interface PanResponder {
         /**
+         * Called when a Panning Gesture begins
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
+        boolean onPanBegin();
+
+        /**
          * Called repeatedly while a touch point is dragged
          * @param startX The starting x screen coordinate for an interval of motion
          * @param startY The starting y screen coordinate for an interval of motion
@@ -123,6 +129,12 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         boolean onPan(float startX, float startY, float endX, float endY);
 
         /**
+         * Called when Panning Gesture ends (Because of an ACTION_UP event)
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
+        boolean onPanEnd();
+
+        /**
          * Called when a dragged touch point with non-zero velocity is lifted
          * @param posX The x screen coordinate where the touch was lifted
          * @param posY The y screen coordinate where the touch was lifted
@@ -131,15 +143,23 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
          * @return True if the event is consumed, false if the event should continue to propagate
          */
         boolean onFling(float posX, float posY, float velocityX, float velocityY);
+
+        /**
+         * Called when a Down event occurs, to potentially cancel a flinging action
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
+        boolean onCancelFling();
     }
 
     /**
      * Interface for responding to a scaling (pinching) gesture
      */
     public interface ScaleResponder {
+        /**
+         * Called when a Scale Gesture begins
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onScaleBegin();
-
-        boolean onScaleEnd();
 
         /**
          * Called repeatedly while two touch points are moved closer to or further from each other
@@ -150,15 +170,23 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
          * @return True if the event is consumed, false if the event should continue to propagate
          */
         boolean onScale(float x, float y, float scale, float velocity);
+
+        /**
+         * Called when a Scale Gesture ends
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
+        boolean onScaleEnd();
     }
 
     /**
      * Interface for responding to a rotation gesture
      */
     public interface RotateResponder {
+        /**
+         * Called when a Rotation Gesture begins
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onRotateBegin();
-
-        boolean onRotateEnd();
 
         /**
          * Called repeatedly while two touch points are rotated around a point
@@ -169,15 +197,23 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
          * @return True if the event is consumed, false if the event should continue to propagate
          */
         boolean onRotate(float x, float y, float rotation);
+
+        /**
+         * Called when Rotation Gesture ends
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
+        boolean onRotateEnd();
     }
 
     /**
      * Interface for responding to a shove (two-finger vertical drag) gesture
      */
     public interface ShoveResponder {
+        /**
+         * Called when Shove Gesture begins
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onShoveBegin();
-
-        boolean onShoveEnd();
 
         /**
          * Called repeatedly while two touch points are moved together vertically
@@ -186,6 +222,12 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
          * @return True if the event is consumed, false if the event should continue to propagate
          */
         boolean onShove(float distance);
+
+        /**
+         * Called when Shove Gesture ends
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
+        boolean onShoveEnd();
     }
 
     private static final long MULTITOUCH_BUFFER_TIME = 256; // milliseconds
@@ -342,6 +384,14 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     @Override
     public boolean onTouch(View v, MotionEvent event) {
 
+        if (event.getAction() == MotionEvent.ACTION_UP) {
+            if (detectedGestures.contains(Gestures.PAN)) {
+                setGestureDetected(Gestures.PAN, false);
+                panResponder.onPanEnd();
+            }
+            detectedGestures.clear();
+        }
+
         panTapGestureDetector.onTouchEvent(event);
         scaleGestureDetector.onTouchEvent(event);
         shoveGestureDetector.onTouchEvent(event);
@@ -390,14 +440,7 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
 
     @Override
     public boolean onDown(MotionEvent e) {
-        // When new touch is placed, dispatch a zero-distance pan;
-        // this provides an opportunity to halt any current motion.
-        if (isDetectionAllowed(Gestures.PAN) && panResponder != null) {
-            final float x = e.getX();
-            final float y = e.getY();
-            return panResponder.onPan(x, y, x, y);
-        }
-        return false;
+        return panResponder.onCancelFling();
     }
 
     @Override
@@ -417,9 +460,10 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
         if (isDetectionAllowed(Gestures.PAN)) {
 
-            int action = e2.getActionMasked();
-            boolean detected = !(action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP);
-            setGestureDetected(Gestures.PAN, detected);
+            if (!detectedGestures.contains(Gestures.PAN)) {
+                panResponder.onPanBegin();
+                setGestureDetected(Gestures.PAN, true);
+            }
 
             if (panResponder == null) {
                 return false;

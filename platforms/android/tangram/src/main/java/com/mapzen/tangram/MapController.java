@@ -809,10 +809,31 @@ public class MapController implements Renderer {
     public void setPanResponder(@Nullable final TouchInput.PanResponder responder) {
         touchInput.setPanResponder(new TouchInput.PanResponder() {
             @Override
+            public boolean onPanBegin() {
+                if (responder == null || !responder.onPanBegin()) {
+                    if (panGesturesEnabled) {
+                        mapChangeListener.onRegionWillChange(true);
+                    }
+                }
+                return true;
+            }
+
+            @Override
             public boolean onPan(final float startX, final float startY, final float endX, final float endY) {
                 if (responder == null || !responder.onPan(startX, startY, endX, endY)) {
                     if (panGesturesEnabled) {
+                        mapChangeListener.onRegionIsChanging();
                         nativeHandlePanGesture(mapPointer, startX, startY, endX, endY);
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public boolean onPanEnd() {
+                if (responder == null || !responder.onPanEnd()) {
+                    if (panGesturesEnabled) {
+                        mapChangeListener.onRegionDidChange(true);
                     }
                 }
                 return true;
@@ -823,6 +844,18 @@ public class MapController implements Renderer {
                 if (responder == null || !responder.onFling(posX, posY, velocityX, velocityY)) {
                     if (panGesturesEnabled) {
                         nativeHandleFlingGesture(mapPointer, posX, posY, velocityX, velocityY);
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public boolean onCancelFling() {
+                if (responder == null || !responder.onCancelFling()) {
+                    if (panGesturesEnabled) {
+                        cancelCameraAnimation();
+                        // TODO: Ideally should call onRegionDidChange if map state "InChanging" - VT(09/10/2018)
+                        mapChangeListener.onRegionDidChange(true);
                     }
                 }
                 return true;
