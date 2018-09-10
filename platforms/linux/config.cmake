@@ -81,4 +81,4 @@ target_compile_options(tangram
   -Wmissing-field-initializers
 )
 
-add_resources(tangram "${PROJECT_SOURCE_DIR}/scenes")
+add_resources(tangram "${PROJECT_SOURCE_DIR}/scenes" "res")

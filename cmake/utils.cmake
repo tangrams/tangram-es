@@ -120,11 +120,11 @@ macro(add_bundle_resources RESOURCE_LIST RESOURCE_DIR RESOURCE_BASE)
 
 endmacro(add_bundle_resources)
 
-macro(add_resources TARGET RESOURCE_DIR)
+macro(add_resources TARGET RESOURCE_DIR DEST_DIR)
 
     add_custom_command(TARGET ${TARGET}
         POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${RESOURCE_DIR} ${CMAKE_BINARY_DIR}/bin)
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${RESOURCE_DIR} ${CMAKE_BINARY_DIR}/${DEST_DIR})
 
 endmacro(add_resources)
 

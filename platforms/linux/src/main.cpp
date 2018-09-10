@@ -17,6 +17,7 @@ int main(int argc, char* argv[]) {
     // Create the windowed app.
     GlfwApp::create(platform, 1024, 768);
 
+    GlfwApp::sceneFile = "res/scene.yaml";
     GlfwApp::parseArgs(argc, argv);
 
     // Resolve the input path against the current directory.

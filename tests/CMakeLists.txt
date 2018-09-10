@@ -64,10 +64,10 @@ foreach(_src_file_path ${TEST_SOURCES})
 
   set_target_properties(${EXECUTABLE_NAME}
     PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/unit"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
   )
 
 endforeach()
 
 # Copy resources into output directory (only needs to be performed for one target)
-add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes")
+add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes" "res")
