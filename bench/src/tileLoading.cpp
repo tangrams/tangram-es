@@ -87,8 +87,8 @@ public:
 
     void SetUp() override {
         LOG("SETUP");
-        ctx.loadScene("scene.yaml");
-        ctx.loadTile("tile.mvt");
+        ctx.loadScene("res/scene.yaml");
+        ctx.loadTile("res/tile.mvt");
         LOG("READY");
     }
     void TearDown() override {

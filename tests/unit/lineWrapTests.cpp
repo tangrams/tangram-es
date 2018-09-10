@@ -10,9 +10,9 @@
 namespace Tangram {
 
 #define TEST_FONT_SIZE  24
-#define TEST_FONT       "fonts/NotoSans-Regular.ttf"
-#define TEST_FONT_AR    "fonts/NotoNaskh-Regular.ttf"
-#define TEST_FONT_JP    "fonts/DroidSansJapanese.ttf"
+#define TEST_FONT       "res/fonts/NotoSans-Regular.ttf"
+#define TEST_FONT_AR    "res/fonts/NotoNaskh-Regular.ttf"
+#define TEST_FONT_JP    "res/fonts/DroidSansJapanese.ttf"
 
 struct ScratchBuffer : public alfons::MeshCallback {
     void drawGlyph(const alfons::Quad& q, const alfons::AtlasGlyph& atlasGlyph) override {}

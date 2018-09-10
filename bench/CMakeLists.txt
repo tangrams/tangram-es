@@ -37,10 +37,10 @@ foreach(_src_file_path ${BENCH_SOURCES})
 
   set_target_properties(${EXECUTABLE_NAME}
     PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/bench"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
   )
 
-  add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes")
+  add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes" "res")
 
 endforeach()
 
