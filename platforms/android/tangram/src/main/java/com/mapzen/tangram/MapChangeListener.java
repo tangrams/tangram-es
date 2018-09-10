@@ -6,7 +6,7 @@ import android.support.annotation.Keep;
 public interface MapChangeListener {
     /**
      * Called on the UI thread at the end of whenever the view is stationary, fully loaded, and
-     * no animations are running.
+     * no camera animations are running.
      */
     void onViewComplete();
 
