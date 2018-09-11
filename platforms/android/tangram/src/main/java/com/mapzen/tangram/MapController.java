@@ -812,7 +812,7 @@ public class MapController implements Renderer {
             public boolean onPanBegin() {
                 if (responder == null || !responder.onPanBegin()) {
                     if (panGesturesEnabled) {
-                        mapChangeListener.onRegionWillChange(true);
+                        onRegionWillChange(true);
                     }
                 }
                 return true;
@@ -822,7 +822,7 @@ public class MapController implements Renderer {
             public boolean onPan(final float startX, final float startY, final float endX, final float endY) {
                 if (responder == null || !responder.onPan(startX, startY, endX, endY)) {
                     if (panGesturesEnabled) {
-                        mapChangeListener.onRegionIsChanging();
+                        onRegionIsChanging();
                         nativeHandlePanGesture(mapPointer, startX, startY, endX, endY);
                     }
                 }
@@ -833,7 +833,7 @@ public class MapController implements Renderer {
             public boolean onPanEnd() {
                 if (responder == null || !responder.onPanEnd()) {
                     if (panGesturesEnabled) {
-                        mapChangeListener.onRegionDidChange(true);
+                        onRegionDidChange(true);
                     }
                 }
                 return true;
@@ -855,7 +855,7 @@ public class MapController implements Renderer {
                     if (panGesturesEnabled) {
                         cancelCameraAnimation();
                         // TODO: Ideally should call onRegionDidChange if map state "InChanging" - VT(09/10/2018)
-                        mapChangeListener.onRegionDidChange(true);
+                        onRegionDidChange(true);
                     }
                 }
                 return true;
@@ -873,7 +873,7 @@ public class MapController implements Renderer {
             public boolean onRotateBegin() {
                 if (responder == null || !responder.onRotateBegin()) {
                     if (rotateGesturesEnabled) {
-                        mapChangeListener.onRegionWillChange(true);
+                        onRegionWillChange(true);
                     }
                 }
                 return true;
@@ -883,7 +883,7 @@ public class MapController implements Renderer {
             public boolean onRotate(final float x, final float y, final float rotation) {
                 if (responder == null || !responder.onRotate(x, y, rotation)) {
                     if (rotateGesturesEnabled) {
-                        mapChangeListener.onRegionIsChanging();
+                        onRegionIsChanging();
                         nativeHandleRotateGesture(mapPointer, x, y, rotation);
                     }
                 }
@@ -894,7 +894,7 @@ public class MapController implements Renderer {
             public boolean onRotateEnd() {
                 if (responder == null || !responder.onRotateEnd()) {
                     if (rotateGesturesEnabled) {
-                        mapChangeListener.onRegionDidChange(true);
+                        onRegionDidChange(true);
                     }
                 }
                 return true;
@@ -912,7 +912,7 @@ public class MapController implements Renderer {
             public boolean onScaleBegin() {
                 if (responder == null || !responder.onScaleBegin()) {
                     if (zoomGesturesEnabled) {
-                        mapChangeListener.onRegionWillChange(true);
+                        onRegionWillChange(true);
                     }
                 }
                 return true;
@@ -922,7 +922,7 @@ public class MapController implements Renderer {
             public boolean onScale(final float x, final float y, final float scale, final float velocity) {
                 if (responder == null || !responder.onScale(x, y, scale, velocity)) {
                     if (zoomGesturesEnabled) {
-                        mapChangeListener.onRegionIsChanging();
+                        onRegionIsChanging();
                         nativeHandlePinchGesture(mapPointer, x, y, scale, velocity);
                     }
                 }
@@ -933,7 +933,7 @@ public class MapController implements Renderer {
             public boolean onScaleEnd() {
                 if (responder == null || !responder.onScaleEnd()) {
                     if (zoomGesturesEnabled) {
-                        mapChangeListener.onRegionDidChange(true);
+                        onRegionDidChange(true);
                     }
                 }
                 return true;
@@ -951,7 +951,7 @@ public class MapController implements Renderer {
             public boolean onShoveBegin() {
                 if (responder == null || !responder.onShoveBegin()) {
                     if (tiltGesturesEnabled) {
-                        mapChangeListener.onRegionWillChange(true);
+                        onRegionWillChange(true);
                     }
                 }
                 return true;
@@ -961,7 +961,7 @@ public class MapController implements Renderer {
             public boolean onShove(final float distance) {
                 if (responder == null || !responder.onShove(distance)) {
                     if (tiltGesturesEnabled) {
-                        mapChangeListener.onRegionIsChanging();
+                        onRegionIsChanging();
                         nativeHandleShoveGesture(mapPointer, distance);
                     }
                 }
@@ -972,7 +972,7 @@ public class MapController implements Renderer {
             public boolean onShoveEnd() {
                 if (responder == null || !responder.onShoveEnd()) {
                     if (tiltGesturesEnabled) {
-                        mapChangeListener.onRegionDidChange(true);
+                        onRegionDidChange(true);
                     }
                 }
                 return true;
@@ -1253,7 +1253,7 @@ public class MapController implements Renderer {
      * @param listener The {@link MapChangeListener} to call when the map change events occur due to camera updates or user interaction
      */
     public void setMapChangeListener(@Nullable final MapChangeListener listener) {
-        final Runnable regionIsChanging = new Runnable() {
+        final Runnable regionIsChanging = (listener == null) ? null : new Runnable() {
             @Override
             public void run() {
                 listener.onRegionIsChanging();
