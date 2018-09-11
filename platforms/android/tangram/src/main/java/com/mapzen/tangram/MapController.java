@@ -855,7 +855,6 @@ public class MapController implements Renderer {
                     if (panGesturesEnabled) {
                         cancelCameraAnimation();
                         // TODO: Ideally should call onRegionDidChange if map state "InChanging" - VT(09/10/2018)
-                        onRegionDidChange(true);
                     }
                 }
                 return true;
