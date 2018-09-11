@@ -16,7 +16,7 @@ import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapController.FeaturePickListener;
 import com.mapzen.tangram.MapController.LabelPickListener;
 import com.mapzen.tangram.MapController.MarkerPickListener;
-import com.mapzen.tangram.MapController.ViewCompleteListener;
+import com.mapzen.tangram.MapChangeListener;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.Marker;
@@ -125,10 +125,27 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         map.setLabelPickListener(this);
         map.setMarkerPickListener(this);
 
-        map.setViewCompleteListener(new ViewCompleteListener() {
+        map.setMapChangeListener(new MapChangeListener() {
+            @Override
             public void onViewComplete() {
                 Log.d(TAG, "View complete");
-            }});
+            }
+
+            @Override
+            public void onRegionWillChange(boolean animated) {
+                Log.d(TAG, "On Region Will Change Animated: " + animated);
+            }
+
+            @Override
+            public void onRegionIsChanging() {
+                Log.d(TAG, "On Region Is Changing");
+            }
+
+            @Override
+            public void onRegionDidChange(boolean animated) {
+                Log.d(TAG, "On Region Did Change Animated: " + animated);
+            }
+        });
 
         markers = map.addDataLayer("touch");
     }
