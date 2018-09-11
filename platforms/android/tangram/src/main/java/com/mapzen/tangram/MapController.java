@@ -256,16 +256,16 @@ public class MapController implements Renderer {
         touchInput = new TouchInput(mapView.getContext());
         mapView.setOnTouchListener(touchInput);
 
-        setPanResponder(null);
-        setScaleResponder(null);
-        setRotateResponder(null);
-        setShoveResponder(null);
+        touchInput.setPanResponder(getPanResponder());
+        touchInput.setScaleResponder(getScaleResponder());
+        touchInput.setRotateResponder(getRotateResponder());
+        touchInput.setShoveResponder(getShoveResponder());
 
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.ROTATE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.ROTATE, Gestures.SHOVE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.SCALE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.PAN, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.LONG_PRESS, false);
+        touchInput.setSimultaneousDetectionDisabled(Gestures.SHOVE, Gestures.ROTATE);
+        touchInput.setSimultaneousDetectionDisabled(Gestures.ROTATE, Gestures.SHOVE);
+        touchInput.setSimultaneousDetectionDisabled(Gestures.SHOVE, Gestures.SCALE);
+        touchInput.setSimultaneousDetectionDisabled(Gestures.SHOVE, Gestures.PAN);
+        touchInput.setSimultaneousDetectionDisabled(Gestures.SCALE, Gestures.LONG_PRESS);
 
         uiThreadHandler = new Handler(mapView.getContext().getMainLooper());
     }
@@ -772,330 +772,128 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Set a responder for tap gestures
-     * @param responder TapResponder to call
+     * Get the touch input manager for this map controller.
+     * @return The touch input manager.
      */
-    public void setTapResponder(@Nullable final TouchInput.TapResponder responder) {
-        touchInput.setTapResponder(new TouchInput.TapResponder() {
-            @Override
-            public boolean onSingleTapUp(final float x, final float y) {
-                return responder != null && responder.onSingleTapUp(x, y);
-            }
-
-            @Override
-            public boolean onSingleTapConfirmed(final float x, final float y) {
-                return responder != null && responder.onSingleTapConfirmed(x, y);
-            }
-        });
+    public TouchInput getTouchInput() {
+        return touchInput;
     }
 
     /**
-     * Set a responder for double-tap gestures
-     * @param responder DoubleTapResponder to call
+     * Get a responder for pan gestures
      */
-    public void setDoubleTapResponder(@Nullable final TouchInput.DoubleTapResponder responder) {
-        touchInput.setDoubleTapResponder(new TouchInput.DoubleTapResponder() {
-            @Override
-            public boolean onDoubleTap(final float x, final float y) {
-                return responder != null && responder.onDoubleTap(x, y);
-            }
-        });
-    }
-
-    /**
-     * Set a responder for long press gestures
-     * @param responder LongPressResponder to call
-     */
-    public void setLongPressResponder(@Nullable final TouchInput.LongPressResponder responder) {
-        touchInput.setLongPressResponder(new TouchInput.LongPressResponder() {
-            @Override
-            public void onLongPress(final float x, final float y) {
-                if (responder != null) {
-                    responder.onLongPress(x, y);
-                }
-            }
-        });
-    }
-
-    /**
-     * Set a responder for pan gestures
-     * @param responder PanResponder to call; if onPan returns true, normal panning behavior will not occur
-     */
-    public void setPanResponder(@Nullable final TouchInput.PanResponder responder) {
-        touchInput.setPanResponder(new TouchInput.PanResponder() {
+    public TouchInput.PanResponder getPanResponder() {
+        return new TouchInput.PanResponder() {
             @Override
             public boolean onPanBegin() {
-                if (responder == null || !responder.onPanBegin()) {
-                    if (panGesturesEnabled) {
-                        onRegionWillChange(true);
-                    }
-                }
+                onRegionWillChange(true);
                 return true;
             }
 
             @Override
             public boolean onPan(final float startX, final float startY, final float endX, final float endY) {
-                if (responder == null || !responder.onPan(startX, startY, endX, endY)) {
-                    if (panGesturesEnabled) {
-                        onRegionIsChanging();
-                        nativeHandlePanGesture(mapPointer, startX, startY, endX, endY);
-                    }
-                }
+                onRegionIsChanging();
+                nativeHandlePanGesture(mapPointer, startX, startY, endX, endY);
                 return true;
             }
 
             @Override
             public boolean onPanEnd() {
-                if (responder == null || !responder.onPanEnd()) {
-                    if (panGesturesEnabled) {
-                        onRegionDidChange(true);
-                    }
-                }
+                onRegionDidChange(true);
                 return true;
             }
 
             @Override
             public boolean onFling(final float posX, final float posY, final float velocityX, final float velocityY) {
-                if (responder == null || !responder.onFling(posX, posY, velocityX, velocityY)) {
-                    if (panGesturesEnabled) {
-                        nativeHandleFlingGesture(mapPointer, posX, posY, velocityX, velocityY);
-                    }
-                }
+                nativeHandleFlingGesture(mapPointer, posX, posY, velocityX, velocityY);
                 return true;
             }
 
             @Override
             public boolean onCancelFling() {
-                if (responder == null || !responder.onCancelFling()) {
-                    if (panGesturesEnabled) {
-                        cancelCameraAnimation();
-                        // TODO: Ideally should call onRegionDidChange if map state "InChanging" - VT(09/10/2018)
-                    }
-                }
+                cancelCameraAnimation();
+                // TODO: Ideally should call onRegionDidChange if map state "InChanging" - VT(09/10/2018)
                 return true;
             }
-        });
+        };
     }
 
     /**
-     * Set a responder for rotate gestures
-     * @param responder RotateResponder to call; if onRotate returns true, normal rotation behavior will not occur
+     * Get a responder for rotate gestures
      */
-    public void setRotateResponder(@Nullable final TouchInput.RotateResponder responder) {
-        touchInput.setRotateResponder(new TouchInput.RotateResponder() {
+    public TouchInput.RotateResponder getRotateResponder() {
+        return new TouchInput.RotateResponder() {
             @Override
             public boolean onRotateBegin() {
-                if (responder == null || !responder.onRotateBegin()) {
-                    if (rotateGesturesEnabled) {
-                        onRegionWillChange(true);
-                    }
-                }
+                onRegionWillChange(true);
                 return true;
             }
 
             @Override
             public boolean onRotate(final float x, final float y, final float rotation) {
-                if (responder == null || !responder.onRotate(x, y, rotation)) {
-                    if (rotateGesturesEnabled) {
-                        onRegionIsChanging();
-                        nativeHandleRotateGesture(mapPointer, x, y, rotation);
-                    }
-                }
+                onRegionIsChanging();
+                nativeHandleRotateGesture(mapPointer, x, y, rotation);
                 return true;
             }
 
             @Override
             public boolean onRotateEnd() {
-                if (responder == null || !responder.onRotateEnd()) {
-                    if (rotateGesturesEnabled) {
-                        onRegionDidChange(true);
-                    }
-                }
+                onRegionDidChange(true);
                 return true;
             }
-        });
+        };
     }
 
     /**
-     * Set a responder for scale gestures
-     * @param responder ScaleResponder to call; if onScale returns true, normal scaling behavior will not occur
+     * Get a responder for scale gestures
      */
-    public void setScaleResponder(@Nullable final TouchInput.ScaleResponder responder) {
-        touchInput.setScaleResponder(new TouchInput.ScaleResponder() {
+    public TouchInput.ScaleResponder getScaleResponder() {
+        return new TouchInput.ScaleResponder() {
             @Override
             public boolean onScaleBegin() {
-                if (responder == null || !responder.onScaleBegin()) {
-                    if (zoomGesturesEnabled) {
-                        onRegionWillChange(true);
-                    }
-                }
+                onRegionWillChange(true);
                 return true;
             }
 
             @Override
             public boolean onScale(final float x, final float y, final float scale, final float velocity) {
-                if (responder == null || !responder.onScale(x, y, scale, velocity)) {
-                    if (zoomGesturesEnabled) {
-                        onRegionIsChanging();
-                        nativeHandlePinchGesture(mapPointer, x, y, scale, velocity);
-                    }
-                }
+                onRegionIsChanging();
+                nativeHandlePinchGesture(mapPointer, x, y, scale, velocity);
                 return true;
             }
 
             @Override
             public boolean onScaleEnd() {
-                if (responder == null || !responder.onScaleEnd()) {
-                    if (zoomGesturesEnabled) {
-                        onRegionDidChange(true);
-                    }
-                }
+                onRegionDidChange(true);
                 return true;
             }
-        });
+        };
     }
 
     /**
-     * Set a responder for shove (vertical two-finger drag) gestures
-     * @param responder ShoveResponder to call; if onShove returns true, normal tilting behavior will not occur
+     * Get a responder for shove (vertical two-finger drag) gestures
      */
-    public void setShoveResponder(@Nullable final TouchInput.ShoveResponder responder) {
-        touchInput.setShoveResponder(new TouchInput.ShoveResponder() {
+    public TouchInput.ShoveResponder getShoveResponder() {
+        return new TouchInput.ShoveResponder() {
             @Override
             public boolean onShoveBegin() {
-                if (responder == null || !responder.onShoveBegin()) {
-                    if (tiltGesturesEnabled) {
-                        onRegionWillChange(true);
-                    }
-                }
+                onRegionWillChange(true);
                 return true;
             }
 
             @Override
             public boolean onShove(final float distance) {
-                if (responder == null || !responder.onShove(distance)) {
-                    if (tiltGesturesEnabled) {
-                        onRegionIsChanging();
-                        nativeHandleShoveGesture(mapPointer, distance);
-                    }
-                }
+                onRegionIsChanging();
+                nativeHandleShoveGesture(mapPointer, distance);
                 return true;
             }
 
             @Override
             public boolean onShoveEnd() {
-                if (responder == null || !responder.onShoveEnd()) {
-                    if (tiltGesturesEnabled) {
-                        onRegionDidChange(true);
-                    }
-                }
+                onRegionDidChange(true);
                 return true;
             }
-        });
-    }
-
-    /**
-     * Set whether the gesture {@code second} can be recognized while {@code first} is in progress
-     * @param first Initial gesture type
-     * @param second Subsequent gesture type
-     * @param allowed True if {@code second} should be recognized, else false
-     */
-    public void setSimultaneousGestureAllowed(final Gestures first, final Gestures second, final boolean allowed) {
-        touchInput.setSimultaneousDetectionAllowed(first, second, allowed);
-    }
-
-    /**
-     * Get whether the gesture {@code second} can be recognized while {@code first} is in progress
-     * @param first Initial gesture type
-     * @param second Subsequent gesture type
-     * @return True if {@code second} will be recognized, else false
-     */
-    public boolean isSimultaneousGestureAllowed(final Gestures first, final Gestures second) {
-        return touchInput.isSimultaneousDetectionAllowed(first, second);
-    }
-
-    /**
-     * Set whether the user can move the map view with panning gestures. This is true by default.
-     *
-     * When this is false you can still move the map view programmatically.
-     * @param enabled If true, panning is enabled.
-     */
-    public void setPanGesturesEnabled(boolean enabled) {
-        panGesturesEnabled = enabled;
-    }
-
-    /**
-     * Get whether the user can move the map view with panning gestures.
-     * @return True if panning is enabled.
-     */
-    public boolean isPanGesturesEnabled() {
-        return panGesturesEnabled;
-    }
-
-    /**
-     * Set whether the user can zoom the map view with pinch and double-tap-move gestures. This is
-     * true by default.
-     *
-     * When this is false you can still zoom the map view programmatically.
-     * @param enabled If true, zooming with gestures is enabled.
-     */
-    public void setZoomGesturesEnabled(boolean enabled) {
-        zoomGesturesEnabled = enabled;
-    }
-
-    /**
-     * Get whether the user can zoom the map view with pinch and double-tap-zoom gestures.
-     * @return True if zooming with gestures is enabled.
-     */
-    public boolean isZoomGesturesEnabled() {
-        return zoomGesturesEnabled;
-    }
-
-    /**
-     * Set whether the user can rotate the map view with gestures. This is true by default.
-     *
-     * When this is false you can still rotate the map view programmatically.
-     * @param enabled If true, rotating with gestures is enabled.
-     */
-    public void setRotateGesturesEnabled(boolean enabled) {
-        rotateGesturesEnabled = enabled;
-    }
-
-    /**
-     * Get whether the user can rotate the map view with gestures.
-     * @return True if rotating with gestures is enabled.
-     */
-    public boolean isRotateGesturesEnabled() {
-        return rotateGesturesEnabled;
-    }
-
-    /**
-     * Set whether the user can tilt the map with shove gestures. This is true by default.
-     *
-     * When this is false you can still tilt the map view programmatically.
-     * @param enabled If true, tilting with gestures is enabled.
-     */
-    public void setTiltGesturesEnabled(boolean enabled) {
-        tiltGesturesEnabled = enabled;
-    }
-
-    /**
-     * Get whether the user can rotate the map with with shove gestures.
-     * @return True if tilting with gestures is enabled.
-     */
-    public boolean isTiltGesturesEnabled() {
-        return tiltGesturesEnabled;
-    }
-
-    /**
-     * Set whether the user can change the map with all gestures.
-     * @param enabled If true, all gestures are enabled. If false, all gestures are disabled.
-     */
-    public void setAllGesturesEnabled(boolean enabled) {
-        setPanGesturesEnabled(enabled);
-        setZoomGesturesEnabled(enabled);
-        setRotateGesturesEnabled(enabled);
-        setTiltGesturesEnabled(enabled);
+        };
     }
 
     /**
@@ -1267,49 +1065,7 @@ public class MapController implements Renderer {
      * @param listener The {@link MapChangeListener} to call when the map change events occur due to camera updates or user interaction
      */
     public void setMapChangeListener(@Nullable final MapChangeListener listener) {
-        final Runnable regionIsChanging = (listener == null) ? null : new Runnable() {
-            @Override
-            public void run() {
-                listener.onRegionIsChanging();
-            }
-        };
-
-        mapChangeListener = (listener == null) ? null : new MapChangeListener() {
-            @Override
-            public void onViewComplete() {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onViewComplete();
-                    }
-                });
-            }
-
-            @Override
-            public void onRegionWillChange(final boolean animated) {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onRegionWillChange(animated);
-                    }
-                });
-            }
-
-            @Override
-            public void onRegionIsChanging() {
-                uiThreadHandler.post(regionIsChanging);
-            }
-
-            @Override
-            public void onRegionDidChange(final boolean animated) {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onRegionDidChange(animated);
-                    }
-                });
-            }
-        };
+        mapChangeListener = listener;
     }
 
     //Convenience member functions
@@ -1583,10 +1339,6 @@ public class MapController implements Renderer {
     private LongSparseArray<Marker> markers;
     private Handler uiThreadHandler;
     private CameraAnimationCallback cameraAnimationCallback;
-    private boolean panGesturesEnabled = true;
-    private boolean zoomGesturesEnabled = true;
-    private boolean rotateGesturesEnabled = true;
-    private boolean tiltGesturesEnabled = true;
     private boolean isGLRendererSet = false;
 
     // GLSurfaceView.Renderer methods

@@ -246,6 +246,7 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     private RotateResponder rotateResponder;
     private ShoveResponder shoveResponder;
 
+    private EnumSet<Gestures> enabledGestures;
     private EnumSet<Gestures> detectedGestures;
     private EnumMap<Gestures, EnumSet<Gestures>> allowedSimultaneousGestures;
 
@@ -262,6 +263,7 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         this.rotateGestureDetector = new RotateGestureDetector(context, this);
         this.shoveGestureDetector = new ShoveGestureDetector(context, this);
 
+        this.enabledGestures = EnumSet.allOf(Gestures.class);
         this.detectedGestures = EnumSet.noneOf(Gestures.class);
         this.allowedSimultaneousGestures = new EnumMap<>(Gestures.class);
 
@@ -269,6 +271,45 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         for (Gestures g : Gestures.values()) {
             allowedSimultaneousGestures.put(g, EnumSet.allOf(Gestures.class));
         }
+    }
+
+    /**
+     * Enable recognizing the given gesture type.
+     * @param g The gesture type.
+     */
+    public void setGestureEnabled(Gestures g) {
+        enabledGestures.add(g);
+    }
+
+    /**
+     * Disable recognizing the given gesture type.
+     * @param g The gesture type.
+     */
+    public void setGestureDisabled(Gestures g) {
+        enabledGestures.remove(g);
+    }
+
+    /**
+     * Get whether the given gesture type is enabled.
+     * @param g The gesture type.
+     * @return True if the gesture type is enabled, otherwise false.
+     */
+    public boolean isGestureEnabled(Gestures g) {
+        return enabledGestures.contains(g);
+    }
+
+    /**
+     * Enable recognizing all gesture types.
+     */
+    public void setAllGesturesEnabled() {
+        enabledGestures = EnumSet.allOf(Gestures.class);
+    }
+
+    /**
+     * Disable recognizing all gesture types.
+     */
+    public void setAllGesturesDisabled() {
+        enabledGestures.clear();
     }
 
     /**
@@ -328,18 +369,22 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     }
 
     /**
-     * Set whether the gesture {@code second} can be recognized while {@code first} is in progress
+     * Enable recognizing the gesture {@code second} while {@code first} is in progress
      * @param first Initial gesture type
      * @param second Subsequent gesture type
-     * @param allowed True if {@code second} should be recognized, else false
      */
-    public void setSimultaneousDetectionAllowed(Gestures first, Gestures second, boolean allowed) {
+    public void setSimultaneousDetectionEnabled(Gestures first, Gestures second) {
+        allowedSimultaneousGestures.get(second).add(first);
+    }
+
+    /**
+     * Disable recognizing the gesture {@code second} while {@code first} is in progress
+     * @param first Initial gesture type
+     * @param second Subsequent gesture type
+     */
+    public void setSimultaneousDetectionDisabled(Gestures first, Gestures second) {
         if (first != second) {
-            if (allowed) {
-                allowedSimultaneousGestures.get(second).add(first);
-            } else {
-                allowedSimultaneousGestures.get(second).remove(first);
-            }
+            allowedSimultaneousGestures.get(second).remove(first);
         }
     }
 
@@ -354,6 +399,9 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     }
 
     private boolean isDetectionAllowed(Gestures g) {
+        if (!enabledGestures.contains(g)) {
+            return false;
+        }
         if (!allowedSimultaneousGestures.get(g).containsAll(detectedGestures)) {
             return false;
         }
@@ -367,13 +415,13 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         return true;
     }
 
-    private void setGestureDetected(Gestures g, boolean detected) {
-        if (detected) {
-            detectedGestures.add(g);
-        } else {
-            detectedGestures.remove(g);
-        }
-        if (!detected && g.isMultiTouch()) {
+    private void setGestureStarted(Gestures g) {
+        detectedGestures.add(g);
+    }
+
+    private void setGestureEnded(Gestures g) {
+        detectedGestures.remove(g);
+        if (g.isMultiTouch()) {
             lastMultiTouchEndTime = SystemClock.uptimeMillis();
         }
     }
@@ -386,7 +434,7 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
 
         if (event.getActionMasked() == MotionEvent.ACTION_UP) {
             if (detectedGestures.contains(Gestures.PAN)) {
-                setGestureDetected(Gestures.PAN, false);
+                setGestureEnded(Gestures.PAN);
                 panResponder.onPanEnd();
             }
             detectedGestures.clear();
@@ -461,8 +509,8 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         if (isDetectionAllowed(Gestures.PAN)) {
 
             if (!detectedGestures.contains(Gestures.PAN)) {
+                setGestureStarted(Gestures.PAN);
                 panResponder.onPanBegin();
-                setGestureDetected(Gestures.PAN, true);
             }
 
             if (panResponder == null) {
@@ -515,15 +563,15 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     @Override
     public boolean onRotateBegin(RotateGestureDetector detector) {
         if (isDetectionAllowed(Gestures.ROTATE)) {
-            setGestureDetected(Gestures.ROTATE, true);
-            rotateResponder.onRotateBegin();
+            setGestureStarted(Gestures.ROTATE);
+            return rotateResponder.onRotateBegin();
         }
-        return true;
+        return false;
     }
 
     @Override
     public void onRotateEnd(RotateGestureDetector detector) {
-        setGestureDetected(Gestures.ROTATE, false);
+        setGestureEnded(Gestures.ROTATE);
         rotateResponder.onRotateEnd();
     }
 
@@ -547,15 +595,15 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     @Override
     public boolean onScaleBegin(ScaleGestureDetector detector) {
         if (isDetectionAllowed(Gestures.SCALE)) {
-            setGestureDetected(Gestures.SCALE, true);
-            scaleResponder.onScaleBegin();
+            setGestureStarted(Gestures.SCALE);
+            return scaleResponder.onScaleBegin();
         }
-        return true;
+        return false;
     }
 
     @Override
     public void onScaleEnd(ScaleGestureDetector detector) {
-        setGestureDetected(Gestures.SCALE, false);
+        setGestureEnded(Gestures.SCALE);
         scaleResponder.onScaleEnd();
     }
 
@@ -573,15 +621,15 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     @Override
     public boolean onShoveBegin(ShoveGestureDetector detector) {
         if (isDetectionAllowed(Gestures.SHOVE)) {
-            setGestureDetected(Gestures.SHOVE, true);
-            shoveResponder.onShoveBegin();
+            setGestureStarted(Gestures.SHOVE);
+            return shoveResponder.onShoveBegin();
         }
-        return true;
+        return false;
     }
 
     @Override
     public void onShoveEnd(ShoveGestureDetector detector) {
-        setGestureDetected(Gestures.SHOVE, false);
+        setGestureEnded(Gestures.SHOVE);
         shoveResponder.onShoveEnd();
     }
 }
