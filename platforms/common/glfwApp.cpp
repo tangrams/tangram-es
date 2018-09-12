@@ -188,7 +188,7 @@ void run() {
             GL::polygonMode(GL_BACK, GL_LINE);
         }
         map->render();
-        if(true) {
+        if(wireframe) {
             GL::polygonMode(GL_FRONT, GL_FILL);
             GL::polygonMode(GL_BACK, GL_FILL);
         }
