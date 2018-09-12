@@ -270,6 +270,7 @@ std::shared_ptr<TileData> TopoJson::parseTile(const TileTask& _task, const MapPr
         return Point {
             (tmp.x - tileOrigin.x) * tileInverseScale,
             (tmp.y - tileOrigin.y) * tileInverseScale,
+             0
         };
     };
 
