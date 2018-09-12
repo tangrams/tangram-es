@@ -17,6 +17,7 @@ extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
 #define glDeleteVertexArrays glDeleteVertexArraysOESEXT
 #define glGenVertexArrays glGenVertexArraysOESEXT
 #define glBindVertexArray glBindVertexArrayOESEXT
+static void glPolygonMode(GLenum face, GLenum mode) {}
 #endif // TANGRAM_ANDROID
 
 #ifdef TANGRAM_IOS
@@ -25,6 +26,7 @@ extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
 #define glDeleteVertexArrays glDeleteVertexArraysOES
 #define glGenVertexArrays glGenVertexArraysOES
 #define glBindVertexArray glBindVertexArrayOES
+static void glPolygonMode(GLenum face, GLenum mode) {}
 #endif // TANGRAM_IOS
 
 #ifdef TANGRAM_OSX
@@ -56,7 +58,7 @@ extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
 static void glBindVertexArray(GLuint array) {}
 static void glDeleteVertexArrays(GLsizei n, const GLuint *arrays) {}
 static void glGenVertexArrays(GLsizei n, GLuint *arrays) {}
-
+static void glPolygonMode(GLenum face, GLenum mode) {}
 #endif // TANGRAM_RPI
 
 #if defined(TANGRAM_ANDROID) || defined(TANGRAM_IOS) || defined(TANGRAM_RPI)
