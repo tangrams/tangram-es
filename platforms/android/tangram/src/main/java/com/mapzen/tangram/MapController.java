@@ -289,6 +289,7 @@ public class MapController implements Renderer {
         });
 
         // set all mapController listener references to null
+        touchInput = null;
         mapChangeListener = null;
         featurePickListener = null;
         sceneLoadListener = null;
