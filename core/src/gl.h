@@ -301,6 +301,7 @@ struct GL {
     static void frontFace(GLenum mode);
     static void clearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
     static void getIntegerv(GLenum pname, GLint *params );
+    static void polygonMode(GLenum face, GLenum mode);
 
     // Program
     static void useProgram(GLuint program);
