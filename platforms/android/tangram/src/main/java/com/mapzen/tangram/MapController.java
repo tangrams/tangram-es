@@ -287,6 +287,15 @@ public class MapController implements Renderer {
                 markers.clear();
             }
         });
+
+        // set all mapController listener references to null
+        mapChangeListener = null;
+        featurePickListener = null;
+        sceneLoadListener = null;
+        labelPickListener = null;
+        markerPickListener = null;
+        cameraAnimationCallback = null;
+        frameCaptureCallback = null;
     }
 
     /**
