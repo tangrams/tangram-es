@@ -287,6 +287,17 @@ public class MapController implements Renderer {
                 markers.clear();
             }
         });
+
+        // Dispose all listener and callbacks associated with mapController
+        // This will help prevent leaks of references from the client code, possibly used in these listener/callbacks
+        touchInput = null;
+        mapChangeListener = null;
+        featurePickListener = null;
+        sceneLoadListener = null;
+        labelPickListener = null;
+        markerPickListener = null;
+        cameraAnimationCallback = null;
+        frameCaptureCallback = null;
     }
 
     /**
