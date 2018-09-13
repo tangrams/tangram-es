@@ -1,0 +1,57 @@
+
+// Set when building only part of the abis in the apk.
+def abiFiltersForWrapScript = []
+
+android {
+    buildTypes {
+        profiling {
+            initWith debug
+            externalNativeBuild {
+                cmake {
+                    // cmake Debug build type uses -O0, which makes the code slow.
+                    arguments "-DCMAKE_BUILD_TYPE=Release"
+                }
+            }
+            packagingOptions {
+                // Exclude wrap.sh for architectures not built.
+                if (abiFiltersForWrapScript) {
+                    def exclude_abis = ["armeabi", "armeabi-v7a", "arm64-v8a",
+                                        "x86", "x86_64", "mips", "mips64"]
+                            .findAll{ !(it in abiFiltersForWrapScript) }
+                            .collect{ "**/" + it + "/wrap.sh" }
+                    excludes += exclude_abis
+                }
+            }
+
+            // Add lib/xxx/wrap.sh in the apk. This is to enable java profiling on Android O
+            // devices.
+            sourceSets {
+                profiling {
+                    resources {
+                        srcDir {
+                            "profiling_apk_add_dir"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+def writeWrapScriptToFullyCompileJavaApp(wrapFile) {
+    wrapFile.withWriter { writer ->
+        writer.write('#!/system/bin/sh\n')
+        writer.write('\$@\n')
+    }
+}
+
+task createProfilingApkAddDir {
+    for (String abi : ["armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64", "mips", "mips64"]) {
+        def dir = new File("app/profiling_apk_add_dir/lib/" + abi)
+        dir.mkdirs()
+        def wrapFile = new File(dir, "wrap.sh")
+        writeWrapScriptToFullyCompileJavaApp(wrapFile)
+        println "write file " + wrapFile.path
+    }
+}
+

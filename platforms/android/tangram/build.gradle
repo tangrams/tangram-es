@@ -5,6 +5,7 @@ group = GROUP
 version = VERSION_NAME
 
 apply from: 'versioning.gradle'
+apply from: 'profiling.gradle'
 
 android {
   compileSdkVersion 27
