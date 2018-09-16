@@ -304,7 +304,7 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
 
     Node animated = config["scene"]["animated"];
     if (animated) {
-        _scene->animated(animated.as<bool>());
+        _scene->animated(YamlUtil::getBoolOrDefault(animated, false));
     }
 
     for (auto& style : _scene->styles()) {
@@ -402,8 +402,13 @@ void SceneLoader::loadShaderConfig(const std::shared_ptr<Platform>& platform, No
 glm::vec4 parseMaterialVec(const Node& prop) {
 
     switch (prop.Type()) {
-    case NodeType::Sequence:
-        return YamlUtil::parseVec<glm::vec4>(prop);
+    case NodeType::Sequence: {
+        glm::vec4 vec;
+        if (YamlUtil::parseVec<glm::vec4>(prop, vec)) {
+            return vec;
+        }
+        break;
+    }
     case NodeType::Scalar: {
         double value;
         if (YamlUtil::getDouble(prop, value, false)) {
@@ -512,22 +517,19 @@ MaterialTexture SceneLoader::loadMaterialTexture(const std::shared_ptr<Platform>
 
     if (Node scaleNode = matCompNode["scale"]) {
         if (scaleNode.IsSequence() && scaleNode.size() == 2) {
-            matTex.scale = { scaleNode[0].as<float>(), scaleNode[1].as<float>(), 1.f };
+            matTex.scale.x = YamlUtil::getFloatOrDefault(scaleNode[0], matTex.scale.x);
+            matTex.scale.y = YamlUtil::getFloatOrDefault(scaleNode[1], matTex.scale.y);
         } else if (scaleNode.IsScalar()) {
-            matTex.scale = glm::vec3(scaleNode.as<float>());
+            matTex.scale = glm::vec3(YamlUtil::getFloatOrDefault(scaleNode, 1.f));
         } else {
             LOGW("Unrecognized scale parameter in material");
         }
     }
 
     if (Node amountNode = matCompNode["amount"]) {
-        if (amountNode.IsSequence() && amountNode.size() == 3) {
-            matTex.amount = { amountNode[0].as<float>(),
-                              amountNode[1].as<float>(),
-                              amountNode[2].as<float>() };
-        } else if (amountNode.IsScalar()) {
-            matTex.amount = glm::vec3(amountNode.as<float>());
-        } else {
+        if (amountNode.IsScalar()) {
+            matTex.amount = glm::vec3(YamlUtil::getFloatOrDefault(amountNode, 1.f));
+        } else if (!YamlUtil::parseVec(amountNode, matTex.amount)) {
             LOGW("Unrecognized amount parameter in material");
         }
     }
@@ -645,8 +647,11 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
     TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
 
     if (Node urlNode = textureConfig["url"]) {
-        url = urlNode.as<std::string>();
-    } else {
+        if (urlNode.IsScalar()) {
+            url = urlNode.Scalar();
+        }
+    }
+    if (url.empty()){
         LOGW("No url specified for texture '%s', skipping.", name.c_str());
         return;
     }
@@ -675,7 +680,8 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
             const std::string& spriteName = it->first.Scalar();
 
             if (sprite) {
-                glm::vec4 desc = YamlUtil::parseVec<glm::vec4>(sprite);
+                glm::vec4 desc;
+                YamlUtil::parseVec<glm::vec4>(sprite, desc);
                 glm::vec2 pos = glm::vec2(desc.x, desc.y);
                 glm::vec2 size = glm::vec2(desc.z, desc.w);
 
@@ -782,24 +788,30 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
     }
 
     if (Node blendOrderNode = styleNode["blend_order"]) {
-        try {
-            auto blendOrder = blendOrderNode.as<int>();
-            style.setBlendOrder(blendOrder);
-        } catch (const BadConversion& e) {
+        int blendOrderValue;
+        if (YamlUtil::getInt(blendOrderNode, blendOrderValue)) {
+            style.setBlendOrder(blendOrderValue);
+        } else {
             LOGE("Integral value expected for blend_order style parameter.\n");
         }
     }
 
     if (Node texcoordsNode = styleNode["texcoords"]) {
-        style.setTexCoordsGeneration(texcoordsNode.as<bool>());
+        bool boolValue;
+        if (YamlUtil::getBool(texcoordsNode, boolValue)) {
+            style.setTexCoordsGeneration(boolValue);
+        }
     }
 
     if (Node dashNode = styleNode["dash"]) {
         if (auto polylineStyle = dynamic_cast<PolylineStyle*>(&style)) {
             if (dashNode.IsSequence()) {
                 std::vector<float> dashValues;
-                for (auto dashValue : dashNode) {
-                    dashValues.push_back(dashValue.as<float>());
+                for (const auto& dashValue : dashNode) {
+                    float floatValue;
+                    if (YamlUtil::getFloat(dashValue, floatValue)) {
+                        dashValues.push_back(floatValue);
+                    }
                 }
                 polylineStyle->setDashArray(dashValues);
                 polylineStyle->setTexCoordsGeneration(true);
@@ -942,16 +954,19 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         url = urlNode.Scalar();
     }
     if (auto minDisplayZoomNode = source["min_display_zoom"]) {
-        minDisplayZoom = minDisplayZoomNode.as<int32_t>(minDisplayZoom);
+        YamlUtil::getInt(minDisplayZoomNode, minDisplayZoom);
     }
     if (auto maxDisplayZoomNode = source["max_display_zoom"]) {
-        maxDisplayZoom = maxDisplayZoomNode.as<int32_t>(maxDisplayZoom);
+        YamlUtil::getInt(maxDisplayZoomNode, maxDisplayZoom);
     }
     if (auto maxZoomNode = source["max_zoom"]) {
-        maxZoom = maxZoomNode.as<int32_t>(maxZoom);
+        YamlUtil::getInt(maxZoomNode, maxZoom);
     }
     if (auto tileSizeNode = source["tile_size"]) {
-        zoomBias = TileSource::zoomBiasFromTileSize(tileSizeNode.as<int32_t>());
+        int tileSize = 0;
+        if (YamlUtil::getInt(tileSizeNode, tileSize)) {
+            zoomBias = TileSource::zoomBiasFromTileSize(tileSize);
+        }
     }
 
     // Parse and append any URL parameters.
@@ -1119,7 +1134,7 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, const std::shared
 
     if (Node visible = light["visible"]) {
         // If 'visible' is false, skip loading this light.
-        if (!visible.as<bool>(true)) { return; }
+        if (!YamlUtil::getBoolOrDefault(visible, true)) { return; }
     }
 
     std::unique_ptr<Light> sceneLight;
@@ -1130,8 +1145,11 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, const std::shared
     } else if (type == "directional") {
         auto dLight(std::make_unique<DirectionalLight>(name));
 
-        if (Node direction = light["direction"]) {
-            dLight->setDirection(YamlUtil::parseVec<glm::vec3>(direction));
+        if (Node directionNode = light["direction"]) {
+            glm::vec3 direction;
+            if (YamlUtil::parseVec<glm::vec3>(directionNode, direction)) {
+                dLight->setDirection(direction);
+            }
         }
         sceneLight = std::move(dLight);
 
@@ -1143,13 +1161,16 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, const std::shared
         }
         if (Node radius = light["radius"]) {
             if (radius.size() > 1) {
-                pLight->setRadius(radius[0].as<float>(), radius[1].as<float>());
+                pLight->setRadius(YamlUtil::getFloatOrDefault(radius[0], 0.f), YamlUtil::getFloatOrDefault(radius[1], 0.f));
             } else {
-                pLight->setRadius(radius.as<float>());
+                pLight->setRadius(YamlUtil::getFloatOrDefault(radius, 0.f));
             }
         }
         if (Node att = light["attenuation"]) {
-            pLight->setAttenuation(att.as<float>());
+            float attenuation;
+            if (YamlUtil::getFloat(att, attenuation)) {
+                pLight->setAttenuation(attenuation);
+            }
         }
         sceneLight = std::move(pLight);
 
@@ -1159,21 +1180,24 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, const std::shared
         if (Node position = light["position"]) {
             parseLightPosition(position, *sLight);
         }
-        if (Node direction = light["direction"]) {
-            sLight->setDirection(YamlUtil::parseVec<glm::vec3>(direction));
+        if (Node directionNode = light["direction"]) {
+            glm::vec3 direction;
+            if (YamlUtil::parseVec<glm::vec3>(directionNode, direction)) {
+                sLight->setDirection(direction);
+            }
         }
         if (Node radius = light["radius"]) {
             if (radius.size() > 1) {
-                sLight->setRadius(radius[0].as<float>(), radius[1].as<float>());
+                sLight->setRadius(YamlUtil::getFloatOrDefault(radius[0], 0.f), YamlUtil::getFloatOrDefault(radius[1], 0.f));
             } else {
-                sLight->setRadius(radius.as<float>());
+                sLight->setRadius(YamlUtil::getFloatOrDefault(radius, 0.f));
             }
         }
         if (Node angle = light["angle"]) {
-            sLight->setCutoffAngle(angle.as<float>());
+            sLight->setCutoffAngle(YamlUtil::getFloatOrDefault(angle, 0.f));
         }
         if (Node exponent = light["exponent"]) {
-            sLight->setCutoffExponent(exponent.as<float>());
+            sLight->setCutoffExponent(YamlUtil::getFloatOrDefault(exponent, 0.f));
         }
         sceneLight = std::move(sLight);
     }
@@ -1220,7 +1244,7 @@ void SceneLoader::loadCamera(const Node& _camera, const std::shared_ptr<Scene>& 
     auto& camera = _scene->camera();
 
     if (Node active = _camera["active"]) {
-        if (!active.as<bool>()) {
+        if (!YamlUtil::getBoolOrDefault(active, false)) {
             return;
         }
     }
@@ -1232,9 +1256,9 @@ void SceneLoader::loadCamera(const Node& _camera, const std::shared_ptr<Scene>& 
         // Only one of focal length and FOV is applied;
         // according to docs, focal length takes precedence.
         if (Node focal = _camera["focal_length"]) {
-            if (focal.IsScalar()) {
-                float length = focal.as<float>();
-                camera.fieldOfView = View::focalLengthToFieldOfView(length);
+            float floatValue;
+            if (YamlUtil::getFloat(focal, floatValue)) {
+                camera.fieldOfView = View::focalLengthToFieldOfView(floatValue);
             } else if (focal.IsSequence()) {
                 camera.fovStops = std::make_shared<Stops>(Stops::Numbers(focal));
                 for (auto& f : camera.fovStops->frames) {
@@ -1243,9 +1267,8 @@ void SceneLoader::loadCamera(const Node& _camera, const std::shared_ptr<Scene>& 
             }
         } else if (Node fov = _camera["fov"]) {
             if (fov.IsScalar()) {
-                float degrees = fov.as<float>(camera.fieldOfView * RAD_TO_DEG);
+                double degrees = YamlUtil::getDoubleOrDefault(fov, camera.fieldOfView * RAD_TO_DEG);
                 camera.fieldOfView = degrees * DEG_TO_RAD;
-
             } else if (fov.IsSequence()) {
                 camera.fovStops = std::make_shared<Stops>(Stops::Numbers(fov));
                 for (auto& f : camera.fovStops->frames) {
@@ -1257,17 +1280,15 @@ void SceneLoader::loadCamera(const Node& _camera, const std::shared_ptr<Scene>& 
         if (Node vanishing = _camera["vanishing_point"]) {
             if (vanishing.IsSequence() && vanishing.size() >= 2) {
                 // Values are pixels, unit strings are ignored.
-                float x = ff::stof(vanishing[0].Scalar());
-                float y = ff::stof(vanishing[1].Scalar());
-                camera.vanishingPoint = { x, y };
+                camera.vanishingPoint.x = YamlUtil::getFloatOrDefault(vanishing[0], 0.f, true);
+                camera.vanishingPoint.y = YamlUtil::getFloatOrDefault(vanishing[1], 0.f, true);
             }
         }
     } else if (type == "isometric") {
         camera.type = CameraType::isometric;
 
         if (Node axis = _camera["axis"]) {
-            camera.obliqueAxis = { axis[0].as<float>(), axis[1].as<float>() };
-
+            YamlUtil::parseVec(axis, camera.obliqueAxis);
         }
     } else if (type == "flat") {
         camera.type = CameraType::flat;
@@ -1279,22 +1300,22 @@ void SceneLoader::loadCamera(const Node& _camera, const std::shared_ptr<Scene>& 
     float z = 0;
 
     if (Node position = _camera["position"]) {
-        x = position[0].as<double>();
-        y = position[1].as<double>();
+        x = YamlUtil::getDoubleOrDefault(position[0], x);
+        y = YamlUtil::getDoubleOrDefault(position[1], y);
         if (position.size() > 2) {
-            z = position[2].as<float>();
+            z = YamlUtil::getFloatOrDefault(position[2], z);
         }
     }
 
     if (Node zoom = _camera["zoom"]) {
-        z = zoom.as<float>();
+        z = YamlUtil::getFloatOrDefault(zoom, z);
     }
 
     if (Node maxTilt = _camera["max_tilt"]) {
         if (maxTilt.IsSequence()) {
             camera.maxTiltStops = std::make_shared<Stops>(Stops::Numbers(maxTilt));
         } else if (maxTilt.IsScalar()) {
-            camera.maxTilt = maxTilt.as<float>(PI);
+            camera.maxTilt = YamlUtil::getFloatOrDefault(maxTilt, PI);
         }
     }
 
@@ -1369,7 +1390,7 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
             // Node was explicitly tagged with '!!str' or the canonical tag
             // 'tag:yaml.org,2002:str' yaml-cpp normalizes the tag value to the
             // canonical form
-            return Filter::MatchEquality(_key, { Value(_node.as<std::string>()) });
+            return Filter::MatchEquality(_key, { Value(_node.Scalar()) });
         }
         double number;
         if (YamlUtil::getDouble(_node, number, false)) {
@@ -1605,34 +1626,55 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
             getOrLoadTexture(platform, strVal, scene);
         }
     } else if (value.IsSequence()) {
-        int size = value.size();
-        try {
-            switch (size) {
-                case 2:
-                    styleUniform.value = YamlUtil::parseVec<glm::vec2>(value);
-                    break;
-                case 3:
-                    styleUniform.value = YamlUtil::parseVec<glm::vec3>(value);
-                    break;
-                case 4:
-                    styleUniform.value = YamlUtil::parseVec<glm::vec4>(value);
-                    break;
-                default:
-                    UniformArray1f uniformArray;
-                    for (const auto& val : value) {
-                        double fValue;
-                        if (YamlUtil::getDouble(val, fValue, false)) {
-                            uniformArray.push_back(fValue);
-                        } else {
-                            return false;
-                        }
-                    }
-                    styleUniform.value = std::move(uniformArray);
-                    break;
+        size_t size = value.size();
+        bool parsed = false;
+        switch (size) {
+            case 2: {
+                glm::vec2 vec;
+                if (YamlUtil::parseVec<glm::vec2>(value, vec)) {
+                    styleUniform.value = vec;
+                    styleUniform.type = "vec2";
+                    parsed = true;
+                }
+                break;
             }
+            case 3: {
+                glm::vec3 vec;
+                if (YamlUtil::parseVec(value, vec)) {
+                    styleUniform.value = vec;
+                    styleUniform.type = "vec3";
+                    parsed = true;
+                }
+                break;
+            }
+            case 4: {
+                glm::vec4 vec;
+                if (YamlUtil::parseVec(value, vec)) {
+                    styleUniform.value = vec;
+                    styleUniform.type = "vec4";
+                    parsed = true;
+                }
+                break;
+            }
+            default: {
+                UniformArray1f uniformArray;
+                for (const auto& val : value) {
+                    double fValue;
+                    if (YamlUtil::getDouble(val, fValue)) {
+                        uniformArray.push_back(fValue);
+                    } else {
+                        return false;
+                    }
+                }
+                styleUniform.value = std::move(uniformArray);
+                styleUniform.type = "vec" + std::to_string(size);
+                parsed = true;
+                break;
+            }
+        }
 
-            styleUniform.type = "vec" + std::to_string(size);
-        } catch (const BadConversion& e) { // array of strings (textures)
+        if (!parsed) {
+            // array of strings (textures)
             UniformTextureArray textureArrayUniform;
             textureArrayUniform.names.reserve(size);
             styleUniform.type = "sampler2D";
@@ -1752,7 +1794,11 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, const std::share
             if (data_layer.IsScalar()) {
                 collections.push_back(data_layer.Scalar());
             } else if (data_layer.IsSequence()) {
-                collections = data_layer.as<std::vector<std::string>>();
+                for (const auto& entry : data_layer) {
+                    if (entry.IsScalar()) {
+                        collections.push_back(entry.Scalar());
+                    }
+                }
             }
         }
     }
