@@ -29,7 +29,8 @@
 #include "scene/styleParam.h"
 #include "util/base64.h"
 #include "util/floatFormatter.h"
-#include "util/yamlHelper.h"
+#include "util/yamlPath.h"
+#include "util/yamlUtil.h"
 #include "view/view.h"
 
 #include "csscolorparser.hpp"
@@ -345,7 +346,7 @@ void SceneLoader::loadShaderConfig(const std::shared_ptr<Platform>& platform, No
             }
             bool bValue;
 
-            if (getBool(define.second, bValue)) {
+            if (YamlUtil::getBool(define.second, bValue)) {
                 // specifying a define to be 'true' means that it is simply
                 // defined and has no value
                 if (bValue) {
@@ -402,13 +403,13 @@ glm::vec4 parseMaterialVec(const Node& prop) {
 
     switch (prop.Type()) {
     case NodeType::Sequence:
-        return parseVec<glm::vec4>(prop);
+        return YamlUtil::parseVec<glm::vec4>(prop);
     case NodeType::Scalar: {
         double value;
-        if (getDouble(prop, value)) {
+        if (YamlUtil::getDouble(prop, value, false)) {
             return glm::vec4(value, value, value, 1.0);
         } else {
-            return getColorAsVec4(prop);
+            return YamlUtil::getColorAsVec4(prop);
         }
         break;
     }
@@ -459,7 +460,7 @@ void SceneLoader::loadMaterial(const std::shared_ptr<Platform>& platform, Node m
 
     if (Node shininess = matNode["shininess"]) {
         double value;
-        if (getDouble(shininess, value, "shininess")) {
+        if (YamlUtil::getDouble(shininess, value, false)) {
             material.setShininess(value);
         }
     }
@@ -661,7 +662,7 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
     float density = 1.f;
     if (Node d = textureConfig["density"]) {
         double val;
-        if (getDouble(d, val)) { density = val; }
+        if (YamlUtil::getDouble(d, val, false)) { density = val; }
     }
 
     std::unique_ptr<SpriteAtlas> atlas;
@@ -674,7 +675,7 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
             const std::string& spriteName = it->first.Scalar();
 
             if (sprite) {
-                glm::vec4 desc = parseVec<glm::vec4>(sprite);
+                glm::vec4 desc = YamlUtil::parseVec<glm::vec4>(sprite);
                 glm::vec2 pos = glm::vec2(desc.x, desc.y);
                 glm::vec2 size = glm::vec2(desc.z, desc.w);
 
@@ -763,7 +764,7 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
         if (!animatedNode.IsScalar()) { LOGW("animated flag should be a scalar"); }
         else {
             bool animate;
-            if (getBool(animatedNode, animate, "animated")) {
+            if (YamlUtil::getBool(animatedNode, animate)) {
                 style.setAnimated(animate);
             }
         }
@@ -808,7 +809,7 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
 
     if (Node dashBackgroundColor = styleNode["dash_background_color"]) {
         if (auto polylineStyle = dynamic_cast<PolylineStyle*>(&style)) {
-            glm::vec4 backgroundColor = getColorAsVec4(dashBackgroundColor);
+            glm::vec4 backgroundColor = YamlUtil::getColorAsVec4(dashBackgroundColor);
             polylineStyle->setDashBackgroundColor(backgroundColor);
         }
     }
@@ -1015,7 +1016,7 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
 
     bool isTms = false;
     if (auto tmsNode = source["tms"]) {
-        getBool(tmsNode, isTms);
+        YamlUtil::getBool(tmsNode, isTms);
     }
 
     auto rawSources = std::make_unique<MemoryCacheDataSource>();
@@ -1130,7 +1131,7 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, const std::shared
         auto dLight(std::make_unique<DirectionalLight>(name));
 
         if (Node direction = light["direction"]) {
-            dLight->setDirection(parseVec<glm::vec3>(direction));
+            dLight->setDirection(YamlUtil::parseVec<glm::vec3>(direction));
         }
         sceneLight = std::move(dLight);
 
@@ -1159,7 +1160,7 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, const std::shared
             parseLightPosition(position, *sLight);
         }
         if (Node direction = light["direction"]) {
-            sLight->setDirection(parseVec<glm::vec3>(direction));
+            sLight->setDirection(YamlUtil::parseVec<glm::vec3>(direction));
         }
         if (Node radius = light["radius"]) {
             if (radius.size() > 1) {
@@ -1187,13 +1188,13 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, const std::shared
         }
     }
     if (Node ambient = light["ambient"]) {
-        sceneLight->setAmbientColor(getColorAsVec4(ambient));
+        sceneLight->setAmbientColor(YamlUtil::getColorAsVec4(ambient));
     }
     if (Node diffuse = light["diffuse"]) {
-        sceneLight->setDiffuseColor(getColorAsVec4(diffuse));
+        sceneLight->setDiffuseColor(YamlUtil::getColorAsVec4(diffuse));
     }
     if (Node specular = light["specular"]) {
-        sceneLight->setSpecularColor(getColorAsVec4(specular));
+        sceneLight->setSpecularColor(YamlUtil::getColorAsVec4(specular));
     }
 
     // Verify that light position parameters are consistent with the origin type
@@ -1371,11 +1372,11 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
             return Filter::MatchEquality(_key, { Value(_node.as<std::string>()) });
         }
         double number;
-        if (getDouble(_node, number)) {
+        if (YamlUtil::getDouble(_node, number, false)) {
             return Filter::MatchEquality(_key, { Value(number) });
         }
         bool existence;
-        if (getBool(_node, existence)) {
+        if (YamlUtil::getBool(_node, existence)) {
             return Filter::MatchExistence(_key, existence);
         }
         const std::string& value = _node.Scalar();
@@ -1385,7 +1386,7 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
         std::vector<Value> values;
         for (const auto& valItr : _node) {
             double number;
-            if (getDouble(valItr, number)) {
+            if (YamlUtil::getDouble(valItr, number, false)) {
                 values.emplace_back(number);
             } else {
                 const std::string& value = valItr.Scalar();
@@ -1423,7 +1424,7 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
 }
 
 bool SceneLoader::getFilterRangeValue(const Node& node, double& val, bool& hasPixelArea) {
-    if (!getDouble(node, val)) {
+    if (!YamlUtil::getDouble(node, val, false)) {
         auto strVal = node.Scalar();
         auto n = strVal.find("px2");
         if (n == std::string::npos) { return false; }
@@ -1563,7 +1564,7 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
 
             } else {
                 // TODO optimize for color values
-                out.push_back(StyleParam{ key, parseSequence(value) });
+                out.push_back(StyleParam{ key, YamlUtil::parseSequence(value) });
             }
             break;
         }
@@ -1590,10 +1591,10 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
         double fValue;
         bool bValue;
 
-        if (getDouble(value, fValue)) {
+        if (YamlUtil::getDouble(value, fValue, false)) {
             styleUniform.type = "float";
             styleUniform.value = (float)fValue;
-        } else if (getBool(value, bValue)) {
+        } else if (YamlUtil::getBool(value, bValue)) {
             styleUniform.type = "bool";
             styleUniform.value = (bool)bValue;
         } else {
@@ -1608,19 +1609,19 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
         try {
             switch (size) {
                 case 2:
-                    styleUniform.value = parseVec<glm::vec2>(value);
+                    styleUniform.value = YamlUtil::parseVec<glm::vec2>(value);
                     break;
                 case 3:
-                    styleUniform.value = parseVec<glm::vec3>(value);
+                    styleUniform.value = YamlUtil::parseVec<glm::vec3>(value);
                     break;
                 case 4:
-                    styleUniform.value = parseVec<glm::vec4>(value);
+                    styleUniform.value = YamlUtil::parseVec<glm::vec4>(value);
                     break;
                 default:
                     UniformArray1f uniformArray;
                     for (const auto& val : value) {
                         double fValue;
-                        if (getDouble(val, fValue)) {
+                        if (YamlUtil::getDouble(val, fValue, false)) {
                             uniformArray.push_back(fValue);
                         } else {
                             return false;
@@ -1774,7 +1775,7 @@ void SceneLoader::loadBackground(Node background, const std::shared_ptr<Scene>& 
         if (colorNode.IsScalar()) {
             str = colorNode.Scalar();
         } else if (colorNode.IsSequence()) {
-            str = parseSequence(colorNode);
+            str = YamlUtil::parseSequence(colorNode);
         }
         scene->background().abgr = StyleParam::parseColor(str);
     }
