@@ -3,19 +3,14 @@ package com.mapzen.tangram;
 import android.content.Context;
 import android.os.SystemClock;
 import android.view.GestureDetector;
-import android.view.GestureDetector.OnDoubleTapListener;
-import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-import android.view.ScaleGestureDetector.OnScaleGestureListener;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewConfiguration;
 
 import com.almeros.android.multitouch.RotateGestureDetector;
-import com.almeros.android.multitouch.RotateGestureDetector.OnRotateGestureListener;
 import com.almeros.android.multitouch.ShoveGestureDetector;
-import com.almeros.android.multitouch.ShoveGestureDetector.OnShoveGestureListener;
 
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -24,8 +19,7 @@ import java.util.EnumSet;
  * {@code TouchInput} collects touch data, applies gesture detectors, resolves simultaneous
  * detection, and calls the appropriate input responders.
  */
-public class TouchInput implements OnTouchListener, OnScaleGestureListener,
-        OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
+public class TouchInput implements OnTouchListener {
 
     /**
      * List of gestures that can be detected and responded to
@@ -258,10 +252,10 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
      */
     public TouchInput(Context context) {
 
-        this.panTapGestureDetector = new GestureDetector(context, this);
-        this.scaleGestureDetector = new ScaleGestureDetector(context, this);
-        this.rotateGestureDetector = new RotateGestureDetector(context, this);
-        this.shoveGestureDetector = new ShoveGestureDetector(context, this);
+        this.panTapGestureDetector = new GestureDetector(context, new GestureListener());
+        this.scaleGestureDetector = new ScaleGestureDetector(context, new ScaleGestureListener());
+        this.rotateGestureDetector = new RotateGestureDetector(context, new RotateGestureListener());
+        this.shoveGestureDetector = new ShoveGestureDetector(context, new ShoveGestureListener());
 
         this.enabledGestures = EnumSet.allOf(Gestures.class);
         this.detectedGestures = EnumSet.noneOf(Gestures.class);
@@ -428,7 +422,6 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
 
     // View.OnTouchListener implementation
     // ===================================
-
     @Override
     public boolean onTouch(View v, MotionEvent event) {
 
@@ -448,188 +441,186 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         return true;
     }
 
-    // GestureDetector.OnDoubleTapListener implementation
-    // ==================================================
-
-    @Override
-    public boolean onSingleTapConfirmed(MotionEvent e) {
-        if (isDetectionAllowed(Gestures.TAP) && tapResponder != null) {
-            return tapResponder.onSingleTapConfirmed(e.getX(), e.getY());
-        }
-        return false;
-    }
-
-    @Override
-    public boolean onDoubleTap(MotionEvent e) {
-        // This event handles the second 'down' of a double tap, which is not a confirmed double tap
-        // (e.g. it could be the start of a 'quick scale' gesture). We ignore this callback and
-        // check for the 'up' event that follows.
-        return false;
-    }
-
-    @Override
-    public boolean onDoubleTapEvent(MotionEvent e) {
-        int action = e.getActionMasked();
-        long time = e.getEventTime() - e.getDownTime();
-        if (action != MotionEvent.ACTION_UP || time > DOUBLE_TAP_TIMEOUT) {
-            // The detector sends back only the first 'down' and the second 'up' so we only need to
-            // respond when we receive an 'up' action. We also discard the gesture if the second tap
-            // lasts longer than the permitted duration between taps.
+    class GestureListener implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener {
+        // GestureDetector.OnDoubleTapListener implementation
+        // ==================================================
+        @Override
+        public boolean onSingleTapConfirmed(MotionEvent e) {
+            if (isDetectionAllowed(Gestures.TAP) && tapResponder != null) {
+                return tapResponder.onSingleTapConfirmed(e.getX(), e.getY());
+            }
             return false;
         }
-        if (isDetectionAllowed(Gestures.DOUBLE_TAP) && doubleTapResponder != null) {
-            return doubleTapResponder.onDoubleTap(e.getX(), e.getY());
+
+        @Override
+        public boolean onDoubleTap(MotionEvent e) {
+            // This event handles the second 'down' of a double tap, which is not a confirmed double tap
+            // (e.g. it could be the start of a 'quick scale' gesture). We ignore this callback and
+            // check for the 'up' event that follows.
+            return false;
         }
-        return false;
-    }
 
-    // GestureDetector.OnGestureListener implementation
-    // ================================================
-
-    @Override
-    public boolean onDown(MotionEvent e) {
-        return panResponder.onCancelFling();
-    }
-
-    @Override
-    public void onShowPress(MotionEvent e) {
-        // Ignored
-    }
-
-    @Override
-    public boolean onSingleTapUp(MotionEvent e) {
-        if (isDetectionAllowed(Gestures.TAP) && tapResponder != null) {
-            return tapResponder.onSingleTapUp(e.getX(), e.getY());
-        }
-        return false;
-    }
-
-    @Override
-    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        if (isDetectionAllowed(Gestures.PAN)) {
-
-            if (!detectedGestures.contains(Gestures.PAN)) {
-                setGestureStarted(Gestures.PAN);
-                panResponder.onPanBegin();
-            }
-
-            if (panResponder == null) {
+        @Override
+        public boolean onDoubleTapEvent(MotionEvent e) {
+            int action = e.getActionMasked();
+            long time = e.getEventTime() - e.getDownTime();
+            if (action != MotionEvent.ACTION_UP || time > DOUBLE_TAP_TIMEOUT) {
+                // The detector sends back only the first 'down' and the second 'up' so we only need to
+                // respond when we receive an 'up' action. We also discard the gesture if the second tap
+                // lasts longer than the permitted duration between taps.
                 return false;
             }
-
-            // TODO: Predictive panning
-            // Use estimated velocity to counteract input->render lag
-
-            float x = 0, y = 0;
-            int n = e2.getPointerCount();
-            for (int i = 0; i < n; i++) {
-                x += e2.getX(i) / n;
-                y += e2.getY(i) / n;
+            if (isDetectionAllowed(Gestures.DOUBLE_TAP) && doubleTapResponder != null) {
+                return doubleTapResponder.onDoubleTap(e.getX(), e.getY());
             }
-            return panResponder.onPan(x + distanceX, y + distanceY, x, y);
+            return false;
         }
-        return false;
-    }
 
-    @Override
-    public void onLongPress(MotionEvent e) {
-        if (isDetectionAllowed(Gestures.LONG_PRESS) && longPressResponder != null) {
-            longPressResponder.onLongPress(e.getX(), e.getY());
+        // GestureDetector.OnGestureListener implementation
+        // ================================================
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return panResponder.onCancelFling();
+        }
+
+        @Override
+        public void onShowPress(MotionEvent e) {
+            // Ignored
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            if (isDetectionAllowed(Gestures.TAP) && tapResponder != null) {
+                return tapResponder.onSingleTapUp(e.getX(), e.getY());
+            }
+            return false;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            if (isDetectionAllowed(Gestures.PAN)) {
+
+                if (!detectedGestures.contains(Gestures.PAN)) {
+                    setGestureStarted(Gestures.PAN);
+                    panResponder.onPanBegin();
+                }
+
+                if (panResponder == null) {
+                    return false;
+                }
+
+                // TODO: Predictive panning
+                // Use estimated velocity to counteract input->render lag
+
+                float x = 0, y = 0;
+                int n = e2.getPointerCount();
+                for (int i = 0; i < n; i++) {
+                    x += e2.getX(i) / n;
+                    y += e2.getY(i) / n;
+                }
+                return panResponder.onPan(x + distanceX, y + distanceY, x, y);
+            }
+            return false;
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+            if (isDetectionAllowed(Gestures.LONG_PRESS) && longPressResponder != null) {
+                longPressResponder.onLongPress(e.getX(), e.getY());
+            }
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            if (isDetectionAllowed(Gestures.PAN) && panResponder != null) {
+                return panResponder.onFling(e2.getX(), e2.getY(), velocityX, velocityY);
+            }
+            return false;
         }
     }
 
-    @Override
-    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-        if (isDetectionAllowed(Gestures.PAN) && panResponder != null) {
-            return panResponder.onFling(e2.getX(), e2.getY(), velocityX, velocityY);
+    class RotateGestureListener implements RotateGestureDetector.OnRotateGestureListener {
+        @Override
+        public boolean onRotate(RotateGestureDetector detector) {
+            if (isDetectionAllowed(Gestures.ROTATE) && rotateResponder != null) {
+                float rotation = -detector.getRotationRadiansDelta();
+                float x = detector.getFocusX();
+                float y = detector.getFocusY();
+                return rotateResponder.onRotate(x, y, rotation);
+            }
+            return false;
         }
-        return false;
-    }
 
-    // RotateGestureDetector.OnRotateGestureListener implementation
-    // ============================================================
-
-    @Override
-    public boolean onRotate(RotateGestureDetector detector) {
-        if (isDetectionAllowed(Gestures.ROTATE) && rotateResponder != null) {
-            float rotation = -detector.getRotationRadiansDelta();
-            float x = detector.getFocusX();
-            float y = detector.getFocusY();
-            return rotateResponder.onRotate(x, y, rotation);
+        @Override
+        public boolean onRotateBegin(RotateGestureDetector detector) {
+            if (isDetectionAllowed(Gestures.ROTATE)) {
+                setGestureStarted(Gestures.ROTATE);
+                return rotateResponder.onRotateBegin();
+            }
+            return false;
         }
-        return false;
-    }
 
-    @Override
-    public boolean onRotateBegin(RotateGestureDetector detector) {
-        if (isDetectionAllowed(Gestures.ROTATE)) {
-            setGestureStarted(Gestures.ROTATE);
-            return rotateResponder.onRotateBegin();
+        @Override
+        public void onRotateEnd(RotateGestureDetector detector) {
+            setGestureEnded(Gestures.ROTATE);
+            rotateResponder.onRotateEnd();
         }
-        return false;
     }
 
-    @Override
-    public void onRotateEnd(RotateGestureDetector detector) {
-        setGestureEnded(Gestures.ROTATE);
-        rotateResponder.onRotateEnd();
-    }
-
-    // ScaleGestureDetector.OnScaleGestureListener implementation
-    // ==========================================================
-
-    @Override
-    public boolean onScale(ScaleGestureDetector detector) {
-        if (isDetectionAllowed(Gestures.SCALE) && scaleResponder != null) {
-            long ms = detector.getTimeDelta();
-            float dt = ms > 0 ? ms / 1000.f : 1.f;
-            float scale = detector.getScaleFactor();
-            float velocity = (scale - 1.f) / dt;
-            float x = detector.getFocusX();
-            float y = detector.getFocusY();
-            return scaleResponder.onScale(x, y, scale, velocity);
+    class ScaleGestureListener implements ScaleGestureDetector.OnScaleGestureListener {
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            if (isDetectionAllowed(Gestures.SCALE) && scaleResponder != null) {
+                long ms = detector.getTimeDelta();
+                float dt = ms > 0 ? ms / 1000.f : 1.f;
+                float scale = detector.getScaleFactor();
+                float velocity = (scale - 1.f) / dt;
+                float x = detector.getFocusX();
+                float y = detector.getFocusY();
+                return scaleResponder.onScale(x, y, scale, velocity);
+            }
+            return false;
         }
-        return false;
-    }
 
-    @Override
-    public boolean onScaleBegin(ScaleGestureDetector detector) {
-        if (isDetectionAllowed(Gestures.SCALE)) {
-            setGestureStarted(Gestures.SCALE);
-            return scaleResponder.onScaleBegin();
+        @Override
+        public boolean onScaleBegin(ScaleGestureDetector detector) {
+            if (isDetectionAllowed(Gestures.SCALE)) {
+                setGestureStarted(Gestures.SCALE);
+                return scaleResponder.onScaleBegin();
+            }
+            return false;
         }
-        return false;
-    }
 
-    @Override
-    public void onScaleEnd(ScaleGestureDetector detector) {
-        setGestureEnded(Gestures.SCALE);
-        scaleResponder.onScaleEnd();
-    }
-
-    // ShoveGestureDetector.OnShoveGestureListener implementation
-    // ==========================================================
-
-    @Override
-    public boolean onShove(ShoveGestureDetector detector) {
-        if (isDetectionAllowed(Gestures.SHOVE) && shoveResponder != null) {
-            return shoveResponder.onShove(detector.getShovePixelsDelta());
+        @Override
+        public void onScaleEnd(ScaleGestureDetector detector) {
+            setGestureEnded(Gestures.SCALE);
+            scaleResponder.onScaleEnd();
         }
-        return false;
     }
 
-    @Override
-    public boolean onShoveBegin(ShoveGestureDetector detector) {
-        if (isDetectionAllowed(Gestures.SHOVE)) {
-            setGestureStarted(Gestures.SHOVE);
-            return shoveResponder.onShoveBegin();
+    class ShoveGestureListener implements ShoveGestureDetector.OnShoveGestureListener {
+        @Override
+        public boolean onShove(ShoveGestureDetector detector) {
+            if (isDetectionAllowed(Gestures.SHOVE) && shoveResponder != null) {
+                return shoveResponder.onShove(detector.getShovePixelsDelta());
+            }
+            return false;
         }
-        return false;
+
+        @Override
+        public boolean onShoveBegin(ShoveGestureDetector detector) {
+            if (isDetectionAllowed(Gestures.SHOVE)) {
+                setGestureStarted(Gestures.SHOVE);
+                return shoveResponder.onShoveBegin();
+            }
+            return false;
+        }
+
+        @Override
+        public void onShoveEnd(ShoveGestureDetector detector) {
+            setGestureEnded(Gestures.SHOVE);
+            shoveResponder.onShoveEnd();
+        }
     }
 
-    @Override
-    public void onShoveEnd(ShoveGestureDetector detector) {
-        setGestureEnded(Gestures.SHOVE);
-        shoveResponder.onShoveEnd();
-    }
 }
