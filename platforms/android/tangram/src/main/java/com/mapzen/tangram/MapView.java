@@ -119,7 +119,6 @@ public class MapView extends FrameLayout {
      */
     protected void onMapInitCancelled(@Nullable final MapController controller) {
         if (controller != null) {
-            controller.UIThreadInit();
             controller.dispose();
         }
     }

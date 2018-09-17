@@ -249,6 +249,7 @@ public class MapController implements Renderer {
     void UIThreadInit() {
         // Set up MapView
         mapView.setRenderer(this);
+        isGLRendererSet = true;
         mapView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         mapView.setPreserveEGLContextOnPause(true);
 
@@ -270,6 +271,9 @@ public class MapController implements Renderer {
     }
 
     void dispose() {
+        // No GL setup from UI Thread, early return
+        if (!isGLRendererSet) { return; }
+
         // Disposing native resources involves GL calls, so we need to run on the GL thread.
         queueEvent(new Runnable() {
             @Override
@@ -1583,6 +1587,7 @@ public class MapController implements Renderer {
     private boolean zoomGesturesEnabled = true;
     private boolean rotateGesturesEnabled = true;
     private boolean tiltGesturesEnabled = true;
+    private boolean isGLRendererSet = false;
 
     // GLSurfaceView.Renderer methods
     // ==============================
