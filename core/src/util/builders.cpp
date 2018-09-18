@@ -106,7 +106,8 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
         _ctx.used[src] = dst++;
 
         auto& p = _polygon[ring][src - offset];
-        glm::vec3 coord(p.x, p.y, _height);
+        //glm::vec3 coord(p.x, p.y, _height);
+        glm::vec3 coord(p.x, p.y, p.z + _height);
 
         if (_ctx.useTexCoords) {
             glm::vec2 uv(mapValue(coord.x, min.x, max.x, 0., 1.),
@@ -152,18 +153,20 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
             }
 
             // 1st vertex top
-            a.z = _maxHeight;
+            a.z += _maxHeight;
             _ctx.addVertex(a, normalVector, glm::vec2(1.,1.));
 
             // 2nd vertex top
-            b.z = _maxHeight;
+            b.z += _maxHeight;
             _ctx.addVertex(b, normalVector, glm::vec2(0.,1.));
 
             // 1st vertex bottom
-            a.z = _minHeight;
+            a.z = line[i].z;
+            a.z += _minHeight;
             _ctx.addVertex(a, normalVector, glm::vec2(1.,0.));
 
             // 2nd vertex bottom
+            b.z = line[i+1].z;
             b.z = _minHeight;
             _ctx.addVertex(b, normalVector, glm::vec2(0.,0.));
 

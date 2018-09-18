@@ -23,20 +23,34 @@ cameras:
         axis: [0, 1]
         active: false
     perspective-camera:
-        # Manhattan
-        position: [-74.00976419448854, 40.70532700869127, 16]
+        # Yosemity Valley, CA
+        position: [-119.5880813, 37.7381181, 13]
         type: perspective
         fov: 45
         max_tilt: [[2, 0], [16, 90]]
         active: true
 
+#lights:
+#    light1:
+#        type: directional
+#        origin: world
+#        direction: [1, 1, -1]
+#        diffuse: [.3, .3, .3, 1.]
+#        ambient: [0.7, 0.7, 0.7, 1.]
+
 lights:
-    light1:
+    directional1:
         type: directional
-        origin: world
-        direction: [1, 1, -1]
-        diffuse: [.3, .3, .3, 1.]
-        ambient: [0.7, 0.7, 0.7, 1.]
+        direction: [1,-.5, -.5]
+        diffuse: [0.950, 0.865, 0.539]
+    directional2:
+        type: directional
+        direction: [-1, -1, -.5]
+        diffuse: [0.542, 0.807, 0.855]
+#    directional3:
+#        type: directional
+#        direction: [0, -1, .2]
+#        diffuse: 1.5
 
 textures:
     pois:
@@ -95,6 +109,14 @@ styles:
                 width: 1px
             interactive: true
 
+    hillshade:
+        base: raster
+        raster: normal
+        shaders:
+            blocks:
+                color: |
+                    color.rgb = vec3(1.);
+
 sources:
     osm:
         type: MVT
@@ -102,8 +124,30 @@ sources:
         max_zoom: 16
         url_params:
             api_key: global.sdk_api_key
+#   mapbox:
+#       type: Raster
+#       url: http://{s}.tiles.mapbox.com/v3/openstreetmap.map-4wvf9l0l/{z}/{x}/{y}.png
+#       url_subdomains: [a, b, c]
+#       tms: True
+        
+    terrarium:
+        type: Raster
+#       url: https://tile.nextzen.org/tilezen/terrain/v1/256/terrarium/{z}/{x}/{y}.png
+        url: https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png
+#       url_params:
+#           api_key: global.sdk_api_key
+
+    normals:
+        type: Raster
+        url: https://elevation-tiles-prod.s3.amazonaws.com/normal/{z}/{x}/{y}.png
 
 layers:
+    terrain:
+        data: { source: normals, layer: _default }
+        #data: { source: terrarium }
+        draw:
+            hillshade:
+                order: 0 # draw on bottom
     touch:
         data: { source: touch }
         line:
@@ -142,6 +186,7 @@ layers:
                         stroke: { color: white, width: 4 }
                         transform: uppercase
     landuse:
+        enabled: false
         data: { source: osm }
         filter:
             - { $zoom: { min: 16 } }

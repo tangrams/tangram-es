@@ -321,6 +321,7 @@ void scrollCallback(GLFWwindow* window, double scrollx, double scrolly) {
 
 }
 
+static bool wirefram_mode = false;
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
     CameraPosition camera = map->getCameraPosition();
@@ -449,6 +450,17 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 break;
             case GLFW_KEY_W:
                 map->onMemoryWarning();
+                break;
+
+            case GLFW_KEY_X:
+                wirefram_mode = !wirefram_mode;
+                if(wirefram_mode) {
+                    glPolygonMode(GL_FRONT, GL_LINE);
+                    glPolygonMode(GL_BACK, GL_LINE);
+                } else {
+                    glPolygonMode(GL_FRONT, GL_FILL);
+                    glPolygonMode(GL_BACK, GL_FILL);
+                }
                 break;
         default:
                 break;
