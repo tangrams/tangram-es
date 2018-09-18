@@ -304,7 +304,7 @@ UrlRequestHandle AndroidPlatform::startUrlRequest(Url _url, UrlCallback _callbac
     JniThreadBinding jniEnv(jvm);
 
     // Get the current value of the request counter and add one, atomically.
-    UrlRequestHandle requestHandle = m_urlRequestCount++;
+    UrlRequestHandle requestHandle = m_urlRequestCount.fetch_add(1, std::memory_order_relaxed);
 
     // If the requested URL does not use HTTP or HTTPS, retrieve it synchronously.
     if (!_url.hasHttpScheme()) {

@@ -97,12 +97,12 @@ public:
     CameraAnimationCallback cameraAnimationListener = nullptr;
 
     void sceneLoadBegin() {
-        sceneLoadTasks++;
+        sceneLoadTasks.fetch_add(1, std::memory_order_relaxed);
     }
 
     void sceneLoadEnd() {
-        sceneLoadTasks--;
-        assert(sceneLoadTasks >= 0);
+        sceneLoadTasks.fetch_sub(1, std::memory_order_relaxed);
+        assert(sceneLoadTasks.load(std::memory_order_relaxed) >= 0);
 
         sceneLoadCondition.notify_one();
     }
@@ -192,7 +192,7 @@ SceneID Map::loadScene(std::shared_ptr<Scene> scene,
     {
         std::unique_lock<std::mutex> lock(impl->sceneMutex);
 
-        impl->sceneLoadCondition.wait(lock, [&]{ return impl->sceneLoadTasks == 0; });
+        impl->sceneLoadCondition.wait(lock, [&]{ return impl->sceneLoadTasks.load(std::memory_order_relaxed) == 0; });
 
         impl->lastValidScene.reset();
     }
@@ -391,7 +391,8 @@ bool Map::update(float _dt) {
     impl->jobQueue.runJobs();
 
     // Wait until font and texture resources are fully loaded
-    if (impl->scene->pendingFonts > 0 || impl->scene->pendingTextures > 0) {
+    if (impl->scene->pendingFonts.load(std::memory_order_relaxed) > 0 ||
+            impl->scene->pendingTextures.load(std::memory_order_relaxed) > 0) {
         platform->requestRender();
         return false;
     }
@@ -457,7 +458,8 @@ bool Map::update(float _dt) {
     bool tilesLoading = impl->tileManager.hasLoadingTiles();
     bool labelsNeedUpdate = impl->labels.needUpdate();
 
-    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || impl->sceneLoadTasks > 0) {
+    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate ||
+            impl->sceneLoadTasks.load(std::memory_order_relaxed) > 0) {
         viewComplete = false;
     }
 
@@ -494,7 +496,7 @@ void Map::pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallb
 void Map::render() {
 
     // Do not render if any texture resources are in process of being downloaded
-    if (impl->scene->pendingTextures > 0) {
+    if (impl->scene->pendingTextures.load(std::memory_order_relaxed) > 0) {
         return;
     }
 

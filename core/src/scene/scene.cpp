@@ -21,10 +21,10 @@ namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
 
-Scene::Scene() : id(s_serial++) {}
+Scene::Scene() : id (s_serial.fetch_add(1, std::memory_order_relaxed)) {}
 
 Scene::Scene(std::shared_ptr<const Platform> _platform, const Url& _url)
-    : id(s_serial++),
+    : id(s_serial.fetch_add(1, std::memory_order_relaxed)),
       m_url(_url),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()) {
@@ -35,7 +35,7 @@ Scene::Scene(std::shared_ptr<const Platform> _platform, const Url& _url)
 }
 
 Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _yaml, const Url& _url)
-    : id(s_serial++),
+    : id(s_serial.fetch_add(1, std::memory_order_relaxed)),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()) {
 

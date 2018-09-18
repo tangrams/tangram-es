@@ -27,7 +27,7 @@ public:
     void runJobs();
 
     void stop() {
-        m_stopped = true;
+        m_stopped.store(true, std::memory_order_relaxed);
         runJobs();
     }
 private:
