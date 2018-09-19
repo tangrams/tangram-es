@@ -772,8 +772,19 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Get the touch input manager for this map controller.
-     * @return The touch input manager.
+     * Get the {@link TouchInput} for this map.
+     *
+     * {@code TouchInput} allows you to configure how gestures can move the map. You can set custom
+     * responders for any gesture type in {@code TouchInput} to override or extend the default
+     * behavior.
+     *
+     * Note that {@code MapController} assigns the default gesture responders for the pan, rotate,
+     * scale, and shove gestures. If you set custom responders for these gestures, the default
+     * responders will be replaced and those gestures will no longer move the map. To customize
+     * these gesture responders and preserve the default map movement behavior: create a new gesture
+     * responder, get the responder for that gesture from the {@code MapController}, and then in the
+     * new responder call the corresponding methods on the {@code MapController} gesture responder.
+     * @return The {@code TouchInput}.
      */
     public TouchInput getTouchInput() {
         return touchInput;
