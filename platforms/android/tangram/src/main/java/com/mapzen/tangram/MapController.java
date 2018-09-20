@@ -519,7 +519,7 @@ public class MapController implements Renderer {
         };
 
         if (cameraAnimationCallback != null) {
-            // NB: Prevent recursion loop when updateCameraPosition is called from onCancel callback
+            // Prevent recursion loop when updateCameraPosition is called from onCancel callback
             CameraAnimationCallback prev = cameraAnimationCallback;
             cameraAnimationCallback = null;
             prev.onCancel();
@@ -532,10 +532,17 @@ public class MapController implements Renderer {
                 update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.padding,
                 seconds, ease.ordinal());
 
-        if (duration > 0) {
-            cameraAnimationCallback = callback;
-        } else {
-            callback.onFinish();
+        cameraAnimationCallback = callback;
+    }
+
+    private void onCameraAnimationEnded(boolean finished) {
+        if (cameraAnimationCallback != null) {
+            if (finished) {
+                cameraAnimationCallback.onFinish();
+            } else {
+                cameraAnimationCallback.onCancel();
+            }
+            cameraAnimationCallback = null;
         }
     }
 
@@ -1536,22 +1543,14 @@ public class MapController implements Renderer {
         }
     }
 
-    // Called from JNI on worker or render-thread.
+    // Called from JNI on render-thread.
     @Keep
     void cameraAnimationCallback(final boolean finished) {
-
-        final CameraAnimationCallback cb = cameraAnimationCallback;
-        if (cb != null) {
-            cameraAnimationCallback = null;
-
+        if (cameraAnimationCallback != null) {
             uiThreadHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (finished) {
-                        cb.onFinish();
-                    } else {
-                        cb.onCancel();
-                    }
+                    onCameraAnimationEnded(finished);
                 }
             });
         }
