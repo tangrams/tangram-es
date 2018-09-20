@@ -945,17 +945,7 @@ public class MapController implements Renderer {
      * @param listener The {@link FeaturePickListener} to call
      */
     public void setFeaturePickListener(@Nullable final FeaturePickListener listener) {
-        featurePickListener = (listener == null) ? null : new FeaturePickListener() {
-            @Override
-            public void onFeaturePick(final Map<String, String> properties, final float positionX, final float positionY) {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onFeaturePick(properties, positionX, positionY);
-                    }
-                });
-            }
-        };
+        featurePickListener = listener;
     }
 
     /**
@@ -1011,7 +1001,7 @@ public class MapController implements Renderer {
     public void pickFeature(final float posX, final float posY) {
         if (featurePickListener != null) {
             checkPointer(mapPointer);
-            nativePickFeature(mapPointer, posX, posY, featurePickListener);
+            nativePickFeature(mapPointer, posX, posY);
         }
     }
 
@@ -1320,7 +1310,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
     private synchronized native int nativeUpdateScene(long mapPtr, String[] updateStrings);
     private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
-    private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
+    private synchronized native void nativePickFeature(long mapPtr, float posX, float posY);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
     private synchronized native void nativePickMarker(MapController instance, long mapPtr, float posX, float posY, MarkerPickListener listener);
     private synchronized native long nativeMarkerAdd(long mapPtr);
@@ -1551,6 +1541,19 @@ public class MapController implements Renderer {
                 @Override
                 public void run() {
                     onCameraAnimationEnded(finished);
+                }
+            });
+        }
+    }
+
+    @Keep
+    void featurePickCallback(final Map<String, String> properties, final float x, final float y) {
+        final FeaturePickListener listener = featurePickListener;
+        if (listener != null) {
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onFeaturePick(properties, x, y);
                 }
             });
         }

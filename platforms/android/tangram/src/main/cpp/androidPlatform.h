@@ -21,7 +21,6 @@ struct SceneUpdate;
 struct SceneError;
 using SceneID = int32_t;
 
-void featurePickCallback(jobject listener, const FeaturePickResult* featurePickResult);
 void markerPickCallback(jobject listener, jobject tangramInstance, const MarkerPickResult* markerPickResult);
 void labelPickCallback(jobject listener, const LabelPickResult* labelPickResult);
 
@@ -42,6 +41,7 @@ public:
     void cancelUrlRequest(UrlRequestHandle _request) override;
     void sceneReadyCallback(SceneID id, const SceneError* error);
     void cameraAnimationCallback(bool finished);
+    void featurePickCallback(const FeaturePickResult* featurePickResult);
 
     void onUrlComplete(JNIEnv* jniEnv, jlong jRequestHandle, jbyteArray jBytes, jstring jError);
 

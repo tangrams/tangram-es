@@ -47,7 +47,7 @@ static jmethodID startUrlRequestMID = 0;
 static jmethodID cancelUrlRequestMID = 0;
 static jmethodID getFontFilePath = 0;
 static jmethodID getFontFallbackFilePath = 0;
-static jmethodID onFeaturePickMID = 0;
+static jmethodID featurePickCallbackMID = 0;
 static jmethodID onLabelPickMID = 0;
 static jmethodID onMarkerPickMID = 0;
 static jmethodID labelPickResultInitMID = 0;
@@ -84,9 +84,8 @@ void AndroidPlatform::setupJniEnv(JNIEnv* jniEnv) {
     setRenderModeMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
     sceneReadyCallbackMID = jniEnv->GetMethodID(tangramClass, "sceneReadyCallback", "(ILcom/mapzen/tangram/SceneError;)V");
     cameraAnimationCallbackMID = jniEnv->GetMethodID(tangramClass, "cameraAnimationCallback", "(Z)V");
+    featurePickCallbackMID = jniEnv->GetMethodID(tangramClass, "featurePickCallback", "(Ljava/util/Map;FF)V");
 
-    jclass featurePickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$FeaturePickListener");
-    onFeaturePickMID = jniEnv->GetMethodID(featurePickListenerClass, "onFeaturePick", "(Ljava/util/Map;FF)V");
     jclass labelPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$LabelPickListener");
     onLabelPickMID = jniEnv->GetMethodID(labelPickListenerClass, "onLabelPick", "(Lcom/mapzen/tangram/LabelPickResult;FF)V");
 
@@ -443,7 +442,7 @@ void markerPickCallback(jobject listener, jobject tangramInstance, const Tangram
     jniEnv->DeleteGlobalRef(tangramInstance);
 }
 
-void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* featurePickResult) {
+void AndroidPlatform::featurePickCallback(const Tangram::FeaturePickResult* featurePickResult) {
 
     JniThreadBinding jniEnv(jvm);
 
@@ -463,8 +462,7 @@ void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* fea
         }
     }
 
-    jniEnv->CallVoidMethod(listener, onFeaturePickMID, hashmap, position[0], position[1]);
-    jniEnv->DeleteGlobalRef(listener);
+    jniEnv->CallVoidMethod(m_tangramInstance, featurePickCallbackMID, hashmap, position[0], position[1]);
 }
 
 void initGLExtensions() {

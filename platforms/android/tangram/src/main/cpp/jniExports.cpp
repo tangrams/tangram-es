@@ -323,12 +323,12 @@ extern "C" {
         map->setPickRadius(radius);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickFeature(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY, jobject listener) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickFeature(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto object = jniEnv->NewGlobalRef(listener);
-        map->pickFeatureAt(posX, posY, [object](auto pickResult) {
-            Tangram::featurePickCallback(object, pickResult);
+        auto platform = static_cast<AndroidPlatform*>(map->getPlatform().get());
+        map->pickFeatureAt(posX, posY, [=](auto pickResult) {
+            platform->featurePickCallback(pickResult);
         });
     }
 
