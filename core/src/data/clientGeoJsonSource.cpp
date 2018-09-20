@@ -59,7 +59,7 @@ ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform,
     m_store = std::make_unique<ClientGeoJsonData>();
 
     if (!_url.empty()) {
-        UrlCallback onUrlFinished = [&, this](UrlResponse response) {
+        UrlCallback onUrlFinished = [&, this](UrlResponse&& response) {
             if (response.error) {
                 LOGE("Unable to retrieve data from '%s': %s", _url.c_str(), response.error);
             } else {

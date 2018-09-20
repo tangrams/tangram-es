@@ -40,7 +40,7 @@ private:
 
     struct Task {
         Request request;
-        Response response;
+        std::vector<char> content;
     };
 
     static Response getCanceledResponse();

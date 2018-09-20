@@ -588,7 +588,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
         texture->spriteAtlas() = std::move(_atlas);
 
         scene->pendingTextures++;
-        scene->startUrlRequest(platform, url, [&, url, scene, texture](UrlResponse response) {
+        scene->startUrlRequest(platform, url, [&, url, scene, texture](UrlResponse&& response) {
                 if (response.error) {
                     LOGE("Error retrieving URL '%s': %s", url.string().c_str(), response.error);
                 } else {
@@ -727,7 +727,7 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
 
     // Load font file.
     scene->pendingFonts++;
-    scene->startUrlRequest(platform, url, [_ft, scene](UrlResponse response) {
+    scene->startUrlRequest(platform, url, [_ft, scene](UrlResponse&& response) {
         if (response.error) {
             LOGE("Error retrieving font '%s' at %s: ", _ft.alias.c_str(), _ft.uri.c_str(), response.error);
         } else {
