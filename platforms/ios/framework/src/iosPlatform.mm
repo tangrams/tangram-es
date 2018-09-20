@@ -144,7 +144,7 @@ UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
     UrlResponse errorResponse;
     if (!mapView) {
         errorResponse.error = "MapView not initialized.";
-        _callback(errorResponse);
+        _callback(std::move(errorResponse));
         return 0;
     }
 
@@ -152,7 +152,7 @@ UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
 
     if (!urlHandler) {
         errorResponse.error = "urlHandler not set in MapView";
-        _callback(errorResponse);
+        _callback(std::move(errorResponse));
         return 0;
     }
 
@@ -186,7 +186,7 @@ UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
 
         // Run the callback from the requester.
         if (_callback) {
-            _callback(urlResponse);
+            _callback(std::move(urlResponse));
         }
     };
 

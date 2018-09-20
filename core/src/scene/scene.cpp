@@ -105,7 +105,7 @@ UrlRequestHandle Scene::startUrlRequest(std::shared_ptr<Platform> platform, Url 
         } else {
             response.error = "Could not find zip archive.";
         }
-        callback(response);
+        callback(std::move(response));
         return 0;
     }
 

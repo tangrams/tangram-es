@@ -311,7 +311,7 @@ UrlRequestHandle AndroidPlatform::startUrlRequest(Url _url, UrlCallback _callbac
         UrlResponse response;
         response.content = bytesFromFile(_url);
         if (_callback) {
-            _callback(response);
+            _callback(std::move(response));
         }
         return requestHandle;
     }
@@ -377,7 +377,7 @@ void AndroidPlatform::onUrlComplete(JNIEnv* _jniEnv, jlong _jRequestHandle, jbyt
         }
     }
     if (callback) {
-        callback(response);
+        callback(std::move(response));
     }
 }
 

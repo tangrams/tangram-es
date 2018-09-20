@@ -42,7 +42,7 @@ UrlRequestHandle MockPlatform::startUrlRequest(Url _url, UrlCallback _callback) 
         response.error = "Url contents could not be found!";
     }
 
-    _callback(response);
+    _callback(std::move(response));
 
     return 0;
 }
