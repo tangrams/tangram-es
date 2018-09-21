@@ -66,10 +66,15 @@ int getIntOrDefault(const YAML::Node& node, int defaultValue, bool allowTrailing
 }
 
 bool getFloat(const YAML::Node& node, float& result, bool allowTrailingJunk) {
-    double doubleValue;
-    if (getDouble(node, doubleValue, allowTrailingJunk)) {
-        result = static_cast<float>(doubleValue);
-        return true;
+    if (node.IsScalar()) {
+        const std::string& scalar = node.Scalar();
+        int size = static_cast<int>(scalar.size());
+        int count = 0;
+        float value = ff::stof(scalar.data(), size, &count);
+        if (count > 0 && (count == size || allowTrailingJunk)) {
+            result = value;
+            return true;
+        }
     }
     return false;
 }
@@ -82,9 +87,11 @@ float getFloatOrDefault(const YAML::Node& node, float defaultValue, bool allowTr
 bool getDouble(const YAML::Node& node, double& result, bool allowTrailingJunk) {
     if (node.IsScalar()) {
         const std::string& scalar = node.Scalar();
+        int size = static_cast<int>(scalar.size());
         int count = 0;
-        result = ff::stod(scalar.data(), static_cast<int>(scalar.size()), &count);
-        if (count == static_cast<int>(scalar.size()) || (count > 0 && allowTrailingJunk)) {
+        double value = ff::stod(scalar.data(), size, &count);
+        if (count > 0 && (count == size || allowTrailingJunk)) {
+            result = value;
             return true;
         }
     }
