@@ -93,14 +93,14 @@ public class DefaultHttpHandler implements HttpHandler {
                 if (body != null) {
                     try {
                         data = body.bytes();
+                        cb.onResponse(response.code(), data);
                     } catch (final IOException e) {
-                        Log.e("Tangram", "Error reading bytes from response body.", e);
+                        Log.e("Tangram", "Error reading bytes from response body:" + e.getMessage());
                         onFailure(call, e);
                     } finally {
                         response.close();
                     }
                 }
-                cb.onResponse(response.code(), data);
             }
         };
         final Request.Builder builder = new Request.Builder().url(httpUrl);
