@@ -203,15 +203,12 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Construct a MapController using a custom scene file
-     * @param view GLSurfaceView for the map display; input events from this
-     * view will be handled by the MapController's TouchInput gesture detector.
-     * It also provides the Context in which the map will function; the asset
+     * Construct a MapController
+     * @param context The application Context in which the map will function; the asset
      * bundle for this activity must contain all the local files that the map
      * will need.
-     * @param handler {@link HttpHandler} to initialize httpHandler for network handling
      */
-    protected MapController(@NonNull final GLSurfaceView view, @Nullable final HttpHandler handler) {
+    protected MapController(@NonNull Context context) {
         if (Build.VERSION.SDK_INT > 18) {
             clientTileSources = new ArrayMap<>();
         } else {
@@ -219,22 +216,12 @@ public class MapController implements Renderer {
         }
         markers = new LongSparseArray<>();
 
-        mapView = view;
-
         // Get configuration info from application
-        displayMetrics = mapView.getContext().getResources().getDisplayMetrics();
-        assetManager = mapView.getContext().getAssets();
-
-        fontFileParser = new FontFileParser();
-
-        // Use the DefaultHttpHandler if none is provided
-        if (handler == null) {
-            httpHandler = new DefaultHttpHandler();
-        } else {
-            httpHandler = handler;
-        }
+        displayMetrics = context.getResources().getDisplayMetrics();
+        assetManager = context.getAssets();
 
         // Parse font file description
+        fontFileParser = new FontFileParser();
         fontFileParser.parse();
 
         mapPointer = nativeInit(this, assetManager);
@@ -246,9 +233,20 @@ public class MapController implements Renderer {
     /**
      * Responsible to configure {@link MapController} configuration on the ui thread.
      * Must be called from the ui thread post instantiation of {@link MapController}
+     * @param view GLSurfaceView for the map display
+     * @param handler {@link HttpHandler} to initialize httpHandler for network handling
      */
-    void UIThreadInit() {
+    void UIThreadInit(@NonNull final GLSurfaceView view, @Nullable final HttpHandler handler) {
+
+        // Use the DefaultHttpHandler if none is provided
+        if (handler == null) {
+            httpHandler = new DefaultHttpHandler();
+        } else {
+            httpHandler = handler;
+        }
+
         // Set up MapView
+        mapView = view;
         mapView.setRenderer(this);
         isGLRendererSet = true;
         mapView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);

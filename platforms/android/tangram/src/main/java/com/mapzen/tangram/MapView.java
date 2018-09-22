@@ -59,14 +59,14 @@ public class MapView extends FrameLayout {
             if (view == null) {
                 return null;
             }
-            return view.mapInitInBackground(httpHandler);
+            return view.mapInitInBackground();
         }
 
         @Override
         protected void onPostExecute(MapController controller) {
             MapView view = mapViewRef.get();
             if (view != null) {
-                view.onMapInitOnUIThread(controller, mapReadyCallback);
+                view.onMapInitOnUIThread(controller, httpHandler, mapReadyCallback);
             }
         }
 
@@ -81,10 +81,9 @@ public class MapView extends FrameLayout {
 
     /**
      * Responsible for doing the actual map init. Should be executed from a non-ui thread.
-     * @param handler {@link HttpHandler} required for network handling
      * @return new or previously initialized {@link MapController}
      */
-    protected MapController mapInitInBackground(@Nullable final HttpHandler handler) {
+    protected MapController mapInitInBackground() {
         synchronized (lock) {
             if (!NativeLibraryLoader.sNativeLibraryLoaded) {
                 android.util.Log.e("Tangram", "Unable to initialize MapController, because failed to initialize native libraries");
@@ -94,20 +93,23 @@ public class MapView extends FrameLayout {
                 return mapController;
             }
         }
-        return getMapInstance(handler);
+        return new MapController(this.getContext());
     }
 
     /**
      * Should be executed from the UI thread
      * @param controller {@link MapController} created in a background thread
+     * @param handler {@link HttpHandler} required for network handling
      * @param callback {@link MapReadyCallback}
      */
-    protected void onMapInitOnUIThread(@Nullable final MapController controller, @NonNull final MapReadyCallback callback) {
+    protected void onMapInitOnUIThread(@Nullable final MapController controller, @Nullable final HttpHandler handler,
+                                       @NonNull final MapReadyCallback callback) {
         synchronized (lock) {
             if (mapController == null && controller != null) {
+                glSurfaceView = createGLSurfaceView();
                 mapController = controller;
-                configureGLSurfaceView();
-                mapController.UIThreadInit();
+                mapController.UIThreadInit(glSurfaceView, handler);
+                addView(glSurfaceView);
             }
             callback.onMapReady(mapController);
         }
@@ -170,22 +172,16 @@ public class MapView extends FrameLayout {
                             @Nullable final HttpHandler handler) {
 
         disposeMapReadyTask();
-        if (glSurfaceView == null) {
-            glSurfaceView = new GLSurfaceView(getContext());
-        }
+
         executeMapAsyncTask(readyCallback, handler);
     }
 
-    @NonNull
-    protected MapController getMapInstance(@Nullable final HttpHandler handler) {
-        return new MapController(glSurfaceView, handler);
-    }
-
-    protected void configureGLSurfaceView() {
-        glSurfaceView.setEGLContextClientVersion(2);
-        glSurfaceView.setPreserveEGLContextOnPause(true);
-        glSurfaceView.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 0, 16, 8));
-        addView(glSurfaceView);
+    protected GLSurfaceView createGLSurfaceView() {
+        GLSurfaceView view = new GLSurfaceView(getContext());
+        view.setEGLContextClientVersion(2);
+        view.setPreserveEGLContextOnPause(true);
+        view.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 0, 16, 8));
+        return view;
     }
 
     protected void disposeMap() {
@@ -211,14 +207,18 @@ public class MapView extends FrameLayout {
      * You must call this method from the parent Activity/Fragment's corresponding method.
      */
     public void onResume() {
-
+        if (glSurfaceView != null) {
+            glSurfaceView.onResume();
+        }
     }
 
     /**
      * You must call this method from the parent Activity/Fragment's corresponding method.
      */
     public void onPause() {
-
+        if (glSurfaceView != null) {
+            glSurfaceView.onPause();
+        }
     }
 
     /**
