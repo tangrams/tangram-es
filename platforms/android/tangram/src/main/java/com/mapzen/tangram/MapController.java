@@ -15,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.ArrayMap;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.LongSparseArray;
 
 import com.mapzen.tangram.TouchInput.Gestures;
@@ -271,6 +272,8 @@ public class MapController implements Renderer {
     }
 
     void dispose() {
+
+        httpHandler = null;
 
         // Prevent any other calls to native functions during dispose
         synchronized (this) {
@@ -1452,6 +1455,10 @@ public class MapController implements Renderer {
         final HttpHandler.Callback callback = new HttpHandler.Callback() {
             @Override
             public void onFailure(@Nullable final IOException e) {
+                if (httpHandler == null) {
+                    Log.w("Tangram", "Network call after disposing MapController - Failure");
+                    return;
+                }
                 String msg = (e == null) ? "" : e.getMessage();
                 nativeOnUrlComplete(mapPointer, requestHandle, null, msg);
                 syncRemoveHttpHandle(requestHandle);
@@ -1459,10 +1466,13 @@ public class MapController implements Renderer {
 
             @Override
             public void onResponse(final int code, @Nullable final byte[] rawDataBytes) {
+                if (httpHandler == null) {
+                    Log.w("Tangram", "Network call after disposing MapController - Response");
+                    return;
+                }
                 if (code >= 200 && code < 300) {
                     nativeOnUrlComplete(mapPointer, requestHandle, rawDataBytes, null);
-                }
-                else {
+                } else {
                     nativeOnUrlComplete(mapPointer, requestHandle, null, "Unexpected response code: " + code + " for URL: " + url);
                 }
                 syncRemoveHttpHandle(requestHandle);
@@ -1470,6 +1480,10 @@ public class MapController implements Renderer {
 
             @Override
             public void onCancel() {
+                if (httpHandler == null) {
+                    Log.w("Tangram", "Network call after disposing MapController - Cancel");
+                    return;
+                }
                 nativeOnUrlComplete(mapPointer, requestHandle, null, null);
                 syncRemoveHttpHandle(requestHandle);
             }
