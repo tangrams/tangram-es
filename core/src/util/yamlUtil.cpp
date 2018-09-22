@@ -6,6 +6,7 @@
 #include "log.h"
 #include "util/floatFormatter.h"
 #include "csscolorparser.hpp"
+#include <cmath>
 
 namespace Tangram {
 namespace YamlUtil {
@@ -47,15 +48,10 @@ std::string parseSequence(const YAML::Node& node) {
 
 
 bool getInt(const YAML::Node& node, int& result, bool allowTrailingJunk) {
-    if (node.IsScalar()) {
-        auto& str = node.Scalar();
-        char* position = nullptr;
-        constexpr int base = 10;
-        long value = std::strtol(str.data(), &position, base);
-        if (position == (str.data() + str.size()) || (position > str.data() && allowTrailingJunk)) {
-            result = static_cast<int>(value);
-            return true;
-        }
+    double value;
+    if (getDouble(node, value, allowTrailingJunk)) {
+        result = static_cast<int>(std::round(value));
+        return true;
     }
     return false;
 }
