@@ -271,37 +271,48 @@ public class MapController implements Renderer {
     }
 
     void dispose() {
-        // No GL setup from UI Thread, early return
-        if (!isGLRendererSet) { return; }
 
-        // Disposing native resources involves GL calls, so we need to run on the GL thread.
-        queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                // Dispose each data sources by first removing it from the Map values and then
-                // calling remove(), so that we don't improperly modify the Map while iterating.
-                for (final Iterator<MapData> it = clientTileSources.values().iterator(); it.hasNext();) {
-                    final MapData mapData = it.next();
-                    it.remove();
-                    mapData.remove();
-                }
-                nativeDispose(mapPointer);
-                mapPointer = 0;
-                clientTileSources.clear();
-                markers.clear();
+        // Prevent any other calls to native functions during dispose
+        synchronized (this) {
+            // Dispose each data sources by first removing it from the Map values and then
+            // calling remove(), so that we don't improperly modify the Map while iterating.
+            for (final Iterator<MapData> it = clientTileSources.values().iterator(); it.hasNext(); ) {
+                final MapData mapData = it.next();
+                it.remove();
+                mapData.remove();
             }
-        });
+            clientTileSources.clear();
+            markers.clear();
 
-        // Dispose all listener and callbacks associated with mapController
-        // This will help prevent leaks of references from the client code, possibly used in these listener/callbacks
-        touchInput = null;
-        mapChangeListener = null;
-        featurePickListener = null;
-        sceneLoadListener = null;
-        labelPickListener = null;
-        markerPickListener = null;
-        cameraAnimationCallback = null;
-        frameCaptureCallback = null;
+            // Dispose all listener and callbacks associated with mapController
+            // This will help prevent leaks of references from the client code, possibly used in these
+            // listener/callbacks
+            touchInput = null;
+            mapChangeListener = null;
+            featurePickListener = null;
+            sceneLoadListener = null;
+            labelPickListener = null;
+            markerPickListener = null;
+            cameraAnimationCallback = null;
+            frameCaptureCallback = null;
+
+            // Prevent any calls to native functions - except dispose.
+            final long pointer = mapPointer;
+            mapPointer = 0;
+
+            if (!isGLRendererSet) {
+                // No GL setup from UI Thread
+                nativeDispose(pointer);
+            } else {
+                // Disposing native resources involves GL calls, so we need to run on the GL thread.
+                queueEvent(new Runnable() {
+                    @Override
+                    public void run() {
+                        nativeDispose(pointer);
+                    }
+                });
+            }
+        }
     }
 
     /**
