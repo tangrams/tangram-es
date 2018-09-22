@@ -1448,7 +1448,13 @@ public class MapController implements Renderer {
 
     @Keep
     void startUrlRequest(@NonNull final String url, final long requestHandle) {
-        if (httpHandler == null) {
+        // FIXME
+        // This is still does not ensure that handler.startRequest is not
+        // executed after MapController.dispose() when startUrlRequest is
+        // callend from worker threads. At least the result is ignored
+
+        HttpHandler handler = httpHandler;
+        if (handler == null) {
             return;
         }
 
@@ -1489,7 +1495,7 @@ public class MapController implements Renderer {
             }
         };
 
-        Object request = httpHandler.startRequest(url, callback);
+        Object request = handler.startRequest(url, callback);
         if (request != null) {
             synchronized (httpRequestHandles) {
                 httpRequestHandles.put(requestHandle, request);
