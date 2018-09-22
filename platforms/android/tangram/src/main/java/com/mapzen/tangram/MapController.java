@@ -1413,7 +1413,7 @@ public class MapController implements Renderer {
     // ==================
 
     private void syncRemoveHttpHandle(final long requestHandle) {
-        synchronized(this) {
+        synchronized(httpRequestHandles) {
             httpRequestHandles.remove(requestHandle);
         }
     }
@@ -1422,7 +1422,7 @@ public class MapController implements Renderer {
     void cancelUrlRequest(final long requestHandle) {
         if (httpHandler != null) {
             Object request;
-            synchronized(this) {
+            synchronized(httpRequestHandles) {
                 request = httpRequestHandles.get(requestHandle);
                 httpRequestHandles.remove(requestHandle);
             }
@@ -1466,7 +1466,7 @@ public class MapController implements Renderer {
 
         Object request = httpHandler.startRequest(url, callback);
         if (request != null) {
-            synchronized (this) {
+            synchronized (httpRequestHandles) {
                 httpRequestHandles.put(requestHandle, request);
             }
         }
