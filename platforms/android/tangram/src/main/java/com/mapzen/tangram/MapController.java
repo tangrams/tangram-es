@@ -86,56 +86,6 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Interface for a callback to receive information about features picked from the map
-     * Triggered after a call of {@link #pickFeature(float, float)}
-     * Listener should be set with {@link #setFeaturePickListener(FeaturePickListener)}
-     * The callback will be run on the main (UI) thread.
-     */
-    @Keep
-    public interface FeaturePickListener {
-        /**
-         * Receive information about features found in a call to {@link #pickFeature(float, float)}
-         * @param properties A mapping of string keys to string or number values
-         * @param positionX The horizontal screen coordinate of the picked location
-         * @param positionY The vertical screen coordinate of the picked location
-         */
-        void onFeaturePick(final Map<String, String> properties, final float positionX, final float positionY);
-    }
-    /**
-     * Interface for a callback to receive information about labels picked from the map
-     * Triggered after a call of {@link #pickLabel(float, float)}
-     * Listener should be set with {@link #setLabelPickListener(LabelPickListener)}
-     * The callback will be run on the main (UI) thread.
-     */
-    @Keep
-    public interface LabelPickListener {
-        /**
-         * Receive information about labels found in a call to {@link #pickLabel(float, float)}
-         * @param labelPickResult The {@link LabelPickResult} that has been selected
-         * @param positionX The horizontal screen coordinate of the picked location
-         * @param positionY The vertical screen coordinate of the picked location
-         */
-        void onLabelPick(final LabelPickResult labelPickResult, final float positionX, final float positionY);
-    }
-
-    /**
-     * Interface for a callback to receive the picked {@link Marker}
-     * Triggered after a call of {@link #pickMarker(float, float)}
-     * Listener should be set with {@link #setMarkerPickListener(MarkerPickListener)}
-     * The callback will be run on the main (UI) thread.
-     */
-    @Keep
-    public interface MarkerPickListener {
-        /**
-         * Receive information about marker found in a call to {@link #pickMarker(float, float)}
-         * @param markerPickResult The {@link MarkerPickResult} the marker that has been selected
-         * @param positionX The horizontal screen coordinate of the picked location
-         * @param positionY The vertical screen coordinate of the picked location
-         */
-        void onMarkerPick(final MarkerPickResult markerPickResult, final float positionX, final float positionY);
-    }
-
-    /**
      * Interface for listening to scene load status information.
      * Triggered after a call of {@link #updateSceneAsync(List<SceneUpdate>)} or
      * {@link #loadSceneFileAsync(String, List<SceneUpdate>)} or {@link #loadSceneFile(String, List<SceneUpdate>)}

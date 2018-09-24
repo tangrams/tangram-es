@@ -116,7 +116,7 @@ void AndroidPlatform::setupJniEnv(JNIEnv* jniEnv) {
 
     markerByIDMID = jniEnv->GetMethodID(tangramClass, "markerById", "(J)Lcom/mapzen/tangram/Marker;");
 
-    jclass markerPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$MarkerPickListener");
+    jclass markerPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MarkerPickListener");
     onMarkerPickMID = jniEnv->GetMethodID(markerPickListenerClass, "onMarkerPick", "(Lcom/mapzen/tangram/MarkerPickResult;FF)V");
 }
 
