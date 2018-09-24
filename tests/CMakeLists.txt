@@ -40,6 +40,7 @@ set(TEST_SOURCES
   unit/tileManagerTests.cpp
   unit/urlTests.cpp
   unit/yamlFilterTests.cpp
+  unit/yamlUtilTests.cpp
 )
 
 # create an executable per test

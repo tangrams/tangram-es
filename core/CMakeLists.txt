@@ -87,7 +87,8 @@ add_library(tangram-core
   src/util/mapProjection.cpp
   src/util/rasterize.cpp
   src/util/url.cpp
-  src/util/yamlHelper.cpp
+  src/util/yamlPath.cpp
+  src/util/yamlUtil.cpp
   src/util/zipArchive.cpp
   src/util/zlibHelper.cpp
   src/view/flyTo.cpp

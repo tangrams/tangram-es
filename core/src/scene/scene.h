@@ -4,7 +4,7 @@
 #include "platform.h"
 #include "util/color.h"
 #include "util/url.h"
-#include "util/yamlHelper.h"
+#include "util/yamlPath.h"
 #include "view/view.h"
 
 #include <atomic>
