@@ -666,8 +666,8 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
 
     float density = 1.f;
     if (Node d = textureConfig["density"]) {
-        double val;
-        if (YamlUtil::getDouble(d, val, false)) { density = val; }
+        float val;
+        if (YamlUtil::getFloat(d, val)) { density = val; }
     }
 
     std::unique_ptr<SpriteAtlas> atlas;
@@ -807,6 +807,7 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
         if (auto polylineStyle = dynamic_cast<PolylineStyle*>(&style)) {
             if (dashNode.IsSequence()) {
                 std::vector<float> dashValues;
+                dashValues.reserve(dashNode.size());
                 for (const auto& dashValue : dashNode) {
                     float floatValue;
                     if (YamlUtil::getFloat(dashValue, floatValue)) {
@@ -1794,6 +1795,7 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, const std::share
             if (data_layer.IsScalar()) {
                 collections.push_back(data_layer.Scalar());
             } else if (data_layer.IsSequence()) {
+                collections.reserve(data_layer.size());
                 for (const auto& entry : data_layer) {
                     if (entry.IsScalar()) {
                         collections.push_back(entry.Scalar());
