@@ -964,7 +964,7 @@ public class MapController implements Renderer {
     public void pickLabel(final float posX, final float posY) {
         if (labelPickListener != null) {
             checkPointer(mapPointer);
-            nativePickLabel(mapPointer, posX, posY, labelPickListener);
+            nativePickLabel(mapPointer, posX, posY);
         }
     }
 
@@ -1261,7 +1261,7 @@ public class MapController implements Renderer {
     private synchronized native int nativeUpdateScene(long mapPtr, String[] updateStrings);
     private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY);
-    private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
+    private synchronized native void nativePickLabel(long mapPtr, float posX, float posY);
     private synchronized native void nativePickMarker(MapController instance, long mapPtr, float posX, float posY, MarkerPickListener listener);
     private synchronized native long nativeMarkerAdd(long mapPtr);
     private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
@@ -1504,6 +1504,20 @@ public class MapController implements Renderer {
                 @Override
                 public void run() {
                     listener.onFeaturePick(properties, x, y);
+                }
+            });
+        }
+    }
+
+    @Keep
+    void labelPickCallback(final Map<String, String> properties, final float x, final float y, final int type, final double lng, final double lat) {
+        final LabelPickResult result = (properties == null) ? null : new LabelPickResult(lng, lat, type, properties);
+        final LabelPickListener listener = labelPickListener;
+        if (listener != null) {
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onLabelPick(result, x, y);
                 }
             });
         }

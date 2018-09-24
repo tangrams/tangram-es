@@ -22,7 +22,6 @@ struct SceneError;
 using SceneID = int32_t;
 
 void markerPickCallback(jobject listener, jobject tangramInstance, const MarkerPickResult* markerPickResult);
-void labelPickCallback(jobject listener, const LabelPickResult* labelPickResult);
 
 std::string stringFromJString(JNIEnv* jniEnv, jstring string);
 jstring jstringFromString(JNIEnv* jniEnv, const std::string& string);
@@ -42,6 +41,7 @@ public:
     void sceneReadyCallback(SceneID id, const SceneError* error);
     void cameraAnimationCallback(bool finished);
     void featurePickCallback(const FeaturePickResult* featurePickResult);
+    void labelPickCallback(const LabelPickResult* labelPickResult);
 
     void onUrlComplete(JNIEnv* jniEnv, jlong jRequestHandle, jbyteArray jBytes, jstring jError);
 

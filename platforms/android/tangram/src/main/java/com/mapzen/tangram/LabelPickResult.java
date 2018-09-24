@@ -22,7 +22,7 @@ public class LabelPickResult {
     private LabelType type;
     private Map<String, String> properties;
 
-    private LabelPickResult(final double longitude, final double latitude, final int type,
+    LabelPickResult(final double longitude, final double latitude, final int type,
                             final Map<String, String> properties) {
         this.properties = properties;
         this.coordinates = new LngLat(longitude, latitude);

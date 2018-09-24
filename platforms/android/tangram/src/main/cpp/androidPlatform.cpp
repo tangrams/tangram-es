@@ -48,7 +48,7 @@ static jmethodID cancelUrlRequestMID = 0;
 static jmethodID getFontFilePath = 0;
 static jmethodID getFontFallbackFilePath = 0;
 static jmethodID featurePickCallbackMID = 0;
-static jmethodID onLabelPickMID = 0;
+static jmethodID labelPickCallbackMID = 0;
 static jmethodID onMarkerPickMID = 0;
 static jmethodID labelPickResultInitMID = 0;
 static jmethodID markerPickResultInitMID = 0;
@@ -56,7 +56,6 @@ static jmethodID sceneReadyCallbackMID = 0;
 static jmethodID sceneErrorInitMID = 0;
 static jmethodID cameraAnimationCallbackMID = 0;
 
-static jclass labelPickResultClass = nullptr;
 static jclass sceneErrorClass = nullptr;
 static jclass markerPickResultClass = nullptr;
 
@@ -85,15 +84,7 @@ void AndroidPlatform::setupJniEnv(JNIEnv* jniEnv) {
     sceneReadyCallbackMID = jniEnv->GetMethodID(tangramClass, "sceneReadyCallback", "(ILcom/mapzen/tangram/SceneError;)V");
     cameraAnimationCallbackMID = jniEnv->GetMethodID(tangramClass, "cameraAnimationCallback", "(Z)V");
     featurePickCallbackMID = jniEnv->GetMethodID(tangramClass, "featurePickCallback", "(Ljava/util/Map;FF)V");
-
-    jclass labelPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$LabelPickListener");
-    onLabelPickMID = jniEnv->GetMethodID(labelPickListenerClass, "onLabelPick", "(Lcom/mapzen/tangram/LabelPickResult;FF)V");
-
-    if (labelPickResultClass) {
-        jniEnv->DeleteGlobalRef(labelPickResultClass);
-    }
-    labelPickResultClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/LabelPickResult"));
-    labelPickResultInitMID = jniEnv->GetMethodID(labelPickResultClass, "<init>", "(DDILjava/util/Map;)V");
+    labelPickCallbackMID = jniEnv->GetMethodID(tangramClass, "labelPickCallback", "(Ljava/util/Map;FFIDD)V");
 
     if (markerPickResultClass) {
         jniEnv->DeleteGlobalRef(markerPickResultClass);
@@ -384,34 +375,31 @@ void setCurrentThreadPriority(int priority) {
     setpriority(PRIO_PROCESS, 0, priority);
 }
 
-void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult) {
+void AndroidPlatform::labelPickCallback(const LabelPickResult* labelPickResult) {
 
     JniThreadBinding jniEnv(jvm);
 
-    float position[2] = {0.0, 0.0};
-
-    jobject labelPickResultObject = nullptr;
+    float x = 0.f, y = 0.f;
+    double lng = 0., lat = 0.;
+    int type = 0;
+    jobject hashmap = nullptr;
 
     if (labelPickResult) {
         auto properties = labelPickResult->touchItem.properties;
 
-        position[0] = labelPickResult->touchItem.position[0];
-        position[1] = labelPickResult->touchItem.position[1];
+        x = labelPickResult->touchItem.position[0];
+        y = labelPickResult->touchItem.position[1];
 
-        jobject hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
+        hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
 
         for (const auto& item : properties->items()) {
             jstring jkey = jstringFromString(jniEnv, item.key);
             jstring jvalue = jstringFromString(jniEnv, properties->asString(item.value));
             jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
         }
-
-        labelPickResultObject = jniEnv->NewObject(labelPickResultClass, labelPickResultInitMID, labelPickResult->coordinates.longitude,
-            labelPickResult->coordinates.latitude, labelPickResult->type, hashmap);
     }
 
-    jniEnv->CallVoidMethod(listener, onLabelPickMID, labelPickResultObject, position[0], position[1]);
-    jniEnv->DeleteGlobalRef(listener);
+    jniEnv->CallVoidMethod(m_tangramInstance, labelPickCallbackMID, hashmap, x, y, lng, lat, type);
 }
 
 void markerPickCallback(jobject listener, jobject tangramInstance, const Tangram::MarkerPickResult* markerPickResult) {
