@@ -8,6 +8,7 @@
 #include "util/extrude.h"
 #include "util/floatFormatter.h"
 #include "util/geom.h" // for CLAMP
+#include "util/yamlUtil.h"
 
 #include "csscolorparser.hpp"
 #include "yaml-cpp/node/node.h"
@@ -102,29 +103,6 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"visible", StyleParamKey::visible},
     {"width", StyleParamKey::width},
 };
-
-static int parseInt(const std::string& _str, int& _value) {
-    try {
-        size_t index;
-        _value = std::stoi(_str, &index);
-        return index;
-    } catch (std::invalid_argument) {
-    } catch (std::out_of_range) {}
-    LOGW("Not an Integer '%s'", _str.c_str());
-
-    return -1;
-}
-
-static int parseFloat(const std::string& _str, double& _value) {
-    int index = 0;
-    _value = ff::stod(_str.data(), _str.size(), &index);
-    if (index == 0) {
-        LOGW("Not a Float '%s'", _str.c_str());
-        return -1;
-    }
-
-    return index;
-}
 
 const std::string& StyleParam::keyName(StyleParamKey _key) {
     static std::string fallback = "bug";
@@ -321,7 +299,7 @@ StyleParam::Value StyleParam::parseNode(StyleParamKey key, const YAML::Node& nod
     case StyleParamKey::text_max_lines:
     case StyleParamKey::text_priority: {
         int result = -1;
-        if (node.IsScalar() && parseInt(node.Scalar(), result) > 0) {
+        if (YamlUtil::getInt(node, result)) {
             return static_cast<uint32_t>(result);
         }
         LOGW("Invalid '%s' value '%s'", keyName(key).c_str(), Dump(node).c_str());
@@ -386,9 +364,9 @@ StyleParam::Value StyleParam::parseNode(StyleParamKey key, const YAML::Node& nod
     case StyleParamKey::outline_miter_limit:
     case StyleParamKey::placement_min_length_ratio:
     case StyleParamKey::text_font_stroke_width: {
-        double number;
-        if (node.IsScalar() && parseFloat(node.Scalar(), number) > 0) {
-            return static_cast<float>(number);
+        float floatValue;
+        if (YamlUtil::getFloat(node, floatValue, true)) {
+            return floatValue;
         } else {
             LOGW("Invalid width value: %s", Dump(node).c_str());
         }
@@ -671,13 +649,13 @@ bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
         return false;
     }
 
-    double num;
-    int index = parseFloat(_str, num);
-    if (index < 0) {
+    int index = 0;
+    float floatValue = ff::stof(_str.data(), _str.size(), &index);
+    if (index <= 0) {
         return false;
     }
 
-    _pxSize = static_cast<float>(num);
+    _pxSize = floatValue;
 
     if (size_t(index) == _str.length() && (_str.find('.') == std::string::npos)) {
         return true;
