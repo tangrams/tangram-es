@@ -977,7 +977,7 @@ public class MapController implements Renderer {
     public void pickMarker(final float posX, final float posY) {
         if (markerPickListener != null) {
             checkPointer(mapPointer);
-            nativePickMarker(this, mapPointer, posX, posY, markerPickListener);
+            nativePickMarker(mapPointer, posX, posY);
         }
     }
 
@@ -1215,11 +1215,6 @@ public class MapController implements Renderer {
         return nativeMarkerSetDrawOrder(mapPointer, markerId, drawOrder);
     }
 
-    @Keep
-    Marker markerById(final long markerId) {
-        return markers.get(markerId);
-    }
-
     // Native methods
     // ==============
 
@@ -1262,7 +1257,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY);
-    private synchronized native void nativePickMarker(MapController instance, long mapPtr, float posX, float posY, MarkerPickListener listener);
+    private synchronized native void nativePickMarker(long mapPtr, float posX, float posY);
     private synchronized native long nativeMarkerAdd(long mapPtr);
     private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
     private synchronized native boolean nativeMarkerSetStylingFromString(long mapPtr, long markerID, String styling);
@@ -1511,13 +1506,34 @@ public class MapController implements Renderer {
 
     @Keep
     void labelPickCallback(final Map<String, String> properties, final float x, final float y, final int type, final double lng, final double lat) {
-        final LabelPickResult result = (properties == null) ? null : new LabelPickResult(lng, lat, type, properties);
         final LabelPickListener listener = labelPickListener;
         if (listener != null) {
             uiThreadHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    LabelPickResult result = null;
+                    if (properties != null) {
+                        result = new LabelPickResult(lng, lat, type, properties);
+                    }
                     listener.onLabelPick(result, x, y);
+                }
+            });
+        }
+    }
+
+    @Keep
+    void markerPickCallback(final long markerId, final float x, final float y, final double lng, final double lat) {
+        final MarkerPickListener listener = markerPickListener;
+        if (listener != null) {
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    final Marker marker = markers.get(markerId);
+                    MarkerPickResult result = null;
+                    if (marker != null) {
+                        result = new MarkerPickResult(marker, lng, lat);
+                    }
+                    listener.onMarkerPick(result, x, y);
                 }
             });
         }

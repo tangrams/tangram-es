@@ -332,13 +332,12 @@ extern "C" {
         });
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickMarker(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jlong mapPtr, jfloat posX, jfloat posY, jobject listener) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickMarker(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto object = jniEnv->NewGlobalRef(listener);
-        auto instance = jniEnv->NewGlobalRef(tangramInstance);
-        map->pickMarkerAt(posX, posY, [object, instance](auto pickMarkerResult) {
-            Tangram::markerPickCallback(object, instance, pickMarkerResult);
+        auto platform = static_cast<AndroidPlatform*>(map->getPlatform().get());
+        map->pickMarkerAt(posX, posY, [=](auto pickResult) {
+            platform->markerPickCallback(pickResult);
         });
     }
 

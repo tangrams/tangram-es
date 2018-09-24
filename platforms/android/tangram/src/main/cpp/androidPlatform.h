@@ -21,8 +21,6 @@ struct SceneUpdate;
 struct SceneError;
 using SceneID = int32_t;
 
-void markerPickCallback(jobject listener, jobject tangramInstance, const MarkerPickResult* markerPickResult);
-
 std::string stringFromJString(JNIEnv* jniEnv, jstring string);
 jstring jstringFromString(JNIEnv* jniEnv, const std::string& string);
 
@@ -42,6 +40,7 @@ public:
     void cameraAnimationCallback(bool finished);
     void featurePickCallback(const FeaturePickResult* featurePickResult);
     void labelPickCallback(const LabelPickResult* labelPickResult);
+    void markerPickCallback(const MarkerPickResult* markerPickResult);
 
     void onUrlComplete(JNIEnv* jniEnv, jlong jRequestHandle, jbyteArray jBytes, jstring jError);
 
