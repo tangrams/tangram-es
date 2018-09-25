@@ -1465,14 +1465,17 @@ public class MapController implements Renderer {
 
     // Called from JNI on worker or render-thread.
     @Keep
-    void sceneReadyCallback(final int sceneId, final SceneError error) {
-
-        final SceneLoadListener cb = sceneLoadListener;
-        if (cb != null) {
+    void sceneReadyCallback(final int sceneId, final int errorType, final String updatePath, final String updateValue) {
+        final SceneLoadListener listener = sceneLoadListener;
+        if (listener != null) {
             uiThreadHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    cb.onSceneReady(sceneId, error);
+                    SceneError error = null;
+                    if (errorType >= 0) {
+                        error = new SceneError(updatePath, updateValue, errorType);
+                    }
+                    listener.onSceneReady(sceneId, error);
                 }
             });
         }

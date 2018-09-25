@@ -51,10 +51,7 @@ static jmethodID featurePickCallbackMID = 0;
 static jmethodID labelPickCallbackMID = 0;
 static jmethodID markerPickCallbackMID = 0;
 static jmethodID sceneReadyCallbackMID = 0;
-static jmethodID sceneErrorInitMID = 0;
 static jmethodID cameraAnimationCallbackMID = 0;
-
-static jclass sceneErrorClass = nullptr;
 
 static jclass hashmapClass = nullptr;
 static jmethodID hashmapInitMID = 0;
@@ -76,17 +73,11 @@ void AndroidPlatform::setupJniEnv(JNIEnv* jniEnv) {
     getFontFallbackFilePath = jniEnv->GetMethodID(tangramClass, "getFontFallbackFilePath", "(II)Ljava/lang/String;");
     requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
-    sceneReadyCallbackMID = jniEnv->GetMethodID(tangramClass, "sceneReadyCallback", "(ILcom/mapzen/tangram/SceneError;)V");
+    sceneReadyCallbackMID = jniEnv->GetMethodID(tangramClass, "sceneReadyCallback", "(IILjava/lang/String;Ljava/lang/String;)V");
     cameraAnimationCallbackMID = jniEnv->GetMethodID(tangramClass, "cameraAnimationCallback", "(Z)V");
     featurePickCallbackMID = jniEnv->GetMethodID(tangramClass, "featurePickCallback", "(Ljava/util/Map;FF)V");
     labelPickCallbackMID = jniEnv->GetMethodID(tangramClass, "labelPickCallback", "(Ljava/util/Map;FFIDD)V");
     markerPickCallbackMID = jniEnv->GetMethodID(tangramClass, "markerPickCallback", "(JFFDD)V");
-
-    if (sceneErrorClass) {
-        jniEnv->DeleteGlobalRef(sceneErrorClass);
-    }
-    sceneErrorClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/SceneError"));
-    sceneErrorInitMID = jniEnv->GetMethodID(sceneErrorClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;I)V");
 
     if (hashmapClass) {
         jniEnv->DeleteGlobalRef(hashmapClass);
@@ -446,19 +437,17 @@ void AndroidPlatform::sceneReadyCallback(SceneID id, const SceneError* sceneErro
 
     JniThreadBinding jniEnv(jvm);
 
-    jobject jUpdateErrorStatus = 0;
+    jint jErrorType = -1;
+    jstring jUpdatePath = nullptr;
+    jstring jUpdateValue = nullptr;
 
     if (sceneError) {
-        jstring jUpdateStatusPath = jstringFromString(jniEnv, sceneError->update.path);
-        jstring jUpdateStatusValue = jstringFromString(jniEnv, sceneError->update.value);
-        jint jError = (jint) sceneError->error;
-        jUpdateErrorStatus = jniEnv->NewObject(sceneErrorClass,
-                                               sceneErrorInitMID,
-                                               jUpdateStatusPath, jUpdateStatusValue,
-                                               jError);
+        jUpdatePath = jstringFromString(jniEnv, sceneError->update.path);
+        jUpdateValue = jstringFromString(jniEnv, sceneError->update.value);
+        jErrorType = (jint)sceneError->error;
     }
 
-    jniEnv->CallVoidMethod(m_tangramInstance, sceneReadyCallbackMID, id, jUpdateErrorStatus);
+    jniEnv->CallVoidMethod(m_tangramInstance, sceneReadyCallbackMID, id, jErrorType, jUpdatePath, jUpdateValue);
 }
 
 void AndroidPlatform::cameraAnimationCallback(bool finished) {
