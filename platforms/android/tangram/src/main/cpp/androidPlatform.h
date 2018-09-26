@@ -45,7 +45,7 @@ public:
     void onUrlComplete(JNIEnv* jniEnv, jlong jRequestHandle, jbyteArray jBytes, jstring jError);
 
     static void bindJniEnvToThread(JNIEnv* jniEnv);
-    static void setupJniEnv(JNIEnv* _jniEnv);
+    static jint jniOnLoad(JavaVM* javaVM);
 
 private:
 

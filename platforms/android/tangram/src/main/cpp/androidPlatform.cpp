@@ -63,8 +63,15 @@ void AndroidPlatform::bindJniEnvToThread(JNIEnv* jniEnv) {
     jniEnv->GetJavaVM(&jvm);
 }
 
-void AndroidPlatform::setupJniEnv(JNIEnv* jniEnv) {
-    bindJniEnvToThread(jniEnv);
+jint AndroidPlatform::jniOnLoad(JavaVM* javaVM) {
+    // JNI OnLoad is invoked once when the native library is loaded so this is a good place to cache
+    // any method or class IDs that we'll need.
+
+    jvm = javaVM;
+    JNIEnv* jniEnv = nullptr;
+    if (javaVM->GetEnv(reinterpret_cast<void**>(&jniEnv), JNI_VERSION_1_6) != JNI_OK) {
+        return -1;
+    }
 
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/MapController");
     startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)V");
@@ -79,12 +86,13 @@ void AndroidPlatform::setupJniEnv(JNIEnv* jniEnv) {
     labelPickCallbackMID = jniEnv->GetMethodID(tangramClass, "labelPickCallback", "(Ljava/util/Map;FFIDD)V");
     markerPickCallbackMID = jniEnv->GetMethodID(tangramClass, "markerPickCallback", "(JFFDD)V");
 
-    if (hashmapClass) {
-        jniEnv->DeleteGlobalRef(hashmapClass);
-    }
+    // We need a reference to the class object later to invoke the constructor. FindClass produces a
+    // local reference that may not be valid later, so create a global reference to the class.
     hashmapClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("java/util/HashMap"));
     hashmapInitMID = jniEnv->GetMethodID(hashmapClass, "<init>", "()V");
     hashmapPutMID = jniEnv->GetMethodID(hashmapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+
+    return JNI_VERSION_1_6;
 }
 
 std::string stringFromJString(JNIEnv* jniEnv, jstring string) {

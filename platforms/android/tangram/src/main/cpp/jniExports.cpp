@@ -22,6 +22,10 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(JNIEnv* jniEnv, jobjectArra
 
 extern "C" {
 
+    JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
+        return AndroidPlatform::jniOnLoad(vm);
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetCameraPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray lonLat, jfloatArray zoomRotationTilt) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
@@ -123,7 +127,6 @@ extern "C" {
     }
 
     JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeInit(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
-        AndroidPlatform::setupJniEnv(jniEnv);
         auto platform = std::make_shared<Tangram::AndroidPlatform>(jniEnv, assetManager, tangramInstance);
         auto map = new Tangram::Map(platform);
         map->setSceneReadyListener([platform](Tangram::SceneID id, const Tangram::SceneError* error) {
