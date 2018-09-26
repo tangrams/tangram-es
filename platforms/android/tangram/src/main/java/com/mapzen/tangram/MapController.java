@@ -91,6 +91,15 @@ public class MapController implements Renderer {
         SELECTION_BUFFER,
     }
 
+    public enum MapRegionChangeState {
+        MAP_REGION_NO_CHANGE,
+        MAP_REGION_WILL_CHANGE,
+        MAP_REGION_WILL_CHANGE_ANIMATED,
+        MAP_REGION_IS_CHANGING,
+        MAP_REGION_DID_CHANGE,
+        MAP_REGION_DID_CHANGE_ANIMATED,
+    }
+
     /**
      * Interface for listening to scene load status information.
      * Triggered after a call of {@link #updateSceneAsync(List<SceneUpdate>)} or
@@ -450,7 +459,6 @@ public class MapController implements Renderer {
      * @param cb Callback that will run when the animation is finished or canceled
      */
     public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease, @Nullable final CameraAnimationCallback cb) {
-        // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
         checkPointer(mapPointer);
         final boolean animated = (duration > 0);
         onRegionWillChange(animated);
@@ -498,7 +506,6 @@ public class MapController implements Renderer {
         onRegionWillChange(true);
         setPendingCameraAnimationCallback(callback, true);
         final float seconds = duration / 1000.f;
-        // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
         nativeFlyTo(mapPointer, position.longitude, position.latitude, position.zoom, seconds, speed);
     }
 
@@ -817,7 +824,7 @@ public class MapController implements Renderer {
             @Override
             public boolean onCancelFling() {
                 cancelCameraAnimation();
-                // TODO: Ideally should call onRegionDidChange if map state "InChanging" - VT(09/10/2018)
+                onRegionDidChange(true);
                 return true;
             }
         };
@@ -1063,22 +1070,41 @@ public class MapController implements Renderer {
         mapChangeListener = listener;
     }
 
-    //Convenience member functions
     private void onRegionWillChange(boolean animated) {
         if (mapChangeListener != null) {
-            mapChangeListener.onRegionWillChange(animated);
+            if (mapRegionChangeState != MapRegionChangeState.MAP_REGION_WILL_CHANGE &&
+                    mapRegionChangeState != MapRegionChangeState.MAP_REGION_WILL_CHANGE_ANIMATED) {
+                mapChangeListener.onRegionWillChange(animated);
+                if (animated) {
+                    mapRegionChangeState = MapRegionChangeState.MAP_REGION_WILL_CHANGE_ANIMATED;
+                } else {
+                    mapRegionChangeState = MapRegionChangeState.MAP_REGION_WILL_CHANGE;
+                }
+            }
         }
     }
 
     private void onRegionDidChange(boolean animated) {
         if (mapChangeListener != null) {
-            mapChangeListener.onRegionDidChange(animated);
+            if (mapRegionChangeState == MapRegionChangeState.MAP_REGION_WILL_CHANGE ||
+                    mapRegionChangeState == MapRegionChangeState.MAP_REGION_IS_CHANGING) {
+                mapChangeListener.onRegionDidChange(animated);
+                if (animated) {
+                    mapRegionChangeState = MapRegionChangeState.MAP_REGION_DID_CHANGE_ANIMATED;
+                } else {
+                    mapRegionChangeState = MapRegionChangeState.MAP_REGION_DID_CHANGE;
+                }
+            }
         }
     }
 
     private void onRegionIsChanging() {
         if (mapChangeListener != null) {
-            mapChangeListener.onRegionIsChanging();
+            if (mapRegionChangeState == MapRegionChangeState.MAP_REGION_WILL_CHANGE_ANIMATED ||
+                    mapRegionChangeState == MapRegionChangeState.MAP_REGION_IS_CHANGING) {
+                mapChangeListener.onRegionIsChanging();
+                mapRegionChangeState = MapRegionChangeState.MAP_REGION_IS_CHANGING;
+            }
         }
     }
 
@@ -1312,6 +1338,7 @@ public class MapController implements Renderer {
     private long mapPointer;
     private long time = System.nanoTime();
     private GLViewHolder viewHolder;
+    private MapRegionChangeState mapRegionChangeState = MapRegionChangeState.MAP_REGION_NO_CHANGE;
     private AssetManager assetManager;
     private TouchInput touchInput;
     private FontFileParser fontFileParser;
