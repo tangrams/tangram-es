@@ -1352,7 +1352,7 @@ public class MapController implements Renderer {
     private FontFileParser fontFileParser;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
-    private LongSparseArray<Object> httpRequestHandles = new LongSparseArray<>();
+    private final LongSparseArray<Object> httpRequestHandles = new LongSparseArray<>();
     private MapChangeListener mapChangeListener;
     private FeaturePickListener featurePickListener;
     private SceneLoadListener sceneLoadListener;
@@ -1426,34 +1426,30 @@ public class MapController implements Renderer {
     // Networking methods
     // ==================
 
-    private void syncRemoveHttpHandle(final long requestHandle) {
-        synchronized(httpRequestHandles) {
-            httpRequestHandles.remove(requestHandle);
-        }
-    }
-
     @Keep
     void cancelUrlRequest(final long requestHandle) {
-        if (httpHandler != null) {
-            Object request;
-            synchronized(httpRequestHandles) {
-                request = httpRequestHandles.get(requestHandle);
-                httpRequestHandles.remove(requestHandle);
-            }
-            if (request != null) {
-                httpHandler.cancelRequest(request);
-            }
+        final HttpHandler handler = httpHandler;
+        if (handler == null) {
+            return;
+        }
+
+        Object request;
+        synchronized (httpRequestHandles) {
+            request = httpRequestHandles.get(requestHandle);
+            httpRequestHandles.remove(requestHandle);
+        }
+        if (request != null) {
+            handler.cancelRequest(request);
         }
     }
 
     @Keep
     void startUrlRequest(@NonNull final String url, final long requestHandle) {
-        // FIXME
+        // TODO
         // This is still does not ensure that handler.startRequest is not
         // executed after MapController.dispose() when startUrlRequest is
-        // callend from worker threads. At least the result is ignored
-
-        HttpHandler handler = httpHandler;
+        // called from worker threads. At least the result will be ignored
+        final HttpHandler handler = httpHandler;
         if (handler == null) {
             return;
         }
@@ -1467,7 +1463,9 @@ public class MapController implements Renderer {
                 }
                 String msg = (e == null) ? "" : e.getMessage();
                 nativeOnUrlComplete(mapPointer, requestHandle, null, msg);
-                syncRemoveHttpHandle(requestHandle);
+                synchronized(httpRequestHandles) {
+                    httpRequestHandles.remove(requestHandle);
+                }
             }
 
             @Override
@@ -1479,9 +1477,12 @@ public class MapController implements Renderer {
                 if (code >= 200 && code < 300) {
                     nativeOnUrlComplete(mapPointer, requestHandle, rawDataBytes, null);
                 } else {
-                    nativeOnUrlComplete(mapPointer, requestHandle, null, "Unexpected response code: " + code + " for URL: " + url);
+                    nativeOnUrlComplete(mapPointer, requestHandle, null,
+                            "Unexpected response code: " + code + " for URL: " + url);
                 }
-                syncRemoveHttpHandle(requestHandle);
+                synchronized(httpRequestHandles) {
+                    httpRequestHandles.remove(requestHandle);
+                }
             }
 
             @Override
@@ -1491,7 +1492,9 @@ public class MapController implements Renderer {
                     return;
                 }
                 nativeOnUrlComplete(mapPointer, requestHandle, null, null);
-                syncRemoveHttpHandle(requestHandle);
+                synchronized(httpRequestHandles) {
+                    httpRequestHandles.remove(requestHandle);
+                }
             }
         };
 
