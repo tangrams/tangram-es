@@ -1248,7 +1248,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeSetupGL(long mapPtr);
     private synchronized native void nativeResize(long mapPtr, int width, int height);
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
-    private synchronized native void nativeRender(long mapPtr);
+    private synchronized native boolean nativeRender(long mapPtr);
     private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
     private synchronized native void nativeUpdateCameraPosition(long mapPtr, int set, double lon, double lat, float zoom, float zoomBy,
                                                                 float rotation, float rotateBy, float tilt, float tiltBy,
@@ -1349,9 +1349,14 @@ public class MapController implements Renderer {
         }
 
         boolean viewComplete;
+        boolean isCameraEasing;
         synchronized(this) {
             viewComplete = nativeUpdate(mapPointer, delta);
-            nativeRender(mapPointer);
+            isCameraEasing = nativeRender(mapPointer);
+        }
+
+        if (isCameraEasing) {
+            onRegionIsChanging();
         }
 
         if (viewComplete) {
