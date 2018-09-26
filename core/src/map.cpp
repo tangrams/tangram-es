@@ -90,6 +90,7 @@ public:
 
     bool cacheGlState = false;
     float pickRadius = .5f;
+    bool isCameraEasing = false;
 
     std::vector<SelectionQuery> selectionQueries;
 
@@ -396,7 +397,6 @@ bool Map::update(float _dt) {
 
     bool viewComplete = true;
     bool markersNeedUpdate = false;
-    bool cameraEasing = false;
 
     if (impl->ease) {
         auto& ease = *(impl->ease);
@@ -407,8 +407,9 @@ bool Map::update(float _dt) {
                 impl->cameraAnimationListener(true);
             }
             impl->ease.reset();
+            impl->isCameraEasing = false;
         } else {
-            cameraEasing = true;
+            impl->isCameraEasing = true;
         }
     }
 
@@ -456,7 +457,7 @@ bool Map::update(float _dt) {
     }
 
     // Request render if labels are in fading states or markers are easing.
-    if (cameraEasing || labelsNeedUpdate || markersNeedUpdate) {
+    if (impl->isCameraEasing || labelsNeedUpdate || markersNeedUpdate) {
         platform->requestRender();
     }
 
@@ -485,11 +486,11 @@ void Map::pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallb
     platform->requestRender();
 }
 
-void Map::render() {
+bool Map::render() {
 
     // Do not render if any texture resources are in process of being downloaded
     if (impl->scene->pendingTextures > 0) {
-        return;
+        return impl->isCameraEasing;
     }
 
     bool drawSelectionBuffer = getDebugFlag(DebugFlags::selection_buffer);
@@ -542,7 +543,7 @@ void Map::render() {
     if (drawSelectionBuffer) {
         impl->selectionBuffer->drawDebug(impl->renderState, viewport);
         FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
-        return;
+        return impl->isCameraEasing;
     }
 
     bool drawnAnimatedStyle = false;
@@ -570,6 +571,8 @@ void Map::render() {
     impl->labels.drawDebug(impl->renderState, impl->view);
 
     FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
+
+    return impl->isCameraEasing;
 }
 
 int Map::getViewportHeight() {
@@ -604,6 +607,7 @@ void Map::cancelCameraAnimation() {
     impl->inputHandler.cancelFling();
 
     impl->ease.reset();
+    impl->isCameraEasing = false;
 
     if (impl->cameraAnimationListener) {
         impl->cameraAnimationListener(false);
