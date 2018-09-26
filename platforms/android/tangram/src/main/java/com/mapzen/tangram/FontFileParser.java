@@ -3,6 +3,7 @@ package com.mapzen.tangram;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.ArrayMap;
+import android.util.Log;
 import android.util.SparseArray;
 import android.util.Xml;
 
@@ -171,29 +172,33 @@ class FontFileParser {
                         if (parser.getEventType() != XmlPullParser.START_TAG) {
                             continue;
                         }
-                        final String tag = parser.getName();
-                        if ("font".equals(tag)) {
-                            String weightStr = parser.getAttributeValue(null, "weight");
-                            if (weightStr == null) {
-                                weightStr = "400";
+                        try {
+                            final String tag = parser.getName();
+                            if ("font".equals(tag)) {
+                                String weightStr = parser.getAttributeValue(null, "weight");
+                                if (weightStr == null) {
+                                    weightStr = "400";
+                                } else {
+                                    familyWeights.add(weightStr);
+                                }
+
+                                final String filename = parser.nextText();
+
+                                // Don't use UI fonts
+                                if (filename.contains("UI-")) {
+                                    continue;
+                                }
+                                // Sorry - not yet supported
+                                if (filename.contains("Emoji")) {
+                                    continue;
+                                }
+
+                                addFallback(Integer.valueOf(weightStr), filename);
                             } else {
-                                familyWeights.add(weightStr);
+                                skip(parser);
                             }
-
-                            final String filename = parser.nextText();
-
-                            // Don't use UI fonts
-                            if (filename.contains("UI-")) {
-                                continue;
-                            }
-                            // Sorry - not yet supported
-                            if (filename.contains("Emoji")) {
-                                continue;
-                            }
-
-                            addFallback(Integer.valueOf(weightStr), filename);
-                        } else {
-                            skip(parser);
+                        } catch (final XmlPullParserException e) {
+                            Log.e("Tangram", "Error in font.xml parsing: " + e.getMessage());
                         }
                     }
 
@@ -273,24 +278,25 @@ class FontFileParser {
     }
 
     public void parse() {
-        File fontFile = new File(fontXMLPath);
 
+        File fontFile = new File(fontXMLPath);
         if (fontFile.exists()) {
-            parse(fontFile.getAbsolutePath(), false);
+            parse(fontFile, false);
             return;
         }
 
         fontFile = new File(oldFontXMLPath);
         if (fontFile.exists()) {
-            parse(fontFile.getAbsolutePath(), true);
+            parse(fontFile, true);
         }
+
         fontFile = new File(oldFontXMLFallbackPath);
         if (fontFile.exists()) {
-            parse(fontFile.getAbsolutePath(), true);
+            parse(fontFile, true);
         }
     }
 
-    private void parse(final String fileXml, final boolean oldXML) {
+    private void parse(final File fileXml, final boolean oldXML) {
         InputStream in;
 
         try {
@@ -311,8 +317,11 @@ class FontFileParser {
                 processDocument(parser);
             }
         } catch(final XmlPullParserException e) {
+            Log.e("Tangram", "Could not parse file: " + fileXml.getAbsolutePath() + " " + e.getMessage());
+
             e.printStackTrace();
         } catch(final IOException e) {
+            Log.e("Tangram", "Could not read file: " + fileXml.getAbsolutePath());
             e.printStackTrace();
         }
 
