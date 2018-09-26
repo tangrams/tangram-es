@@ -42,6 +42,7 @@ inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation
     BOOL _shouldCaptureFrame;
     BOOL _captureFrameWaitForViewComplete;
     BOOL _viewComplete;
+    BOOL _isCameraEasing;
     BOOL _viewInBackground;
     BOOL _renderRequested;
 }
@@ -130,6 +131,7 @@ inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation
     _viewInBackground = [UIApplication sharedApplication].applicationState == UIApplicationStateBackground;
     _renderRequested = YES;
     _continuous = NO;
+    _isCameraEasing = NO;
     _preferredFramesPerSecond = 60;
     _markersById = [[NSMutableDictionary alloc] init];
     _dataLayersByName = [[NSMutableDictionary alloc] init];
@@ -349,7 +351,9 @@ inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation
         return;
     }
 
-    self.map->render();
+    if (self.map->render()) {
+        [self regionIsChanging];
+    }
 }
 
 #pragma mark Screenshots
