@@ -23,8 +23,6 @@ public class MapView extends FrameLayout {
     protected MapController mapController;
     protected MapAsyncTask getMapAsyncTask;
 
-    private final Object lock = new Object();
-
     /**
      * MapReadyCallback interface
      * onMapReady gets invoked on the ui thread when {@link MapController} is instantiated and ready to be used
@@ -84,15 +82,12 @@ public class MapView extends FrameLayout {
      * @return new or previously initialized {@link MapController}
      */
     protected MapController mapInitInBackground() {
-        synchronized (lock) {
-            if (!NativeLibraryLoader.sNativeLibraryLoaded) {
-                android.util.Log.e("Tangram", "Unable to initialize MapController, because failed to initialize native libraries");
-                return null;
-            }
-            if (mapController != null) {
-                return mapController;
-            }
+
+        if (!NativeLibraryLoader.sNativeLibraryLoaded) {
+            android.util.Log.e("Tangram", "Unable to initialize MapController: Failed to initialize native libraries");
+            return null;
         }
+
         return new MapController(this.getContext());
     }
 
@@ -104,15 +99,23 @@ public class MapView extends FrameLayout {
      */
     protected void onMapInitOnUIThread(@Nullable final MapController controller, @Nullable final HttpHandler handler,
                                        @NonNull final MapReadyCallback callback) {
-        synchronized (lock) {
-            if (mapController == null && controller != null) {
-                glSurfaceView = createGLSurfaceView();
-                mapController = controller;
-                mapController.UIThreadInit(glSurfaceView, handler);
-                addView(glSurfaceView);
-            }
-            callback.onMapReady(mapController);
+        if (glSurfaceView != null) {
+            removeView(glSurfaceView);
+            glSurfaceView = null;
         }
+
+        if (mapController != null) {
+            mapController.dispose();
+            mapController = null;
+        }
+
+        if (controller != null) {
+            mapController = controller;
+            glSurfaceView = createGLSurfaceView();
+            mapController.UIThreadInit(glSurfaceView, handler);
+            addView(glSurfaceView);
+        }
+        callback.onMapReady(mapController);
     }
 
     /**
@@ -187,12 +190,14 @@ public class MapView extends FrameLayout {
     protected void disposeMap() {
         disposeMapReadyTask();
 
-        synchronized (lock) {
-            if (mapController != null) {
-                // MapController has been initialized, so we'll dispose it now.
-                mapController.dispose();
-                mapController = null;
-            }
+        if (glSurfaceView != null) {
+            glSurfaceView.onPause();
+            glSurfaceView = null;
+        }
+
+        if (mapController != null) {
+            mapController.dispose();
+            mapController = null;
         }
     }
 
@@ -233,9 +238,7 @@ public class MapView extends FrameLayout {
      * You must call this method from the parent Activity/Fragment's corresponding method.
      */
     public void onLowMemory() {
-        synchronized (lock) {
-            mapController.onLowMemory();
-        }
+        mapController.onLowMemory();
     }
 
 }
