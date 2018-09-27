@@ -537,10 +537,17 @@ bool Map::render() {
         impl->selectionQueries.clear();
     }
 
+    // Get background color for frame based on zoom level, if there are stops
+    auto background = impl->scene->background();
+    if (impl->scene->backgroundStops().frames.size() > 0) {
+        background = impl->scene->backgroundStops().evalColor(getZoom());
+    }
+
     // Setup default framebuffer for a new frame
     glm::vec2 viewport(impl->view.getWidth(), impl->view.getHeight());
+
     FrameBuffer::apply(impl->renderState, impl->renderState.defaultFrameBuffer(),
-                       viewport, impl->scene->background().toColorF());
+                       viewport, background.toColorF());
 
     if (drawSelectionBuffer) {
         impl->selectionBuffer->drawDebug(impl->renderState, viewport);

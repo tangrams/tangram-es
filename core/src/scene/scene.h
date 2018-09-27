@@ -2,6 +2,7 @@
 
 #include "map.h"
 #include "platform.h"
+#include "stops.h"
 #include "util/color.h"
 #include "util/url.h"
 #include "util/yamlPath.h"
@@ -32,7 +33,6 @@ class Style;
 class Texture;
 class TileSource;
 class ZipArchive;
-struct Stops;
 
 // Delimiter used in sceneloader for style params and layer-sublayer naming
 const std::string DELIMITER = ":";
@@ -88,6 +88,7 @@ public:
     auto& functions() { return m_jsFunctions; }
     auto& stops() { return m_stops; }
     auto& background() { return m_background; }
+    auto& backgroundStops() { return m_backgroundStops; }
     auto& fontContext() { return m_fontContext; }
     auto& globalRefs() { return m_globalRefs; }
     auto& featureSelection() { return m_featureSelection; }
@@ -189,6 +190,7 @@ private:
     std::list<Stops> m_stops;
 
     Color m_background;
+    Stops m_backgroundStops;
 
     std::shared_ptr<FontContext> m_fontContext;
 
