@@ -449,7 +449,18 @@ public class MapController implements Renderer {
         final boolean animated = (duration != 0);
         onRegionWillChange(animated);
 
-        CameraAnimationCallback callback = new CameraAnimationCallback() {
+        // Cancel the previous callback, if present.
+        onCameraAnimationEnded(false);
+
+        final float seconds = duration / 1000.f;
+
+        nativeUpdateCameraPosition(mapPointer, update.set, update.longitude, update.latitude, update.zoom,
+                update.zoomBy, update.rotation, update.rotationBy, update.tilt, update.tiltBy,
+                update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.padding,
+                seconds, ease.ordinal());
+
+        // Wrap the callback to run corresponding map change events.
+        cameraAnimationCallback = new CameraAnimationCallback() {
             @Override
             public void onFinish() {
                 onRegionDidChange(animated);
@@ -467,32 +478,18 @@ public class MapController implements Renderer {
                 }
             }
         };
-
-        if (cameraAnimationCallback != null) {
-            // Prevent recursion loop when updateCameraPosition is called from onCancel callback
-            CameraAnimationCallback prev = cameraAnimationCallback;
-            cameraAnimationCallback = null;
-            prev.onCancel();
-        }
-
-        final float seconds = duration / 1000.f;
-
-        nativeUpdateCameraPosition(mapPointer, update.set, update.longitude, update.latitude, update.zoom,
-                update.zoomBy, update.rotation, update.rotationBy, update.tilt, update.tiltBy,
-                update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.padding,
-                seconds, ease.ordinal());
-
-        cameraAnimationCallback = callback;
     }
 
     private void onCameraAnimationEnded(boolean finished) {
         if (cameraAnimationCallback != null) {
-            if (finished) {
-                cameraAnimationCallback.onFinish();
-            } else {
-                cameraAnimationCallback.onCancel();
-            }
+            // Prevent recursion loop when updateCameraPosition is called from callback.
+            final CameraAnimationCallback cb = cameraAnimationCallback;
             cameraAnimationCallback = null;
+            if (finished) {
+                cb.onFinish();
+            } else {
+                cb.onCancel();
+            }
         }
     }
 
