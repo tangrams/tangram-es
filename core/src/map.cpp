@@ -591,9 +591,9 @@ CameraPosition Map::getCameraPosition() {
     CameraPosition camera;
 
     getPosition(camera.longitude, camera.latitude);
-    camera.zoom = getZoom();
-    camera.rotation = getRotation();
-    camera.tilt = getTilt();
+    camera.zoom = impl->view.getZoom();
+    camera.rotation = impl->view.getRoll();
+    camera.tilt = impl->view.getPitch();
 
     return camera;
 }
@@ -640,10 +640,10 @@ void Map::setCameraPositionEased(const CameraPosition& _camera, float _duration,
     e.start.pos = impl->view.getMapProjection().LonLatToMeters({ lonStart, latStart});
     e.end.pos = impl->view.getMapProjection().LonLatToMeters({ lonEnd, latEnd});
 
-    e.start.zoom = getZoom();
+    e.start.zoom = impl->view.getZoom();
     e.end.zoom = _camera.zoom;
 
-    float radiansStart = getRotation();
+    float radiansStart = impl->view.getRoll();
 
     // Ease over the smallest angular distance needed
     float radiansDelta = glm::mod(_camera.rotation - radiansStart, (float)TWO_PI);
@@ -652,7 +652,7 @@ void Map::setCameraPositionEased(const CameraPosition& _camera, float _duration,
     e.start.rotation = radiansStart;
     e.end.rotation = radiansStart + radiansDelta;
 
-    e.start.tilt = getTilt();
+    e.start.tilt = impl->view.getPitch();
     e.end.tilt = _camera.tilt;
 
     impl->ease = std::make_unique<Ease>(_duration,
@@ -709,31 +709,10 @@ void Map::updateCameraPosition(const CameraUpdate& _update, float _duration, Eas
     }
 }
 
-void Map::setPosition(double _lon, double _lat) {
-    cancelCameraAnimation();
-
-    glm::dvec2 meters = impl->view.getMapProjection().LonLatToMeters({ _lon, _lat});
-    impl->view.setPosition(meters.x, meters.y);
-    impl->inputHandler.cancelFling();
-    impl->platform->requestRender();
-}
-
 void Map::getPosition(double& _lon, double& _lat) {
     LngLat degrees = impl->view.getCenterCoordinates();
     _lon = degrees.longitude;
     _lat = degrees.latitude;
-}
-
-void Map::setZoom(float _z) {
-    cancelCameraAnimation();
-
-    impl->view.setZoom(_z);
-    impl->inputHandler.cancelFling();
-    impl->platform->requestRender();
-}
-
-float Map::getZoom() {
-    return impl->view.getZoom();
 }
 
 void Map::setMinZoom(float _minZoom) {
@@ -750,28 +729,6 @@ void Map::setMaxZoom(float _maxZoom) {
 
 float Map::getMaxZoom() {
     return impl->view.getMaxZoom();
-}
-
-void Map::setRotation(float _radians) {
-    cancelCameraAnimation();
-
-    impl->view.setRoll(_radians);
-    impl->platform->requestRender();
-}
-
-float Map::getRotation() {
-    return impl->view.getRoll();
-}
-
-void Map::setTilt(float _radians) {
-    cancelCameraAnimation();
-
-    impl->view.setPitch(_radians);
-    impl->platform->requestRender();
-}
-
-float Map::getTilt() {
-    return impl->view.getPitch();
 }
 
 CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, EdgePadding _pad) {
@@ -811,9 +768,9 @@ void Map::flyTo(const CameraPosition& _camera, float _duration, float _speed) {
 
     double lngStart = 0., latStart = 0., lngEnd = _camera.longitude, latEnd = _camera.latitude;
     getPosition(lngStart, latStart);
-    float zStart = getZoom();
-    float rStart = getRotation();
-    float tStart = getTilt();
+    float zStart = impl->view.getZoom();
+    float rStart = impl->view.getRoll();
+    float tStart = impl->view.getPitch();
 
     // Ease over the smallest angular distance needed
     float radiansDelta = glm::mod(_camera.rotation - rStart, (float)TWO_PI);

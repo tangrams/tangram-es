@@ -263,13 +263,12 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     if ((time - last_time_released) < double_tap_time) {
         // Double tap recognized
         const float duration = 0.5f;
-        Tangram::LngLat tapped, current;
+        Tangram::LngLat tapped;
         map->screenPositionToLngLat(x, y, &tapped.longitude, &tapped.latitude);
-        map->getPosition(current.longitude, current.latitude);
         auto pos = map->getCameraPosition();
         pos.zoom += 1.f;
-        pos.longitude = 0.5 * (tapped.longitude + current.longitude);
-        pos.latitude = 0.5 * (tapped.latitude + current.latitude);
+        pos.longitude = 0.5 * (tapped.longitude + pos.longitude);
+        pos.latitude = 0.5 * (tapped.latitude + pos.latitude);
 
         map->setCameraPositionEased(pos, duration, EaseType::quint);
     } else if ((time - last_time_pressed) < single_tap_time) {
@@ -426,13 +425,23 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 glfwSetWindowShouldClose(window, true);
                 break;
             case GLFW_KEY_F1:
-                map->setPosition(-74.00976419448854, 40.70532700869127);
-                map->setZoom(16);
-                break;
+                {
+                    auto cameraPosition = map->getCameraPosition();
+                    cameraPosition.longitude = -74.00976419448854;
+                    cameraPosition.latitude = 40.70532700869127;
+                    cameraPosition.zoom = 16;
+                    map->setCameraPosition(cameraPosition);
+                    break;
+                }
             case GLFW_KEY_F2:
-                map->setPosition(8.82, 53.08);
-                map->setZoom(14);
-                break;
+                {
+                    auto cameraPosition = map->getCameraPosition();
+                    cameraPosition.longitude = 8.82;
+                    cameraPosition.latitude = 53.08;
+                    cameraPosition.zoom = 14;
+                    map->setCameraPosition(cameraPosition);
+                    break;
+                }
             case GLFW_KEY_F3:
                 camera.longitude = 8.82;
                 camera.latitude = 53.08;

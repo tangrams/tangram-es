@@ -215,19 +215,6 @@ public:
     // Each unsigned int corresponds to an RGBA pixel value
     void captureSnapshot(unsigned int* _data);
 
-    // Set the position of the map view in degrees longitude and latitude
-    void setPosition(double _lon, double _lat);
-
-    // Set the values of the arguments to the position of the map view in degrees
-    // longitude and latitude
-    void getPosition(double& _lon, double& _lat);
-
-    // Set the fractional zoom level of the view
-    void setZoom(float _z);
-
-    // Get the fractional zoom level of the view
-    float getZoom();
-
     // Set the minimum zoom level for the view; values less than 0 will be
     // clamped to 0; values greater than the current maximum zoom level will set
     // the maximum zoom to this value.
@@ -243,20 +230,6 @@ public:
 
     // Get the maximum zoom level for the view.
     float getMaxZoom();
-
-    // Set the counter-clockwise rotation of the view in radians; 0 corresponds to
-    // North pointing up
-    void setRotation(float _radians);
-
-    // Get the counter-clockwise rotation of the view in radians; 0 corresponds to
-    // North pointing up
-    float getRotation();
-
-    // Set the tilt angle of the view in radians; 0 corresponds to straight down
-    void setTilt(float _radians);
-
-    // Get the tilt angle of the view in radians; 0 corresponds to straight down
-    float getTilt();
 
     // Get the CameraPosition that encloses the bounds given by _a and _b and
     // leaves at least the given amount of padding on each side (in logical pixels).
@@ -428,6 +401,10 @@ private:
 protected:
 
     std::shared_ptr<Platform> platform;
+
+    // Helper method: Set the values of the arguments to the position of the map view in degrees
+    // longitude and latitude
+    void getPosition(double& _lon, double& _lat);
 
     SceneID loadSceneAsync(std::shared_ptr<Scene> _scene,
                        const std::vector<SceneUpdate>& _sceneUpdates = {});

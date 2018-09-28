@@ -154,13 +154,16 @@ int main(int argc, char **argv) {
     map->loadScene(sceneUrl.string(), !options.hasLocationSet, updates);
     map->setupGL();
     map->resize(getWindowWidth(), getWindowHeight());
-    map->setTilt(options.tilt);
-    map->setRotation(options.rotation);
+    auto CameraPosition = map->getCameraPosition();
+    cameraPosition.tilt = options.tilt;
+    cameraPosition.rotation = options.rotation;
 
     if (options.hasLocationSet) {
-        map->setPosition(options.longitude, options.latitude);
-        map->setZoom(options.zoom);
+        cameraPosition.longitude = options.longitude;
+        cameraPosition.latitude = options.latitude;
+        cameraPosition.zoom = options.zoom;
     }
+    map->setCameraPosition(cameraPosition);
 
     // Start clock
     Timer timer;
@@ -190,11 +193,19 @@ int main(int argc, char **argv) {
 void onKeyPress(int _key) {
     switch (_key) {
         case KEY_ZOOM_IN:
-            map->setZoom(map->getZoom() + 1.0f);
-            break;
+            {
+                auto cameraPosition = map->getCameraPosition();
+                cameraPosition.zoom = cameraPosition.zoom + 1.0f;
+                map->setCameraPosition(cameraPosition);
+                break;
+            }
         case KEY_ZOOM_OUT:
-            map->setZoom(map->getZoom() - 1.0f);
-            break;
+            {
+                auto cameraPosition = map->getCameraPosition();
+                cameraPosition.zoom = cameraPosition.zoom - 1.0f;
+                map->setCameraPosition(cameraPosition);
+                break;
+            }
         case KEY_UP:
             map->handlePanGesture(0.0, 0.0, 0.0, 100.0);
             break;
