@@ -213,6 +213,8 @@ void Texture::update(RenderState& rs, GLuint _textureUnit) {
     update(rs, _textureUnit, data);
 
     m_data.clear();
+    // Free the allocated buffer by swapping with an empty vector.
+    std::vector<GLuint>().swap(m_data);
 }
 
 void Texture::update(RenderState& rs, GLuint _textureUnit, const GLuint* data) {
