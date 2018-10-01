@@ -1,6 +1,8 @@
 #include "glfwApp.h"
 #include <GLFW/glfw3.h>
 #include <cstdlib>
+#include <atomic>
+#include "gl.h"
 
 #ifndef BUILD_NUM_STRING
 #define BUILD_NUM_STRING ""
@@ -50,6 +52,8 @@ double last_y_down = 0.0;
 double last_x_velocity = 0.0;
 double last_y_velocity = 0.0;
 
+std::atomic<bool> wireframe_mode;
+
 Tangram::MarkerID marker = 0;
 Tangram::MarkerID poiMarker = 0;
 Tangram::MarkerID polyline = 0;
@@ -91,6 +95,10 @@ void parseArgs(int argc, char* argv[]) {
             break;
         }
     }
+}
+
+void setWireframeMode(bool state) {
+    wireframe_mode = state;
 }
 
 void setScene(const std::string& _path, const std::string& _yaml) {
@@ -174,8 +182,16 @@ void run() {
 
         // Render
         map->update(delta);
+        const bool wireframe = wireframe_mode;
+        if(wireframe) {
+            glPolygonMode(GL_FRONT, GL_LINE);
+            glPolygonMode(GL_BACK, GL_LINE);
+        }
         map->render();
-
+        if(wireframe) {
+            glPolygonMode(GL_FRONT, GL_FILL);
+            glPolygonMode(GL_BACK, GL_FILL);
+        }
         // Swap front and back buffers
         glfwSwapBuffers(main_window);
 
