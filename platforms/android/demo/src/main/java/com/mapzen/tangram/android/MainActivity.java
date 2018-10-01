@@ -23,6 +23,7 @@ import com.mapzen.tangram.Marker;
 import com.mapzen.tangram.MarkerPickResult;
 import com.mapzen.tangram.SceneError;
 import com.mapzen.tangram.SceneUpdate;
+import com.mapzen.tangram.TouchInput;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
@@ -118,9 +119,12 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         map.setSceneLoadListener(this);
         map.loadSceneFile(sceneUrl, sceneUpdates);
         map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
-        map.setTapResponder(this);
-        map.setDoubleTapResponder(this);
-        map.setLongPressResponder(this);
+
+        TouchInput touchInput = map.getTouchInput();
+        touchInput.setTapResponder(this);
+        touchInput.setDoubleTapResponder(this);
+        touchInput.setLongPressResponder(this);
+
         map.setFeaturePickListener(this);
         map.setLabelPickListener(this);
         map.setMarkerPickListener(this);

@@ -58,7 +58,7 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
         m_urlSubdomainIndex = (m_urlSubdomainIndex + 1) % m_urlSubdomains.size();
     }
 
-    UrlCallback onRequestFinish = [this, callback, task, url](UrlResponse response) mutable {
+    UrlCallback onRequestFinish = [this, callback, task, url](UrlResponse&& response) mutable {
 
         removePending(task->tileId(), false);
 

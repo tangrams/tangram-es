@@ -15,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.ArrayMap;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.LongSparseArray;
 
 import com.mapzen.tangram.TouchInput.Gestures;
@@ -202,15 +203,12 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Construct a MapController using a custom scene file
-     * @param view GLSurfaceView for the map display; input events from this
-     * view will be handled by the MapController's TouchInput gesture detector.
-     * It also provides the Context in which the map will function; the asset
+     * Construct a MapController
+     * @param context The application Context in which the map will function; the asset
      * bundle for this activity must contain all the local files that the map
      * will need.
-     * @param handler {@link HttpHandler} to initialize httpHandler for network handling
      */
-    protected MapController(@NonNull final GLSurfaceView view, @Nullable final HttpHandler handler) {
+    protected MapController(@NonNull Context context) {
         if (Build.VERSION.SDK_INT > 18) {
             clientTileSources = new ArrayMap<>();
         } else {
@@ -218,22 +216,12 @@ public class MapController implements Renderer {
         }
         markers = new LongSparseArray<>();
 
-        mapView = view;
-
         // Get configuration info from application
-        displayMetrics = mapView.getContext().getResources().getDisplayMetrics();
-        assetManager = mapView.getContext().getAssets();
-
-        fontFileParser = new FontFileParser();
-
-        // Use the DefaultHttpHandler if none is provided
-        if (handler == null) {
-            httpHandler = new DefaultHttpHandler();
-        } else {
-            httpHandler = handler;
-        }
+        displayMetrics = context.getResources().getDisplayMetrics();
+        assetManager = context.getAssets();
 
         // Parse font file description
+        fontFileParser = new FontFileParser();
         fontFileParser.parse();
 
         mapPointer = nativeInit(this, assetManager);
@@ -245,48 +233,87 @@ public class MapController implements Renderer {
     /**
      * Responsible to configure {@link MapController} configuration on the ui thread.
      * Must be called from the ui thread post instantiation of {@link MapController}
+     * @param view GLSurfaceView for the map display
+     * @param handler {@link HttpHandler} to initialize httpHandler for network handling
      */
-    void UIThreadInit() {
+    void UIThreadInit(@NonNull final GLSurfaceView view, @Nullable final HttpHandler handler) {
+
+        // Use the DefaultHttpHandler if none is provided
+        if (handler == null) {
+            httpHandler = new DefaultHttpHandler();
+        } else {
+            httpHandler = handler;
+        }
+
         // Set up MapView
+        mapView = view;
         mapView.setRenderer(this);
+        isGLRendererSet = true;
         mapView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         mapView.setPreserveEGLContextOnPause(true);
 
         touchInput = new TouchInput(mapView.getContext());
         mapView.setOnTouchListener(touchInput);
 
-        setPanResponder(null);
-        setScaleResponder(null);
-        setRotateResponder(null);
-        setShoveResponder(null);
+        touchInput.setPanResponder(getPanResponder());
+        touchInput.setScaleResponder(getScaleResponder());
+        touchInput.setRotateResponder(getRotateResponder());
+        touchInput.setShoveResponder(getShoveResponder());
 
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.ROTATE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.ROTATE, Gestures.SHOVE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.SCALE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.PAN, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.LONG_PRESS, false);
+        touchInput.setSimultaneousDetectionDisabled(Gestures.SHOVE, Gestures.ROTATE);
+        touchInput.setSimultaneousDetectionDisabled(Gestures.ROTATE, Gestures.SHOVE);
+        touchInput.setSimultaneousDetectionDisabled(Gestures.SHOVE, Gestures.SCALE);
+        touchInput.setSimultaneousDetectionDisabled(Gestures.SHOVE, Gestures.PAN);
+        touchInput.setSimultaneousDetectionDisabled(Gestures.SCALE, Gestures.LONG_PRESS);
 
         uiThreadHandler = new Handler(mapView.getContext().getMainLooper());
     }
 
     void dispose() {
-        // Disposing native resources involves GL calls, so we need to run on the GL thread.
-        queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                // Dispose each data sources by first removing it from the Map values and then
-                // calling remove(), so that we don't improperly modify the Map while iterating.
-                for (final Iterator<MapData> it = clientTileSources.values().iterator(); it.hasNext();) {
-                    final MapData mapData = it.next();
-                    it.remove();
-                    mapData.remove();
-                }
-                nativeDispose(mapPointer);
-                mapPointer = 0;
-                clientTileSources.clear();
-                markers.clear();
+
+        httpHandler = null;
+
+        // Prevent any other calls to native functions during dispose
+        synchronized (this) {
+            // Dispose each data sources by first removing it from the Map values and then
+            // calling remove(), so that we don't improperly modify the Map while iterating.
+            for (final Iterator<MapData> it = clientTileSources.values().iterator(); it.hasNext(); ) {
+                final MapData mapData = it.next();
+                it.remove();
+                mapData.remove();
             }
-        });
+            clientTileSources.clear();
+            markers.clear();
+
+            // Dispose all listener and callbacks associated with mapController
+            // This will help prevent leaks of references from the client code, possibly used in these
+            // listener/callbacks
+            touchInput = null;
+            mapChangeListener = null;
+            featurePickListener = null;
+            sceneLoadListener = null;
+            labelPickListener = null;
+            markerPickListener = null;
+            cameraAnimationCallback = null;
+            frameCaptureCallback = null;
+
+            // Prevent any calls to native functions - except dispose.
+            final long pointer = mapPointer;
+            mapPointer = 0;
+
+            if (!isGLRendererSet) {
+                // No GL setup from UI Thread
+                nativeDispose(pointer);
+            } else {
+                // Disposing native resources involves GL calls, so we need to run on the GL thread.
+                queueEvent(new Runnable() {
+                    @Override
+                    public void run() {
+                        nativeDispose(pointer);
+                    }
+                });
+            }
+        }
     }
 
     /**
@@ -757,330 +784,139 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Set a responder for tap gestures
-     * @param responder TapResponder to call
+     * Get the {@link TouchInput} for this map.
+     *
+     * {@code TouchInput} allows you to configure how gestures can move the map. You can set custom
+     * responders for any gesture type in {@code TouchInput} to override or extend the default
+     * behavior.
+     *
+     * Note that {@code MapController} assigns the default gesture responders for the pan, rotate,
+     * scale, and shove gestures. If you set custom responders for these gestures, the default
+     * responders will be replaced and those gestures will no longer move the map. To customize
+     * these gesture responders and preserve the default map movement behavior: create a new gesture
+     * responder, get the responder for that gesture from the {@code MapController}, and then in the
+     * new responder call the corresponding methods on the {@code MapController} gesture responder.
+     * @return The {@code TouchInput}.
      */
-    public void setTapResponder(@Nullable final TouchInput.TapResponder responder) {
-        touchInput.setTapResponder(new TouchInput.TapResponder() {
-            @Override
-            public boolean onSingleTapUp(final float x, final float y) {
-                return responder != null && responder.onSingleTapUp(x, y);
-            }
-
-            @Override
-            public boolean onSingleTapConfirmed(final float x, final float y) {
-                return responder != null && responder.onSingleTapConfirmed(x, y);
-            }
-        });
+    public TouchInput getTouchInput() {
+        return touchInput;
     }
 
     /**
-     * Set a responder for double-tap gestures
-     * @param responder DoubleTapResponder to call
+     * Get a responder for pan gestures
      */
-    public void setDoubleTapResponder(@Nullable final TouchInput.DoubleTapResponder responder) {
-        touchInput.setDoubleTapResponder(new TouchInput.DoubleTapResponder() {
-            @Override
-            public boolean onDoubleTap(final float x, final float y) {
-                return responder != null && responder.onDoubleTap(x, y);
-            }
-        });
-    }
-
-    /**
-     * Set a responder for long press gestures
-     * @param responder LongPressResponder to call
-     */
-    public void setLongPressResponder(@Nullable final TouchInput.LongPressResponder responder) {
-        touchInput.setLongPressResponder(new TouchInput.LongPressResponder() {
-            @Override
-            public void onLongPress(final float x, final float y) {
-                if (responder != null) {
-                    responder.onLongPress(x, y);
-                }
-            }
-        });
-    }
-
-    /**
-     * Set a responder for pan gestures
-     * @param responder PanResponder to call; if onPan returns true, normal panning behavior will not occur
-     */
-    public void setPanResponder(@Nullable final TouchInput.PanResponder responder) {
-        touchInput.setPanResponder(new TouchInput.PanResponder() {
+    public TouchInput.PanResponder getPanResponder() {
+        return new TouchInput.PanResponder() {
             @Override
             public boolean onPanBegin() {
-                if (responder == null || !responder.onPanBegin()) {
-                    if (panGesturesEnabled) {
-                        onRegionWillChange(true);
-                    }
-                }
+                onRegionWillChange(true);
                 return true;
             }
 
             @Override
             public boolean onPan(final float startX, final float startY, final float endX, final float endY) {
-                if (responder == null || !responder.onPan(startX, startY, endX, endY)) {
-                    if (panGesturesEnabled) {
-                        onRegionIsChanging();
-                        nativeHandlePanGesture(mapPointer, startX, startY, endX, endY);
-                    }
-                }
+                onRegionIsChanging();
+                nativeHandlePanGesture(mapPointer, startX, startY, endX, endY);
                 return true;
             }
 
             @Override
             public boolean onPanEnd() {
-                if (responder == null || !responder.onPanEnd()) {
-                    if (panGesturesEnabled) {
-                        onRegionDidChange(true);
-                    }
-                }
+                onRegionDidChange(true);
                 return true;
             }
 
             @Override
             public boolean onFling(final float posX, final float posY, final float velocityX, final float velocityY) {
-                if (responder == null || !responder.onFling(posX, posY, velocityX, velocityY)) {
-                    if (panGesturesEnabled) {
-                        nativeHandleFlingGesture(mapPointer, posX, posY, velocityX, velocityY);
-                    }
-                }
+                nativeHandleFlingGesture(mapPointer, posX, posY, velocityX, velocityY);
                 return true;
             }
 
             @Override
             public boolean onCancelFling() {
-                if (responder == null || !responder.onCancelFling()) {
-                    if (panGesturesEnabled) {
-                        cancelCameraAnimation();
-                        // TODO: Ideally should call onRegionDidChange if map state "InChanging" - VT(09/10/2018)
-                    }
-                }
+                cancelCameraAnimation();
+                // TODO: Ideally should call onRegionDidChange if map state "InChanging" - VT(09/10/2018)
                 return true;
             }
-        });
+        };
     }
 
     /**
-     * Set a responder for rotate gestures
-     * @param responder RotateResponder to call; if onRotate returns true, normal rotation behavior will not occur
+     * Get a responder for rotate gestures
      */
-    public void setRotateResponder(@Nullable final TouchInput.RotateResponder responder) {
-        touchInput.setRotateResponder(new TouchInput.RotateResponder() {
+    public TouchInput.RotateResponder getRotateResponder() {
+        return new TouchInput.RotateResponder() {
             @Override
             public boolean onRotateBegin() {
-                if (responder == null || !responder.onRotateBegin()) {
-                    if (rotateGesturesEnabled) {
-                        onRegionWillChange(true);
-                    }
-                }
+                onRegionWillChange(true);
                 return true;
             }
 
             @Override
             public boolean onRotate(final float x, final float y, final float rotation) {
-                if (responder == null || !responder.onRotate(x, y, rotation)) {
-                    if (rotateGesturesEnabled) {
-                        onRegionIsChanging();
-                        nativeHandleRotateGesture(mapPointer, x, y, rotation);
-                    }
-                }
+                onRegionIsChanging();
+                nativeHandleRotateGesture(mapPointer, x, y, rotation);
                 return true;
             }
 
             @Override
             public boolean onRotateEnd() {
-                if (responder == null || !responder.onRotateEnd()) {
-                    if (rotateGesturesEnabled) {
-                        onRegionDidChange(true);
-                    }
-                }
+                onRegionDidChange(true);
                 return true;
             }
-        });
+        };
     }
 
     /**
-     * Set a responder for scale gestures
-     * @param responder ScaleResponder to call; if onScale returns true, normal scaling behavior will not occur
+     * Get a responder for scale gestures
      */
-    public void setScaleResponder(@Nullable final TouchInput.ScaleResponder responder) {
-        touchInput.setScaleResponder(new TouchInput.ScaleResponder() {
+    public TouchInput.ScaleResponder getScaleResponder() {
+        return new TouchInput.ScaleResponder() {
             @Override
             public boolean onScaleBegin() {
-                if (responder == null || !responder.onScaleBegin()) {
-                    if (zoomGesturesEnabled) {
-                        onRegionWillChange(true);
-                    }
-                }
+                onRegionWillChange(true);
                 return true;
             }
 
             @Override
             public boolean onScale(final float x, final float y, final float scale, final float velocity) {
-                if (responder == null || !responder.onScale(x, y, scale, velocity)) {
-                    if (zoomGesturesEnabled) {
-                        onRegionIsChanging();
-                        nativeHandlePinchGesture(mapPointer, x, y, scale, velocity);
-                    }
-                }
+                onRegionIsChanging();
+                nativeHandlePinchGesture(mapPointer, x, y, scale, velocity);
                 return true;
             }
 
             @Override
             public boolean onScaleEnd() {
-                if (responder == null || !responder.onScaleEnd()) {
-                    if (zoomGesturesEnabled) {
-                        onRegionDidChange(true);
-                    }
-                }
+                onRegionDidChange(true);
                 return true;
             }
-        });
+        };
     }
 
     /**
-     * Set a responder for shove (vertical two-finger drag) gestures
-     * @param responder ShoveResponder to call; if onShove returns true, normal tilting behavior will not occur
+     * Get a responder for shove (vertical two-finger drag) gestures
      */
-    public void setShoveResponder(@Nullable final TouchInput.ShoveResponder responder) {
-        touchInput.setShoveResponder(new TouchInput.ShoveResponder() {
+    public TouchInput.ShoveResponder getShoveResponder() {
+        return new TouchInput.ShoveResponder() {
             @Override
             public boolean onShoveBegin() {
-                if (responder == null || !responder.onShoveBegin()) {
-                    if (tiltGesturesEnabled) {
-                        onRegionWillChange(true);
-                    }
-                }
+                onRegionWillChange(true);
                 return true;
             }
 
             @Override
             public boolean onShove(final float distance) {
-                if (responder == null || !responder.onShove(distance)) {
-                    if (tiltGesturesEnabled) {
-                        onRegionIsChanging();
-                        nativeHandleShoveGesture(mapPointer, distance);
-                    }
-                }
+                onRegionIsChanging();
+                nativeHandleShoveGesture(mapPointer, distance);
                 return true;
             }
 
             @Override
             public boolean onShoveEnd() {
-                if (responder == null || !responder.onShoveEnd()) {
-                    if (tiltGesturesEnabled) {
-                        onRegionDidChange(true);
-                    }
-                }
+                onRegionDidChange(true);
                 return true;
             }
-        });
-    }
-
-    /**
-     * Set whether the gesture {@code second} can be recognized while {@code first} is in progress
-     * @param first Initial gesture type
-     * @param second Subsequent gesture type
-     * @param allowed True if {@code second} should be recognized, else false
-     */
-    public void setSimultaneousGestureAllowed(final Gestures first, final Gestures second, final boolean allowed) {
-        touchInput.setSimultaneousDetectionAllowed(first, second, allowed);
-    }
-
-    /**
-     * Get whether the gesture {@code second} can be recognized while {@code first} is in progress
-     * @param first Initial gesture type
-     * @param second Subsequent gesture type
-     * @return True if {@code second} will be recognized, else false
-     */
-    public boolean isSimultaneousGestureAllowed(final Gestures first, final Gestures second) {
-        return touchInput.isSimultaneousDetectionAllowed(first, second);
-    }
-
-    /**
-     * Set whether the user can move the map view with panning gestures. This is true by default.
-     *
-     * When this is false you can still move the map view programmatically.
-     * @param enabled If true, panning is enabled.
-     */
-    public void setPanGesturesEnabled(boolean enabled) {
-        panGesturesEnabled = enabled;
-    }
-
-    /**
-     * Get whether the user can move the map view with panning gestures.
-     * @return True if panning is enabled.
-     */
-    public boolean isPanGesturesEnabled() {
-        return panGesturesEnabled;
-    }
-
-    /**
-     * Set whether the user can zoom the map view with pinch and double-tap-move gestures. This is
-     * true by default.
-     *
-     * When this is false you can still zoom the map view programmatically.
-     * @param enabled If true, zooming with gestures is enabled.
-     */
-    public void setZoomGesturesEnabled(boolean enabled) {
-        zoomGesturesEnabled = enabled;
-    }
-
-    /**
-     * Get whether the user can zoom the map view with pinch and double-tap-zoom gestures.
-     * @return True if zooming with gestures is enabled.
-     */
-    public boolean isZoomGesturesEnabled() {
-        return zoomGesturesEnabled;
-    }
-
-    /**
-     * Set whether the user can rotate the map view with gestures. This is true by default.
-     *
-     * When this is false you can still rotate the map view programmatically.
-     * @param enabled If true, rotating with gestures is enabled.
-     */
-    public void setRotateGesturesEnabled(boolean enabled) {
-        rotateGesturesEnabled = enabled;
-    }
-
-    /**
-     * Get whether the user can rotate the map view with gestures.
-     * @return True if rotating with gestures is enabled.
-     */
-    public boolean isRotateGesturesEnabled() {
-        return rotateGesturesEnabled;
-    }
-
-    /**
-     * Set whether the user can tilt the map with shove gestures. This is true by default.
-     *
-     * When this is false you can still tilt the map view programmatically.
-     * @param enabled If true, tilting with gestures is enabled.
-     */
-    public void setTiltGesturesEnabled(boolean enabled) {
-        tiltGesturesEnabled = enabled;
-    }
-
-    /**
-     * Get whether the user can rotate the map with with shove gestures.
-     * @return True if tilting with gestures is enabled.
-     */
-    public boolean isTiltGesturesEnabled() {
-        return tiltGesturesEnabled;
-    }
-
-    /**
-     * Set whether the user can change the map with all gestures.
-     * @param enabled If true, all gestures are enabled. If false, all gestures are disabled.
-     */
-    public void setAllGesturesEnabled(boolean enabled) {
-        setPanGesturesEnabled(enabled);
-        setZoomGesturesEnabled(enabled);
-        setRotateGesturesEnabled(enabled);
-        setTiltGesturesEnabled(enabled);
+        };
     }
 
     /**
@@ -1252,49 +1088,7 @@ public class MapController implements Renderer {
      * @param listener The {@link MapChangeListener} to call when the map change events occur due to camera updates or user interaction
      */
     public void setMapChangeListener(@Nullable final MapChangeListener listener) {
-        final Runnable regionIsChanging = (listener == null) ? null : new Runnable() {
-            @Override
-            public void run() {
-                listener.onRegionIsChanging();
-            }
-        };
-
-        mapChangeListener = (listener == null) ? null : new MapChangeListener() {
-            @Override
-            public void onViewComplete() {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onViewComplete();
-                    }
-                });
-            }
-
-            @Override
-            public void onRegionWillChange(final boolean animated) {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onRegionWillChange(animated);
-                    }
-                });
-            }
-
-            @Override
-            public void onRegionIsChanging() {
-                uiThreadHandler.post(regionIsChanging);
-            }
-
-            @Override
-            public void onRegionDidChange(final boolean animated) {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onRegionDidChange(animated);
-                    }
-                });
-            }
-        };
+        mapChangeListener = listener;
     }
 
     //Convenience member functions
@@ -1556,7 +1350,7 @@ public class MapController implements Renderer {
     private FontFileParser fontFileParser;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
-    private LongSparseArray<Object> httpRequestHandles = new LongSparseArray<>();
+    private final LongSparseArray<Object> httpRequestHandles = new LongSparseArray<>();
     private MapChangeListener mapChangeListener;
     private FeaturePickListener featurePickListener;
     private SceneLoadListener sceneLoadListener;
@@ -1568,10 +1362,7 @@ public class MapController implements Renderer {
     private LongSparseArray<Marker> markers;
     private Handler uiThreadHandler;
     private CameraAnimationCallback cameraAnimationCallback;
-    private boolean panGesturesEnabled = true;
-    private boolean zoomGesturesEnabled = true;
-    private boolean rotateGesturesEnabled = true;
-    private boolean tiltGesturesEnabled = true;
+    private boolean isGLRendererSet = false;
 
     // GLSurfaceView.Renderer methods
     // ==============================
@@ -1633,61 +1424,81 @@ public class MapController implements Renderer {
     // Networking methods
     // ==================
 
-    private void syncRemoveHttpHandle(final long requestHandle) {
-        synchronized(this) {
-            httpRequestHandles.remove(requestHandle);
-        }
-    }
-
     @Keep
     void cancelUrlRequest(final long requestHandle) {
-        if (httpHandler != null) {
-            Object request;
-            synchronized(this) {
-                request = httpRequestHandles.get(requestHandle);
-                httpRequestHandles.remove(requestHandle);
-            }
-            if (request != null) {
-                httpHandler.cancelRequest(request);
-            }
+        final HttpHandler handler = httpHandler;
+        if (handler == null) {
+            return;
+        }
+
+        Object request;
+        synchronized (httpRequestHandles) {
+            request = httpRequestHandles.get(requestHandle);
+            httpRequestHandles.remove(requestHandle);
+        }
+        if (request != null) {
+            handler.cancelRequest(request);
         }
     }
 
     @Keep
     void startUrlRequest(@NonNull final String url, final long requestHandle) {
-        if (httpHandler == null) {
+        // TODO
+        // This is still does not ensure that handler.startRequest is not
+        // executed after MapController.dispose() when startUrlRequest is
+        // called from worker threads. At least the result will be ignored
+        final HttpHandler handler = httpHandler;
+        if (handler == null) {
             return;
         }
 
         final HttpHandler.Callback callback = new HttpHandler.Callback() {
             @Override
             public void onFailure(@Nullable final IOException e) {
+                if (httpHandler == null) {
+                    Log.w("Tangram", "Network call after disposing MapController - Failure");
+                    return;
+                }
                 String msg = (e == null) ? "" : e.getMessage();
                 nativeOnUrlComplete(mapPointer, requestHandle, null, msg);
-                syncRemoveHttpHandle(requestHandle);
+                synchronized(httpRequestHandles) {
+                    httpRequestHandles.remove(requestHandle);
+                }
             }
 
             @Override
             public void onResponse(final int code, @Nullable final byte[] rawDataBytes) {
+                if (httpHandler == null) {
+                    Log.w("Tangram", "Network call after disposing MapController - Response");
+                    return;
+                }
                 if (code >= 200 && code < 300) {
                     nativeOnUrlComplete(mapPointer, requestHandle, rawDataBytes, null);
+                } else {
+                    nativeOnUrlComplete(mapPointer, requestHandle, null,
+                            "Unexpected response code: " + code + " for URL: " + url);
                 }
-                else {
-                    nativeOnUrlComplete(mapPointer, requestHandle, null, "Unexpected response code: " + code + " for URL: " + url);
+                synchronized(httpRequestHandles) {
+                    httpRequestHandles.remove(requestHandle);
                 }
-                syncRemoveHttpHandle(requestHandle);
             }
 
             @Override
             public void onCancel() {
+                if (httpHandler == null) {
+                    Log.w("Tangram", "Network call after disposing MapController - Cancel");
+                    return;
+                }
                 nativeOnUrlComplete(mapPointer, requestHandle, null, null);
-                syncRemoveHttpHandle(requestHandle);
+                synchronized(httpRequestHandles) {
+                    httpRequestHandles.remove(requestHandle);
+                }
             }
         };
 
-        Object request = httpHandler.startRequest(url, callback);
+        Object request = handler.startRequest(url, callback);
         if (request != null) {
-            synchronized (this) {
+            synchronized (httpRequestHandles) {
                 httpRequestHandles.put(requestHandle, request);
             }
         }

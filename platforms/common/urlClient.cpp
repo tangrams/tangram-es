@@ -37,8 +37,7 @@ UrlClient::~UrlClient() {
         // For all requests that have not started, finish them now with a canceled response.
         for (auto& request : m_requests) {
             if (request.callback) {
-                auto response = getCanceledResponse();
-                request.callback(response);
+                request.callback(getCanceledResponse());
             }
         }
         m_requests.clear();
@@ -131,7 +130,7 @@ void UrlClient::curlLoop(uint32_t index) {
     // Set up an easy handle for reuse.
     auto handle = curl_easy_init();
     curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, &curlWriteCallback);
-    curl_easy_setopt(handle, CURLOPT_WRITEDATA, &task.response);
+    curl_easy_setopt(handle, CURLOPT_WRITEDATA, &task.content);
     curl_easy_setopt(handle, CURLOPT_PROGRESSFUNCTION, &curlProgressCallback);
     curl_easy_setopt(handle, CURLOPT_PROGRESSDATA, &task);
     curl_easy_setopt(handle, CURLOPT_NOPROGRESS, 0L);
@@ -164,6 +163,8 @@ void UrlClient::curlLoop(uint32_t index) {
             }
         }
         if (haveRequest) {
+            UrlResponse response;
+
             // Configure the easy handle.
             const char* url = task.request.url.data();
             curl_easy_setopt(handle, CURLOPT_URL, url);
@@ -173,23 +174,23 @@ void UrlClient::curlLoop(uint32_t index) {
             // Handle success or error.
             if (result == CURLE_OK) {
                 LOGD("curlLoop %u succeeded for url: %s", index, url);
-                task.response.error = nullptr;
+                response.error = nullptr;
             } else if (result == CURLE_ABORTED_BY_CALLBACK) {
                 LOGD("curlLoop %u aborted request for url: %s", index, url);
-                task.response.error = requestCancelledError;
+                response.error = requestCancelledError;
             } else {
                 LOGD("curlLoop %u failed with error '%s' for url: %s", index, curlErrorString, url);
-                task.response.error = curlErrorString;
+                response.error = curlErrorString;
             }
             // If a callback is given, always run it regardless of request result.
             if (task.request.callback) {
                 LOGD("curlLoop %u performing request callback", index);
-                task.request.callback(task.response);
+                response.content = task.content;
+                task.request.callback(std::move(response));
             }
         }
-        // Reset the response.
-        task.response.content.clear();
-        task.response.error = nullptr;
+        // Reset the task.
+        task.content.clear();
     }
     LOGD("curlLoop %u exiting", index);
     // Clean up our easy handle.

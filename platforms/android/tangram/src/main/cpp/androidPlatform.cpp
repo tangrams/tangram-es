@@ -311,7 +311,7 @@ UrlRequestHandle AndroidPlatform::startUrlRequest(Url _url, UrlCallback _callbac
         UrlResponse response;
         response.content = bytesFromFile(_url);
         if (_callback) {
-            _callback(response);
+            _callback(std::move(response));
         }
         return requestHandle;
     }
@@ -377,13 +377,12 @@ void AndroidPlatform::onUrlComplete(JNIEnv* _jniEnv, jlong _jRequestHandle, jbyt
         }
     }
     if (callback) {
-        callback(response);
+        callback(std::move(response));
     }
 }
 
 void setCurrentThreadPriority(int priority) {
-    int  tid = gettid();
-    setpriority(PRIO_PROCESS, tid, priority);
+    setpriority(PRIO_PROCESS, 0, priority);
 }
 
 void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult) {

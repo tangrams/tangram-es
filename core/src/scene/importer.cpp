@@ -62,7 +62,7 @@ Node Importer::applySceneImports(std::shared_ptr<Platform> platform) {
         }
 
         activeDownloads++;
-        m_scene->startUrlRequest(platform, nextUrlToImport, [&, nextUrlToImport](UrlResponse response) {
+        m_scene->startUrlRequest(platform, nextUrlToImport, [&, nextUrlToImport](UrlResponse&& response) {
             std::unique_lock<std::mutex> lock(sceneMutex);
             if (response.error) {
                 LOGE("Unable to retrieve '%s': %s", nextUrlToImport.string().c_str(), response.error);

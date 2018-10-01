@@ -1,6 +1,7 @@
 #include "linuxSystemFontHelper.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
 
 namespace Tangram {
