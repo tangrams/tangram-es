@@ -73,10 +73,6 @@ void GL::clearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
 void GL::getIntegerv(GLenum pname, GLint *params ) {
     GL_CHECK(glGetIntegerv(pname, params ));
 }
-void GL::polygonMode(GLenum face, GLenum mode) {
-    GL_CHECK(glPolygonMode(face, mode));
-}
-
 
 // Program
 void GL::useProgram(GLuint program) {

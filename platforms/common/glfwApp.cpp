@@ -184,13 +184,13 @@ void run() {
         map->update(delta);
         const bool wireframe = wireframe_mode;
         if(wireframe) {
-            GL::polygonMode(GL_FRONT, GL_LINE);
-            GL::polygonMode(GL_BACK, GL_LINE);
+            glPolygonMode(GL_FRONT, GL_LINE);
+            glPolygonMode(GL_BACK, GL_LINE);
         }
         map->render();
         if(wireframe) {
-            GL::polygonMode(GL_FRONT, GL_FILL);
-            GL::polygonMode(GL_BACK, GL_FILL);
+            glPolygonMode(GL_FRONT, GL_FILL);
+            glPolygonMode(GL_BACK, GL_FILL);
         }
         // Swap front and back buffers
         glfwSwapBuffers(main_window);
