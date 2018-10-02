@@ -10,6 +10,10 @@ set(CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "9.3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 execute_process(COMMAND xcrun --sdk iphoneos --show-sdk-version OUTPUT_VARIABLE IOS_SDK_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+# Configure the API key in the Info.plist for the demo app.
+set(NEXTZEN_API_KEY $ENV{NEXTZEN_API_KEY})
+configure_file(${PROJECT_SOURCE_DIR}/platforms/ios/demo/Info.plist.in ${PROJECT_BINARY_DIR}/Info.plist)
+
 # Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
 if (IOS_SDK_VERSION VERSION_LESS 11.0)
   set(SQLITE_USE_LEGACY_STRUCT ON CACHE BOOL "")
