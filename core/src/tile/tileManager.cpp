@@ -308,7 +308,8 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
     // Tile load request above this zoom-level will be canceled in order to
     // not wait for tiles that are too small to contribute significantly to
     // the current view.
-    int maxZoom = _view.zoom + 2;
+    int maxZoom = glm::round(_view.zoom + 2.f);
+    int minZoom = glm::round(_view.zoom - 3.f);
 
     std::vector<TileID> removeTiles;
     auto& tiles = _tileSet.tiles;
@@ -348,27 +349,29 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
             auto& entry = curTilesIt->second;
             entry.setVisible(true);
 
-            auto sourceGeneration = (entry.isReady()) ?
-                entry.tile->sourceGeneration() : entry.task->sourceGeneration();
-
             if (entry.isReady()) {
                 m_tiles.push_back(entry.tile);
 
-                if (!entry.isInProgress() &&
-                    (sourceGeneration < generation)) {
+                auto sourceGeneration = entry.tile->sourceGeneration();
+                if (!entry.isInProgress() && (sourceGeneration < generation)) {
                     // Tile needs update - enqueue for loading
                     entry.task = _tileSet.source->createTask(visTileId);
                     enqueueTask(_tileSet, visTileId, _view);
                 }
             } else if (entry.needsLoading()) {
                 // Not yet available - enqueue for loading
+                if (!entry.task) {
+                    entry.task = _tileSet.source->createTask(visTileId);
+                }
                 enqueueTask(_tileSet, visTileId, _view);
 
-            } else if (entry.isCanceled() &&
-                       (sourceGeneration < generation)) {
-                // Tile needs update - enqueue for loading
-                entry.task = _tileSet.source->createTask(visTileId);
-                enqueueTask(_tileSet, visTileId, _view);
+            } else if (entry.isCanceled()) {
+                auto sourceGeneration = entry.task->sourceGeneration();
+                if (sourceGeneration < generation) {
+                    // Tile needs update - enqueue for loading
+                    entry.task = _tileSet.source->createTask(visTileId);
+                    enqueueTask(_tileSet, visTileId, _view);
+                }
             }
 
             if (entry.isInProgress()) {
@@ -407,9 +410,13 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
             if (entry.getProxyCounter() > 0) {
                 if (entry.isReady()) {
                     m_tiles.push_back(entry.tile);
-                } else if (curTileId.z < maxZoom) {
-                    // Cancel loading
-                    removeTiles.push_back(curTileId);
+                } else if (entry.isInProgress()) {
+                    if (curTileId.z >= maxZoom || curTileId.z <= minZoom) {
+                        // Cancel tile loading but keep tile entry for referencing
+                        // this tiles proxy tiles.
+                        entry.clearTask();
+                        _tileSet.source->cancelLoadingTile(curTileId);
+                    }
                 }
             } else {
                 removeTiles.push_back(curTileId);
@@ -423,13 +430,9 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
         auto it = tiles.find(removeTiles.back());
         removeTiles.pop_back();
 
-        if ((it != tiles.end()) &&
-            (!it->second.isVisible()) &&
-            (it->second.getProxyCounter() <= 0  ||
-             it->first.z >= maxZoom)) {
-
+        if ((it != tiles.end()) && (!it->second.isVisible()) &&
+            (it->second.getProxyCounter() <= 0)) {
             clearProxyTiles(_tileSet, it->first, it->second, removeTiles);
-
             removeTile(_tileSet, it);
         }
     }
@@ -583,19 +586,18 @@ bool TileManager::updateProxyTile(TileSet& _tileSet, TileEntry& _tile,
     {
         const auto& it = tiles.find(_proxyTileId);
         if (it != tiles.end()) {
-            auto& entry = it->second;
-
-            if (!entry.isCanceled() && _tile.setProxy(_proxyId)) {
+            if (_tile.setProxy(_proxyId)) {
+                auto& entry = it->second;
                 entry.incProxyCounter();
 
                 if (entry.isReady()) {
                     m_tiles.push_back(entry.tile);
                 }
-
-                // Note: No need to check the cache: When the tile is in
-                // tileSet it would have already been fetched from cache
                 return true;
             }
+            // Note: No need to check the cache: When the tile is in
+            // tileSet it has already been fetched from cache
+            return false;
         }
     }
 
