@@ -135,6 +135,11 @@ inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation
     _dataLayersByName = [[NSMutableDictionary alloc] init];
     _resourceRoot = [[NSBundle mainBundle] resourceURL];
 
+    self.clipsToBounds = YES;
+    self.opaque = YES;
+    self.autoresizesSubviews = YES;
+    self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+
     if (!_urlHandler) {
         _urlHandler = [[TGDefaultURLHandler alloc] init];
     }
@@ -153,11 +158,6 @@ inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation
         weakSelf.cameraAnimationCallback = nil;
         [weakSelf regionDidChangeAnimated:YES];
     });
-
-    self.clipsToBounds = YES;
-    self.opaque = YES;
-    self.autoresizesSubviews = YES;
-    self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 }
 
 - (void)didEnterBackground:(__unused NSNotification *)notification
@@ -190,7 +190,7 @@ inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation
     _glView.drawableDepthFormat = GLKViewDrawableDepthFormat24;
     _glView.drawableStencilFormat = GLKViewDrawableStencilFormat8;
     _glView.drawableMultisample = GLKViewDrawableMultisampleNone;
-    _glView.opaque = YES;
+    _glView.opaque = self.opaque;
     _glView.delegate = self;
     _glView.autoresizingMask = self.autoresizingMask;
 
