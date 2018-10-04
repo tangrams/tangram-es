@@ -88,7 +88,7 @@ public class MapView extends FrameLayout {
             return null;
         }
 
-        return new MapController(this.getContext());
+        return getMapInstance();
     }
 
     /**
@@ -199,6 +199,10 @@ public class MapView extends FrameLayout {
             mapController.dispose();
             mapController = null;
         }
+    }
+
+    protected MapController getMapInstance() {
+        return new MapController(this.getContext());
     }
 
     /**
