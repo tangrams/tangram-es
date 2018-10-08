@@ -631,11 +631,13 @@ bool StyleParam::parseColor(const YAML::Node& node, Color &result) {
     if (node.IsSequence() && node.size() >= 3) {
         ColorF color;
         isValid = true;
-        isValid |= YAML::convert<float>::decode(node[0], color.r);
-        isValid |= YAML::convert<float>::decode(node[1], color.g);
-        isValid |= YAML::convert<float>::decode(node[2], color.b);
+        isValid &= YamlUtil::getFloat(node[0], color.r);
+        isValid &= YamlUtil::getFloat(node[1], color.g);
+        isValid &= YamlUtil::getFloat(node[2], color.b);
         if (node.size() >= 4) {
-            isValid |= YAML::convert<float>::decode(node[3], color.a);
+            isValid &= YamlUtil::getFloat(node[3], color.a);
+        } else {
+            color.a = 1.f;
         }
         if (isValid) {
             result = color.toColor();
