@@ -667,14 +667,14 @@ bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
 
     if (_str.compare(index, end, "px") == 0) {
         return true;
-    } else if (_str.compare(index, end, "em") == 0) {
-        // FIXME: Number strings ending with 'em' fail to match this.
-        // The float parser consumes the 'e' (for scientific notation like '1.2e6').
-        _pxSize *= 16.f;
     } else if (_str.compare(index, end, "pt") == 0) {
         _pxSize /= 0.75f;
     } else if (_str.compare(index, end, "%") == 0) {
         _pxSize /= 6.25f;
+    } else if (_str.compare(index - 1, end, "em") == 0) {
+        // The float parser consumes the 'e' (for scientific notation like '1.2e6') so if the string ends with 'em'
+        // then 'e' will be the last character consumed and the substring from index-1 to end will be 'em'.
+        _pxSize *= 16.f;
     } else {
         return false;
     }
