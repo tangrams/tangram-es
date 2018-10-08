@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Tangram</string>
+    <string name="title_activity_demo_chooser">DemoChooserActivity</string>
+    <string name="simple_map_title">Simple Map</string>
+    <string name="scene_switcher_title">Scene Switcher</string>
 </resources>
