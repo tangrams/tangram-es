@@ -300,19 +300,7 @@ public class MapController implements Renderer {
             // Prevent any calls to native functions - except dispose.
             final long pointer = mapPointer;
             mapPointer = 0;
-
-            if (!isGLRendererSet) {
-                // No GL setup from UI Thread
-                nativeDispose(pointer);
-            } else {
-                // Disposing native resources involves GL calls, so we need to run on the GL thread.
-                queueEvent(new Runnable() {
-                    @Override
-                    public void run() {
-                        nativeDispose(pointer);
-                    }
-                });
-            }
+            nativeDispose(pointer);
         }
     }
 
