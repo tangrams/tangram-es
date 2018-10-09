@@ -449,48 +449,35 @@ public class MapController implements Renderer {
         final boolean animated = (duration != 0);
         onRegionWillChange(animated);
 
-        // Cancel the previous callback, if present.
-        onCameraAnimationEnded(false);
-
         final float seconds = duration / 1000.f;
+
+        synchronized (cameraAnimationCallbackLock) {
+            // Wrap the callback to run corresponding map change events.
+            pendingCameraAnimationCallback = new CameraAnimationCallback() {
+                @Override
+                public void onFinish() {
+                    onRegionDidChange(animated);
+                    if (cb != null) {
+                        cb.onFinish();
+                    }
+                }
+
+                @Override
+                public void onCancel() {
+                    // Possible camera update was cancelled in between, so should account for this map change
+                    onRegionDidChange(animated);
+                    if (cb != null) {
+                        cb.onCancel();
+                    }
+                }
+            };
+        }
 
         nativeUpdateCameraPosition(mapPointer, update.set, update.longitude, update.latitude, update.zoom,
                 update.zoomBy, update.rotation, update.rotationBy, update.tilt, update.tiltBy,
                 update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.padding,
                 seconds, ease.ordinal());
 
-        // Wrap the callback to run corresponding map change events.
-        cameraAnimationCallback = new CameraAnimationCallback() {
-            @Override
-            public void onFinish() {
-                onRegionDidChange(animated);
-                if (cb != null) {
-                    cb.onFinish();
-                }
-            }
-
-            @Override
-            public void onCancel() {
-                // Possible camera update was cancelled in between, so should account for this map change
-                onRegionDidChange(animated);
-                if (cb != null) {
-                    cb.onCancel();
-                }
-            }
-        };
-    }
-
-    private void onCameraAnimationEnded(boolean finished) {
-        if (cameraAnimationCallback != null) {
-            // Prevent recursion loop when updateCameraPosition is called from callback.
-            final CameraAnimationCallback cb = cameraAnimationCallback;
-            cameraAnimationCallback = null;
-            if (finished) {
-                cb.onFinish();
-            } else {
-                cb.onCancel();
-            }
-        }
     }
 
     /**
@@ -1306,6 +1293,8 @@ public class MapController implements Renderer {
     private LongSparseArray<Marker> markers;
     private Handler uiThreadHandler;
     private CameraAnimationCallback cameraAnimationCallback;
+    private CameraAnimationCallback pendingCameraAnimationCallback;
+    private final Object cameraAnimationCallbackLock = new Object();
     private boolean isGLRendererSet = false;
 
     // GLSurfaceView.Renderer methods
@@ -1481,11 +1470,20 @@ public class MapController implements Renderer {
     // Called from JNI on render-thread.
     @Keep
     void cameraAnimationCallback(final boolean finished) {
-        if (cameraAnimationCallback != null) {
+        final CameraAnimationCallback callback = cameraAnimationCallback;
+        synchronized (cameraAnimationCallbackLock) {
+            cameraAnimationCallback = pendingCameraAnimationCallback;
+            pendingCameraAnimationCallback = null;
+        }
+        if (callback != null) {
             uiThreadHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    onCameraAnimationEnded(finished);
+                    if (finished) {
+                        callback.onFinish();
+                    } else {
+                        callback.onCancel();
+                    }
                 }
             });
         }
