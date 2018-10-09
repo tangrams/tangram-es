@@ -221,7 +221,7 @@ void PolylineStyleBuilder<V>::setup(const Tile& tile) {
     m_zoom = id.s;
     m_overzoom2 = exp2(id.s - id.z);
     m_tileUnitsPerMeter = tile.getInverseScale();
-    m_tileUnitsPerPixel = 1.f / tile.getProjection()->TileSize();
+    m_tileUnitsPerPixel = 1.f / MapProjection::tileSize();
 
     // When a tile is overzoomed, we are actually styling the area of its
     // 'source' tile, which will have a larger effective pixel size at the
@@ -235,7 +235,7 @@ void PolylineStyleBuilder<V>::setup(const Marker& marker, int zoom) {
     m_zoom = zoom;
     m_overzoom2 = 1.f;
     m_tileUnitsPerMeter = 1.f / marker.extent();
-    float metersPerTile = 2.f * MapProjection::HALF_CIRCUMFERENCE * exp2(-zoom);
+    float metersPerTile = MapProjection::metersPerTileAtZoom(zoom);
 
     // In general, a Marker won't cover the same area as a tile, so the effective
     // "tile size" for building a Marker is the size of a tile in pixels multiplied

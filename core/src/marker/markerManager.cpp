@@ -23,7 +23,6 @@ MarkerManager::~MarkerManager() {}
 void MarkerManager::setScene(std::shared_ptr<Scene> scene) {
 
     m_scene = scene;
-    m_mapProjection = scene->mapProjection().get();
 
     m_styleContext = std::make_unique<StyleContext>();
     m_styleContext->initFunctions(*scene);
@@ -145,7 +144,7 @@ bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
     }
 
     // Update the marker's bounds to the given coordinates.
-    auto origin = m_mapProjection->LonLatToMeters({ lngLat.longitude, lngLat.latitude });
+    auto origin = MapProjection::lngLatToProjectedMeters({lngLat.longitude, lngLat.latitude});
     marker->setBounds({ origin, origin });
 
     return true;
@@ -165,7 +164,7 @@ bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float durati
         return setPoint(markerID, lngLat);
     }
 
-    auto dest = m_mapProjection->LonLatToMeters({ lngLat.longitude, lngLat.latitude });
+    auto dest = MapProjection::lngLatToProjectedMeters({lngLat.longitude, lngLat.latitude});
     marker->setEase(dest, duration, ease);
 
     return true;
@@ -197,8 +196,8 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
     for (int i = 0; i < count; ++i) {
         bounds.expand(coordinates[i].longitude, coordinates[i].latitude);
     }
-    bounds.min = m_mapProjection->LonLatToMeters(bounds.min);
-    bounds.max = m_mapProjection->LonLatToMeters(bounds.max);
+    bounds.min = MapProjection::lngLatToProjectedMeters({bounds.min.x, bounds.min.y});
+    bounds.max = MapProjection::lngLatToProjectedMeters({bounds.max.x, bounds.max.y});
 
     // Update the marker's bounds.
     marker->setBounds(bounds);
@@ -208,8 +207,8 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
     // Project and offset the coordinates into the marker-local coordinate system.
     auto origin = marker->origin(); // SW corner.
     for (int i = 0; i < count; ++i) {
-        auto degrees = glm::dvec2(coordinates[i].longitude, coordinates[i].latitude);
-        auto meters = m_mapProjection->LonLatToMeters(degrees);
+        auto degrees = LngLat(coordinates[i].longitude, coordinates[i].latitude);
+        auto meters = MapProjection::lngLatToProjectedMeters(degrees);
         line.emplace_back((meters.x - origin.x) * scale, (meters.y - origin.y) * scale);
     }
 
@@ -255,8 +254,8 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
         }
         ring += count;
     }
-    bounds.min = m_mapProjection->LonLatToMeters(bounds.min);
-    bounds.max = m_mapProjection->LonLatToMeters(bounds.max);
+    bounds.min = MapProjection::lngLatToProjectedMeters({bounds.min.x, bounds.min.y});
+    bounds.max = MapProjection::lngLatToProjectedMeters({bounds.max.x, bounds.max.y});
 
     // Update the marker's bounds.
     marker->setBounds(bounds);
@@ -271,8 +270,8 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
         polygon.emplace_back();
         auto& line = polygon.back();
         for (int j = 0; j < count; ++j) {
-            auto degrees = glm::dvec2(ring[j].longitude, ring[j].latitude);
-            auto meters = m_mapProjection->LonLatToMeters(degrees);
+            auto degrees = LngLat(ring[j].longitude, ring[j].latitude);
+            auto meters = MapProjection::lngLatToProjectedMeters(degrees);
             line.emplace_back((meters.x - origin.x) * scale, (meters.y - origin.y) * scale);
         }
         ring += count;

@@ -32,7 +32,7 @@ void TileTask::setTile(std::unique_ptr<Tile>&& _tile) {
 
 void TileTask::process(TileBuilder& _tileBuilder) {
 
-    auto tileData = m_source->parse(*this, *_tileBuilder.scene().mapProjection());
+    auto tileData = m_source->parse(*this);
 
     if (tileData) {
         m_tile = _tileBuilder.build(m_tileId, *tileData, *m_source);

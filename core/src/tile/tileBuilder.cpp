@@ -99,7 +99,7 @@ std::unique_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
 
     m_selectionFeatures.clear();
 
-    auto tile = std::make_unique<Tile>(_tileID, *m_scene->mapProjection(), &_source);
+    auto tile = std::make_unique<Tile>(_tileID, &_source);
 
     tile->initGeometry(m_scene->styles().size());
 
@@ -135,7 +135,7 @@ std::unique_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
         builder.second->addLayoutItems(m_labelLayout);
     }
 
-    float tileSize = m_scene->mapProjection()->TileSize() * m_scene->pixelScale();
+    float tileSize = MapProjection::tileSize() * m_scene->pixelScale();
 
     m_labelLayout.process(_tileID, tile->getInverseScale(), tileSize);
 

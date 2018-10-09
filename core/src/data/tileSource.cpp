@@ -102,11 +102,11 @@ void TileSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
     }
 }
 
-std::shared_ptr<TileData> TileSource::parse(const TileTask& _task, const MapProjection& _projection) const {
+std::shared_ptr<TileData> TileSource::parse(const TileTask& _task) const {
     switch (m_format) {
-    case Format::TopoJson: return TopoJson::parseTile(_task, _projection, m_id);
-    case Format::GeoJson: return GeoJson::parseTile(_task, _projection, m_id);
-    case Format::Mvt: return Mvt::parseTile(_task, _projection, m_id);
+    case Format::TopoJson: return TopoJson::parseTile(_task, m_id);
+    case Format::GeoJson: return GeoJson::parseTile(_task, m_id);
+    case Format::Mvt: return Mvt::parseTile(_task, m_id);
     }
     assert(false);
     return nullptr;

@@ -319,7 +319,7 @@ Layer Mvt::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
     return layer;
 }
 
-std::shared_ptr<TileData> Mvt::parseTile(const TileTask& _task, const MapProjection& _projection, int32_t _sourceId) {
+std::shared_ptr<TileData> Mvt::parseTile(const TileTask& _task, int32_t _sourceId) {
 
     auto tileData = std::make_shared<TileData>();
 

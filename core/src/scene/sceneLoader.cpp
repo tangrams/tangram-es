@@ -1567,8 +1567,7 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
                         scene->stops().push_back(Stops::Sizes(value, StyleParam::unitsForStyleParam(styleKey)));
                         out.push_back(StyleParam{ styleKey, &(scene->stops().back()) });
                     } else if (StyleParam::isWidth(styleKey)) {
-                        scene->stops().push_back(Stops::Widths(value, *scene->mapProjection(),
-                                                              StyleParam::unitsForStyleParam(styleKey)));
+                        scene->stops().push_back(Stops::Widths(value, StyleParam::unitsForStyleParam(styleKey)));
                         out.push_back(StyleParam{ styleKey, &(scene->stops().back()) });
                     } else if (StyleParam::isOffsets(styleKey)) {
                         scene->stops().push_back(Stops::Offsets(value, StyleParam::unitsForStyleParam(styleKey)));

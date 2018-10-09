@@ -39,7 +39,7 @@ auto Stops::Colors(const YAML::Node& _node) -> Stops {
 
 double widthMeterToPixel(float _zoom, double _tileSize, double _width) {
     // pixel per meter at z == 0
-    double meterRes = _tileSize / (2.0 * MapProjection::HALF_CIRCUMFERENCE);
+    double meterRes = _tileSize / MapProjection::EARTH_CIRCUMFERENCE_METERS;
     // pixel per meter at zoom
     meterRes *= exp2(_zoom);
 
@@ -186,11 +186,11 @@ auto Stops::Offsets(const YAML::Node& _node, uint8_t _units) -> Stops {
     return stops;
 }
 
-auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, uint8_t _units) -> Stops {
+auto Stops::Widths(const YAML::Node& _node, uint8_t _units) -> Stops {
     Stops stops;
     if (!_node.IsSequence()) { return stops; }
 
-    double tileSize = _projection.TileSize();
+    double tileSize = MapProjection::tileSize();
 
     bool lastIsMeter = false;
     float lastKey = 0;

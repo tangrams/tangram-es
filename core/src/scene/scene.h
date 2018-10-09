@@ -102,7 +102,6 @@ public:
     const auto& lights() const { return m_lights; }
     const auto& lightBlocks() const { return m_lightShaderBlocks; }
     const auto& functions() const { return m_jsFunctions; }
-    const auto& mapProjection() const { return m_mapProjection; }
     const auto& fontContext() const { return m_fontContext; }
     const auto& globalRefs() const { return m_globalRefs; }
     const auto& featureSelection() const { return m_featureSelection; }
@@ -162,8 +161,6 @@ private:
 
     // The root node of the YAML scene configuration
     YAML::Node m_config;
-
-    std::unique_ptr<MapProjection> m_mapProjection;
 
     std::vector<DataLayer> m_layers;
     std::vector<std::shared_ptr<TileSource>> m_tileSources;

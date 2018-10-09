@@ -30,7 +30,7 @@ struct Stops {
 
     std::vector<Frame> frames;
     static Stops Colors(const YAML::Node& _node);
-    static Stops Widths(const YAML::Node& _node, const MapProjection& _projection, uint8_t _units);
+    static Stops Widths(const YAML::Node& _node, uint8_t _units);
     static Stops FontSize(const YAML::Node& _node);
     static Stops Sizes(const YAML::Node& _node, uint8_t _units);
     static Stops Offsets(const YAML::Node& _node, uint8_t _units);

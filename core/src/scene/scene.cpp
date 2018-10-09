@@ -28,10 +28,6 @@ Scene::Scene(std::shared_ptr<const Platform> _platform, const Url& _url)
       m_url(_url),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()) {
-
-    // For now we only have one projection..
-    // TODO how to share projection with view?
-    m_mapProjection.reset(new MercatorProjection());
 }
 
 Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _yaml, const Url& _url)
@@ -41,8 +37,6 @@ Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _yaml
 
     m_url = _url;
     m_yaml = _yaml;
-
-    m_mapProjection.reset(new MercatorProjection());
 }
 
 void Scene::copyConfig(const Scene& _other) {
@@ -56,8 +50,6 @@ void Scene::copyConfig(const Scene& _other) {
     m_yaml = _other.m_yaml;
 
     m_globalRefs = _other.m_globalRefs;
-
-    m_mapProjection.reset(new MercatorProjection());
 
     m_zipArchives = _other.m_zipArchives;
 }

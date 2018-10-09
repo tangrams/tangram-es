@@ -41,8 +41,7 @@ public:
 
 protected:
 
-    virtual std::shared_ptr<TileData> parse(const TileTask& _task,
-                                            const MapProjection& _projection) const override;
+    virtual std::shared_ptr<TileData> parse(const TileTask& _task) const override;
 
     std::unique_ptr<ClientGeoJsonData> m_store;
 

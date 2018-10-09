@@ -336,8 +336,7 @@ struct add_geometry {
     }
 };
 
-std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task,
-                                                     const MapProjection& _projection) const {
+std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task) const {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 
