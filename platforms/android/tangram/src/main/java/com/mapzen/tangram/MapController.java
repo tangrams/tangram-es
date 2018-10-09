@@ -269,7 +269,11 @@ public class MapController implements Renderer {
         uiThreadHandler = new Handler(mapView.getContext().getMainLooper());
     }
 
-    void dispose() {
+    /**
+     * Responsible to dispose internals of MapController during Map teardown.
+     * If client code extends MapController and overrides this method, then it must call super.dispose()
+     */
+    protected void dispose() {
 
         httpHandler = null;
 
