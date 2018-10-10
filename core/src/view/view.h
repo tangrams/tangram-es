@@ -195,7 +195,9 @@ public:
     double screenToGroundPlane(double& _screenX, double& _screenY);
 
     /* Gets the screen position from a latitude/longitude */
-    glm::vec2 lonLatToScreenPosition(double lon, double lat, bool& clipped) const;
+    glm::vec2 lngLatToScreenPosition(double lng, double lat, bool& clipped);
+
+    LngLat screenPositionToLngLat(float x, float y, bool& intersection);
 
     // For a position on the map in projected meters, this returns the displacement vector *from* the view *to* that
     // position, accounting for wrapping around the 180th meridian to get the smallest magnitude displacement.
