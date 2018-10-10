@@ -1429,15 +1429,13 @@ public class MapController implements Renderer {
     // Networking methods
     // ==================
 
-    @Keep
     void cancelAllNetworkRequests() {
-        final HttpHandler handler = httpHandler;
-        if (handler == null) {
+        if (httpHandler == null) {
             return;
         }
         synchronized (httpRequestHandles) {
             for (int i = 0; i < httpRequestHandles.size(); i++) {
-                handler.cancelRequest(httpRequestHandles.valueAt(i));
+                httpHandler.cancelRequest(httpRequestHandles.valueAt(i));
             }
             httpRequestHandles.clear();
         }
