@@ -861,20 +861,18 @@ void Map::flyTo(const CameraPosition& _camera, float _duration, float _speed) {
 
 bool Map::screenPositionToLngLat(double _x, double _y, double* _lng, double* _lat) {
 
-    double intersection = impl->view.screenToGroundPlane(_x, _y);
-    glm::dvec3 eye = impl->view.getPosition();
-    glm::dvec2 meters(_x + eye.x, _y + eye.y);
-    glm::dvec2 lngLat = impl->view.getMapProjection().MetersToLonLat(meters);
-    *_lng = LngLat::wrapLongitude(lngLat.x);
-    *_lat = lngLat.y;
+    bool intersection = false;
+    LngLat lngLat = impl->view.screenPositionToLngLat(_x, _y, intersection);
+    *_lng = lngLat.longitude;
+    *_lat = lngLat.latitude;
 
-    return (intersection >= 0);
+    return intersection;
 }
 
 bool Map::lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y) {
     bool clipped = false;
 
-    glm::vec2 screenCoords = impl->view.lonLatToScreenPosition(_lng, _lat, clipped);
+    glm::vec2 screenCoords = impl->view.lngLatToScreenPosition(_lng, _lat, clipped);
 
     *_x = screenCoords.x;
     *_y = screenCoords.y;

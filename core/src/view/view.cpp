@@ -457,14 +457,29 @@ void View::updateMatrices() {
 
 }
 
-glm::vec2 View::lonLatToScreenPosition(double lon, double lat, bool& clipped) const {
-    glm::dvec2 absoluteMeters = m_projection->LonLatToMeters({lon, lat});
+glm::vec2 View::lngLatToScreenPosition(double lng, double lat, bool& clipped) {
+
+    if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
+
+    glm::dvec2 absoluteMeters = m_projection->LonLatToMeters({lng, lat});
     glm::dvec2 relativeMeters = getRelativeMeters(absoluteMeters);
     glm::dvec4 worldPosition(relativeMeters, 0.0, 1.0);
 
     glm::vec2 screenPosition = worldToScreenSpace(m_viewProj, worldPosition, {m_vpWidth, m_vpHeight}, clipped);
 
     return screenPosition;
+}
+
+LngLat View::screenPositionToLngLat(float x, float y, bool& _intersection) {
+
+    if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
+
+    double dx = x, dy = y;
+    double distance = screenToGroundPlaneInternal(dx, dy);
+    _intersection = (distance >= 0);
+    glm::dvec2 meters(dx + m_pos.x, dy + m_pos.y);
+    glm::dvec2 lngLat = m_projection->MetersToLonLat(meters);
+    return LngLat(LngLat::wrapLongitude(lngLat.x), lngLat.y);
 }
 
 glm::dvec2 View::getRelativeMeters(glm::dvec2 projectedMeters) const {
