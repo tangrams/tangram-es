@@ -219,16 +219,18 @@ public class Marker {
         bitmap.getPixels(argb, 0, width, 0, 0, width, height);
 
         final int[] abgr = new int[width * height];
-        int row, col;
+        int row = 0, col = 0;
         for (int i = 0; i < argb.length; i++) {
-            col = i % width;
-            row = i / width;
             final int pix = argb[i];
             final int pb = (pix >> 16) & 0xff;
             final int pr = (pix << 16) & 0x00ff0000;
             final int pix1 = (pix & 0xff00ff00) | pr | pb;
             final int flippedIndex = (height - 1 - row) * width + col;
             abgr[flippedIndex] = pix1;
+            if(++col >= width) {
+                ++row;
+                col = 0;
+            }
         }
 
         return map.setMarkerBitmap(markerId, width, height, abgr);
