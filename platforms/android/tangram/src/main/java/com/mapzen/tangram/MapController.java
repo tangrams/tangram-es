@@ -275,6 +275,7 @@ public class MapController implements Renderer {
      */
     protected void dispose() {
 
+        cancelAllNetworkRequests();
         httpHandler = null;
 
         // Prevent any other calls to native functions during dispose
@@ -1427,6 +1428,20 @@ public class MapController implements Renderer {
 
     // Networking methods
     // ==================
+
+    @Keep
+    void cancelAllNetworkRequests() {
+        final HttpHandler handler = httpHandler;
+        if (handler == null) {
+            return;
+        }
+        synchronized (httpRequestHandles) {
+            for (int i = 0; i < httpRequestHandles.size(); i++) {
+                handler.cancelRequest(httpRequestHandles.valueAt(i));
+            }
+            httpRequestHandles.clear();
+        }
+    }
 
     @Keep
     void cancelUrlRequest(final long requestHandle) {
