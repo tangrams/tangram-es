@@ -165,9 +165,9 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeStates) {
         void (^callback)(BOOL) = weakSelf.cameraAnimationCallback;
         if (callback) {
             callback(!finished);
+            [weakSelf setMapRegionChangeState:IDLE];
         }
         weakSelf.cameraAnimationCallback = nil;
-        [weakSelf setMapRegionChangeState:IDLE];
     });
 }
 
