@@ -1174,9 +1174,27 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     [shoveRecognizer setTranslation:CGPointZero inView:_glView];
 }
 
+#pragma mark Map region change state notifiers
+
+- (void)notifyGestureDidBegin
+{
+    [self setMapRegionChangeState:ANIMATING];
+}
+
+- (void)notifyGestureIsChanging
+{
+    [self setMapRegionChangeState:ANIMATING];
+}
+
+- (void)notifyGestureDidEnd
+{
+    [self setMapRegionChangeState:IDLE];
+}
+
 #pragma mark Internal Logic
 
-- (void)setMapRegionChangeState:(TGMapRegionChangeStates)state {
+- (void)setMapRegionChangeState:(TGMapRegionChangeStates)state
+{
     switch (_currentState) {
         case IDLE:
             if (state == JUMPING) {
