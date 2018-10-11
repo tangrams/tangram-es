@@ -5,7 +5,6 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.graphics.Rect;
-import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.os.Build;
 import android.os.Handler;
@@ -818,7 +817,6 @@ public class MapController implements Renderer {
 
             @Override
             public boolean onFling(final float posX, final float posY, final float velocityX, final float velocityY) {
-                setMapRegionState(MapRegionChangeState.ANIMATING);
                 nativeHandleFlingGesture(mapPointer, posX, posY, velocityX, velocityY);
                 return true;
             }
@@ -1086,8 +1084,6 @@ public class MapController implements Renderer {
                 case JUMPING:
                     if (state == MapRegionChangeState.IDLE) {
                         mapChangeListener.onRegionDidChange(false);
-                    } else if (state == MapRegionChangeState.ANIMATING) { // e.g. panning to fling
-                        mapChangeListener.onRegionIsChanging();
                     }
                     break;
                 case ANIMATING:
@@ -1353,10 +1349,17 @@ public class MapController implements Renderer {
     private CameraAnimationCallback pendingCameraAnimationCallback;
     private final Object cameraAnimationCallbackLock = new Object();
     private boolean isGLRendererSet = false;
+    private boolean isPrevCameraEasing = false;
     private Runnable setMapRegionAnimatingRunnable = new Runnable() {
         @Override
         public void run() {
             setMapRegionState(MapRegionChangeState.ANIMATING);
+        }
+    };
+    private Runnable setMapRegionIdleRunnable = new Runnable() {
+        @Override
+        public void run() {
+            setMapRegionState(MapRegionChangeState.IDLE);
         }
     };
 
@@ -1384,7 +1387,11 @@ public class MapController implements Renderer {
 
         if (isCameraEasing) {
             uiThreadHandler.post(setMapRegionAnimatingRunnable);
+        } else if (isPrevCameraEasing) {
+            uiThreadHandler.post(setMapRegionIdleRunnable);
         }
+
+        isPrevCameraEasing = isCameraEasing;
 
         if (viewComplete) {
             if (mapChangeListener != null) {
