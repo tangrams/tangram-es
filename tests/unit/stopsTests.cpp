@@ -98,9 +98,7 @@ TEST_CASE("Stops parses correctly from YAML distance values", "[Stops][YAML]") {
 
     YAML::Node node = YAML::Load("[ [10, 0], [16, .04], [18, .2], [19, .2] ]");
 
-    MercatorProjection proj;
-
-    Stops stops(Stops::Widths(node, proj, {}));
+    Stops stops(Stops::Widths(node, {}));
 
     // +1 added for meter end stop
     REQUIRE(stops.frames.size() == 5);
@@ -135,9 +133,8 @@ TEST_CASE("Regression test - Dont crash on evaluating empty stops", "[Stops][YAM
     YAML::Node node = YAML::Load("[]");
 
     {
-        MercatorProjection proj{};
         uint8_t allowedUnit = Unit::meter;
-        Stops stops(Stops::Widths(node, proj, allowedUnit));
+        Stops stops(Stops::Widths(node, allowedUnit));
         REQUIRE(stops.frames.size() == 0);
         stops.evalVec2(1);
     }

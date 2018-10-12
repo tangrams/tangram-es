@@ -108,7 +108,7 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
     view.setZoom(0);
     view.update(false);
 
-    Tile tile({0,0,0}, view.getMapProjection());
+    Tile tile({0,0,0});
     tile.update(0, view);
 
     struct TestTransform {

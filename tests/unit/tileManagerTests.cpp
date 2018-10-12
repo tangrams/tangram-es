@@ -12,8 +12,7 @@
 
 using namespace Tangram;
 
-MercatorProjection s_projection;
-ViewState viewState { &s_projection, true, glm::vec2(0), 1, 0, 1.f, glm::vec2(0), 256.f };
+ViewState viewState { true, glm::vec2(0), 1, 0, 1.f, glm::vec2(0), 256.f };
 
 struct TestTileWorker : TileTaskQueue {
     int processedCount = 0;
@@ -41,7 +40,7 @@ struct TestTileWorker : TileTaskQueue {
                 continue;
             }
 
-            task->setTile(std::make_unique<Tile>(task->tileId(), s_projection, &task->source()));
+            task->setTile(std::make_unique<Tile>(task->tileId(), &task->source()));
 
             pendingTiles = true;
             processedCount++;
@@ -53,7 +52,7 @@ struct TestTileWorker : TileTaskQueue {
         auto task = tasks[position];
         tasks.erase(tasks.begin() + position);
 
-        task->setTile(std::make_unique<Tile>(task->tileId(), s_projection, &task->source()));
+        task->setTile(std::make_unique<Tile>(task->tileId(), &task->source()));
 
         pendingTiles = true;
         processedCount++;
@@ -94,8 +93,7 @@ struct TestTileSource : TileSource {
 
     void cancelLoadingTile(const TileID& _tile) override {}
 
-    std::shared_ptr<TileData> parse(const TileTask& _task,
-                                    const MapProjection& _projection) const override{
+    std::shared_ptr<TileData> parse(const TileTask& _task) const override {
         return nullptr;
     };
 
