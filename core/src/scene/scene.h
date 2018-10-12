@@ -153,6 +153,8 @@ public:
 
     std::vector<SceneError> errors;
 
+    std::shared_ptr<const Platform> platform() const { return m_platform; }
+    
 private:
 
     // The URL from which this scene was loaded
@@ -202,6 +204,8 @@ private:
     float m_pixelScale = 1.0f;
 
     float m_time = 0.0;
+
+    std::shared_ptr<const Platform> m_platform;
 
 };
 

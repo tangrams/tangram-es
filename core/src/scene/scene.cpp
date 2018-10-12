@@ -27,7 +27,8 @@ Scene::Scene(std::shared_ptr<const Platform> _platform, const Url& _url)
     : id(s_serial++),
       m_url(_url),
       m_fontContext(std::make_shared<FontContext>(_platform)),
-      m_featureSelection(std::make_unique<FeatureSelection>()) {
+      m_featureSelection(std::make_unique<FeatureSelection>()),
+      m_platform(_platform) {
 
     // For now we only have one projection..
     // TODO how to share projection with view?
@@ -37,7 +38,8 @@ Scene::Scene(std::shared_ptr<const Platform> _platform, const Url& _url)
 Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _yaml, const Url& _url)
     : id(s_serial++),
       m_fontContext(std::make_shared<FontContext>(_platform)),
-      m_featureSelection(std::make_unique<FeatureSelection>()) {
+      m_featureSelection(std::make_unique<FeatureSelection>()),
+      m_platform(_platform) {
 
     m_url = _url;
     m_yaml = _yaml;

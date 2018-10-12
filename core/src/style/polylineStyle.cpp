@@ -428,9 +428,11 @@ void PolylineStyleBuilder<V>::buildLine(const Line& _line, const typename Parame
                                         MeshData<V>& _mesh, GLuint selection) {
 
     float zoom = m_overzoom2;
-    m_builder.addVertex = [&](const glm::vec2& coord, const glm::vec2& normal, const glm::vec2& uv) {
+    m_builder.addVertex = [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
+        auto h = _att.height;
+        h.x += coord.z * position_scale;
         _mesh.vertices.push_back({{ coord.x,coord.y }, normal, { uv.x, uv.y * zoom },
-                                  _att.width, _att.height, _att.color, selection});
+                                  _att.width, h, _att.color, selection});
     };
 
     Builders::buildPolyLine(_line, m_builder);

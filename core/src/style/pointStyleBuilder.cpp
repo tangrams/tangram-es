@@ -452,7 +452,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& _
             }
             break;
         case LabelProperty::Placement::spaced: {
-            LineSampler<std::vector<glm::vec3>> sampler;
+            LineSampler<std::vector<Point>> sampler;
 
             sampler.set(_line);
 
@@ -477,7 +477,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& _
                     params.labelOptions.angle = RAD_TO_DEG * atan2(r.x, r.y);
                 }
 
-                addLabel({p.x, p.y}, _uvsQuad, _texture, params, _rule);
+                addLabel({p.x, p.y, 0.f}, _uvsQuad, _texture, params, _rule);
 
             } while (sampler.advance(spacing, p, r));
         }
@@ -555,7 +555,7 @@ bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
         }
     } else {
         if (!_polygon.empty()) {
-            glm::vec2 c;
+            glm::vec3 c;
             c = centroid(_polygon.front().begin(), _polygon.front().end());
             addLabel(c, uvsQuad, texture, p, _rule);
         }

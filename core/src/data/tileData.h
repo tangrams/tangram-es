@@ -11,7 +11,7 @@
 Tile Coordinates:
 
   A point in the geometry of a tile is represented with 32-bit floating point
-  x and y coordinates. Coordinates represent normalized displacement from
+  x, y, and z coordinates. Coordinates represent normalized displacement from
   the origin (i.e. lower-left corner) of a tile.
 
   (0.0, 1.0) ---------- (1.0, 1.0)
@@ -24,6 +24,8 @@ Tile Coordinates:
   Coordinates that fall outside the range [0.0, 1.0] are permissible, as tile
   servers may choose not to clip certain geometries to tile boundaries, but these
   points are clipped in the client-side geometry processing.
+
+  Z coordinates are expected to be normalized to the same scale as x, y coordinates.
 
 Data heirarchy:
 
@@ -48,7 +50,8 @@ Data heirarchy:
 
   A <Line> is a collection of <Point>s.
 
-  A <Point> is 2 32-bit floating point coordinates representing x and y.
+  A <Point> is 3 32-bit floating point coordinates representing x, y, and z
+  (in that order).
 
 */
 namespace Tangram {
@@ -60,11 +63,11 @@ enum GeometryType {
     polygons
 };
 
-using Point = glm::vec2;
+typedef glm::vec3 Point;
 
-using Line = std::vector<Point>;
+typedef std::vector<Point> Line;
 
-using Polygon = std::vector<Line>;
+typedef std::vector<Line> Polygon;
 
 struct Feature {
     Feature() {}
