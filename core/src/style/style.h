@@ -258,12 +258,15 @@ public:
     /* Perform any unsetup needed after drawing each frame */
     virtual void onEndDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {}
 
-    /* Draws the geometry associated with this <Style> */
-    virtual void draw(RenderState& rs, const Tile& _tile);
+    /* Draws the geometry associated with this <Style>
+     * returns true when meshes associated with this style are successfully drawn,
+     * false otherwise.
+     */
+    virtual bool draw(RenderState& rs, const Tile& _tile);
 
-    virtual void draw(RenderState& rs, const Marker& _marker);
+    virtual bool draw(RenderState& rs, const Marker& _marker);
 
-    virtual void draw(RenderState& rs, const View& _view, Scene& _scene,
+    virtual bool draw(RenderState& rs, const View& _view, Scene& _scene,
                       const std::vector<std::shared_ptr<Tile>>& _tiles,
                       const std::vector<std::unique_ptr<Marker>>& _markers);
 
