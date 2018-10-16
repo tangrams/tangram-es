@@ -26,6 +26,10 @@ extern "C" {
         return AndroidPlatform::jniOnLoad(vm);
     }
 
+    JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved) {
+        AndroidPlatform::jniOnUnload(vm);
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetCameraPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray lonLat, jfloatArray zoomRotationTilt) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);

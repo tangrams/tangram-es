@@ -46,6 +46,7 @@ public:
 
     static void bindJniEnvToThread(JNIEnv* jniEnv);
     static jint jniOnLoad(JavaVM* javaVM);
+    static void jniOnUnload(JavaVM* javaVM);
 
 private:
 

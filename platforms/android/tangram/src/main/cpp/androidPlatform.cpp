@@ -95,6 +95,17 @@ jint AndroidPlatform::jniOnLoad(JavaVM* javaVM) {
     return JNI_VERSION_1_6;
 }
 
+void AndroidPlatform::jniOnUnload(JavaVM *javaVM) {
+    JNIEnv* jniEnv = nullptr;
+    if (javaVM->GetEnv(reinterpret_cast<void**>(&jniEnv), JNI_VERSION_1_6) != JNI_OK) {
+        return;
+    }
+    jniEnv->DeleteGlobalRef(hashmapClass);
+    hashmapClass = nullptr;
+
+    jvm = nullptr;
+}
+
 std::string stringFromJString(JNIEnv* jniEnv, jstring string) {
     auto length = jniEnv->GetStringLength(string);
     std::u16string chars(length, char16_t());
