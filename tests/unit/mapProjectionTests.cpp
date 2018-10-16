@@ -1,5 +1,4 @@
 #include "catch.hpp"
-#include "approxVec.h"
 #include "glm/glm.hpp"
 #include "util/mapProjection.h"
 
@@ -25,7 +24,8 @@ TEST_CASE("MapProjection correctly converts between LngLat and ProjectedMeters",
             );
 
     auto convertedMeters = MapProjection::lngLatToProjectedMeters(pair.lngLat);
-    CHECK_THAT(convertedMeters, IsApproxEqualToVec<glm::dvec2>(pair.meters, epsilonMeters));
+    CHECK_THAT(convertedMeters.x, Catch::WithinAbs(pair.meters.x, epsilonMeters));
+    CHECK_THAT(convertedMeters.y, Catch::WithinAbs(pair.meters.y, epsilonMeters));
 
     auto convertedLngLat = MapProjection::projectedMetersToLngLat(pair.meters);
     CHECK_THAT(convertedLngLat.longitude, Catch::WithinAbs(pair.lngLat.longitude, epsilonDegrees));
