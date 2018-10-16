@@ -30,6 +30,8 @@ PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT = 0;
 PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT = 0;
 PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT = 0;
 
+#define TANGRAM_JNI_VERSION JNI_VERSION_1_6
+
 namespace Tangram {
 
 /* Followed the following document for JavaVM tips when used with native threads
@@ -69,7 +71,7 @@ jint AndroidPlatform::jniOnLoad(JavaVM* javaVM) {
 
     jvm = javaVM;
     JNIEnv* jniEnv = nullptr;
-    if (javaVM->GetEnv(reinterpret_cast<void**>(&jniEnv), JNI_VERSION_1_6) != JNI_OK) {
+    if (javaVM->GetEnv(reinterpret_cast<void**>(&jniEnv), TANGRAM_JNI_VERSION) != JNI_OK) {
         return -1;
     }
 
@@ -92,12 +94,12 @@ jint AndroidPlatform::jniOnLoad(JavaVM* javaVM) {
     hashmapInitMID = jniEnv->GetMethodID(hashmapClass, "<init>", "()V");
     hashmapPutMID = jniEnv->GetMethodID(hashmapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
-    return JNI_VERSION_1_6;
+    return TANGRAM_JNI_VERSION;
 }
 
 void AndroidPlatform::jniOnUnload(JavaVM *javaVM) {
     JNIEnv* jniEnv = nullptr;
-    if (javaVM->GetEnv(reinterpret_cast<void**>(&jniEnv), JNI_VERSION_1_6) != JNI_OK) {
+    if (javaVM->GetEnv(reinterpret_cast<void**>(&jniEnv), TANGRAM_JNI_VERSION) != JNI_OK) {
         return;
     }
     jniEnv->DeleteGlobalRef(hashmapClass);
@@ -129,7 +131,7 @@ private:
     int status;
 public:
     JniThreadBinding(JavaVM* _jvm) : jvm(_jvm) {
-        status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
+        status = jvm->GetEnv((void**)&jniEnv, TANGRAM_JNI_VERSION);
         if (status == JNI_EDETACHED) { jvm->AttachCurrentThread(&jniEnv, NULL);}
     }
     ~JniThreadBinding() {
