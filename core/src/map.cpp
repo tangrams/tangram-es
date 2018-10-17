@@ -561,7 +561,7 @@ void Map::render() {
         }
     }
 
-    if (drawnAnimatedStyle != platform->isContinuousRendering()) {
+    if (impl->scene->animated() != Scene::animate::no && drawnAnimatedStyle != platform->isContinuousRendering()) {
         platform->setContinuousRendering(drawnAnimatedStyle);
     }
 
