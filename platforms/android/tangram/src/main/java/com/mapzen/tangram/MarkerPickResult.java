@@ -12,7 +12,7 @@ public class MarkerPickResult {
     private Marker marker;
     private LngLat coordinates;
 
-    private MarkerPickResult(final Marker marker, final double longitude, final double latitude) {
+    MarkerPickResult(final Marker marker, final double longitude, final double latitude) {
         this.marker = marker;
         this.coordinates = new LngLat(longitude, latitude);
     }

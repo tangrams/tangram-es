@@ -86,56 +86,6 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Interface for a callback to receive information about features picked from the map
-     * Triggered after a call of {@link #pickFeature(float, float)}
-     * Listener should be set with {@link #setFeaturePickListener(FeaturePickListener)}
-     * The callback will be run on the main (UI) thread.
-     */
-    @Keep
-    public interface FeaturePickListener {
-        /**
-         * Receive information about features found in a call to {@link #pickFeature(float, float)}
-         * @param properties A mapping of string keys to string or number values
-         * @param positionX The horizontal screen coordinate of the picked location
-         * @param positionY The vertical screen coordinate of the picked location
-         */
-        void onFeaturePick(final Map<String, String> properties, final float positionX, final float positionY);
-    }
-    /**
-     * Interface for a callback to receive information about labels picked from the map
-     * Triggered after a call of {@link #pickLabel(float, float)}
-     * Listener should be set with {@link #setLabelPickListener(LabelPickListener)}
-     * The callback will be run on the main (UI) thread.
-     */
-    @Keep
-    public interface LabelPickListener {
-        /**
-         * Receive information about labels found in a call to {@link #pickLabel(float, float)}
-         * @param labelPickResult The {@link LabelPickResult} that has been selected
-         * @param positionX The horizontal screen coordinate of the picked location
-         * @param positionY The vertical screen coordinate of the picked location
-         */
-        void onLabelPick(final LabelPickResult labelPickResult, final float positionX, final float positionY);
-    }
-
-    /**
-     * Interface for a callback to receive the picked {@link Marker}
-     * Triggered after a call of {@link #pickMarker(float, float)}
-     * Listener should be set with {@link #setMarkerPickListener(MarkerPickListener)}
-     * The callback will be run on the main (UI) thread.
-     */
-    @Keep
-    public interface MarkerPickListener {
-        /**
-         * Receive information about marker found in a call to {@link #pickMarker(float, float)}
-         * @param markerPickResult The {@link MarkerPickResult} the marker that has been selected
-         * @param positionX The horizontal screen coordinate of the picked location
-         * @param positionY The vertical screen coordinate of the picked location
-         */
-        void onMarkerPick(final MarkerPickResult markerPickResult, final float positionX, final float positionY);
-    }
-
-    /**
      * Interface for listening to scene load status information.
      * Triggered after a call of {@link #updateSceneAsync(List<SceneUpdate>)} or
      * {@link #loadSceneFileAsync(String, List<SceneUpdate>)} or {@link #loadSceneFile(String, List<SceneUpdate>)}
@@ -499,44 +449,35 @@ public class MapController implements Renderer {
         final boolean animated = (duration != 0);
         onRegionWillChange(animated);
 
-        CameraAnimationCallback callback = new CameraAnimationCallback() {
-            @Override
-            public void onFinish() {
-                onRegionDidChange(animated);
-                if (cb != null) {
-                    cb.onFinish();
-                }
-            }
-
-            @Override
-            public void onCancel() {
-                // Possible camera update was cancelled in between, so should account for this map change
-                onRegionDidChange(animated);
-                if (cb != null) {
-                    cb.onCancel();
-                }
-            }
-        };
-
-        if (cameraAnimationCallback != null) {
-            // NB: Prevent recursion loop when updateCameraPosition is called from onCancel callback
-            CameraAnimationCallback prev = cameraAnimationCallback;
-            cameraAnimationCallback = null;
-            prev.onCancel();
-        }
-
         final float seconds = duration / 1000.f;
+
+        synchronized (cameraAnimationCallbackLock) {
+            // Wrap the callback to run corresponding map change events.
+            pendingCameraAnimationCallback = new CameraAnimationCallback() {
+                @Override
+                public void onFinish() {
+                    onRegionDidChange(animated);
+                    if (cb != null) {
+                        cb.onFinish();
+                    }
+                }
+
+                @Override
+                public void onCancel() {
+                    // Possible camera update was cancelled in between, so should account for this map change
+                    onRegionDidChange(animated);
+                    if (cb != null) {
+                        cb.onCancel();
+                    }
+                }
+            };
+        }
 
         nativeUpdateCameraPosition(mapPointer, update.set, update.longitude, update.latitude, update.zoom,
                 update.zoomBy, update.rotation, update.rotationBy, update.tilt, update.tiltBy,
                 update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.padding,
                 seconds, ease.ordinal());
 
-        if (duration > 0) {
-            cameraAnimationCallback = callback;
-        } else {
-            callback.onFinish();
-        }
     }
 
     /**
@@ -938,17 +879,7 @@ public class MapController implements Renderer {
      * @param listener The {@link FeaturePickListener} to call
      */
     public void setFeaturePickListener(@Nullable final FeaturePickListener listener) {
-        featurePickListener = (listener == null) ? null : new FeaturePickListener() {
-            @Override
-            public void onFeaturePick(final Map<String, String> properties, final float positionX, final float positionY) {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onFeaturePick(properties, positionX, positionY);
-                    }
-                });
-            }
-        };
+        featurePickListener = listener;
     }
 
     /**
@@ -1004,7 +935,7 @@ public class MapController implements Renderer {
     public void pickFeature(final float posX, final float posY) {
         if (featurePickListener != null) {
             checkPointer(mapPointer);
-            nativePickFeature(mapPointer, posX, posY, featurePickListener);
+            nativePickFeature(mapPointer, posX, posY);
         }
     }
 
@@ -1017,7 +948,7 @@ public class MapController implements Renderer {
     public void pickLabel(final float posX, final float posY) {
         if (labelPickListener != null) {
             checkPointer(mapPointer);
-            nativePickLabel(mapPointer, posX, posY, labelPickListener);
+            nativePickLabel(mapPointer, posX, posY);
         }
     }
 
@@ -1030,7 +961,7 @@ public class MapController implements Renderer {
     public void pickMarker(final float posX, final float posY) {
         if (markerPickListener != null) {
             checkPointer(mapPointer);
-            nativePickMarker(this, mapPointer, posX, posY, markerPickListener);
+            nativePickMarker(mapPointer, posX, posY);
         }
     }
 
@@ -1268,11 +1199,6 @@ public class MapController implements Renderer {
         return nativeMarkerSetDrawOrder(mapPointer, markerId, drawOrder);
     }
 
-    @Keep
-    Marker markerById(final long markerId) {
-        return markers.get(markerId);
-    }
-
     // Native methods
     // ==============
 
@@ -1313,9 +1239,9 @@ public class MapController implements Renderer {
     private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
     private synchronized native int nativeUpdateScene(long mapPtr, String[] updateStrings);
     private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
-    private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
-    private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
-    private synchronized native void nativePickMarker(MapController instance, long mapPtr, float posX, float posY, MarkerPickListener listener);
+    private synchronized native void nativePickFeature(long mapPtr, float posX, float posY);
+    private synchronized native void nativePickLabel(long mapPtr, float posX, float posY);
+    private synchronized native void nativePickMarker(long mapPtr, float posX, float posY);
     private synchronized native long nativeMarkerAdd(long mapPtr);
     private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
     private synchronized native boolean nativeMarkerSetStylingFromString(long mapPtr, long markerID, String styling);
@@ -1367,6 +1293,8 @@ public class MapController implements Renderer {
     private LongSparseArray<Marker> markers;
     private Handler uiThreadHandler;
     private CameraAnimationCallback cameraAnimationCallback;
+    private CameraAnimationCallback pendingCameraAnimationCallback;
+    private final Object cameraAnimationCallbackLock = new Object();
     private boolean isGLRendererSet = false;
 
     // GLSurfaceView.Renderer methods
@@ -1523,35 +1451,87 @@ public class MapController implements Renderer {
 
     // Called from JNI on worker or render-thread.
     @Keep
-    void sceneReadyCallback(final int sceneId, final SceneError error) {
-
-        final SceneLoadListener cb = sceneLoadListener;
-        if (cb != null) {
+    void sceneReadyCallback(final int sceneId, final int errorType, final String updatePath, final String updateValue) {
+        final SceneLoadListener listener = sceneLoadListener;
+        if (listener != null) {
             uiThreadHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    cb.onSceneReady(sceneId, error);
+                    SceneError error = null;
+                    if (errorType >= 0) {
+                        error = new SceneError(updatePath, updateValue, errorType);
+                    }
+                    listener.onSceneReady(sceneId, error);
                 }
             });
         }
     }
 
-    // Called from JNI on worker or render-thread.
+    // Called from JNI on render-thread.
     @Keep
     void cameraAnimationCallback(final boolean finished) {
-
-        final CameraAnimationCallback cb = cameraAnimationCallback;
-        if (cb != null) {
-            cameraAnimationCallback = null;
-
+        final CameraAnimationCallback callback = cameraAnimationCallback;
+        synchronized (cameraAnimationCallbackLock) {
+            cameraAnimationCallback = pendingCameraAnimationCallback;
+            pendingCameraAnimationCallback = null;
+        }
+        if (callback != null) {
             uiThreadHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     if (finished) {
-                        cb.onFinish();
+                        callback.onFinish();
                     } else {
-                        cb.onCancel();
+                        callback.onCancel();
                     }
+                }
+            });
+        }
+    }
+
+    @Keep
+    void featurePickCallback(final Map<String, String> properties, final float x, final float y) {
+        final FeaturePickListener listener = featurePickListener;
+        if (listener != null) {
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onFeaturePick(properties, x, y);
+                }
+            });
+        }
+    }
+
+    @Keep
+    void labelPickCallback(final Map<String, String> properties, final float x, final float y, final int type, final double lng, final double lat) {
+        final LabelPickListener listener = labelPickListener;
+        if (listener != null) {
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    LabelPickResult result = null;
+                    if (properties != null) {
+                        result = new LabelPickResult(lng, lat, type, properties);
+                    }
+                    listener.onLabelPick(result, x, y);
+                }
+            });
+        }
+    }
+
+    @Keep
+    void markerPickCallback(final long markerId, final float x, final float y, final double lng, final double lat) {
+        final MarkerPickListener listener = markerPickListener;
+        if (listener != null) {
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    final Marker marker = markers.get(markerId);
+                    MarkerPickResult result = null;
+                    if (marker != null) {
+                        result = new MarkerPickResult(marker, lng, lat);
+                    }
+                    listener.onMarkerPick(result, x, y);
                 }
             });
         }
