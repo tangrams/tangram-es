@@ -27,6 +27,8 @@ jobs:
   build-ios:
     macos:
       xcode: "9.4.0"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       # Check out repository with submodules.
       - checkout
@@ -41,6 +43,8 @@ jobs:
   build-deploy-ios-snapshot:
     macos:
       xcode: "9.4.0"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       # Check out repository with submodules.
       - checkout
@@ -61,6 +65,8 @@ jobs:
   build-deploy-macos-snapshot:
     macos:
       xcode: "9.4.0"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       # Check out repository with submodules.
       - checkout
@@ -76,6 +82,8 @@ jobs:
   build-deploy-ios-release:
     macos:
       xcode: "9.4.0"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       # Check out repository with submodules.
       - checkout
