@@ -356,9 +356,18 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
         std::string value(duk_get_string(m_ctx, -1));
 
         switch (_key) {
+            case StyleParamKey::outline_style:
+            case StyleParamKey::repeat_group:
+            case StyleParamKey::sprite:
+            case StyleParamKey::sprite_default:
+            case StyleParamKey::style:
+            case StyleParamKey::text_align:
+            case StyleParamKey::text_repeat_group:
             case StyleParamKey::text_source:
             case StyleParamKey::text_source_left:
             case StyleParamKey::text_source_right:
+            case StyleParamKey::text_transform:
+            case StyleParamKey::texture:
                 _val = value;
                 break;
             default:
