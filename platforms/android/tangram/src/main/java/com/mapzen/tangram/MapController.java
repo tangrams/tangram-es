@@ -441,24 +441,60 @@ public class MapController implements Renderer {
      * @param cb Callback that will run when the animation is finished or canceled
      */
     public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease, @Nullable final CameraAnimationCallback cb) {
-
         // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
-
         checkPointer(mapPointer);
-
-        final boolean animated = (duration != 0);
+        final boolean animated = (duration > 0);
         onRegionWillChange(animated);
-
+        setPendingCameraAnimationCallback(cb, animated);
         final float seconds = duration / 1000.f;
+        nativeUpdateCameraPosition(mapPointer, update.set, update.longitude, update.latitude, update.zoom,
+                update.zoomBy, update.rotation, update.rotationBy, update.tilt, update.tiltBy,
+                update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.padding,
+                seconds, ease.ordinal());
 
+    }
+
+    /**
+     * Smoothly animate over an arc to an updated camera position for the map view
+     * @param position CameraPosition of the destination
+     */
+    public void flyToCameraPosition(@NonNull CameraPosition position) {
+        flyToCameraPosition(position, 0, null);
+    }
+
+    /**
+     * Smoothly animate over an arc to an updated camera position for the map view
+     * @param position CameraPosition of the destination
+     * @param callback Callback that will run when the animation is finished or canceled
+     */
+    public void flyToCameraPosition(@NonNull CameraPosition position, @Nullable final CameraAnimationCallback callback) {
+        flyToCameraPosition(position, 0, callback);
+    }
+
+    /**
+     * Smoothly animate over an arc to an updated camera position for the map view
+     * @param position CameraPosition of the destination
+     * @param duration Time in milliseconds of the animation
+     * @param callback Callback that will run when the animation is finished or canceled
+     */
+    public void flyToCameraPosition(@NonNull final CameraPosition position, final int duration, @Nullable final CameraAnimationCallback callback) {
+        checkPointer(mapPointer);
+        onRegionWillChange(true);
+        setPendingCameraAnimationCallback(callback, true);
+        final float seconds = duration / 1000.f;
+        // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
+        nativeFlyTo(mapPointer, position.longitude, position.latitude, position.zoom, seconds, 1.f);
+    }
+
+    private void setPendingCameraAnimationCallback(final CameraAnimationCallback callback, final Boolean animated) {
         synchronized (cameraAnimationCallbackLock) {
             // Wrap the callback to run corresponding map change events.
             pendingCameraAnimationCallback = new CameraAnimationCallback() {
                 @Override
                 public void onFinish() {
                     onRegionDidChange(animated);
-                    if (cb != null) {
-                        cb.onFinish();
+                    if (callback != null) {
+                        callback.onFinish();
                     }
                 }
 
@@ -466,18 +502,12 @@ public class MapController implements Renderer {
                 public void onCancel() {
                     // Possible camera update was cancelled in between, so should account for this map change
                     onRegionDidChange(animated);
-                    if (cb != null) {
-                        cb.onCancel();
+                    if (callback != null) {
+                        callback.onCancel();
                     }
                 }
             };
         }
-
-        nativeUpdateCameraPosition(mapPointer, update.set, update.longitude, update.latitude, update.zoom,
-                update.zoomBy, update.rotation, update.rotationBy, update.tilt, update.tiltBy,
-                update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.padding,
-                seconds, ease.ordinal());
-
     }
 
     /**
@@ -547,24 +577,6 @@ public class MapController implements Renderer {
         out.rotation = 0.f;
         out.tilt = 0.f;
         return out;
-    }
-
-    /**
-     * Smoothly animate over an arc to an updated camera position for the map view
-     * @param position LngLat of the position to set
-     * @param zoom Zoom level; lower values show more area
-     * @param duration Time in milliseconds to ease to given zoom
-     * @param speed If duration is 0, speed is used as factor to change the duration that is
-     *              calculated for the distance of the flight path. (Recommended range 0.1 - 10.0)
-     */
-    public void flyTo(@NonNull final LngLat position, final float zoom, final int duration, final float speed) {
-        checkPointer(mapPointer);
-        boolean animated = (duration != 0);
-        onRegionWillChange(animated);
-        final float seconds = duration / 1000.f;
-        // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
-        nativeFlyTo(mapPointer, position.longitude, position.latitude, zoom, seconds, speed);
-        onRegionDidChange(animated);
     }
 
     /**
