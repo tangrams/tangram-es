@@ -158,6 +158,12 @@ UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
 
     TGDownloadCompletionHandler handler = ^void (NSData* data, NSURLResponse* response, NSError* error) {
 
+        __strong TGMapView* mapView = m_mapView;
+        if (!mapView) {
+            // Map was disposed before the request completed, so abort the completion handler.
+            return;
+        }
+        
         // Create our response object. The '__block' specifier is to allow mutation in the data-copy block below.
         __block UrlResponse urlResponse;
 
