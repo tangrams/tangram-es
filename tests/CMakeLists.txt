@@ -26,7 +26,7 @@ set(TEST_SOURCES
   unit/layerTests.cpp
   unit/lineWrapTests.cpp
   unit/lngLatTests.cpp
-  unit/mercProjTests.cpp
+  unit/mapProjectionTests.cpp
   unit/meshTests.cpp
   unit/sceneImportTests.cpp
   unit/sceneLoaderTests.cpp

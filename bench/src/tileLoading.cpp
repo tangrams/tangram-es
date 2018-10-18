@@ -12,7 +12,6 @@
 #include "tile/tileBuilder.h"
 #include "tile/tileTask.h"
 #include "text/fontContext.h"
-#include "util/mapProjection.h"
 
 #include <fstream>
 #include <iostream>
@@ -24,8 +23,6 @@
 using namespace Tangram;
 
 struct TestContext {
-
-    MercatorProjection s_projection;
 
     std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
 
@@ -73,13 +70,13 @@ struct TestContext {
     }
 
     void parseTile() {
-        Tile tile({0,0,10,10}, s_projection);
+        Tile tile({0,0,10,10});
         source = *scene->tileSources().begin();
         auto task = source->createTask(tile.getID());
         auto& t = dynamic_cast<BinaryTileTask&>(*task);
         t.rawTileData = std::make_shared<std::vector<char>>(rawTileData);
 
-        tileData = source->parse(*task, s_projection);
+        tileData = source->parse(*task);
     }
 };
 

@@ -57,7 +57,7 @@ void PointLight::setupProgram(RenderState& rs, const View& _view, ShaderProgram&
         position[2] /= m_position.units[2] == Unit::pixel ? _view.pixelsPerMeter() : 1.0;
 
         // Move light's world position into camera space
-        glm::dvec2 camSpace = _view.getMapProjection().LonLatToMeters(glm::dvec2(position.x, position.y));
+        glm::dvec2 camSpace = MapProjection::lngLatToProjectedMeters(LngLat(position.x, position.y));
         position.x = camSpace.x - (_view.getPosition().x + _view.getEye().x);
         position.y = camSpace.y - (_view.getPosition().y + _view.getEye().y);
         position.z = position.z - _view.getEye().z;

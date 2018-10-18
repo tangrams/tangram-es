@@ -22,7 +22,6 @@ enum class CameraType : uint8_t {
 struct Stops;
 
 struct ViewState {
-    const MapProjection* mapProjection;
     bool changedOnLastUpdate;
     glm::dvec2 center;
     float zoom;
@@ -42,15 +41,9 @@ class View {
 
 public:
 
-    View(int _width = 800, int _height = 600, ProjectionType _projType = ProjectionType::mercator);
+    View(int _width = 800, int _height = 600);
 
     View(const View& _view) = default;
-
-    /* Sets a new map projection with default tileSize */
-    void setMapProjection(ProjectionType _projType);
-
-    /* Gets the current map projection */
-    const MapProjection& getMapProjection() const { return *m_projection.get(); }
 
     void setCameraType(CameraType _type);
     auto cameraType() const { return m_type; }
@@ -209,8 +202,6 @@ public:
     /* Returns true if the view properties have changed since the last call to update() */
     bool changedOnLastUpdate() const { return m_changed; }
 
-    constexpr static float s_pixelsPerTile = 256.0;
-
     const glm::mat4& getOrthoViewportMatrix() const { return m_orthoViewport; };
 
     float pixelScale() const { return m_pixelScale; }
@@ -225,7 +216,6 @@ protected:
 
     double screenToGroundPlaneInternal(double& _screenX, double& _screenY) const;
 
-    std::shared_ptr<MapProjection> m_projection;
     std::shared_ptr<Stops> m_fovStops;
     std::shared_ptr<Stops> m_maxPitchStops;
 

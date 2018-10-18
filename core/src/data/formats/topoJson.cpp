@@ -78,7 +78,8 @@ Point TopoJson::getPoint(const JsonValue& _coordinates, const Topology& _topolog
     _cursor.x += _coordinates[0].GetInt();
     _cursor.y += _coordinates[1].GetInt();
 
-    return _topology.proj(glm::dvec2(_cursor) * _topology.scale + _topology.translate);
+    auto tmp = glm::dvec2(_cursor) * _topology.scale + _topology.translate;
+    return _topology.proj(LngLat(tmp.x, tmp.y));
 
 }
 
@@ -244,7 +245,7 @@ Layer TopoJson::getLayer(JsonValue::MemberIterator& _objectIt, const Topology& _
 
 }
 
-std::shared_ptr<TileData> TopoJson::parseTile(const TileTask& _task, const MapProjection& _projection, int32_t _source) {
+std::shared_ptr<TileData> TopoJson::parseTile(const TileTask& _task, int32_t _source) {
 
     auto& task = static_cast<const BinaryTileTask&>(_task);
 
@@ -261,12 +262,12 @@ std::shared_ptr<TileData> TopoJson::parseTile(const TileTask& _task, const MapPr
     }
 
     // Transform JSON data into a TileData using TopoJson functions
-    BoundingBox tileBounds(_projection.TileBounds(task.tileId()));
-    glm::dvec2 tileOrigin = {tileBounds.min.x, tileBounds.max.y*-1.0};
+    BoundingBox tileBounds(MapProjection::tileBounds(task.tileId()));
+    glm::dvec2 tileOrigin = tileBounds.min;
     double tileInverseScale = 1.0 / tileBounds.width();
 
-    const auto projFn = [&](glm::dvec2 _lonLat){
-        glm::dvec2 tmp = _projection.LonLatToMeters(_lonLat);
+    const auto projFn = [&](LngLat _lngLat){
+        ProjectedMeters tmp = MapProjection::lngLatToProjectedMeters(_lngLat);
         return Point {
             (tmp.x - tileOrigin.x) * tileInverseScale,
             (tmp.y - tileOrigin.y) * tileInverseScale,

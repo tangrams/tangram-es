@@ -282,7 +282,7 @@ void StyleContext::setKeyword(const std::string& _key, Value _val) {
 float StyleContext::getPixelAreaScale() {
     // scale the filter value with pixelsPerMeter
     // used with `px2` area filtering
-    double metersPerPixel = 2.f * MapProjection::HALF_CIRCUMFERENCE * exp2(-m_keywordZoom) / View::s_pixelsPerTile;
+    double metersPerPixel = MapProjection::EARTH_CIRCUMFERENCE_METERS * exp2(-m_keywordZoom) / MapProjection::tileSize();
     return metersPerPixel * metersPerPixel;
 }
 

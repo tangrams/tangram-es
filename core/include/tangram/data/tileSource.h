@@ -9,7 +9,6 @@
 
 namespace Tangram {
 
-class MapProjection;
 struct TileData;
 struct TileID;
 struct Raster;
@@ -104,7 +103,7 @@ public:
     virtual void cancelLoadingTile(const TileID& _tile);
 
     /* Parse a <TileTask> with data into a <TileData>, returning an empty TileData on failure */
-    virtual std::shared_ptr<TileData> parse(const TileTask& _task, const MapProjection& _projection) const;
+    virtual std::shared_ptr<TileData> parse(const TileTask& _task) const;
 
     /* Clears all data associated with this TileSource */
     virtual void clearData();

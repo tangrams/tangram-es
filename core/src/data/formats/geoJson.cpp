@@ -32,7 +32,7 @@ bool GeoJson::isFeatureCollection(const JsonValue& _in) {
 }
 
 Point GeoJson::getPoint(const JsonValue& _in, const Transform& _proj) {
-    return _proj(glm::dvec2(_in[0].GetDouble(), _in[1].GetDouble()));
+    return _proj(LngLat(_in[0].GetDouble(), _in[1].GetDouble()));
 }
 
 Line GeoJson::getLine(const JsonValue& _in, const Transform& _proj) {
@@ -158,7 +158,7 @@ Layer GeoJson::getLayer(const JsonValue& _in, const Transform& _proj, int32_t _s
 
 }
 
-std::shared_ptr<TileData> GeoJson::parseTile(const TileTask& _task, const MapProjection& _projection, int32_t _sourceId) {
+std::shared_ptr<TileData> GeoJson::parseTile(const TileTask& _task, int32_t _sourceId) {
 
     auto& task = static_cast<const BinaryTileTask&>(_task);
 
@@ -174,12 +174,12 @@ std::shared_ptr<TileData> GeoJson::parseTile(const TileTask& _task, const MapPro
         return tileData;
     }
 
-    BoundingBox tileBounds(_projection.TileBounds(task.tileId()));
-    glm::dvec2 tileOrigin = {tileBounds.min.x, tileBounds.max.y*-1.0};
+    BoundingBox tileBounds(MapProjection::tileBounds(task.tileId()));
+    glm::dvec2 tileOrigin = tileBounds.min;
     double tileInverseScale = 1.0 / tileBounds.width();
 
-    const auto projFn = [&](glm::dvec2 _lonLat){
-        glm::dvec2 tmp = _projection.LonLatToMeters(_lonLat);
+    const auto projFn = [&](LngLat _lngLat){
+        ProjectedMeters tmp = MapProjection::lngLatToProjectedMeters(_lngLat);
         return Point {
             (tmp.x - tileOrigin.x) * tileInverseScale,
             (tmp.y - tileOrigin.y) * tileInverseScale,

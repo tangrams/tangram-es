@@ -4,36 +4,30 @@
 #include "labels/labelSet.h"
 #include "style/style.h"
 #include "tile/tileID.h"
+#include "util/mapProjection.h"
 #include "view/view.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 
 namespace Tangram {
 
-Tile::Tile(TileID _id, const MapProjection& _projection, const TileSource* _source) :
+Tile::Tile(TileID _id, const TileSource* _source) :
     m_id(_id),
-    m_projection(&_projection),
     m_sourceId(_source ? _source->id() : 0),
     m_sourceGeneration(_source ? _source->generation() : 0) {
 
-    BoundingBox bounds(_projection.TileBounds(_id));
-
-    m_scale = bounds.width();
-    m_inverseScale = 1.0/m_scale;
-    m_tileOrigin = { bounds.min.x, -bounds.max.y };
+    m_scale = MapProjection::metersPerTileAtZoom(_id.z);
+    m_tileOrigin = MapProjection::tileSouthWestCorner(_id);
 
     // Init model matrix to size of tile
     m_modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(m_scale));
 }
 
 
-glm::dvec2 Tile::coordToLngLat(const glm::vec2& _tileCoord) const {
-    double scale = 1.0 / m_inverseScale;
-
-    glm::dvec2 meters = glm::dvec2(_tileCoord) * scale + m_tileOrigin;
-    glm::dvec2 degrees = m_projection->MetersToLonLat(meters);
-
-    return {degrees.x, degrees.y};
+LngLat Tile::coordToLngLat(const glm::vec2& _tileCoord) const {
+    glm::dvec2 meters = glm::dvec2(_tileCoord) * m_scale + m_tileOrigin;
+    LngLat degrees = MapProjection::projectedMetersToLngLat(meters);
+    return degrees;
 }
 
 Tile::~Tile() {}
