@@ -451,19 +451,10 @@ public class MapController implements Renderer {
                 update.zoomBy, update.rotation, update.rotationBy, update.tilt, update.tiltBy,
                 update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.padding,
                 seconds, ease.ordinal());
-
     }
 
     /**
-     * Smoothly animate over an arc to an updated camera position for the map view
-     * @param position CameraPosition of the destination
-     */
-    public void flyToCameraPosition(@NonNull CameraPosition position) {
-        flyToCameraPosition(position, 0, null);
-    }
-
-    /**
-     * Smoothly animate over an arc to an updated camera position for the map view
+     * Smoothly animate over an arc to a new camera position for the map view
      * @param position CameraPosition of the destination
      * @param callback Callback that will run when the animation is finished or canceled
      */
@@ -472,18 +463,32 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Smoothly animate over an arc to an updated camera position for the map view
+     * Smoothly animate over an arc to a new camera position for the map view
      * @param position CameraPosition of the destination
      * @param duration Time in milliseconds of the animation
      * @param callback Callback that will run when the animation is finished or canceled
      */
     public void flyToCameraPosition(@NonNull final CameraPosition position, final int duration, @Nullable final CameraAnimationCallback callback) {
+        flyToCameraPosition(position, duration, callback, 1);
+    }
+
+    /**
+     * Smoothly animate over an arc to a new camera position for the map view
+     * @param position CameraPosition of the destination
+     * @param callback Callback that will run when the animation is finished or canceled
+     * @param speed Scaling factor for animation duration (recommended range is 0.1 - 10)
+     */
+    public void flyToCameraPosition(@NonNull final CameraPosition position, @Nullable final CameraAnimationCallback callback, final float speed) {
+        flyToCameraPosition(position, -1, callback, speed);
+    }
+
+    private void flyToCameraPosition(@NonNull final CameraPosition position, final int duration, @Nullable final CameraAnimationCallback callback, final float speed) {
         checkPointer(mapPointer);
         onRegionWillChange(true);
         setPendingCameraAnimationCallback(callback, true);
         final float seconds = duration / 1000.f;
         // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
-        nativeFlyTo(mapPointer, position.longitude, position.latitude, position.zoom, seconds, 1.f);
+        nativeFlyTo(mapPointer, position.longitude, position.latitude, position.zoom, seconds, speed);
     }
 
     private void setPendingCameraAnimationCallback(final CameraAnimationCallback callback, final Boolean animated) {
