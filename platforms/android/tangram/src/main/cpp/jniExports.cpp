@@ -47,35 +47,37 @@ extern "C" {
         jniEnv->ReleaseFloatArrayElements(zoomRotationTilt, zrt, 0);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeUpdateCameraPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr,
-                                                                                            jint set, jdouble lon, jdouble lat,
-                                                                                            jfloat zoom, jfloat zoomBy,
-                                                                                            jfloat rotation, jfloat rotateBy,
-                                                                                            jfloat tilt, jfloat tiltBy,
-                                                                                            jdouble b1lon, jdouble b1lat,
-                                                                                            jdouble b2lon, jdouble b2lat,
-                                                                                            jintArray jpad,
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetCameraPosition(JNIEnv* jniEnv, jobject obj,jlong mapPtr,
+                                                                                            jdouble lng, jdouble lat, jfloat zoom,
+                                                                                            jfloat rotation, jfloat tilt) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+
+        CameraPosition position;
+        position.longitude = lng;
+        position.latitude = lat;
+        position.zoom = zoom;
+        position.rotation = rotation;
+        position.tilt = tilt;
+
+        map->setCameraPosition(position);
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeEaseToCameraPosition(JNIEnv* jniEnv, jobject obj,jlong mapPtr,
+                                                                                            jdouble lng, jdouble lat, jfloat zoom,
+                                                                                            jfloat rotation, jfloat tilt,
                                                                                             jfloat duration, jint ease) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
 
-        CameraUpdate update;
-        update.set = set;
+        CameraPosition position;
+        position.longitude = lng;
+        position.latitude = lat;
+        position.zoom = zoom;
+        position.rotation = rotation;
+        position.tilt = tilt;
 
-        update.lngLat = LngLat{lon,lat};
-        update.zoom = zoom;
-        update.zoomBy = zoomBy;
-        update.rotation = rotation;
-        update.rotationBy = rotateBy;
-        update.tilt = tilt;
-        update.tiltBy = tiltBy;
-        update.bounds = std::array<LngLat,2>{{LngLat{b1lon, b1lat}, LngLat{b2lon, b2lat}}};
-        if (jpad != NULL) {
-            jint* jpadArray = jniEnv->GetIntArrayElements(jpad, NULL);
-            update.padding = EdgePadding{jpadArray[0], jpadArray[1], jpadArray[2], jpadArray[3]};
-            jniEnv->ReleaseIntArrayElements(jpad, jpadArray, JNI_ABORT);
-        }
-        map->updateCameraPosition(update, duration, static_cast<Tangram::EaseType>(ease));
+        map->setCameraPositionEased(position, duration, static_cast<EaseType>(ease));
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetEnclosingCameraPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble aLng, jdouble aLat, jdouble bLng, jdouble bLat,

@@ -397,60 +397,58 @@ public class MapController implements Renderer {
 
     /**
      * Set the camera position of the map view
-     * @param update CameraUpdate to modify current camera position
+     * @param position CameraPosition of the destination
      */
-    public void updateCameraPosition(@NonNull final CameraUpdate update) {
-        updateCameraPosition(update, 0, DEFAULT_EASE_TYPE,null);
+    public void setCameraPosition(@NonNull final CameraPosition position) {
+        checkPointer(mapPointer);
+        nativeSetCameraPosition(mapPointer, position.center.longitude, position.center.latitude, position.zoom, position.rotation, position.tilt);
     }
 
     /**
      * Animate the camera position of the map view with the default easing function
-     * @param update CameraUpdate to update current camera position
+     * @param position CameraPosition of the destination
      * @param duration Time in milliseconds to ease to the updated position
      */
-    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration) {
-        updateCameraPosition(update, duration, DEFAULT_EASE_TYPE, null);
+    public void easeToCameraPosition(@NonNull final CameraPosition position, final int duration) {
+        easeToCameraPosition(position, duration, DEFAULT_EASE_TYPE, null);
     }
 
     /**
      * Animate the camera position of the map view with an easing function
-     * @param update CameraUpdate to update current camera position
+     * @param position CameraPosition of the destination
      * @param duration Time in milliseconds to ease to the updated position
      * @param ease Type of easing to use
      */
-    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease) {
-        updateCameraPosition(update, duration, ease, null);
+    public void easeToCameraPosition(@NonNull final CameraPosition position, final int duration, @NonNull final EaseType ease) {
+        easeToCameraPosition(position, duration, ease, null);
     }
 
     /**
      * Animate the camera position of the map view and run a callback when the animation completes
-     * @param update CameraUpdate to update current camera position
+     * @param position CameraPosition of the destination
      * @param duration Time in milliseconds to ease to the updated position
      * @param cb Callback that will run when the animation is finished or canceled
      */
-    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final CameraAnimationCallback cb) {
-        updateCameraPosition(update, duration, DEFAULT_EASE_TYPE, cb);
+    public void easeToCameraPosition(@NonNull final CameraPosition position, final int duration, @NonNull final CameraAnimationCallback cb) {
+        easeToCameraPosition(position, duration, DEFAULT_EASE_TYPE, cb);
     }
 
     /**
      * Animate the camera position of the map view with an easing function and run a callback when
      * the animation completes
-     * @param update CameraUpdate to update current camera position
+     * @param position CameraPosition of the destination
      * @param duration Time in milliseconds to ease to the updated position
      * @param ease Type of easing to use
      * @param cb Callback that will run when the animation is finished or canceled
      */
-    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease, @Nullable final CameraAnimationCallback cb) {
+    public void easeToCameraPosition(@NonNull final CameraPosition position, final int duration, @NonNull final EaseType ease, @Nullable final CameraAnimationCallback cb) {
         // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
         checkPointer(mapPointer);
         final boolean animated = (duration > 0);
         onRegionWillChange(animated);
         setPendingCameraAnimationCallback(cb, animated);
         final float seconds = duration / 1000.f;
-        nativeUpdateCameraPosition(mapPointer, update.set, update.longitude, update.latitude, update.zoom,
-                update.zoomBy, update.rotation, update.rotationBy, update.tilt, update.tiltBy,
-                update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.padding,
-                seconds, ease.ordinal());
+        nativeEaseToCameraPosition(mapPointer, position.center.longitude, position.center.latitude, position.zoom, position.rotation, position.tilt, seconds, ease.ordinal());
     }
 
     /**
@@ -1231,10 +1229,8 @@ public class MapController implements Renderer {
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
     private synchronized native void nativeRender(long mapPtr);
     private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
-    private synchronized native void nativeUpdateCameraPosition(long mapPtr, int set, double lon, double lat, float zoom, float zoomBy,
-                                                                float rotation, float rotateBy, float tilt, float tiltBy,
-                                                                double b1lon, double b1lat, double b2lon, double b2lat, int[] padding,
-                                                                float duration, int ease);
+    private synchronized native void nativeSetCameraPosition(long mapPtr, double lng, double lat, float zoom, float rotation, float tilt);
+    private synchronized native void nativeEaseToCameraPosition(long mapPtr, double lng, double lat, float zoom, float rotation, float tilt, float duration, int ease);
     private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
     private synchronized native void nativeGetEnclosingCameraPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int[] buffer, double[] lngLatZoom);
     private synchronized native void nativeCancelCameraAnimation(long mapPtr);

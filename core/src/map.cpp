@@ -669,46 +669,6 @@ void Map::setCameraPositionEased(const CameraPosition& _camera, float _duration,
     platform->requestRender();
 }
 
-
-void Map::updateCameraPosition(const CameraUpdate& _update, float _duration, EaseType _e) {
-
-    CameraPosition camera;
-    if ((_update.set & CameraUpdate::SET_CAMERA) != 0) {
-        camera = getCameraPosition();
-    }
-    if ((_update.set & CameraUpdate::SET_BOUNDS) != 0) {
-        camera = getEnclosingCameraPosition(_update.bounds[0], _update.bounds[1], _update.padding);
-    }
-    if ((_update.set & CameraUpdate::SET_LNGLAT) != 0) {
-        camera.longitude = _update.lngLat.longitude;
-        camera.latitude = _update.lngLat.latitude;
-    }
-    if ((_update.set & CameraUpdate::SET_ZOOM) != 0) {
-        camera.zoom = _update.zoom;
-    }
-    if ((_update.set & CameraUpdate::SET_ROTATION) != 0) {
-        camera.rotation = _update.rotation;
-    }
-    if ((_update.set & CameraUpdate::SET_TILT) != 0) {
-        camera.tilt = _update.tilt;
-    }
-    if ((_update.set & CameraUpdate::SET_ZOOM_BY) != 0) {
-        camera.zoom += _update.zoomBy;
-    }
-    if ((_update.set & CameraUpdate::SET_ROTATION_BY) != 0) {
-        camera.rotation += _update.rotationBy;
-    }
-    if ((_update.set & CameraUpdate::SET_TILT_BY) != 0) {
-        camera.tilt += _update.tiltBy;
-    }
-
-    if (_duration == 0.f) {
-        setCameraPosition(camera);
-    } else {
-        setCameraPositionEased(camera, _duration, _e);
-    }
-}
-
 void Map::setPosition(double _lon, double _lat) {
     cancelCameraAnimation();
 

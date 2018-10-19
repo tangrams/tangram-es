@@ -9,6 +9,16 @@ public class CameraPosition {
     public float rotation;
     public float tilt;
 
+    public CameraPosition() {
+    }
+
+    public CameraPosition(@NonNull LngLat center, float zoom, float rotation, float tilt) {
+        this.center = center;
+        this.zoom = zoom;
+        this.rotation = rotation;
+        this.tilt = tilt;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

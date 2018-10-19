@@ -112,31 +112,6 @@ struct EdgePadding {
         : left(left), top(top), right(right), bottom(bottom) {}
 };
 
-struct CameraUpdate {
-    enum Flags {
-        SET_LNGLAT =      1 << 0,
-        SET_ZOOM =        1 << 1,
-        SET_ZOOM_BY =     1 << 2,
-        SET_ROTATION =    1 << 3,
-        SET_ROTATION_BY = 1 << 4,
-        SET_TILT =        1 << 5,
-        SET_TILT_BY =     1 << 6,
-        SET_BOUNDS =      1 << 7,
-        SET_CAMERA =      1 << 8,
-    };
-    int set = 0;
-
-    LngLat lngLat;
-    float zoom = 0;
-    float zoomBy = 0;
-    float rotation = 0;
-    float rotationBy = 0;
-    float tilt = 0;
-    float tiltBy = 0;
-    std::array<LngLat,2> bounds;
-    EdgePadding padding;
-};
-
 class Map {
 
 public:
@@ -278,8 +253,6 @@ public:
     void setCameraPosition(const CameraPosition& _camera);
 
     void setCameraPositionEased(const CameraPosition& _camera, float duration, EaseType _e = EaseType::quint);
-
-    void updateCameraPosition(const CameraUpdate& _update, float duration = 0.f, EaseType _e = EaseType::quint);
 
     void cancelCameraAnimation();
 

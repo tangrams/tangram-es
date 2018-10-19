@@ -7,42 +7,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Window;
 import android.widget.Toast;
-
-import com.mapzen.tangram.CameraPosition;
-import com.mapzen.tangram.CameraUpdateFactory;
-import com.mapzen.tangram.FeaturePickListener;
-import com.mapzen.tangram.LabelPickListener;
-import com.mapzen.tangram.LabelPickResult;
-import com.mapzen.tangram.LngLat;
-import com.mapzen.tangram.MapChangeListener;
-import com.mapzen.tangram.MapController;
-import com.mapzen.tangram.MapData;
-import com.mapzen.tangram.MapView;
-import com.mapzen.tangram.Marker;
-import com.mapzen.tangram.MarkerPickListener;
-import com.mapzen.tangram.MarkerPickResult;
-import com.mapzen.tangram.SceneError;
-import com.mapzen.tangram.SceneUpdate;
-import com.mapzen.tangram.TouchInput;
+import com.mapzen.tangram.*;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
 import com.mapzen.tangram.networking.DefaultHttpHandler;
 import com.mapzen.tangram.networking.HttpHandler;
+import okhttp3.*;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
-
-import okhttp3.Cache;
-import okhttp3.CacheControl;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 
 public class MainActivity extends AppCompatActivity implements MapController.SceneLoadListener, TapResponder,
         DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener,
@@ -60,6 +35,8 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
             "https://www.nextzen.org/carto/tron-style/6/tron-style.zip",
             "https://www.nextzen.org/carto/cinnabar-style/9/cinnabar-style.zip"
     };
+
+    private static final CameraPosition STARTING_CAMERA_POSITION = new CameraPosition(new LngLat(-74.00976419448854, 40.70532700869127), 16, 0, 0);
 
     private ArrayList<SceneUpdate> sceneUpdates = new ArrayList<>();
 
@@ -118,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         String sceneUrl = sceneSelector.getCurrentString();
         map.setSceneLoadListener(this);
         map.loadSceneFile(sceneUrl, sceneUpdates);
-        map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
+        map.setCameraPosition(STARTING_CAMERA_POSITION);
 
         TouchInput touchInput = map.getTouchInput();
         touchInput.setTapResponder(this);
@@ -246,7 +223,10 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         map.pickLabel(x, y);
         map.pickMarker(x, y);
 
-        map.updateCameraPosition(CameraUpdateFactory.setPosition(tappedPoint), 1000, new MapController.CameraAnimationCallback() {
+        CameraPosition position = map.getCameraPosition();
+        position.center = tappedPoint;
+
+        map.easeToCameraPosition(position, 1000, new MapController.CameraAnimationCallback() {
             @Override
             public void onFinish() {
                 Log.d("Tangram","finished!");
@@ -270,8 +250,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         camera.center.longitude = .5 * (tapped.longitude + camera.center.longitude);
         camera.center.latitude = .5 * (tapped.latitude + camera.center.latitude);
         camera.zoom += 1;
-        map.updateCameraPosition(CameraUpdateFactory.newCameraPosition(camera),
-                    500, MapController.EaseType.CUBIC);
+        map.easeToCameraPosition(camera, 500, MapController.EaseType.CUBIC);
         return true;
     }
 
