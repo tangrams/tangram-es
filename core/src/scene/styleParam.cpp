@@ -620,17 +620,22 @@ bool StyleParam::parseValueUnitPair(const std::string& value, StyleParam::ValueU
     return true;
 }
 
-bool StyleParam::parseColor(const YAML::Node& node, Color &result) {
+bool StyleParam::parseColor(const std::string& value, Color& result) {
     bool isValid = false;
+    auto cssColor = CSSColorParser::parse(value, isValid);
+    if (isValid) {
+        result.abgr = cssColor.getInt();
+    }
+    return isValid;
+}
+
+bool StyleParam::parseColor(const YAML::Node& node, Color& result) {
     if (node.IsScalar()) {
-        auto cssColor = CSSColorParser::parse(node.Scalar(), isValid);
-        if (isValid) {
-            result.abgr = cssColor.getInt();
-        }
+        return parseColor(node.Scalar(), result);
     }
     if (node.IsSequence() && node.size() >= 3) {
         ColorF color;
-        isValid = true;
+        bool isValid = true;
         isValid &= YamlUtil::getFloat(node[0], color.r);
         isValid &= YamlUtil::getFloat(node[1], color.g);
         isValid &= YamlUtil::getFloat(node[2], color.b);
@@ -642,8 +647,9 @@ bool StyleParam::parseColor(const YAML::Node& node, Color &result) {
         if (isValid) {
             result = color.toColor();
         }
+        return isValid;
     }
-    return isValid;
+    return false;
 }
 
 bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {

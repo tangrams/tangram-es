@@ -370,6 +370,17 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
             case StyleParamKey::texture:
                 _val = value;
                 break;
+            case StyleParamKey::color:
+            case StyleParamKey::outline_color:
+            case StyleParamKey::text_font_fill:
+            case StyleParamKey::text_font_stroke_color: {
+                Color result;
+                if (StyleParam::parseColor(value, result)) {
+                    _val = result.abgr;
+                }
+                LOGW("Invalid color value: %s", value.c_str());
+                break;
+            }
             default:
                 _val = StyleParam::parseString(_key, value);
                 break;

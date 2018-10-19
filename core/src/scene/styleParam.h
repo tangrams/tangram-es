@@ -287,6 +287,7 @@ struct StyleParam {
     static bool parseValueUnitPair(const std::string& value, StyleParam::ValueUnitPair& result);
 
     static bool parseColor(const YAML::Node& node, Color& result);
+    static bool parseColor(const std::string& value, Color& result);
 
     static bool isColor(StyleParamKey _key);
     static bool isSize(StyleParamKey _key);
