@@ -488,7 +488,7 @@ public class MapController implements Renderer {
         setPendingCameraAnimationCallback(callback, true);
         final float seconds = duration / 1000.f;
         // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
-        nativeFlyTo(mapPointer, position.longitude, position.latitude, position.zoom, seconds, speed);
+        nativeFlyTo(mapPointer, position.center.longitude, position.center.latitude, position.zoom, seconds, 1.f);
     }
 
     private void setPendingCameraAnimationCallback(final CameraAnimationCallback callback, final Boolean animated) {
@@ -535,8 +535,8 @@ public class MapController implements Renderer {
         final double[] pos = { 0, 0 };
         final float[] zrt = { 0, 0, 0 };
         nativeGetCameraPosition(mapPointer, pos, zrt);
-        out.longitude = pos[0];
-        out.latitude = pos[1];
+        out.center.longitude = pos[0];
+        out.center.latitude = pos[1];
         out.zoom = zrt[0];
         out.rotation = zrt[1];
         out.tilt = zrt[2];
@@ -576,8 +576,8 @@ public class MapController implements Renderer {
         int pad[] = new int[]{padding.left, padding.top, padding.right, padding.bottom};
         double lngLatZoom[] = new double[3];
         nativeGetEnclosingCameraPosition(mapPointer, sw.longitude, sw.latitude, ne.longitude, ne.latitude, pad, lngLatZoom);
-        out.longitude = lngLatZoom[0];
-        out.latitude = lngLatZoom[1];
+        out.center.longitude = lngLatZoom[0];
+        out.center.latitude = lngLatZoom[1];
         out.zoom = (float)lngLatZoom[2];
         out.rotation = 0.f;
         out.tilt = 0.f;

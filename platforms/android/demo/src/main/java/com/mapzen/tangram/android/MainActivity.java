@@ -267,8 +267,8 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         LngLat tapped = map.screenPositionToLngLat(new PointF(x, y));
         CameraPosition camera = map.getCameraPosition();
 
-        camera.longitude = .5 * (tapped.longitude + camera.longitude);
-        camera.latitude = .5 * (tapped.latitude + camera.latitude);
+        camera.center.longitude = .5 * (tapped.longitude + camera.center.longitude);
+        camera.center.latitude = .5 * (tapped.latitude + camera.center.latitude);
         camera.zoom += 1;
         map.updateCameraPosition(CameraUpdateFactory.newCameraPosition(camera),
                     500, MapController.EaseType.CUBIC);

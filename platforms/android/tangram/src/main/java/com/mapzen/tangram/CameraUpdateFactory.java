@@ -130,8 +130,8 @@ public class CameraUpdateFactory {
     public static CameraUpdate newCameraPosition(@NonNull CameraPosition position) {
         CameraUpdate update = new CameraUpdate();
         update.set = CameraUpdate.SET_LNGLAT | CameraUpdate.SET_ZOOM | CameraUpdate.SET_ROTATION | CameraUpdate.SET_TILT;
-        update.longitude = position.longitude;
-        update.latitude = position.latitude;
+        update.longitude = position.center.longitude;
+        update.latitude = position.center.latitude;
         update.zoom = position.zoom;
         update.rotation = position.rotation;
         update.tilt = position.tilt;
