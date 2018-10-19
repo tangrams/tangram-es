@@ -38,7 +38,7 @@ inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation
     return TGDegreesFromRadians(-rotation);
 }
 
-@interface TGMapView () <UIGestureRecognizerDelegate, GLKViewDelegate> {
+@interface TGMapView () <GLKViewDelegate> {
     BOOL _shouldCaptureFrame;
     BOOL _captureFrameWaitForViewComplete;
     BOOL _viewComplete;
@@ -245,7 +245,7 @@ inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation
     [_tapGestureRecognizer requireGestureRecognizerToFail:_doubleTapGestureRecognizer];
 
     _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(respondToPanGesture:)];
-    _panGestureRecognizer.maximumNumberOfTouches = 1;
+    _panGestureRecognizer.maximumNumberOfTouches = 2;
 
     _pinchGestureRecognizer = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(respondToPinchGesture:)];
     _rotationGestureRecognizer = [[UIRotationGestureRecognizer alloc] initWithTarget:self action:@selector(respondToRotationGesture:)];
@@ -962,11 +962,8 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
 {
     // make shove gesture exclusive
-    if ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
-        return [gestureRecognizer numberOfTouches] != 2;
-    }
-    if ([otherGestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
-        return [otherGestureRecognizer numberOfTouches] != 2;
+    if ([gestureRecognizer isEqual:_shoveGestureRecognizer] || [otherGestureRecognizer isEqual:_shoveGestureRecognizer]) {
+        return NO;
     }
     return YES;
 }

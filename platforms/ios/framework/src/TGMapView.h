@@ -53,7 +53,7 @@ NS_ASSUME_NONNULL_BEGIN
  regarding _Coordinate Systems and Drawing in iOS_ for more information.
  */
 TG_EXPORT
-@interface TGMapView : UIView
+@interface TGMapView : UIView <UIGestureRecognizerDelegate>
 
 #pragma mark Initialize the View
 
