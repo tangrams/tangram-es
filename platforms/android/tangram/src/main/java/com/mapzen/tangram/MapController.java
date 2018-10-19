@@ -516,23 +516,6 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Smoothly animate over an arc to an updated camera position for the map view
-     * @param position CameraPosition of the destination
-     * @param duration Time in milliseconds of the animation, or <= 0 to calculate duration based on distance travelled
-     * @param speed If duration is 0, speed is used as factor to change the duration that is
-     *              calculated for the distance of the flight path. (Recommended range 0.1 - 10.0)
-     */
-    public void flyToCameraPosition(@NonNull final CameraPosition position, final int duration, final float speed) {
-        checkPointer(mapPointer);
-        boolean animated = (duration != 0);
-        onRegionWillChange(animated);
-        final float seconds = duration / 1000.f;
-        // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
-        nativeFlyTo(mapPointer, position.longitude, position.latitude, position.zoom, seconds, speed);
-        onRegionDidChange(animated);
-    }
-
-    /**
      * Get the {@link CameraPosition} of the map view
      * @return The current camera position
      */
