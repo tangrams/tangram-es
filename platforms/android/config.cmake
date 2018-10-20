@@ -21,4 +21,5 @@ target_link_libraries(tangram
   GLESv2
   log
   z
+  jnigraphics
 )
