@@ -214,10 +214,7 @@ public class Marker {
         final int density = context.getResources().getDisplayMetrics().densityDpi;
         final int width = bitmap.getScaledWidth(density);
         final int height = bitmap.getScaledHeight(density);
-        final int[] argb = new int[width * height];
-        bitmap.getPixels(argb, 0, width, 0, 0, width, height);
-
-        return map.setMarkerBitmap(markerId, width, height, argb);
+        return map.setMarkerBitmap(markerId, width, height, bitmap);
     }
 
     void invalidate() {

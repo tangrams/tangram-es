@@ -3,6 +3,7 @@
 #include "map.h"
 
 #include <cassert>
+#include <android/bitmap.h>
 
 using namespace Tangram;
 
@@ -388,27 +389,31 @@ extern "C" {
         return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetBitmap(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jint width, jint height, jintArray data) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetBitmap(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jint width, jint height, jobject jbitmap) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        jint* argbInput = jniEnv->GetIntArrayElements(data, NULL);
-        int length = width * height;
-        int* abgrOutput = new int[length];
-        int i = 0;
-        for (int row = 0; row < height; row++) {
-            for (int col = 0; col < width; col++) {
-                int pix = argbInput[i++];
-                int pb = (pix >> 16) & 0xff;
-                int pr = (pix << 16) & 0x00ff0000;
-                int pix1 = (pix & 0xff00ff00) | pr | pb;
-                int flippedIndex = (height - 1 - row) * width + col;
-                abgrOutput[flippedIndex] = pix1;
+        jint* argbInput;
+        int locked = AndroidBitmap_lockPixels(jniEnv, jbitmap, (void**)&argbInput);
+        if (locked) {
+            int length = width * height;
+            int* abgrOutput = new int[length];
+            int i = 0;
+            for (int row = 0; row < height; row++) {
+                for (int col = 0; col < width; col++) {
+                    int pix = argbInput[i++];
+                    int pb = (pix >> 16) & 0xff;
+                    int pr = (pix << 16) & 0x00ff0000;
+                    int pix1 = (pix & 0xff00ff00) | pr | pb;
+                    int flippedIndex = (height - 1 - row) * width + col;
+                    abgrOutput[flippedIndex] = pix1;
+                }
             }
+            AndroidBitmap_unlockPixels(jniEnv, jbitmap);
+            auto result = map->markerSetBitmap(static_cast<unsigned int>(markerID), width, height, reinterpret_cast<unsigned int*>(abgrOutput));
+            delete[] abgrOutput;
+            return static_cast<jboolean>(result);
         }
-        auto result = map->markerSetBitmap(static_cast<unsigned int>(markerID), width, height, reinterpret_cast<unsigned int*>(abgrOutput));
-        delete abgrOutput;
-        jniEnv->ReleaseIntArrayElements(data, argbInput, JNI_ABORT);
-        return static_cast<jboolean>(result);
+        return false;
     }
 
     JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPoint(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdouble lng, jdouble lat) {
