@@ -394,7 +394,7 @@ extern "C" {
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         jint* argbInput;
         int locked = AndroidBitmap_lockPixels(jniEnv, jbitmap, (void**)&argbInput);
-        if (locked) {
+        if (locked == ANDROID_BITMAP_RESULT_SUCCESS) {
             int length = width * height;
             int* abgrOutput = new int[length];
             int i = 0;
