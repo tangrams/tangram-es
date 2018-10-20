@@ -389,31 +389,45 @@ extern "C" {
         return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetBitmap(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jint width, jint height, jobject jbitmap) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetBitmap(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jobject jbitmap) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        jint* argbInput;
-        int locked = AndroidBitmap_lockPixels(jniEnv, jbitmap, (void**)&argbInput);
-        if (locked == ANDROID_BITMAP_RESULT_SUCCESS) {
-            int length = width * height;
-            int* abgrOutput = new int[length];
-            int i = 0;
-            for (int row = 0; row < height; row++) {
-                for (int col = 0; col < width; col++) {
-                    int pix = argbInput[i++];
-                    int pb = (pix >> 16) & 0xff;
-                    int pr = (pix << 16) & 0x00ff0000;
-                    int pix1 = (pix & 0xff00ff00) | pr | pb;
-                    int flippedIndex = (height - 1 - row) * width + col;
-                    abgrOutput[flippedIndex] = pix1;
-                }
-            }
-            AndroidBitmap_unlockPixels(jniEnv, jbitmap);
-            auto result = map->markerSetBitmap(static_cast<unsigned int>(markerID), width, height, reinterpret_cast<unsigned int*>(abgrOutput));
-            delete[] abgrOutput;
-            return static_cast<jboolean>(result);
+
+        AndroidBitmapInfo bitmapInfo;
+        if (AndroidBitmap_getInfo(jniEnv, jbitmap, &bitmapInfo) != ANDROID_BITMAP_RESULT_SUCCESS) {
+            return static_cast<jboolean>(false);
         }
-        return false;
+        if (bitmapInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+            // TODO: Add different conversion functions for other formats.
+            return static_cast<jboolean>(false);
+        }
+        uint32_t* pixelInput;
+        if (AndroidBitmap_lockPixels(jniEnv, jbitmap, (void**)&pixelInput) != ANDROID_BITMAP_RESULT_SUCCESS) {
+            return static_cast<jboolean>(false);
+        }
+        int width = bitmapInfo.width;
+        int height = bitmapInfo.height;
+        uint32_t* pixelOutput = new uint32_t[height * bitmapInfo.stride];
+        int i = 0;
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                uint32_t pixel = pixelInput[i++];
+                // Undo alpha pre-multiplication.
+                auto rgba = reinterpret_cast<uint8_t*>(&pixel);
+                int a = rgba[3];
+                if (a != 0) {
+                    rgba[0] = static_cast<uint8_t>(rgba[0] * 255 / a);
+                    rgba[1] = static_cast<uint8_t>(rgba[1] * 255 / a);
+                    rgba[2] = static_cast<uint8_t>(rgba[2] * 255 / a);
+                }
+                int flippedIndex = (height - 1 - row) * width + col;
+                pixelOutput[flippedIndex] = pixel;
+            }
+        }
+        AndroidBitmap_unlockPixels(jniEnv, jbitmap);
+        auto result = map->markerSetBitmap(static_cast<unsigned int>(markerID), width, height, pixelOutput);
+        delete[] pixelOutput;
+        return static_cast<jboolean>(result);
     }
 
     JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPoint(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdouble lng, jdouble lat) {

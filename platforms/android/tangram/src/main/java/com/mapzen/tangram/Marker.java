@@ -211,10 +211,7 @@ public class Marker {
     }
 
     private boolean setBitmap(@NonNull final Bitmap bitmap) {
-        final int density = context.getResources().getDisplayMetrics().densityDpi;
-        final int width = bitmap.getScaledWidth(density);
-        final int height = bitmap.getScaledHeight(density);
-        return map.setMarkerBitmap(markerId, width, height, bitmap);
+        return map.setMarkerBitmap(markerId, bitmap);
     }
 
     void invalidate() {
