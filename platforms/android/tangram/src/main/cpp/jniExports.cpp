@@ -407,7 +407,7 @@ extern "C" {
         }
         int width = bitmapInfo.width;
         int height = bitmapInfo.height;
-        uint32_t* pixelOutput = new uint32_t[height * bitmapInfo.stride];
+        uint32_t* pixelOutput = new uint32_t[height * width];
         int i = 0;
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
