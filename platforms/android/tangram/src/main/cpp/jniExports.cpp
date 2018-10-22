@@ -416,9 +416,10 @@ extern "C" {
                 auto rgba = reinterpret_cast<uint8_t*>(&pixel);
                 int a = rgba[3];
                 if (a != 0) {
-                    rgba[0] = static_cast<uint8_t>(rgba[0] * 255 / a);
-                    rgba[1] = static_cast<uint8_t>(rgba[1] * 255 / a);
-                    rgba[2] = static_cast<uint8_t>(rgba[2] * 255 / a);
+                    auto alphaInv = 1.f/a;
+                    rgba[0] = static_cast<uint8_t>(rgba[0] * 255 * alphaInv);
+                    rgba[1] = static_cast<uint8_t>(rgba[1] * 255 * alphaInv );
+                    rgba[2] = static_cast<uint8_t>(rgba[2] * 255 * alphaInv);
                 }
                 int flippedIndex = (height - 1 - row) * width + col;
                 pixelOutput[flippedIndex] = pixel;
