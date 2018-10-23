@@ -377,8 +377,9 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 Color result;
                 if (StyleParam::parseColor(value, result)) {
                     _val = result.abgr;
+                } else {
+                    LOGW("Invalid color value: %s", value.c_str());
                 }
-                LOGW("Invalid color value: %s", value.c_str());
                 break;
             }
             default:
