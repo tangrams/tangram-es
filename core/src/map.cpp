@@ -545,7 +545,7 @@ void Map::render() {
         return;
     }
 
-    bool drawnAnimatedStyle = impl->scene->animated() == Scene::animate::yes;
+    bool drawnAnimatedStyle = false;
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
@@ -561,7 +561,9 @@ void Map::render() {
         }
     }
 
-    if (impl->scene->animated() != Scene::animate::no && drawnAnimatedStyle != platform->isContinuousRendering()) {
+    if (impl->scene->animated() != Scene::animate::no &&
+        drawnAnimatedStyle != platform->isContinuousRendering()) {
+
         platform->setContinuousRendering(drawnAnimatedStyle);
     }
 
