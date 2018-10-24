@@ -190,11 +190,24 @@ public class MapView extends FrameLayout {
         view.setPreserveEGLContextOnPause(true);
         try {
             view.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 0, 16, 8));
+            return view;
         } catch(IllegalArgumentException e) {
             // TODO: print available configs to check whether we could support them
-            return null;
+            android.util.Log.e("Tangram", "EGLConfig 8-8-8-0 not supported");
         }
-        return view;
+        try {
+            view.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 8, 16, 8));
+            return view;
+        } catch(IllegalArgumentException e) {
+            android.util.Log.e("Tangram", "EGLConfig 8-8-8-8 not supported");
+        }
+        try {
+            view.setEGLConfigChooser(new ConfigChooser(5, 6, 5, 0, 16, 8));
+            return view;
+        } catch(IllegalArgumentException e) {
+            android.util.Log.e("Tangram", "EGLConfig 5-6-5-0 not supported");
+        }
+        return null;
     }
 
     protected void disposeMap() {
