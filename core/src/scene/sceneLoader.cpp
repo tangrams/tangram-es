@@ -766,7 +766,6 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
     }
 
     if (Node animatedNode = styleNode["animated"]) {
-        LOGW("'animated' property will be set but not yet implemented in styles"); // TODO
         if (!animatedNode.IsScalar()) { LOGW("animated flag should be a scalar"); }
         else {
             bool animate;
