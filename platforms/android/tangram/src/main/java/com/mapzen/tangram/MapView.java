@@ -110,10 +110,15 @@ public class MapView extends FrameLayout {
         }
 
         if (controller != null) {
-            mapController = controller;
             glSurfaceView = createGLSurfaceView();
-            mapController.UIThreadInit(glSurfaceView, handler);
-            addView(glSurfaceView);
+            if (glSurfaceView == null) {
+                android.util.Log.e("Tangram", "Unable to initialize MapController: Failed to initialize OpenGL view");
+                controller.dispose();
+            } else {
+                mapController = controller;
+                mapController.UIThreadInit(glSurfaceView, handler);
+                addView(glSurfaceView);
+            }
         }
         callback.onMapReady(mapController);
     }
@@ -183,7 +188,12 @@ public class MapView extends FrameLayout {
         GLSurfaceView view = new GLSurfaceView(getContext());
         view.setEGLContextClientVersion(2);
         view.setPreserveEGLContextOnPause(true);
-        view.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 0, 16, 8));
+        try {
+            view.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 0, 16, 8));
+        } catch(IllegalArgumentException e) {
+            // TODO: print available configs to check whether we could support them
+            return null;
+        }
         return view;
     }
 
