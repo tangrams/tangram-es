@@ -3,6 +3,7 @@
 #include "map.h"
 
 #include <cassert>
+#include <android/bitmap.h>
 
 using namespace Tangram;
 
@@ -388,13 +389,46 @@ extern "C" {
         return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetBitmap(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jint width, jint height, jintArray data) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetBitmap(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jobject jbitmap) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        jint* ptr = jniEnv->GetIntArrayElements(data, NULL);
-        unsigned int* imgData = reinterpret_cast<unsigned int*>(ptr);
-        jniEnv->ReleaseIntArrayElements(data, ptr, JNI_ABORT);
-        auto result = map->markerSetBitmap(static_cast<unsigned int>(markerID), width, height, imgData);
+
+        AndroidBitmapInfo bitmapInfo;
+        if (AndroidBitmap_getInfo(jniEnv, jbitmap, &bitmapInfo) != ANDROID_BITMAP_RESULT_SUCCESS) {
+            return static_cast<jboolean>(false);
+        }
+        if (bitmapInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+            // TODO: Add different conversion functions for other formats.
+            return static_cast<jboolean>(false);
+        }
+        uint32_t* pixelInput;
+        if (AndroidBitmap_lockPixels(jniEnv, jbitmap, (void**)&pixelInput) != ANDROID_BITMAP_RESULT_SUCCESS) {
+            return static_cast<jboolean>(false);
+        }
+        int width = bitmapInfo.width;
+        int height = bitmapInfo.height;
+        uint32_t* pixelOutput = new uint32_t[height * width];
+        int i = 0;
+        for (int row = 0; row < height; row++) {
+            // Flips image upside-down
+            int flippedRow = (height - 1 - row) * width;
+            for (int col = 0; col < width; col++) {
+                uint32_t pixel = pixelInput[i++];
+                // Undo alpha pre-multiplication.
+                auto rgba = reinterpret_cast<uint8_t*>(&pixel);
+                int a = rgba[3];
+                if (a != 0) {
+                    auto alphaInv = 255.f/a;
+                    rgba[0] = static_cast<uint8_t>(rgba[0] * alphaInv);
+                    rgba[1] = static_cast<uint8_t>(rgba[1] * alphaInv );
+                    rgba[2] = static_cast<uint8_t>(rgba[2] * alphaInv);
+                }
+                pixelOutput[flippedRow + col] = pixel;
+            }
+        }
+        AndroidBitmap_unlockPixels(jniEnv, jbitmap);
+        auto result = map->markerSetBitmap(static_cast<unsigned int>(markerID), width, height, pixelOutput);
+        delete[] pixelOutput;
         return static_cast<jboolean>(result);
     }
 

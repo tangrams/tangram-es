@@ -1155,10 +1155,10 @@ public class MapController implements Renderer {
         return nativeMarkerSetStylingFromPath(mapPointer, markerId, path);
     }
 
-    boolean setMarkerBitmap(final long markerId, final int width, final int height, final int[] data) {
+    boolean setMarkerBitmap(final long markerId, Bitmap bitmap) {
         checkPointer(mapPointer);
         checkId(markerId);
-        return nativeMarkerSetBitmap(mapPointer, markerId, width, height, data);
+        return nativeMarkerSetBitmap(mapPointer, markerId, bitmap);
     }
 
     boolean setMarkerPoint(final long markerId, final double lng, final double lat) {
@@ -1246,7 +1246,7 @@ public class MapController implements Renderer {
     private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
     private synchronized native boolean nativeMarkerSetStylingFromString(long mapPtr, long markerID, String styling);
     private synchronized native boolean nativeMarkerSetStylingFromPath(long mapPtr, long markerID, String path);
-    private synchronized native boolean nativeMarkerSetBitmap(long mapPtr, long markerID, int width, int height, int[] data);
+    private synchronized native boolean nativeMarkerSetBitmap(long mapPtr, long markerID, Bitmap bitmap);
     private synchronized native boolean nativeMarkerSetPoint(long mapPtr, long markerID, double lng, double lat);
     private synchronized native boolean nativeMarkerSetPointEased(long mapPtr, long markerID, double lng, double lat, float duration, int ease);
     private synchronized native boolean nativeMarkerSetPolyline(long mapPtr, long markerID, double[] coordinates, int count);
