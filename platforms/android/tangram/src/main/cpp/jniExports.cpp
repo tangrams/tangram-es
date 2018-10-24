@@ -410,19 +410,20 @@ extern "C" {
         uint32_t* pixelOutput = new uint32_t[height * width];
         int i = 0;
         for (int row = 0; row < height; row++) {
+            // Flips image upside-down
+            int flippedRow = (height - 1 - row) * width;
             for (int col = 0; col < width; col++) {
                 uint32_t pixel = pixelInput[i++];
                 // Undo alpha pre-multiplication.
                 auto rgba = reinterpret_cast<uint8_t*>(&pixel);
                 int a = rgba[3];
                 if (a != 0) {
-                    auto alphaInv = 1.f/a;
-                    rgba[0] = static_cast<uint8_t>(rgba[0] * 255 * alphaInv);
-                    rgba[1] = static_cast<uint8_t>(rgba[1] * 255 * alphaInv );
-                    rgba[2] = static_cast<uint8_t>(rgba[2] * 255 * alphaInv);
+                    auto alphaInv = 255.f/a;
+                    rgba[0] = static_cast<uint8_t>(rgba[0] * alphaInv);
+                    rgba[1] = static_cast<uint8_t>(rgba[1] * alphaInv );
+                    rgba[2] = static_cast<uint8_t>(rgba[2] * alphaInv);
                 }
-                int flippedIndex = (height - 1 - row) * width + col;
-                pixelOutput[flippedIndex] = pixel;
+                pixelOutput[flippedRow + col] = pixel;
             }
         }
         AndroidBitmap_unlockPixels(jniEnv, jbitmap);
