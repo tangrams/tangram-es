@@ -455,6 +455,7 @@ public class MapController implements Renderer {
 
     /**
      * Smoothly animate over an arc to a new camera position for the map view
+     * FlyTo duration is calculated assuming speed of 1 unit and distance between the current and new positions
      * @param position CameraPosition of the destination
      * @param callback Callback that will run when the animation is finished or canceled
      */
@@ -463,7 +464,7 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Smoothly animate over an arc to a new camera position for the map view
+     * Smoothly animate over an arc to a new camera position for the map view in provided time duration
      * @param position CameraPosition of the destination
      * @param duration Time in milliseconds of the animation
      * @param callback Callback that will run when the animation is finished or canceled
@@ -474,6 +475,7 @@ public class MapController implements Renderer {
 
     /**
      * Smoothly animate over an arc to a new camera position for the map view
+     * FlyTo duration is calculated using speed and distance between the current and new positions
      * @param position CameraPosition of the destination
      * @param callback Callback that will run when the animation is finished or canceled
      * @param speed Scaling factor for animation duration (recommended range is 0.1 - 10)
