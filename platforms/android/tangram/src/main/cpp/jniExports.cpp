@@ -104,7 +104,7 @@ extern "C" {
         camera.longitude = lon;
         camera.latitude = lat;
         camera.zoom = zoom;
-        map->flyTo(camera, duration);
+        map->flyTo(camera, duration, speed);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeCancelCameraAnimation(JNIEnv* jniEnv, jobject obj,  jlong mapPtr) {
