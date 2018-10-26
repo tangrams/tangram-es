@@ -17,8 +17,10 @@ import android.util.ArrayMap;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.LongSparseArray;
+import android.view.MotionEvent;
 
 import com.mapzen.tangram.TouchInput.Gestures;
+import com.mapzen.tangram.viewholder.GLViewHolder;
 import com.mapzen.tangram.networking.DefaultHttpHandler;
 import com.mapzen.tangram.networking.HttpHandler;
 
@@ -36,6 +38,10 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class MapController implements Renderer {
 
+
+    public boolean handleGesture(MapView mapView, MotionEvent ev) {
+        return touchInput.onTouch(mapView, ev);
+    }
 
     /**
      * Options for interpolating map parameters
@@ -131,8 +137,8 @@ public class MapController implements Renderer {
 
     @NonNull
     private Bitmap capture() {
-        final int w = mapView.getWidth();
-        final int h = mapView.getHeight();
+        final int w = viewHolder.getView().getWidth();
+        final int h = viewHolder.getView().getHeight();
 
         final int b[] = new int[w * h];
         final int bt[] = new int[w * h];
@@ -183,10 +189,10 @@ public class MapController implements Renderer {
     /**
      * Responsible to configure {@link MapController} configuration on the ui thread.
      * Must be called from the ui thread post instantiation of {@link MapController}
-     * @param view GLSurfaceView for the map display
+     * @param viewHolder GLViewHolder for the map display
      * @param handler {@link HttpHandler} to initialize httpHandler for network handling
      */
-    void UIThreadInit(@NonNull final GLSurfaceView view, @Nullable final HttpHandler handler) {
+    void UIThreadInit(@NonNull final GLViewHolder viewHolder, @Nullable final HttpHandler handler) {
 
         // Use the DefaultHttpHandler if none is provided
         if (handler == null) {
@@ -196,14 +202,13 @@ public class MapController implements Renderer {
         }
 
         // Set up MapView
-        mapView = view;
-        mapView.setRenderer(this);
+        this.viewHolder = viewHolder;
+        viewHolder.setRenderer(this);
         isGLRendererSet = true;
-        mapView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-        mapView.setPreserveEGLContextOnPause(true);
+        viewHolder.setRenderMode(GLViewHolder.RenderMode.RENDER_WHEN_DIRTY);
 
-        touchInput = new TouchInput(mapView.getContext());
-        mapView.setOnTouchListener(touchInput);
+        Context context = viewHolder.getView().getContext();
+        touchInput = new TouchInput(context);
 
         touchInput.setPanResponder(getPanResponder());
         touchInput.setScaleResponder(getScaleResponder());
@@ -216,7 +221,7 @@ public class MapController implements Renderer {
         touchInput.setSimultaneousDetectionDisabled(Gestures.SHOVE, Gestures.PAN);
         touchInput.setSimultaneousDetectionDisabled(Gestures.SCALE, Gestures.LONG_PRESS);
 
-        uiThreadHandler = new Handler(mapView.getContext().getMainLooper());
+        uiThreadHandler = new Handler(context.getMainLooper());
     }
 
     /**
@@ -256,19 +261,23 @@ public class MapController implements Renderer {
             final long pointer = mapPointer;
             mapPointer = 0;
 
-            if (!isGLRendererSet) {
-                // No GL setup from UI Thread
-                nativeDispose(pointer);
-            } else {
-                // Disposing native resources involves GL calls, so we need to run on the GL thread.
-                queueEvent(new Runnable() {
-                    @Override
-                    public void run() {
-                        nativeDispose(pointer);
-                    }
-                });
-            }
+            // NOTE: It is possible for the MapView held by a ViewGroup to be removed, calling detachFromWindow which
+            // stops the Render Thread associated with GLSurfaceView, possibly resulting in leaks from render thread
+            // queue. Because of the above, destruction lifecycle of the GLSurfaceView will not be triggered.
+            //
+            // To avoid the above senario, nativeDispose is called from the UIThread.
+            nativeDispose(pointer);
         }
+    }
+
+    /**
+     * Returns the {@link GLViewHolder} instance for the client application, which can be further used to get the underlying
+     * GLSurfaceView or Client provided implementation for GLViewHolder, to forward any explicit view controls, example Transformations, etc.
+     * @return GLViewHolder used by the Map Renderer
+     */
+    @Nullable
+    public GLViewHolder getGLViewHolder() {
+        return viewHolder;
     }
 
     /**
@@ -733,7 +742,7 @@ public class MapController implements Renderer {
      */
     @Keep
     public void requestRender() {
-        mapView.requestRender();
+        viewHolder.requestRender();
     }
 
     /**
@@ -745,7 +754,15 @@ public class MapController implements Renderer {
      */
     @Keep
     public void setRenderMode(@IntRange(from=0,to=1) final int renderMode) {
-        mapView.setRenderMode(renderMode);
+        switch (renderMode) {
+            case 0:
+                viewHolder.setRenderMode(GLViewHolder.RenderMode.RENDER_WHEN_DIRTY);
+                break;
+            case 1:
+                viewHolder.setRenderMode(GLViewHolder.RenderMode.RENDER_CONTINUOUSLY);
+                break;
+            default:
+        }
     }
 
     /**
@@ -994,7 +1011,7 @@ public class MapController implements Renderer {
         checkPointer(mapPointer);
         final long markerId = nativeMarkerAdd(mapPointer);
 
-        final Marker marker = new Marker(mapView.getContext(), markerId, this);
+        final Marker marker = new Marker(viewHolder.getView().getContext(), markerId, this);
         markers.put(markerId, marker);
 
         return marker;
@@ -1070,7 +1087,7 @@ public class MapController implements Renderer {
      * @param r Runnable to run
      */
     public void queueEvent(@NonNull final Runnable r) {
-        mapView.queueEvent(r);
+        viewHolder.queueEvent(r);
     }
 
     /**
@@ -1294,7 +1311,7 @@ public class MapController implements Renderer {
 
     private long mapPointer;
     private long time = System.nanoTime();
-    private GLSurfaceView mapView;
+    private GLViewHolder viewHolder;
     private AssetManager assetManager;
     private TouchInput touchInput;
     private FontFileParser fontFileParser;
