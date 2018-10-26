@@ -23,18 +23,6 @@ public interface GLViewHolder {
     void setRenderer(GLSurfaceView.Renderer renderer);
 
     /**
-     * Control whether the EGL context is preserved when the GLSurfaceView is paused and
-     * resumed.
-     * @param preserveOnPause preserve the EGL context when paused
-     */
-    void setPreserveEGLContextOnPause(boolean preserveOnPause);
-
-    /**
-     * @return true if the EGL context will be preserved when paused
-     */
-    boolean getPreserveEGLContextOnPause();
-
-    /**
      * Set the rendering mode. When {@link RenderMode} is
      * RENDER_CONTINUOUSLY, the renderer is called
      * repeatedly to re-render the scene. When {@link RenderMode}
@@ -49,18 +37,6 @@ public interface GLViewHolder {
      * @return the current rendering mode.
      */
     RenderMode getRenderMode();
-
-    /**
-     * Install a custom EGLConfigChooser.
-     * @param configChooser
-     */
-    void setEGLConfigChooser(GLSurfaceView.EGLConfigChooser configChooser);
-
-    /**
-     * Inform the EGLContext and EGLConfigChooser
-     * which EGLContext client version to pick.
-     */
-    void setEGLContextClientVersion(int version);
 
     /**
      * Request that the renderer render a frame.

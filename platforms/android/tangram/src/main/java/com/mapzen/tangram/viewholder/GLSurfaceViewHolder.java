@@ -51,26 +51,6 @@ public class GLSurfaceViewHolder implements GLViewHolder {
     }
 
     @Override
-    public void setPreserveEGLContextOnPause(boolean preserveOnPause) {
-        glSurfaceView.setPreserveEGLContextOnPause(preserveOnPause);
-    }
-
-    @Override
-    public boolean getPreserveEGLContextOnPause() {
-        return glSurfaceView.getPreserveEGLContextOnPause();
-    }
-
-    @Override
-    public void setEGLConfigChooser(GLSurfaceView.EGLConfigChooser configChooser) {
-        glSurfaceView.setEGLConfigChooser(configChooser);
-    }
-
-    @Override
-    public void setEGLContextClientVersion(int version) {
-        glSurfaceView.setEGLContextClientVersion(version);
-    }
-
-    @Override
     public void queueEvent(@NonNull final Runnable r) {
         glSurfaceView.queueEvent(r);
     }

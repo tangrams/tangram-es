@@ -117,7 +117,7 @@ public class MapView extends FrameLayout {
         }
 
         if (controller != null) {
-            viewHolder = createViewHolder(viewHolderFactory);
+            viewHolder = viewHolderFactory.build(getContext());
             if (viewHolder == null) {
                 android.util.Log.e("Tangram", "Unable to initialize MapController: Failed to initialize OpenGL view");
                 controller.dispose();
@@ -128,32 +128,6 @@ public class MapView extends FrameLayout {
             }
         }
         callback.onMapReady(mapController);
-    }
-
-    protected GLViewHolder createViewHolder(@NonNull GLViewHolderFactory viewHolderFactory) {
-        GLViewHolder view = viewHolderFactory.build(getContext());
-        view.setEGLContextClientVersion(2);
-        view.setPreserveEGLContextOnPause(true);
-        try {
-            view.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 0, 16, 8));
-            return view;
-        } catch(IllegalArgumentException e) {
-            // TODO: print available configs to check whether we could support them
-            android.util.Log.e("Tangram", "EGLConfig 8-8-8-0 not supported");
-        }
-        try {
-            view.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 8, 16, 8));
-            return view;
-        } catch(IllegalArgumentException e) {
-            android.util.Log.e("Tangram", "EGLConfig 8-8-8-8 not supported");
-        }
-        try {
-            view.setEGLConfigChooser(new ConfigChooser(5, 6, 5, 0, 16, 8));
-            return view;
-        } catch(IllegalArgumentException e) {
-            android.util.Log.e("Tangram", "EGLConfig 5-6-5-0 not supported");
-        }
-        return null;
     }
 
     /**

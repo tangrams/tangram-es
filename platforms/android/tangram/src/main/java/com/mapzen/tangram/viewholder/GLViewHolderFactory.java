@@ -9,6 +9,5 @@ public interface GLViewHolderFactory {
      * for {@link GLViewHolder}
      * @param context Application Context
      */
-    @NonNull
     GLViewHolder build(Context context);
 }
