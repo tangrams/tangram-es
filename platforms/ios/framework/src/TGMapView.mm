@@ -62,6 +62,7 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeStates) {
 @property (strong, nonatomic) NSMutableDictionary<NSString *, TGMapData *> *dataLayersByName;
 @property (nonatomic, copy, nullable) void (^cameraAnimationCallback)(BOOL);
 @property TGMapRegionChangeStates currentState;
+@property BOOL prevCameraEasing;
 
 @end // interface TGMapView
 
@@ -145,6 +146,7 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeStates) {
     _dataLayersByName = [[NSMutableDictionary alloc] init];
     _resourceRoot = [[NSBundle mainBundle] resourceURL];
     _currentState = IDLE;
+    _prevCameraEasing = false;
 
     self.clipsToBounds = YES;
     self.opaque = YES;
@@ -360,9 +362,14 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeStates) {
         return;
     }
 
-    if (self.map->render()) {
+    BOOL cameraEasing = self.map->render();
+    if (cameraEasing) {
         [self setMapRegionChangeState:ANIMATING];
+    } else if (_prevCameraEasing) {
+        [self setMapRegionChangeState:IDLE];
     }
+
+    _prevCameraEasing = cameraEasing;
 }
 
 #pragma mark Screenshots
