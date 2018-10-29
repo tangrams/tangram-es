@@ -1109,7 +1109,7 @@ void SceneLoader::loadSourceRasters(const std::shared_ptr<Platform>& platform, s
 
 void SceneLoader::parseLightPosition(Node positionNode, PointLight& light) {
     UnitVec<glm::vec3> positionResult;
-    if (StyleParam::parseVec3(positionNode, UnitSet{Unit::pixel, Unit::meter}, positionResult)) {
+    if (StyleParam::parseVec3(positionNode, UnitSet{Unit::none, Unit::pixel, Unit::meter}, positionResult)) {
         for (auto& unit : positionResult.units) {
             if (unit == Unit::none) {
                 unit = Unit::meter;
