@@ -398,6 +398,7 @@ bool Map::update(float _dt) {
     bool viewComplete = true;
     bool markersNeedUpdate = false;
 
+    bool isEasing = false;
     if (impl->ease) {
         auto& ease = *(impl->ease);
         ease.update(_dt);
@@ -407,13 +408,18 @@ bool Map::update(float _dt) {
                 impl->cameraAnimationListener(true);
             }
             impl->ease.reset();
-            impl->isCameraEasing = false;
+            isEasing = false;
         } else {
-            impl->isCameraEasing = true;
+            isEasing = true;
         }
     }
 
-    impl->inputHandler.update(_dt);
+    bool isFlinging = impl->inputHandler.update(_dt);
+    if (!isEasing && !isFlinging) {
+        impl->isCameraEasing = false;
+    } else {
+        impl->isCameraEasing = true;
+    }
 
     impl->view.update();
 

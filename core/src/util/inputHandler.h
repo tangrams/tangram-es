@@ -22,7 +22,7 @@ public:
     void handleRotateGesture(float _posX, float _posY, float _radians);
     void handleShoveGesture(float _distance);
 
-    void update(float _dt);
+    bool update(float _dt);
 
     void cancelFling();
 
