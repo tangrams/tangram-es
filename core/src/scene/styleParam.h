@@ -277,7 +277,6 @@ struct StyleParam {
 
     static Value parseString(StyleParamKey key, const std::string& _value);
 
-    // WIP: Node-based value parsing.
     static Value parseNode(StyleParamKey key, const YAML::Node& node);
 
     static bool parseSize(const YAML::Node& node, UnitSet allowedUnits, SizeValue& result);

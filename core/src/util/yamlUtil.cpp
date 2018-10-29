@@ -29,24 +29,6 @@ glm::vec4 getColorAsVec4(const YAML::Node& node) {
     return glm::vec4();
 }
 
-std::string parseSequence(const YAML::Node& node) {
-    if (!node.IsSequence()) {
-        LOGW("Expected a plain sequence: '%'", Dump(node).c_str());
-        return "";
-    }
-
-    std::stringstream sstream;
-    for (const auto& val : node) {
-        if (!val.IsScalar()) {
-            LOGW("Expected a plain sequence: '%'", Dump(node).c_str());
-            return "";
-        }
-        sstream << val.Scalar() << ",";
-    }
-    return sstream.str();
-}
-
-
 bool getInt(const YAML::Node& node, int& result, bool allowTrailingJunk) {
     double value;
     if (getDouble(node, value, allowTrailingJunk)) {
