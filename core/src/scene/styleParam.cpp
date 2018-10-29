@@ -154,18 +154,7 @@ StyleParam::Value StyleParam::parseNode(StyleParamKey key, const YAML::Node& nod
         return std::numeric_limits<uint32_t>::max();
     }
     case StyleParamKey::text_offset:
-    case StyleParamKey::offset: {
-        ValueUnitPair scalar;
-        if (node.IsScalar() && (parseValueUnitPair(node.Scalar(), scalar) && allowedUnits.contains(scalar.unit))) {
-            return glm::vec2(scalar.value);
-        }
-        UnitVec<glm::vec2> vec;
-        if (parseVec2(node, allowedUnits, vec)) {
-            return vec.value;
-        }
-        LOGW("Invalid offset parameter '%s'.", Dump(node).c_str());
-        return Value();
-    }
+    case StyleParamKey::offset:
     case StyleParamKey::text_buffer:
     case StyleParamKey::buffer: {
         ValueUnitPair scalar;
@@ -176,7 +165,7 @@ StyleParam::Value StyleParam::parseNode(StyleParamKey key, const YAML::Node& nod
         if (parseVec2(node, allowedUnits, vec)) {
             return vec.value;
         }
-        LOGW("Invalid buffer parameter '%s'.", Dump(node).c_str());
+        LOGW("Invalid buffer/offset parameter '%s'.", Dump(node).c_str());
         return Value();
     }
     case StyleParamKey::size: {
