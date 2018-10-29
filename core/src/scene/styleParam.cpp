@@ -145,11 +145,10 @@ StyleParam::Value StyleParam::parseNode(StyleParamKey key, const YAML::Node& nod
         return parseExtrudeNode(node);
     }
     case StyleParamKey::text_wrap: {
-        bool useWrap = false;
-        int wrapLength = 15; // Default wrap length.
-        if (YAML::convert<bool>::decode(node, useWrap) && useWrap) {
+        int wrapLength = TextStyle::DEFAULT_TEXT_WRAP_LENGTH;
+        if (YamlUtil::getBoolOrDefault(node, false)) {
             return (uint32_t)wrapLength;
-        } else if (YAML::convert<int>::decode(node, wrapLength) && wrapLength > 0) {
+        } else if (YamlUtil::getInt(node, wrapLength) && wrapLength > 0) {
             return (uint32_t)wrapLength;
         }
         return std::numeric_limits<uint32_t>::max();
