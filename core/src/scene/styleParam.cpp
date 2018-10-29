@@ -562,7 +562,7 @@ bool parseVec(const YAML::Node& node, UnitSet allowedUnits, UnitVec<T>& vec) {
             continue;
         }
         StyleParam::ValueUnitPair result;
-        success |= StyleParam::parseValueUnitPair(nodeElement.Scalar(), result);
+        success &= StyleParam::parseValueUnitPair(nodeElement.Scalar(), result);
 
         if (!allowedUnits.contains(result.unit)) {
             success = false;
@@ -575,15 +575,15 @@ bool parseVec(const YAML::Node& node, UnitSet allowedUnits, UnitVec<T>& vec) {
 }
 
 bool StyleParam::parseSize(const YAML::Node& node, UnitSet allowedUnits, SizeValue& result) {
-    bool success = false;
+    bool success = true;
     if (node.IsScalar()) {
         success = parseSizeUnitPair(node.Scalar(), result.x);
     }
     if (node.IsSequence() && node.size() >= 2) {
         const auto& nodeFirst = node[0];
         const auto& nodeSecond = node[1];
-        success |= nodeFirst.IsScalar() && parseSizeUnitPair(nodeFirst.Scalar(), result.x);
-        success |= nodeSecond.IsScalar() && parseSizeUnitPair(nodeSecond.Scalar(), result.y);
+        success &= nodeFirst.IsScalar() && parseSizeUnitPair(nodeFirst.Scalar(), result.x);
+        success &= nodeSecond.IsScalar() && parseSizeUnitPair(nodeSecond.Scalar(), result.y);
     }
     return success && (allowedUnits.contains(result.x.unit) && allowedUnits.contains(result.y.unit));
 }
