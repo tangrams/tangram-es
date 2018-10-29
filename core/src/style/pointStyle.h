@@ -19,6 +19,8 @@ class PointStyle : public Style {
 
 public:
 
+    constexpr static float DEFAULT_PLACEMENT_SPACING = 80.f;
+
     PointStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
                Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES, bool _selection = true);
 

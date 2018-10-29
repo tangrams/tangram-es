@@ -8,6 +8,7 @@
 #include "util/extrude.h"
 #include "util/floatFormatter.h"
 #include "util/geom.h" // for CLAMP
+#include "util/mapProjection.h"
 #include "util/yamlUtil.h"
 
 #include "csscolorparser.hpp"
@@ -17,6 +18,7 @@
 #include <algorithm>
 #include <cstring>
 #include <map>
+#include <style/pointStyle.h>
 
 namespace Tangram {
 
@@ -272,7 +274,7 @@ StyleParam::Value StyleParam::parseNode(StyleParamKey key, const YAML::Node& nod
     case StyleParamKey::text_optional:
     case StyleParamKey::text_collide: {
         bool result = false;
-        if (YAML::convert<bool>::decode(node, result)) {
+        if (YamlUtil::getBool(node, result)) {
             return result;
         }
         LOGW("Invalid boolean value %s for key %s", Dump(node).c_str(), StyleParam::keyName(key).c_str());
@@ -302,7 +304,7 @@ StyleParam::Value StyleParam::parseNode(StyleParamKey key, const YAML::Node& nod
         }
         if (result.unit != Unit::pixel) {
             LOGW("Invalid placement spacing value '%s'", Dump(node).c_str());
-            result.value = 80.f;
+            result.value = PointStyle::DEFAULT_PLACEMENT_SPACING;
             result.unit = Unit::pixel;
         }
         return Width(result);
@@ -317,7 +319,7 @@ StyleParam::Value StyleParam::parseNode(StyleParamKey key, const YAML::Node& nod
         }
         if (result.unit != Unit::pixel) {
             LOGW("Invalid repeat distance value '%s'", Dump(node).c_str());
-            result.value = 256.f;
+            result.value = MapProjection::tileSize();
             result.unit = Unit::pixel;
         }
         return Width(result);
