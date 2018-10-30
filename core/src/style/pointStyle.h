@@ -30,8 +30,8 @@ public:
     virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
     virtual void onBeginFrame(RenderState& rs) override;
     virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) override;
-    virtual bool draw(RenderState& rs, const Tile& _tile) override { return true; }
-    virtual bool draw(RenderState& rs, const Marker& _marker) override { return true; }
+    virtual bool draw(RenderState& rs, const Tile& _tile) override { return false; }
+    virtual bool draw(RenderState& rs, const Marker& _marker) override { return false; }
 
     void setTextures(const std::unordered_map<std::string, std::shared_ptr<Texture>>& _textures) {
         m_textures = &_textures;

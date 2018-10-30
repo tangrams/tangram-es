@@ -91,9 +91,9 @@ public:
 
     virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) override;
 
-    virtual bool draw(RenderState& rs, const Tile& _tile) override { return true; }
+    virtual bool draw(RenderState& rs, const Tile& _tile) override { return false; }
 
-    virtual bool draw(RenderState& rs, const Marker& _marker) override { return true; }
+    virtual bool draw(RenderState& rs, const Marker& _marker) override { return false; }
 
     std::unique_ptr<StyleBuilder> createBuilder() const override;
 
