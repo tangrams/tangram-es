@@ -15,6 +15,7 @@ jobs:
       - image: circleci/android:api-28-ndk-r17b
     environment:
       GRADLE_OPTS: -Xmx2048m
+      CMAKE_BUILD_PARALLEL_LEVEL: 4
     steps:
       - checkout
       - run: git submodule update --init
@@ -24,6 +25,7 @@ jobs:
       - image: circleci/android:api-28-ndk-r17b
     environment:
       GRADLE_OPTS: -Xmx2048m
+      CMAKE_BUILD_PARALLEL_LEVEL: 4
     steps:
       - checkout
       - run: git submodule update --init
