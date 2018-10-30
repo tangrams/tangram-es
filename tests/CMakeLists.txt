@@ -33,6 +33,7 @@ set(TEST_SOURCES
   unit/sceneUpdateTests.cpp
   unit/stopsTests.cpp
   unit/styleMixerTests.cpp
+  unit/styleParamTests.cpp
   unit/styleSortingTests.cpp
   unit/styleUniformsTests.cpp
   unit/textureTests.cpp

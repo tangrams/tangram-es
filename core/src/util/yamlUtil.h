@@ -44,7 +44,5 @@ bool parseVec(const YAML::Node& sequence, T& result) {
 
 glm::vec4 getColorAsVec4(const YAML::Node& node);
 
-std::string parseSequence(const YAML::Node& node);
-
 } // namespace YamlUtil
 } // namespace Tangram
