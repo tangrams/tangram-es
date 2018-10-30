@@ -12,14 +12,14 @@ jobs:
       - run: source scripts/run_bench.sh build/linux/bin
   build-android:
     docker:
-      - image: lakoo/android-ndk:25-26.0.1-r15c
+      - image: circleci/android:api-28-ndk-r17b
     steps:
       - checkout
       - run: git submodule update --init
       - run: cd platforms/android && ./gradlew demo:assembleDebug -Ptangram.abis=armeabi-v7a
   build-deploy-android-snapshot:
     docker:
-      - image: lakoo/android-ndk:25-26.0.1-r15c
+      - image: circleci/android:api-28-ndk-r17b
     steps:
       - checkout
       - run: git submodule update --init
