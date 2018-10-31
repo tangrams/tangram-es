@@ -208,14 +208,7 @@ inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation
     _map->setupGL();
     _map->setPixelScale(_glView.contentScaleFactor);
 
-    UIColor* backgroundColor = self.backgroundColor;
-
-    if (backgroundColor != nil) {
-        CGFloat red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
-        [backgroundColor getRed:&red green:&green blue:&blue alpha:&alpha];
-        _map->setDefaultBackgroundColor(red, green, blue);
-    }
-
+    [self trySetMapDefaultBackground:self.backgroundColor];
 }
 
 - (void)setupDisplayLink
@@ -266,6 +259,14 @@ inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation
     [_glView addGestureRecognizer:_rotationGestureRecognizer];
     [_glView addGestureRecognizer:_shoveGestureRecognizer];
     [_glView addGestureRecognizer:_longPressGestureRecognizer];
+}
+
+#pragma mark UIView methods
+
+- (void)setBackgroundColor:(UIColor *)backgroundColor
+{
+    [super setBackgroundColor:backgroundColor];
+    [self trySetMapDefaultBackground:backgroundColor];
 }
 
 - (void)didMoveToWindow
@@ -1172,6 +1173,15 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     if ([self.mapViewDelegate respondsToSelector:@selector(mapView:regionDidChangeAnimated:)]) {
         [self.mapViewDelegate mapView:self regionDidChangeAnimated:animated];
+    }
+}
+
+- (void)trySetMapDefaultBackground:(UIColor *)backgroundColor
+{
+    if (_map) {
+        CGFloat red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
+        [backgroundColor getRed:&red green:&green blue:&blue alpha:&alpha];
+        _map->setDefaultBackgroundColor(red, green, blue);
     }
 }
 
