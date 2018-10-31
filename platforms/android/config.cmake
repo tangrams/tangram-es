@@ -1,13 +1,13 @@
 add_definitions(-DTANGRAM_ANDROID)
 
-if (CIRCLECI)
+if ($ENV{CIRCLECI})
   # Force Ninja on CircleCI to use a specific number of concurrent jobs.
   # Otherwise it guesses concurrency based on the physical CPU (which has a lot of cores!) and runs out of memory.
   message(STATUS "Limiting concurrent jobs due to CI environment.")
   set(CMAKE_JOB_POOL_COMPILE:STRING compile)
   set(CMAKE_JOB_POOL_LINK:STRING link)
   set(CMAKE_JOB_POOLS:STRING compile=4;link=2)
-endif(CIRCLECI)
+endif()
 
 add_library(tangram SHARED
   platforms/common/platform_gl.cpp
