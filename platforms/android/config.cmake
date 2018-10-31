@@ -4,9 +4,9 @@ if ($ENV{CIRCLECI})
   # Force Ninja on CircleCI to use a specific number of concurrent jobs.
   # Otherwise it guesses concurrency based on the physical CPU (which has a lot of cores!) and runs out of memory.
   message(STATUS "Limiting concurrent jobs due to CI environment.")
+  set_property(GLOBAL PROPERTY JOB_POOLS compile=4 link=2)
   set(CMAKE_JOB_POOL_COMPILE:STRING compile)
   set(CMAKE_JOB_POOL_LINK:STRING link)
-  set(CMAKE_JOB_POOLS:STRING compile=4;link=2)
 endif()
 
 add_library(tangram SHARED
