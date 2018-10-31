@@ -7,7 +7,7 @@ if (CIRCLECI)
 
   set(CMAKE_JOB_POOL_COMPILE:STRING compile)
   set(CMAKE_JOB_POOL_LINK:STRING link)
-  set(CMAKE_JOB_POOLS:STRING compile=8;link=2)
+  set(CMAKE_JOB_POOLS:STRING compile=24;link=2)
 endif(CIRCLECI)
 
 add_library(tangram SHARED
