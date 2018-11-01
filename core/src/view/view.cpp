@@ -479,7 +479,7 @@ glm::dvec2 View::getRelativeMeters(glm::dvec2 projectedMeters) const {
 
 void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
 
-    int zoom = int(m_zoom);
+    int zoom = getIntegerZoom();
     int maxTileIndex = 1 << zoom;
 
     // Bounds of view trapezoid in world space (i.e. view frustum projected onto z = 0 plane)

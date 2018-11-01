@@ -540,7 +540,7 @@ bool Map::render() {
     // Get background color for frame based on zoom level, if there are stops
     auto background = impl->scene->background();
     if (impl->scene->backgroundStops().frames.size() > 0) {
-        background = impl->scene->backgroundStops().evalColor(getZoom());
+        background = impl->scene->backgroundStops().evalColor(impl->view.getIntegerZoom());
     }
 
     // Setup default framebuffer for a new frame

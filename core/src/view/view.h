@@ -135,6 +135,9 @@ public:
     /* Gets the current zoom */
     float getZoom() const { return m_zoom; }
 
+    /* Get the current zoom truncated to an integer. This is the zoom used to determine visible tiles. */
+    int getIntegerZoom() const { return static_cast<int>(m_zoom); }
+
     /* Get the current roll angle in radians */
     float getRoll() const { return m_roll; }
 
