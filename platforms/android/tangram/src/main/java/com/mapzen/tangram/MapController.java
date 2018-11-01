@@ -798,13 +798,13 @@ public class MapController implements Renderer {
         return new TouchInput.PanResponder() {
             @Override
             public boolean onPanBegin() {
-                setMapRegionState(MapRegionChangeState.ANIMATING);
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 return true;
             }
 
             @Override
             public boolean onPan(final float startX, final float startY, final float endX, final float endY) {
-                setMapRegionState(MapRegionChangeState.ANIMATING);
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 nativeHandlePanGesture(mapPointer, startX, startY, endX, endY);
                 return true;
             }
@@ -836,13 +836,13 @@ public class MapController implements Renderer {
         return new TouchInput.RotateResponder() {
             @Override
             public boolean onRotateBegin() {
-                setMapRegionState(MapRegionChangeState.ANIMATING);
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 return true;
             }
 
             @Override
             public boolean onRotate(final float x, final float y, final float rotation) {
-                setMapRegionState(MapRegionChangeState.ANIMATING);
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 nativeHandleRotateGesture(mapPointer, x, y, rotation);
                 return true;
             }
@@ -862,13 +862,13 @@ public class MapController implements Renderer {
         return new TouchInput.ScaleResponder() {
             @Override
             public boolean onScaleBegin() {
-                setMapRegionState(MapRegionChangeState.ANIMATING);
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 return true;
             }
 
             @Override
             public boolean onScale(final float x, final float y, final float scale, final float velocity) {
-                setMapRegionState(MapRegionChangeState.ANIMATING);
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 nativeHandlePinchGesture(mapPointer, x, y, scale, velocity);
                 return true;
             }
@@ -888,13 +888,13 @@ public class MapController implements Renderer {
         return new TouchInput.ShoveResponder() {
             @Override
             public boolean onShoveBegin() {
-                setMapRegionState(MapRegionChangeState.ANIMATING);
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 return true;
             }
 
             @Override
             public boolean onShove(final float distance) {
-                setMapRegionState(MapRegionChangeState.ANIMATING);
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 nativeHandleShoveGesture(mapPointer, distance);
                 return true;
             }
@@ -1084,6 +1084,8 @@ public class MapController implements Renderer {
                 case JUMPING:
                     if (state == MapRegionChangeState.IDLE) {
                         mapChangeListener.onRegionDidChange(false);
+                    } else if (state == MapRegionChangeState.JUMPING) {
+                        mapChangeListener.onRegionIsChanging();
                     }
                     break;
                 case ANIMATING:

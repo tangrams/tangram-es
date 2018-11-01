@@ -415,11 +415,7 @@ bool Map::update(float _dt) {
     }
 
     bool isFlinging = impl->inputHandler.update(_dt);
-    if (!isEasing && !isFlinging) {
-        impl->isCameraEasing = false;
-    } else {
-        impl->isCameraEasing = true;
-    }
+    impl->isCameraEasing = (isEasing || isFlinging);
 
     impl->view.update();
 

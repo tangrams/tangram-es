@@ -402,19 +402,19 @@ TG_EXPORT
 #pragma mark Map region change state notifiers
 
 /**
- Client can use these to trigger explicit `TGMapRegionChangeStates` changes
+ Client can use these to trigger explicit `TGMapRegionChangeState` changes
  Notifies that client is going to begin map region animation
  */
 - (void)notifyGestureDidBegin;
 
 /**
- Client can use these to trigger explicit `TGMapRegionChangeStates` changes
+ Client can use these to trigger explicit `TGMapRegionChangeState` changes
  Notifies that client is animating map region
  */
 - (void)notifyGestureIsChanging;
 
 /**
- Client can use these to trigger explicit `TGMapRegionChangeStates` changes
+ Client can use these to trigger explicit `TGMapRegionChangeState` changes
  Notifies that client is stopping animating map region
  */
 - (void)notifyGestureDidEnd;
