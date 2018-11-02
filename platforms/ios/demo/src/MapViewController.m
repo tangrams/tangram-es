@@ -119,7 +119,7 @@
     CLLocationCoordinate2D coordinates = [view coordinateFromViewPosition:location];
 
     // Add polyline data layer
-    /*{
+    {
         TGFeatureProperties* properties = @{ @"type" : @"line", @"color" : @"#D2655F" };
         static CLLocationCoordinate2D lastCoordinates = {NAN, NAN};
 
@@ -165,32 +165,18 @@
     // Request feature picking
     [view pickFeatureAt:location];
     [view pickLabelAt:location];
-    // [view pickMarkerAt:location];*/
+    // [view pickMarkerAt:location];
 
     TGCameraPosition* camera = [view cameraPosition];
     camera.center = CLLocationCoordinate2DMake(coordinates.latitude, coordinates.longitude);
-    [view setCameraPosition:camera withDuration:0 easeType:TGEaseTypeCubic callback: ^(BOOL canceled){
-        NSLog(@"Animation completed %d", !canceled);
-    }];
-}
-
-- (void)mapView:(TGMapView *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeDoubleTapGesture:(CGPoint)location {
-    CLLocationCoordinate2D coordinates = [view coordinateFromViewPosition:location];
-    TGCameraPosition* camera = [view cameraPosition];
-    camera.center = CLLocationCoordinate2DMake(coordinates.latitude, coordinates.longitude);
-    camera.zoom += 1;
-    [view setCameraPosition:camera withDuration:5000 easeType:TGEaseTypeCubic callback: ^(BOOL canceled){
+    [view setCameraPosition:camera withDuration:0.5 easeType:TGEaseTypeCubic callback: ^(BOOL canceled){
         NSLog(@"Animation completed %d", !canceled);
     }];
 }
 
 - (void)mapView:(TGMapView *)mapView recognizer:(UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location
 {
-    TGCameraPosition* camera = [mapView cameraPosition];
-    camera.center = CLLocationCoordinate2DMake(8.6468935, 76.9531794);
-    [mapView flyToCameraPosition:camera withDuration:1000 callback: ^(BOOL canceled) {
-        NSLog(@"FlyToAnimation completed %d", !canceled);
-    }];
+    NSLog(@"Did long press at %f %f", location.x, location.y);
 }
 
 - (void)addAlert:(NSString *)message withTitle:(NSString *)title
