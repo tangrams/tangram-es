@@ -38,7 +38,20 @@ inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation
     return TGDegreesFromRadians(-rotation);
 }
 
-@interface TGMapView () <GLKViewDelegate> {
+/**
+ Map region change states
+ Used to determine map region change transitions when animating or responding to input gestures.
+ IDLE: Map is still, no state transitions happening
+ Jumping: Map region changing without animating
+ Animating: Map region changing with animation
+ */
+typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
+    TGMapRegionIdle = 0,
+    TGMapRegionJumping,
+    TGMapRegionAnimating,
+};
+
+@interface TGMapView () <UIGestureRecognizerDelegate, GLKViewDelegate> {
     BOOL _shouldCaptureFrame;
     BOOL _captureFrameWaitForViewComplete;
     BOOL _viewComplete;
@@ -52,6 +65,8 @@ inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation
 @property (strong, nonatomic) NSMutableDictionary<NSString *, TGMarker *> *markersById;
 @property (strong, nonatomic) NSMutableDictionary<NSString *, TGMapData *> *dataLayersByName;
 @property (nonatomic, copy, nullable) void (^cameraAnimationCallback)(BOOL);
+@property TGMapRegionChangeState currentState;
+@property BOOL prevCameraEasing;
 
 @end // interface TGMapView
 
@@ -134,6 +149,8 @@ inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation
     _markersById = [[NSMutableDictionary alloc] init];
     _dataLayersByName = [[NSMutableDictionary alloc] init];
     _resourceRoot = [[NSBundle mainBundle] resourceURL];
+    _currentState = TGMapRegionIdle;
+    _prevCameraEasing = false;
 
     self.clipsToBounds = YES;
     self.opaque = YES;
@@ -154,9 +171,9 @@ inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation
         void (^callback)(BOOL) = weakSelf.cameraAnimationCallback;
         if (callback) {
             callback(!finished);
+            [weakSelf setMapRegionChangeState:TGMapRegionIdle];
         }
         weakSelf.cameraAnimationCallback = nil;
-        [weakSelf regionDidChangeAnimated:YES];
     });
 }
 
@@ -349,7 +366,14 @@ inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation
         return;
     }
 
-    self.map->render();
+    BOOL cameraEasing = self.map->render();
+    if (cameraEasing) {
+        [self setMapRegionChangeState:TGMapRegionAnimating];
+    } else if (_prevCameraEasing) {
+        [self setMapRegionChangeState:TGMapRegionIdle];
+    }
+
+    _prevCameraEasing = cameraEasing;
 }
 
 #pragma mark Screenshots
@@ -739,9 +763,9 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 - (void)setPosition:(CLLocationCoordinate2D)position {
     if (!self.map) { return; }
 
-    [self regionWillChangeAnimated:NO];
+    [self setMapRegionChangeState:TGMapRegionJumping];
     self.map->setPosition(position.longitude, position.latitude);
-    [self regionDidChangeAnimated:NO];
+    [self setMapRegionChangeState:TGMapRegionIdle];
 }
 
 - (CLLocationCoordinate2D)position
@@ -758,9 +782,9 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     if (!self.map) { return; }
 
-    [self regionWillChangeAnimated:NO];
+    [self setMapRegionChangeState:TGMapRegionJumping];
     self.map->setZoom(zoom);
-    [self regionDidChangeAnimated:NO];
+    [self setMapRegionChangeState:TGMapRegionIdle];
 }
 
 - (CGFloat)zoom
@@ -774,10 +798,10 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     if (!self.map) { return; }
 
-    [self regionWillChangeAnimated:NO];
+    [self setMapRegionChangeState:TGMapRegionJumping];
     float rotation = convertBearingDegreesToRotationRadians(bearing);
     self.map->setRotation(rotation);
-    [self regionDidChangeAnimated:NO];
+    [self setMapRegionChangeState:TGMapRegionIdle];
 }
 
 - (CLLocationDirection)bearing
@@ -800,10 +824,10 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     if (!self.map) { return; }
 
-    [self regionWillChangeAnimated:NO];
+    [self setMapRegionChangeState:TGMapRegionJumping];
     float tilt = TGRadiansFromDegrees(pitch);
     self.map->setTilt(tilt);
-    [self regionDidChangeAnimated:NO];
+    [self setMapRegionChangeState:TGMapRegionIdle];
 }
 
 - (TGCameraPosition *)cameraPosition
@@ -816,9 +840,9 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 - (void)setCameraPosition:(TGCameraPosition *)cameraPosition
 {
     Tangram::CameraPosition result = [cameraPosition convertToCoreCamera];
-    [self regionWillChangeAnimated:NO];
+    [self setMapRegionChangeState:TGMapRegionJumping];
     self.map->setCameraPosition(result);
-    [self regionDidChangeAnimated:NO];
+    [self setMapRegionChangeState:TGMapRegionIdle];
 }
 
 - (void)setCameraPosition:(TGCameraPosition *)cameraPosition
@@ -828,7 +852,11 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     Tangram::CameraPosition camera = [cameraPosition convertToCoreCamera];
     Tangram::EaseType ease = TGConvertTGEaseTypeToCoreEaseType(easeType);
-    [self regionWillChangeAnimated:YES];
+    if (duration > 0) {
+        [self setMapRegionChangeState:TGMapRegionAnimating];
+    } else {
+        [self setMapRegionChangeState:TGMapRegionJumping];
+    }
     self.map->setCameraPositionEased(camera, duration, ease);
     self.cameraAnimationCallback = callback;
 }
@@ -843,7 +871,11 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
                    callback:(void (^)(BOOL))callback
 {
     Tangram::CameraPosition camera = [cameraPosition convertToCoreCamera];
-    [self regionWillChangeAnimated:YES];
+    if (duration > 0) {
+        [self setMapRegionChangeState:TGMapRegionAnimating];
+    } else {
+        [self setMapRegionChangeState:TGMapRegionJumping];
+    }
     self.map->flyTo(camera, duration);
     self.cameraAnimationCallback = callback;
 }
@@ -1023,15 +1055,15 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
     switch (panRecognizer.state) {
         case UIGestureRecognizerStateBegan:
-            [self regionWillChangeAnimated:YES];
+            [self setMapRegionChangeState:TGMapRegionJumping];
             break;
         case UIGestureRecognizerStateChanged:
-            [self regionIsChanging];
+            [self setMapRegionChangeState:TGMapRegionJumping];
             self.map->handlePanGesture(start.x * self.contentScaleFactor, start.y * self.contentScaleFactor, end.x * self.contentScaleFactor, end.y * self.contentScaleFactor);
             break;
         case UIGestureRecognizerStateEnded:
             self.map->handleFlingGesture(end.x * self.contentScaleFactor, end.y * self.contentScaleFactor, velocity.x * self.contentScaleFactor, velocity.y * self.contentScaleFactor);
-            [self regionDidChangeAnimated:YES];
+            [self setMapRegionChangeState:TGMapRegionIdle];
             break;
         default:
             break;
@@ -1057,10 +1089,10 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     CGFloat scale = pinchRecognizer.scale;
     switch (pinchRecognizer.state) {
         case UIGestureRecognizerStateBegan:
-            [self regionWillChangeAnimated:YES];
+            [self setMapRegionChangeState:TGMapRegionJumping];
             break;
         case UIGestureRecognizerStateChanged:
-            [self regionIsChanging];
+            [self setMapRegionChangeState:TGMapRegionJumping];
             if ([self.gestureDelegate respondsToSelector:@selector(pinchFocus:recognizer:)]) {
                 CGPoint focusPosition = [self.gestureDelegate pinchFocus:self recognizer:pinchRecognizer];
                 self.map->handlePinchGesture(focusPosition.x * self.contentScaleFactor, focusPosition.y * self.contentScaleFactor, scale, pinchRecognizer.velocity);
@@ -1069,7 +1101,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
             }
             break;
         case UIGestureRecognizerStateEnded:
-            [self regionDidChangeAnimated:YES];
+            [self setMapRegionChangeState:TGMapRegionIdle];
             break;
         default:
             break;
@@ -1095,10 +1127,10 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     CGFloat rotation = rotationRecognizer.rotation;
     switch (rotationRecognizer.state) {
         case UIGestureRecognizerStateBegan:
-            [self regionWillChangeAnimated:YES];
+            [self setMapRegionChangeState:TGMapRegionJumping];
             break;
         case UIGestureRecognizerStateChanged:
-            [self regionIsChanging];
+            [self setMapRegionChangeState:TGMapRegionJumping];
             if ([self.gestureDelegate respondsToSelector:@selector(rotationFocus:recognizer:)]) {
                 CGPoint focusPosition = [self.gestureDelegate rotationFocus:self recognizer:rotationRecognizer];
                 self.map->handleRotateGesture(focusPosition.x * self.contentScaleFactor, focusPosition.y * self.contentScaleFactor, rotation);
@@ -1107,7 +1139,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
             }
             break;
         case UIGestureRecognizerStateEnded:
-            [self regionDidChangeAnimated:YES];
+            [self setMapRegionChangeState:TGMapRegionIdle];
             break;
         default:
             break;
@@ -1133,17 +1165,17 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
     switch (shoveRecognizer.state) {
         case UIGestureRecognizerStateBegan:
-            [self regionWillChangeAnimated:YES];
+            [self setMapRegionChangeState:TGMapRegionJumping];
             break;
         case UIGestureRecognizerStateChanged:
-            [self regionIsChanging];
+            [self setMapRegionChangeState:TGMapRegionJumping];
             self.map->handleShoveGesture(displacement.y);
             if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeShoveGesture:)]) {
                 [self.gestureDelegate mapView:self recognizer:shoveRecognizer didRecognizeShoveGesture:displacement];
             }
             break;
         case UIGestureRecognizerStateEnded:
-            [self regionDidChangeAnimated:YES];
+            [self setMapRegionChangeState:TGMapRegionIdle];
             break;
         default:
             break;
@@ -1153,7 +1185,54 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     [shoveRecognizer setTranslation:CGPointZero inView:_glView];
 }
 
+#pragma mark Map region change state notifiers
+
+- (void)notifyGestureDidBegin
+{
+    [self setMapRegionChangeState:TGMapRegionAnimating];
+}
+
+- (void)notifyGestureIsChanging
+{
+    [self setMapRegionChangeState:TGMapRegionAnimating];
+}
+
+- (void)notifyGestureDidEnd
+{
+    [self setMapRegionChangeState:TGMapRegionIdle];
+}
+
 #pragma mark Internal Logic
+
+- (void)setMapRegionChangeState:(TGMapRegionChangeState)state
+{
+    switch (_currentState) {
+        case TGMapRegionIdle:
+            if (state == TGMapRegionJumping) {
+                [self regionWillChangeAnimated:NO];
+            } else if (state == TGMapRegionAnimating) {
+                [self regionWillChangeAnimated:YES];
+            }
+            break;
+        case TGMapRegionJumping:
+            if (state == TGMapRegionIdle) {
+                [self regionDidChangeAnimated:NO];
+            } else if (state == TGMapRegionJumping) {
+                [self regionIsChanging];
+            }
+            break;
+        case TGMapRegionAnimating:
+            if (state == TGMapRegionIdle) {
+                [self regionDidChangeAnimated:YES];
+            } else if (state == TGMapRegionAnimating) {
+                [self regionIsChanging];
+            }
+            break;
+        default:
+            break;
+    }
+    _currentState = state;
+}
 
 - (void)regionWillChangeAnimated:(BOOL)animated
 {

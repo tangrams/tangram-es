@@ -28,7 +28,7 @@ namespace Tangram {
 
 InputHandler::InputHandler(std::shared_ptr<Platform> _platform, View& _view) : m_platform(_platform), m_view(_view) {}
 
-void InputHandler::update(float _dt) {
+bool InputHandler::update(float _dt) {
 
     auto velocityPanPixels = m_view.pixelsPerMeter() / m_view.pixelScale() * m_velocityPan;
 
@@ -45,6 +45,8 @@ void InputHandler::update(float _dt) {
 
         m_platform->requestRender();
     }
+
+    return isFlinging;
 }
 
 void InputHandler::handleTapGesture(float _posX, float _posY) {

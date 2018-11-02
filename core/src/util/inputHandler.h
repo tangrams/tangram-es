@@ -22,7 +22,10 @@ public:
     void handleRotateGesture(float _posX, float _posY, float _radians);
     void handleShoveGesture(float _distance);
 
-    void update(float _dt);
+    /*
+     * Returns true if the update results in any flinging from the inputHandler
+     */
+    bool update(float _dt);
 
     void cancelFling();
 

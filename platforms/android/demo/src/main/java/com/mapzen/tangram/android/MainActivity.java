@@ -118,7 +118,6 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         String sceneUrl = sceneSelector.getCurrentString();
         map.setSceneLoadListener(this);
         map.loadSceneFile(sceneUrl, sceneUpdates);
-        map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
 
         TouchInput touchInput = map.getTouchInput();
         touchInput.setTapResponder(this);
@@ -150,6 +149,8 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
                 Log.d(TAG, "On Region Did Change Animated: " + animated);
             }
         });
+
+        map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
 
         markers = map.addDataLayer("touch");
     }
@@ -246,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         map.pickLabel(x, y);
         map.pickMarker(x, y);
 
-        map.updateCameraPosition(CameraUpdateFactory.setPosition(tappedPoint), 1000, new MapController.CameraAnimationCallback() {
+        map.updateCameraPosition(CameraUpdateFactory.setPosition(tappedPoint), 0, new MapController.CameraAnimationCallback() {
             @Override
             public void onFinish() {
                 Log.d("Tangram","finished!");
@@ -271,7 +272,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         camera.latitude = .5 * (tapped.latitude + camera.latitude);
         camera.zoom += 1;
         map.updateCameraPosition(CameraUpdateFactory.newCameraPosition(camera),
-                    500, MapController.EaseType.CUBIC);
+                    5000, MapController.EaseType.CUBIC);
         return true;
     }
 
@@ -282,6 +283,21 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         markers.clear();
         showTileInfo = !showTileInfo;
         map.setDebugFlag(MapController.DebugFlag.TILE_INFOS, showTileInfo);
+        CameraPosition camera = map.getCameraPosition();
+        camera.longitude = 79.9531794;
+        camera.latitude = 28.6468935;
+        camera.zoom = 16;
+        map.flyToCameraPosition(camera, 10000, new MapController.CameraAnimationCallback() {
+            @Override
+            public void onFinish() {
+                Log.d("Tangram", "flyTo finished");
+            }
+
+            @Override
+            public void onCancel() {
+                Log.d("Tangram", "flyTo canceled");
+            }
+        });
     }
 
     @Override
