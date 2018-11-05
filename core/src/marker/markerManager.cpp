@@ -80,14 +80,14 @@ bool MarkerManager::setStyling(MarkerID markerID, const char* styling, bool isPa
     return true;
 }
 
-bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const unsigned int* bitmapData) {
+bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const unsigned int* bitmapData, float density) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
     m_dirty = true;
 
     TextureOptions options = { GL_RGBA, GL_RGBA, { GL_LINEAR, GL_LINEAR }, { GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE } };
-    auto texture = std::make_unique<Texture>(width, height, options);
+    auto texture = std::make_unique<Texture>(width, height, options, false, density);
     unsigned int size = width * height;
     texture->setData(bitmapData, size);
 

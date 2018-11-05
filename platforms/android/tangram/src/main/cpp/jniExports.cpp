@@ -389,7 +389,7 @@ extern "C" {
         return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetBitmap(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jobject jbitmap) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetBitmap(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jobject jbitmap, jfloat density) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
 
@@ -427,7 +427,7 @@ extern "C" {
             }
         }
         AndroidBitmap_unlockPixels(jniEnv, jbitmap);
-        auto result = map->markerSetBitmap(static_cast<unsigned int>(markerID), width, height, pixelOutput);
+        auto result = map->markerSetBitmap(static_cast<unsigned int>(markerID), width, height, pixelOutput, density);
         delete[] pixelOutput;
         return static_cast<jboolean>(result);
     }

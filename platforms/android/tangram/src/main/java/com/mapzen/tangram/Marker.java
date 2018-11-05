@@ -106,10 +106,11 @@ public class Marker {
      * @return whether the drawable's bitmap was successfully set
      */
     public boolean setDrawable(final int drawableId) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inTargetDensity = context.getResources().getDisplayMetrics().densityDpi;
+        options.inTargetDensity = metrics.densityDpi;
         Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), drawableId, options);
-        return setBitmap(bitmap);
+        return setBitmap(bitmap, metrics.density);
     }
 
     /**
@@ -120,12 +121,15 @@ public class Marker {
      * @return whether the drawable's bitmap was successfully set
      */
     public boolean setDrawable(@NonNull final Drawable drawable) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+
+        float screenDensity = metrics.density;
         int density = context.getResources().getDisplayMetrics().densityDpi;
         BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
         bitmapDrawable.setTargetDensity(density);
         Bitmap bitmap = bitmapDrawable.getBitmap();
         bitmap.setDensity(density);
-        return setBitmap(bitmap);
+        return setBitmap(bitmap, screenDensity);
     }
 
     /**
@@ -210,8 +214,8 @@ public class Marker {
         return visible;
     }
 
-    private boolean setBitmap(@NonNull final Bitmap bitmap) {
-        return map.setMarkerBitmap(markerId, bitmap);
+    private boolean setBitmap(@NonNull final Bitmap bitmap, float density) {
+        return map.setMarkerBitmap(markerId, bitmap, density);
     }
 
     void invalidate() {
