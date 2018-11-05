@@ -18,7 +18,6 @@
 - (void)mapView:(nonnull TGMapView *)view didCaptureScreenshot:(nonnull UIImage *)screenshot;
 
 - (void)mapView:(nonnull TGMapView *)view recognizer:(nonnull UIGestureRecognizer *)recognizer didRecognizeSingleTapGesture:(CGPoint)location;
-- (void)mapView:(TGMapView *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeDoubleTapGesture:(CGPoint)location;
 - (void)mapView:(nonnull TGMapView *)view recognizer:(nonnull UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location;
 
 @end
