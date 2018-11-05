@@ -62,12 +62,8 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
 
         removePending(task->tileId(), false);
 
-        if (task->isCanceled()) {
-            return;
-        }
-
         if (response.error) {
-            LOGE("Error for URL request '%s': %s", url.string().c_str(), response.error);
+            LOGW("Error for URL request '%s': %s", url.string().c_str(), response.error);
             return;
         }
 
@@ -75,6 +71,11 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
             auto& dlTask = static_cast<BinaryTileTask&>(*task);
             dlTask.rawTileData = std::make_shared<std::vector<char>>(std::move(response.content));
         }
+
+        if (task->isCanceled()) {
+            return;
+        }
+
         callback.func(task);
     };
 
