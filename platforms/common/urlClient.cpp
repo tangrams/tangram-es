@@ -117,8 +117,7 @@ size_t UrlClient::curlWriteCallback(char* ptr, size_t size, size_t n, void* user
 
 int UrlClient::curlProgressCallback(void* user, double dltotal, double dlnow, double ultotal, double ulnow) {
     // Signals libCURL to abort the request if marked as canceled.
-    auto* task = reinterpret_cast<UrlClient::Task*>(user);
-    return static_cast<int>(task->request.canceled);
+    return false;
 }
 
 void UrlClient::curlLoop(uint32_t index) {
