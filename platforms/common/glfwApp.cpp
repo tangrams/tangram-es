@@ -62,6 +62,7 @@ double last_x_velocity = 0.0;
 double last_y_velocity = 0.0;
 
 bool wireframe_mode = false;
+bool show_gui = true;
 
 Tangram::MarkerID marker = 0;
 Tangram::MarkerID poiMarker = 0;
@@ -198,16 +199,17 @@ void run() {
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(main_window)) {
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        if(show_gui) {
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
 
-        // Create ImGui interface.
-        // ImGui::ShowDemoWindow();
-        showSceneGUI();
-        showViewportGUI();
-        showDebugFlagsGUI();
-
+            // Create ImGui interface.
+            // ImGui::ShowDemoWindow();
+            showSceneGUI();
+            showViewportGUI();
+            showDebugFlagsGUI();
+        }
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
         lastTime = currentTime;
@@ -225,9 +227,11 @@ void run() {
             glPolygonMode(GL_BACK, GL_FILL);
         }
 
-        // Render ImGui interface.
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        if (show_gui) {
+            // Render ImGui interface.
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        }
 
         // Swap front and back buffers
         glfwSwapBuffers(main_window);
@@ -401,6 +405,9 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
     if (action == GLFW_PRESS) {
         switch (key) {
+            case GLFW_KEY_D:
+                show_gui = !show_gui;
+                break;
             case GLFW_KEY_BACKSPACE:
                 recreate_context = true;
                 break;
