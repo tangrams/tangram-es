@@ -118,7 +118,6 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         String sceneUrl = sceneSelector.getCurrentString();
         map.setSceneLoadListener(this);
         map.loadSceneFile(sceneUrl, sceneUpdates);
-        map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
 
         TouchInput touchInput = map.getTouchInput();
         touchInput.setTapResponder(this);
@@ -150,6 +149,8 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
                 Log.d(TAG, "On Region Did Change Animated: " + animated);
             }
         });
+
+        map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
 
         markers = map.addDataLayer("touch");
     }

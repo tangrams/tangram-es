@@ -193,7 +193,7 @@ public:
     bool update(float _dt);
 
     // Render a new frame of the map view (if needed)
-    void render();
+    bool render();
 
     // Gets the viewport height in physical pixels (framebuffer size)
     int getViewportHeight();
