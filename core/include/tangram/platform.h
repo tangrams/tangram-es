@@ -11,7 +11,7 @@ namespace Tangram {
 
 // Identifier type for URL requests. This handle is interpreted differently for
 // each platform type, so do not perform any application logic with its value.
-using UrlRequestHandle = uint64_t;
+using UrlRequestHandle = int64_t;
 
 // Result of a URL request. If the request could not be completed or if the
 // host returned an HTTP status code >= 400, a non-null error string will be

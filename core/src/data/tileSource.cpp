@@ -112,13 +112,12 @@ std::shared_ptr<TileData> TileSource::parse(const TileTask& _task) const {
     return nullptr;
 }
 
-void TileSource::cancelLoadingTile(const TileID& _tileID) {
+void TileSource::cancelLoadingTile(TileTask& _task) {
 
-    if (m_sources) { return m_sources->cancelLoadingTile(_tileID); }
+    if (m_sources) { m_sources->cancelLoadingTile(_task); }
 
-    for (auto& raster : m_rasterSources) {
-        TileID rasterID = _tileID.withMaxSourceZoom(raster->maxZoom());
-        raster->cancelLoadingTile(rasterID);
+    for (auto& subTask : _task.subTasks()) {
+        subTask->source().cancelLoadingTile(*subTask);
     }
 }
 

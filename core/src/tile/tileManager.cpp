@@ -550,11 +550,11 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
 
 
     if (entry.isInProgress()) {
-        entry.clearTask();
-
         // 1. Remove from Datasource. Make sure to cancel
         //  the network request associated with this tile.
-        _tileSet.source->cancelLoadingTile(id);
+        _tileSet.source->cancelLoadingTile(*entry.task);
+
+        entry.clearTask();
 
     } else if (entry.isReady()) {
         // Add to cache
