@@ -196,7 +196,7 @@
         }
     }
 
-    if (!tangramInstance->markerSetBitmap(self.identifier, static_cast<int>(w), static_cast<int>(h), bitmap.data())) {
+    if (!tangramInstance->markerSetBitmap(self.identifier, static_cast<int>(w), static_cast<int>(h), bitmap.data(), [UIScreen mainScreen].scale)) {
         [self createNSError];
     }
 }
