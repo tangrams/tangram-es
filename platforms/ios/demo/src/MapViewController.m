@@ -28,6 +28,21 @@
     NSLog(@"Did capture screenshot");
 }
 
+- (void)mapViewRegionIsChanging:(TGMapView *)mapView
+{
+    NSLog(@"Region Is Changing");
+}
+
+- (void)mapView:(TGMapView *)mapView regionWillChangeAnimated:(BOOL)animated
+{
+    NSLog(@"Region Will Change animated: %d", animated);
+}
+
+- (void)mapView:(TGMapView *)mapView regionDidChangeAnimated:(BOOL)animated
+{
+    NSLog(@"Region Did Change animated: %d", animated);
+}
+
 - (void)mapViewDidCompleteLoading:(TGMapView *)mapView
 {
     NSLog(@"Did complete view");

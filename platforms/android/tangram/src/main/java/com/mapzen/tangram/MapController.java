@@ -5,7 +5,6 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.graphics.Rect;
-import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.os.Build;
 import android.os.Handler;
@@ -89,6 +88,12 @@ public class MapController implements Renderer {
         DRAW_ALL_LABELS,
         TANGRAM_STATS,
         SELECTION_BUFFER,
+    }
+
+    private enum MapRegionChangeState {
+        IDLE,
+        JUMPING,
+        ANIMATING,
     }
 
     /**
@@ -450,11 +455,13 @@ public class MapController implements Renderer {
      * @param cb Callback that will run when the animation is finished or canceled
      */
     public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease, @Nullable final CameraAnimationCallback cb) {
-        // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
         checkPointer(mapPointer);
-        final boolean animated = (duration > 0);
-        onRegionWillChange(animated);
-        setPendingCameraAnimationCallback(cb, animated);
+        if (duration > 0) {
+            setMapRegionState(MapRegionChangeState.ANIMATING);
+        } else {
+            setMapRegionState(MapRegionChangeState.JUMPING);
+        }
+        setPendingCameraAnimationCallback(cb);
         final float seconds = duration / 1000.f;
         nativeUpdateCameraPosition(mapPointer, update.set, update.longitude, update.latitude, update.zoom,
                 update.zoomBy, update.rotation, update.rotationBy, update.tilt, update.tiltBy,
@@ -495,20 +502,20 @@ public class MapController implements Renderer {
 
     private void flyToCameraPosition(@NonNull final CameraPosition position, final int duration, @Nullable final CameraAnimationCallback callback, final float speed) {
         checkPointer(mapPointer);
-        onRegionWillChange(true);
-        setPendingCameraAnimationCallback(callback, true);
+        // TODO: Make sense to have mark animating for flyTo irrespective of duration/speed?
+        setMapRegionState(MapRegionChangeState.ANIMATING);
+        setPendingCameraAnimationCallback(callback);
         final float seconds = duration / 1000.f;
-        // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
         nativeFlyTo(mapPointer, position.longitude, position.latitude, position.zoom, seconds, speed);
     }
 
-    private void setPendingCameraAnimationCallback(final CameraAnimationCallback callback, final Boolean animated) {
+    private void setPendingCameraAnimationCallback(final CameraAnimationCallback callback) {
         synchronized (cameraAnimationCallbackLock) {
             // Wrap the callback to run corresponding map change events.
             pendingCameraAnimationCallback = new CameraAnimationCallback() {
                 @Override
                 public void onFinish() {
-                    onRegionDidChange(animated);
+                    setMapRegionState(MapRegionChangeState.IDLE);
                     if (callback != null) {
                         callback.onFinish();
                     }
@@ -517,7 +524,7 @@ public class MapController implements Renderer {
                 @Override
                 public void onCancel() {
                     // Possible camera update was cancelled in between, so should account for this map change
-                    onRegionDidChange(animated);
+                    setMapRegionState(MapRegionChangeState.IDLE);
                     if (callback != null) {
                         callback.onCancel();
                     }
@@ -791,20 +798,20 @@ public class MapController implements Renderer {
         return new TouchInput.PanResponder() {
             @Override
             public boolean onPanBegin() {
-                onRegionWillChange(true);
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 return true;
             }
 
             @Override
             public boolean onPan(final float startX, final float startY, final float endX, final float endY) {
-                onRegionIsChanging();
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 nativeHandlePanGesture(mapPointer, startX, startY, endX, endY);
                 return true;
             }
 
             @Override
             public boolean onPanEnd() {
-                onRegionDidChange(true);
+                setMapRegionState(MapRegionChangeState.IDLE);
                 return true;
             }
 
@@ -817,7 +824,6 @@ public class MapController implements Renderer {
             @Override
             public boolean onCancelFling() {
                 cancelCameraAnimation();
-                // TODO: Ideally should call onRegionDidChange if map state "InChanging" - VT(09/10/2018)
                 return true;
             }
         };
@@ -830,20 +836,20 @@ public class MapController implements Renderer {
         return new TouchInput.RotateResponder() {
             @Override
             public boolean onRotateBegin() {
-                onRegionWillChange(true);
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 return true;
             }
 
             @Override
             public boolean onRotate(final float x, final float y, final float rotation) {
-                onRegionIsChanging();
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 nativeHandleRotateGesture(mapPointer, x, y, rotation);
                 return true;
             }
 
             @Override
             public boolean onRotateEnd() {
-                onRegionDidChange(true);
+                setMapRegionState(MapRegionChangeState.IDLE);
                 return true;
             }
         };
@@ -856,20 +862,20 @@ public class MapController implements Renderer {
         return new TouchInput.ScaleResponder() {
             @Override
             public boolean onScaleBegin() {
-                onRegionWillChange(true);
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 return true;
             }
 
             @Override
             public boolean onScale(final float x, final float y, final float scale, final float velocity) {
-                onRegionIsChanging();
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 nativeHandlePinchGesture(mapPointer, x, y, scale, velocity);
                 return true;
             }
 
             @Override
             public boolean onScaleEnd() {
-                onRegionDidChange(true);
+                setMapRegionState(MapRegionChangeState.IDLE);
                 return true;
             }
         };
@@ -882,20 +888,20 @@ public class MapController implements Renderer {
         return new TouchInput.ShoveResponder() {
             @Override
             public boolean onShoveBegin() {
-                onRegionWillChange(true);
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 return true;
             }
 
             @Override
             public boolean onShove(final float distance) {
-                onRegionIsChanging();
+                setMapRegionState(MapRegionChangeState.JUMPING);
                 nativeHandleShoveGesture(mapPointer, distance);
                 return true;
             }
 
             @Override
             public boolean onShoveEnd() {
-                onRegionDidChange(true);
+                setMapRegionState(MapRegionChangeState.IDLE);
                 return true;
             }
         };
@@ -1063,23 +1069,35 @@ public class MapController implements Renderer {
         mapChangeListener = listener;
     }
 
-    //Convenience member functions
-    private void onRegionWillChange(boolean animated) {
-        if (mapChangeListener != null) {
-            mapChangeListener.onRegionWillChange(animated);
-        }
-    }
 
-    private void onRegionDidChange(boolean animated) {
-        if (mapChangeListener != null) {
-            mapChangeListener.onRegionDidChange(animated);
-        }
-    }
+    void setMapRegionState(MapRegionChangeState state) {
 
-    private void onRegionIsChanging() {
         if (mapChangeListener != null) {
-            mapChangeListener.onRegionIsChanging();
+            switch (currentState) {
+                case IDLE:
+                    if (state == MapRegionChangeState.JUMPING) {
+                        mapChangeListener.onRegionWillChange(false);
+                    } else if (state == MapRegionChangeState.ANIMATING){
+                        mapChangeListener.onRegionWillChange(true);
+                    }
+                    break;
+                case JUMPING:
+                    if (state == MapRegionChangeState.IDLE) {
+                        mapChangeListener.onRegionDidChange(false);
+                    } else if (state == MapRegionChangeState.JUMPING) {
+                        mapChangeListener.onRegionIsChanging();
+                    }
+                    break;
+                case ANIMATING:
+                    if (state == MapRegionChangeState.IDLE) {
+                        mapChangeListener.onRegionDidChange(true);
+                    } else if (state == MapRegionChangeState.ANIMATING) {
+                        mapChangeListener.onRegionIsChanging();
+                    }
+                    break;
+            }
         }
+        currentState = state;
     }
 
     /**
@@ -1248,7 +1266,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeSetupGL(long mapPtr);
     private synchronized native void nativeResize(long mapPtr, int width, int height);
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
-    private synchronized native void nativeRender(long mapPtr);
+    private synchronized native boolean nativeRender(long mapPtr);
     private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
     private synchronized native void nativeUpdateCameraPosition(long mapPtr, int set, double lon, double lat, float zoom, float zoomBy,
                                                                 float rotation, float rotateBy, float tilt, float tiltBy,
@@ -1312,6 +1330,7 @@ public class MapController implements Renderer {
     private long mapPointer;
     private long time = System.nanoTime();
     private GLViewHolder viewHolder;
+    private MapRegionChangeState currentState = MapRegionChangeState.IDLE;
     private AssetManager assetManager;
     private TouchInput touchInput;
     private FontFileParser fontFileParser;
@@ -1332,6 +1351,19 @@ public class MapController implements Renderer {
     private CameraAnimationCallback pendingCameraAnimationCallback;
     private final Object cameraAnimationCallbackLock = new Object();
     private boolean isGLRendererSet = false;
+    private boolean isPrevCameraEasing = false;
+    private Runnable setMapRegionAnimatingRunnable = new Runnable() {
+        @Override
+        public void run() {
+            setMapRegionState(MapRegionChangeState.ANIMATING);
+        }
+    };
+    private Runnable setMapRegionIdleRunnable = new Runnable() {
+        @Override
+        public void run() {
+            setMapRegionState(MapRegionChangeState.IDLE);
+        }
+    };
 
     // GLSurfaceView.Renderer methods
     // ==============================
@@ -1349,10 +1381,19 @@ public class MapController implements Renderer {
         }
 
         boolean viewComplete;
+        boolean isCameraEasing;
         synchronized(this) {
             viewComplete = nativeUpdate(mapPointer, delta);
-            nativeRender(mapPointer);
+            isCameraEasing = nativeRender(mapPointer);
         }
+
+        if (isCameraEasing) {
+            uiThreadHandler.post(setMapRegionAnimatingRunnable);
+        } else if (isPrevCameraEasing) {
+            uiThreadHandler.post(setMapRegionIdleRunnable);
+        }
+
+        isPrevCameraEasing = isCameraEasing;
 
         if (viewComplete) {
             if (mapChangeListener != null) {
