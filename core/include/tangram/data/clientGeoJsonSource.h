@@ -39,13 +39,12 @@ public:
     virtual void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
     std::shared_ptr<TileTask> createTask(TileID _tileId, int _subTask) override;
 
-    virtual void cancelLoadingTile(const TileID& _tile) override {};
+    virtual void cancelLoadingTile(TileTask& _task) override {};
     virtual void clearData() override;
 
 protected:
 
-    virtual std::shared_ptr<TileData> parse(const TileTask& _task,
-                                            const MapProjection& _projection) const override;
+    virtual std::shared_ptr<TileData> parse(const TileTask& _task) const override;
 
     std::unique_ptr<ClientGeoJsonData> m_store;
 

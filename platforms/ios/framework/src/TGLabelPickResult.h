@@ -3,12 +3,13 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 11/02/16.
+//  Updated by Matt Blair on 8/21/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
+#import <CoreLocation/CoreLocation.h>
 #import <Foundation/Foundation.h>
 #import "TGExport.h"
-#import "TGGeoPoint.h"
 #import "TGMapData.h"
 
 /**
@@ -24,7 +25,7 @@ typedef NS_ENUM(NSInteger, TGLabelType) {
 /**
  Data structure holding the result of a label selection that occured on the map view.
 
- See `-[TGMapViewController pickLabelAt:]` and `[TGMapViewDelegate mapView:didSelectLabel:atScreenPosition:]`.
+ See `-[TGMapView pickLabelAt:]` and `[TGMapViewDelegate mapView:didSelectLabel:atScreenPosition:]`.
  */
 TG_EXPORT
 @interface TGLabelPickResult : NSObject
@@ -32,7 +33,7 @@ TG_EXPORT
 NS_ASSUME_NONNULL_BEGIN
 
 /// The geographic coordinates of the selected label
-@property (readonly, nonatomic) TGGeoPoint coordinates;
+@property (readonly, nonatomic) CLLocationCoordinate2D coordinate;
 
 /// The type of the label (text or icon)
 @property (readonly, nonatomic) TGLabelType type;

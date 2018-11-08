@@ -61,13 +61,6 @@
             ReferencedContainer = "container:TangramDemo.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "NEXTZEN_API_KEY"
-            value = "KXcYNjp0QXigFSMc5a7eEA"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>

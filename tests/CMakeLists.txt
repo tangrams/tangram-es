@@ -26,13 +26,14 @@ set(TEST_SOURCES
   unit/layerTests.cpp
   unit/lineWrapTests.cpp
   unit/lngLatTests.cpp
-  unit/mercProjTests.cpp
+  unit/mapProjectionTests.cpp
   unit/meshTests.cpp
   unit/sceneImportTests.cpp
   unit/sceneLoaderTests.cpp
   unit/sceneUpdateTests.cpp
   unit/stopsTests.cpp
   unit/styleMixerTests.cpp
+  unit/styleParamTests.cpp
   unit/styleSortingTests.cpp
   unit/styleUniformsTests.cpp
   unit/textureTests.cpp
@@ -40,6 +41,7 @@ set(TEST_SOURCES
   unit/tileManagerTests.cpp
   unit/urlTests.cpp
   unit/yamlFilterTests.cpp
+  unit/yamlUtilTests.cpp
 )
 
 # create an executable per test

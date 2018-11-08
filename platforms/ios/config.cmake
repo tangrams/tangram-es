@@ -1,6 +1,6 @@
 add_definitions(-DTANGRAM_IOS)
 
-set(TANGRAM_FRAMEWORK_VERSION "0.9.4-dev")
+set(TANGRAM_FRAMEWORK_VERSION "0.9.7-dev")
 
 ### Configure iOS toolchain.
 set(IOS TRUE)
@@ -9,6 +9,10 @@ set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
 set(CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "9.3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 execute_process(COMMAND xcrun --sdk iphoneos --show-sdk-version OUTPUT_VARIABLE IOS_SDK_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# Configure the API key in the Info.plist for the demo app.
+set(NEXTZEN_API_KEY $ENV{NEXTZEN_API_KEY})
+configure_file(${PROJECT_SOURCE_DIR}/platforms/ios/demo/Info.plist.in ${PROJECT_BINARY_DIR}/Info.plist)
 
 # Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
 if (IOS_SDK_VERSION VERSION_LESS 11.0)
@@ -20,44 +24,48 @@ set(SQLITECPP_INTERNAL_SQLITE OFF CACHE BOOL "")
 # static library target, relative paths cause it to fail with an error.
 set(TANGRAM_FRAMEWORK_HEADERS
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TangramMap.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGCameraPosition.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGExport.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolyline.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeometry.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolygon.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPoint.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMarker.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGSceneUpdate.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapData.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGTypes.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGHttpHandler.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolyline.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGLabelPickResult.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapData.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapView.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapViewDelegate.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMarker.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMarkerPickResult.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapViewController.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGRecognizerDelegate.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGSceneUpdate.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGTypes.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGURLHandler.h
 )
 
 set(TANGRAM_FRAMEWORK_SOURCES
   ${TANGRAM_FRAMEWORK_HEADERS}
-  platforms/common/platform_gl.cpp
   platforms/common/appleAllowedFonts.h
   platforms/common/appleAllowedFonts.mm
+  platforms/common/platform_gl.cpp
   platforms/ios/framework/src/iosPlatform.h
   platforms/ios/framework/src/iosPlatform.mm
-  platforms/ios/framework/src/TGHelpers.h
-  platforms/ios/framework/src/TGHelpers.mm
-  platforms/ios/framework/src/TGGeoPolyline.mm
+  platforms/ios/framework/src/TGCameraPosition+Internal.h
+  platforms/ios/framework/src/TGCameraPosition.mm
   platforms/ios/framework/src/TGGeoPolygon.mm
-  platforms/ios/framework/src/TGHttpHandler.mm
-  platforms/ios/framework/src/TGMapData+Internal.h
-  platforms/ios/framework/src/TGMapData.mm
-  platforms/ios/framework/src/TGSceneUpdate.mm
-  platforms/ios/framework/src/TGLabelPickResult+Internal.h
+  platforms/ios/framework/src/TGGeoPolyline.mm
   platforms/ios/framework/src/TGLabelPickResult.mm
-  platforms/ios/framework/src/TGMarkerPickResult+Internal.h
-  platforms/ios/framework/src/TGMarkerPickResult.mm
-  platforms/ios/framework/src/TGMarker+Internal.h
+  platforms/ios/framework/src/TGLabelPickResult+Internal.h
+  platforms/ios/framework/src/TGMapData.mm
+  platforms/ios/framework/src/TGMapData+Internal.h
+  platforms/ios/framework/src/TGMapView.mm
+  platforms/ios/framework/src/TGMapView+Internal.h
   platforms/ios/framework/src/TGMarker.mm
+  platforms/ios/framework/src/TGMarker+Internal.h
+  platforms/ios/framework/src/TGMarkerPickResult.mm
+  platforms/ios/framework/src/TGMarkerPickResult+Internal.h
+  platforms/ios/framework/src/TGSceneUpdate.mm
+  platforms/ios/framework/src/TGTypes+Internal.h
   platforms/ios/framework/src/TGTypes.mm
-  platforms/ios/framework/src/TGMapViewController+Internal.h
-  platforms/ios/framework/src/TGMapViewController.mm
+  platforms/ios/framework/src/TGURLHandler.mm
 )
 
 ### Configure dynamic framework build target. 
@@ -72,9 +80,11 @@ target_link_libraries(TangramMap PRIVATE
   # Frameworks: use quotes so "-framework X" is treated as a single linker flag.
   "-framework CoreFoundation"
   "-framework CoreGraphics"
+  "-framework CoreLocation"
   "-framework CoreText"
   "-framework GLKit"
   "-framework OpenGLES"
+  "-framework QuartzCore"
   "-framework UIKit"
 )
 
@@ -91,6 +101,7 @@ set_target_properties(TangramMap PROPERTIES
   XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
   XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14"
   XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
+  XCODE_ATTRIBUTE_GCC_TREAT_WARNINGS_AS_ERRORS "YES"
 )
 
 ### Configure static library build target.
@@ -105,9 +116,11 @@ target_link_libraries(tangram-static PRIVATE
   # Frameworks: use quotes so "-framework X" is treated as a single linker flag.
   "-framework CoreFoundation"
   "-framework CoreGraphics"
+  "-framework CoreLocation"
   "-framework CoreText"
   "-framework GLKit"
   "-framework OpenGLES"
+  "-framework QuartzCore"
   "-framework UIKit"
 )
 
@@ -148,6 +161,7 @@ set_target_properties(tangram-static PROPERTIES
   XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
   XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14"
   XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
+  XCODE_ATTRIBUTE_GCC_TREAT_WARNINGS_AS_ERRORS "YES"
   # The Xcode settings below are to pre-link our static libraries into a single
   # archive. Xcode will take the objects from this target and from all of the
   # pre-link libraries, combine them, and resolve the symbols into one "master"

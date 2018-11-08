@@ -31,7 +31,7 @@ void AmbientLight::setupProgram(RenderState& rs, const View& _view, ShaderProgra
 }
 
 std::string AmbientLight::getClassBlock() {
-    return SHADER_SOURCE(ambientLight_glsl);
+    return ambientLight_glsl;
 }
 
 std::string AmbientLight::getInstanceDefinesBlock() {

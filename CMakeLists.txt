@@ -27,6 +27,18 @@ endif()
 
 include(cmake/utils.cmake)
 
+# If target platform isn't specified, use the local platform.
+if(NOT TANGRAM_PLATFORM)
+  message(STATUS "No platform target specified. Choose a target with -DTANGRAM_PLATFORM=platform.")
+  string(TOLOWER "${CMAKE_SYSTEM_NAME}" SYSTEM_NAME)
+  if (${SYSTEM_NAME} STREQUAL "darwin")
+    set(TANGRAM_PLATFORM "osx")
+  else()
+    set(TANGRAM_PLATFORM ${SYSTEM_NAME})
+  endif()
+  message(STATUS "Using your OS as the platform target: ${TANGRAM_PLATFORM}.")
+endif()
+
 # Configure platform target.
 if(TANGRAM_PLATFORM)
   set(TANGRAM_PLATFORM_CONFIG_FILE "platforms/${TANGRAM_PLATFORM}/config.cmake")

@@ -7,7 +7,7 @@
 
 #define TANGRAM_VERSION_MAJOR 0
 #define TANGRAM_VERSION_MINOR 9
-#define TANGRAM_VERSION_PATCH 4
+#define TANGRAM_VERSION_PATCH 6
 
 #include "data/clientGeoJsonSource.h"
 #include "data/properties.h"

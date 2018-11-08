@@ -282,7 +282,7 @@ void StyleContext::setKeyword(const std::string& _key, Value _val) {
 float StyleContext::getPixelAreaScale() {
     // scale the filter value with pixelsPerMeter
     // used with `px2` area filtering
-    double metersPerPixel = 2.f * MapProjection::HALF_CIRCUMFERENCE * exp2(-m_keywordZoom) / View::s_pixelsPerTile;
+    double metersPerPixel = MapProjection::EARTH_CIRCUMFERENCE_METERS * exp2(-m_keywordZoom) / MapProjection::tileSize();
     return metersPerPixel * metersPerPixel;
 }
 
@@ -356,11 +356,32 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
         std::string value(duk_get_string(m_ctx, -1));
 
         switch (_key) {
+            case StyleParamKey::outline_style:
+            case StyleParamKey::repeat_group:
+            case StyleParamKey::sprite:
+            case StyleParamKey::sprite_default:
+            case StyleParamKey::style:
+            case StyleParamKey::text_align:
+            case StyleParamKey::text_repeat_group:
             case StyleParamKey::text_source:
             case StyleParamKey::text_source_left:
             case StyleParamKey::text_source_right:
+            case StyleParamKey::text_transform:
+            case StyleParamKey::texture:
                 _val = value;
                 break;
+            case StyleParamKey::color:
+            case StyleParamKey::outline_color:
+            case StyleParamKey::text_font_fill:
+            case StyleParamKey::text_font_stroke_color: {
+                Color result;
+                if (StyleParam::parseColor(value, result)) {
+                    _val = result.abgr;
+                } else {
+                    LOGW("Invalid color value: %s", value.c_str());
+                }
+                break;
+            }
             default:
                 _val = StyleParam::parseString(_key, value);
                 break;

@@ -38,8 +38,7 @@ void DebugStyle::constructVertexLayout() {
 
 void DebugStyle::constructShaderProgram() {
 
-    m_shaderSource->setSourceStrings(SHADER_SOURCE(debug_fs),
-                                     SHADER_SOURCE(debug_vs));
+    m_shaderSource->setSourceStrings(debug_fs, debug_vs);
 
 }
 

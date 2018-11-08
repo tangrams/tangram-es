@@ -103,7 +103,7 @@ void RasterSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb)
     TileSource::loadTileData(_task, cb);
 }
 
-std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapProjection& _projection) const {
+std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task) const {
 
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
 

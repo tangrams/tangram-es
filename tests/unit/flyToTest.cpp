@@ -64,9 +64,8 @@ TEST_CASE( "FlyTo Bremen to New York", "[View][FlyTo]" ) {
 
     auto view = getView();
 
-    const MapProjection& projection = view.getMapProjection();
-    glm::dvec2 a = projection.LonLatToMeters(glm::dvec2(8.820, 53.080));
-    glm::dvec2 b = projection.LonLatToMeters(glm::dvec2(-74.009, 40.705));
+    glm::dvec2 a = MapProjection::lngLatToProjectedMeters({8.820, 53.080});
+    glm::dvec2 b = MapProjection::lngLatToProjectedMeters({-74.009, 40.705});
 
     glm::dvec3 start(a.x, a.y, 16.0);
     glm::dvec3 end(b.x, b.y, 16.0);

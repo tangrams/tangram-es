@@ -83,6 +83,8 @@ using SceneID = int32_t;
 // Function type for a sceneReady callback
 using SceneReadyCallback = std::function<void(SceneID id, const SceneError*)>;
 
+using CameraAnimationCallback = std::function<void(bool finished)>;
+
 enum class EaseType : char {
     linear = 0,
     cubic,
@@ -90,17 +92,50 @@ enum class EaseType : char {
     sine,
 };
 
-struct EaseCancel {
-
+struct CameraPosition {
+    double longitude = 0;
+    double latitude = 0;
+    float zoom = 0;
+    float rotation = 0;
+    float tilt = 0;
 };
 
-struct EaseFinish {
+struct EdgePadding {
+    int left = 0;
+    int top = 0;
+    int right = 0;
+    int bottom = 0;
 
+    EdgePadding() {}
+
+    EdgePadding(int left, int top, int right, int bottom)
+        : left(left), top(top), right(right), bottom(bottom) {}
 };
 
-using EaseCb = std::function<void (float)>;
-using EaseCancelCb = std::function<void ()>;
-using EaseFinishCb = std::function<void ()>;
+struct CameraUpdate {
+    enum Flags {
+        SET_LNGLAT =      1 << 0,
+        SET_ZOOM =        1 << 1,
+        SET_ZOOM_BY =     1 << 2,
+        SET_ROTATION =    1 << 3,
+        SET_ROTATION_BY = 1 << 4,
+        SET_TILT =        1 << 5,
+        SET_TILT_BY =     1 << 6,
+        SET_BOUNDS =      1 << 7,
+        SET_CAMERA =      1 << 8,
+    };
+    int set = 0;
+
+    LngLat lngLat;
+    float zoom = 0;
+    float zoomBy = 0;
+    float rotation = 0;
+    float rotationBy = 0;
+    float tilt = 0;
+    float tiltBy = 0;
+    std::array<LngLat,2> bounds;
+    EdgePadding padding;
+};
 
 class Map {
 
@@ -141,8 +176,10 @@ public:
     // The callback may be be called from the main or worker thread.
     void setSceneReadyListener(SceneReadyCallback _onSceneReady);
 
-    // Set url for a DataSource in the scene.
-    void setDataSourceUrl(const char* _dataSourceName, const char* _url);
+    void setCameraAnimationListener(CameraAnimationCallback _cb);
+
+    // Set an MBTiles SQLite database file for a DataSource in the scene.
+    void setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath);
 
     // Initialize graphics resources; OpenGL context must be created prior to calling this
     void setupGL();
@@ -156,7 +193,7 @@ public:
     bool update(float _dt);
 
     // Render a new frame of the map view (if needed)
-    void render();
+    bool render();
 
     // Gets the viewport height in physical pixels (framebuffer size)
     int getViewportHeight();
@@ -178,46 +215,45 @@ public:
     // Each unsigned int corresponds to an RGBA pixel value
     void captureSnapshot(unsigned int* _data);
 
-    // Set the position of the map view in degrees longitude and latitude; if duration
-    // (in seconds) is provided, position eases to the set value over the duration;
-    // calling either version of the setter overrides all previous calls
+    // Set the position of the map view in degrees longitude and latitude
     void setPosition(double _lon, double _lat);
-    void setPositionEased(double _lon, double _lat, float _duration, EaseType _e = EaseType::quint, EaseCancelCb _cancelCb = nullptr, EaseFinishCb _finishCb = nullptr);
 
     // Set the values of the arguments to the position of the map view in degrees
     // longitude and latitude
     void getPosition(double& _lon, double& _lat);
 
-    // Set the fractional zoom level of the view; if duration (in seconds) is provided,
-    // zoom eases to the set value over the duration; calling either version of the setter
-    // overrides all previous calls
+    // Set the fractional zoom level of the view
     void setZoom(float _z);
-    void setZoomEased(float _z, float _duration, EaseType _e = EaseType::quint, EaseCancelCb _cancelCb = nullptr, EaseFinishCb _finishCb = nullptr);
-
-    // Run flight animation to change postion and zoom  of the map
-    // If _duration is 0, speed is used as factor to change the duration that is
-    // calculated for the duration of the flight path. (Recommended range 0.1 - 2.0)
-    void flyTo(double _lon, double _lat, float _z, float _duration, float _speed = 1.0f);
 
     // Get the fractional zoom level of the view
     float getZoom();
 
+    // Set the minimum zoom level for the view; values less than 0 will be
+    // clamped to 0; values greater than the current maximum zoom level will set
+    // the maximum zoom to this value.
+    void setMinZoom(float _minZoom);
+
+    // Get the minimum zoom level for the view.
+    float getMinZoom();
+
+    // Set the maximum zoom level for the view; values greater than 20.5 will be
+    // clamped to 20.5; values less than the current minimum zoom level will set
+    // the minimum zoom to this value.
+    void setMaxZoom(float _maxZoom);
+
+    // Get the maximum zoom level for the view.
+    float getMaxZoom();
+
     // Set the counter-clockwise rotation of the view in radians; 0 corresponds to
-    // North pointing up; if duration (in seconds) is provided, rotation eases to the
-    // the set value over the duration; calling either version of the setter overrides
-    // all previous calls
+    // North pointing up
     void setRotation(float _radians);
-    void setRotationEased(float _radians, float _duration, EaseType _e = EaseType::quint, EaseCancelCb _cancelCb = nullptr, EaseFinishCb _finishCb = nullptr);
 
     // Get the counter-clockwise rotation of the view in radians; 0 corresponds to
     // North pointing up
     float getRotation();
 
-    // Set the tilt angle of the view in radians; 0 corresponds to straight down;
-    // if duration (in seconds) is provided, tilt eases to the set value over the
-    // duration; calling either version of the setter overrides all previous calls
+    // Set the tilt angle of the view in radians; 0 corresponds to straight down
     void setTilt(float _radians);
-    void setTiltEased(float _radians, float _duration, EaseType _e = EaseType::quint, EaseCancelCb _cancelCb = nullptr, EaseFinishCb _finishCb = nullptr);
 
     // Get the tilt angle of the view in radians; 0 corresponds to straight down
     float getTilt();
@@ -233,11 +269,30 @@ public:
     // Clear all easings
     void clearEasing();
 
+    // Get the CameraPosition that encloses the bounds given by _a and _b and
+    // leaves at least the given amount of padding on each side (in logical pixels).
+    CameraPosition getEnclosingCameraPosition(LngLat _a, LngLat _b, EdgePadding _pad);
+
+    // Run flight animation to change postion and zoom  of the map
+    // If _duration is 0, speed is used as factor to change the duration that is
+    // calculated for the duration of the flight path. (Recommended range 0.1 - 2.0)
+    void flyTo(const CameraPosition& _camera, float _duration, float _speed = 1.0f);
+
     // Set the camera type (0 = perspective, 1 = isometric, 2 = flat)
     void setCameraType(int _type);
 
     // Get the camera type (0 = perspective, 1 = isometric, 2 = flat)
     int getCameraType();
+
+    CameraPosition getCameraPosition();
+
+    void setCameraPosition(const CameraPosition& _camera);
+
+    void setCameraPositionEased(const CameraPosition& _camera, float duration, EaseType _e = EaseType::quint);
+
+    void updateCameraPosition(const CameraUpdate& _update, float duration = 0.f, EaseType _e = EaseType::quint);
+
+    void cancelCameraAnimation();
 
     // Given coordinates in screen space (x right, y down), set the output longitude and
     // latitude to the geographic location corresponding to that point; returns false if

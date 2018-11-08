@@ -36,7 +36,7 @@ struct PointStyleBuilder : public StyleBuilder {
         LabelProperty::Placement placement = LabelProperty::Placement::vertex;
         float extrudeScale = 1.f;
         float placementMinLengthRatio = 1.0f;
-        float placementSpacing = 80.f;
+        float placementSpacing = PointStyle::DEFAULT_PLACEMENT_SPACING;
     };
 
     const PointStyle& m_style;

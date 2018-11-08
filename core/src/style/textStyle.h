@@ -21,6 +21,8 @@ class TextStyle : public Style {
 
 public:
 
+    constexpr static uint32_t DEFAULT_TEXT_WRAP_LENGTH = 15;
+
     struct Parameters {
         std::shared_ptr<alfons::Font> font;
         std::string text = "";
@@ -34,7 +36,7 @@ public:
         Label::Options labelOptions;
         bool wordWrap = true;
         uint32_t maxLines = 0;
-        uint32_t maxLineWidth = 15;
+        uint32_t maxLineWidth = DEFAULT_TEXT_WRAP_LENGTH;
 
         TextLabelProperty::Transform transform = TextLabelProperty::Transform::none;
         TextLabelProperty::Align align = TextLabelProperty::Align::none;
@@ -89,9 +91,9 @@ public:
 
     virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) override;
 
-    virtual void draw(RenderState& rs, const Tile& _tile) override {}
+    virtual bool draw(RenderState& rs, const Tile& _tile) override { return false; }
 
-    virtual void draw(RenderState& rs, const Marker& _marker) override {}
+    virtual bool draw(RenderState& rs, const Marker& _marker) override { return false; }
 
     std::unique_ptr<StyleBuilder> createBuilder() const override;
 

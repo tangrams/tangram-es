@@ -1,8 +1,4 @@
-#include "util/yamlHelper.h"
-
-#include "util/floatFormatter.h"
-#include "log.h"
-#include "csscolorparser.hpp"
+#include "util/yamlPath.h"
 
 #include <cmath>
 
@@ -88,70 +84,5 @@ bool YamlPath::get(YAML::Node root, YAML::Node& out) {
     return true;
 }
 
-glm::vec4 getColorAsVec4(const Node& node) {
-    double val;
-    if (getDouble(node, val)) {
-        return glm::vec4(val, val, val, 1.0);
-    }
-    if (node.IsSequence()) {
-        return parseVec<glm::vec4>(node);
-    }
-    if (node.IsScalar()) {
-        auto c = CSSColorParser::parse(node.Scalar());
-        return glm::vec4(c.r / 255.f, c.g / 255.f, c.b / 255.f, c.a);
-    }
-    return glm::vec4();
-}
-
-std::string parseSequence(const Node& node) {
-    if (!node.IsSequence()) {
-        LOGW("Expected a plain sequence: '%'", Dump(node).c_str());
-        return "";
-    }
-
-    std::stringstream sstream;
-    for (const auto& val : node) {
-        if (!val.IsScalar()) {
-            LOGW("Expected a plain sequence: '%'", Dump(node).c_str());
-            return "";
-        }
-        sstream << val.Scalar() << ",";
-    }
-    return sstream.str();
-}
-
-bool getDouble(const Node& node, double& value) {
-
-    if (node.IsScalar()) {
-        const std::string& s = node.Scalar();
-        int count;
-        value = ff::stod(s.c_str(), s.length(), &count);
-        if (count == int(s.length())) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool getDouble(const Node& node, double& value, const char* name) {
-
-    if (getDouble(node, value)) { return true; }
-
-    LOGW("Expected a floating point value for '%s' property.:\n%s\n", name, Dump(node).c_str());
-    return false;
-}
-
-bool getBool(const Node& node, bool& value, const char* name) {
-    try {
-        value = node.as<bool>();
-        return true;
-    } catch (const BadConversion& e) {}
-
-    if (name) {
-        LOGW("Expected a boolean value for '%s' property.:\n%s\n", name, Dump(node).c_str());
-    }
-    return false;
-}
 
 }

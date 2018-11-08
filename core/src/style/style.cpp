@@ -216,7 +216,7 @@ void Style::setupRasters(const std::vector<std::shared_ptr<TileSource>>& _source
             + std::to_string(numRasterSource) + "\n", false);
     m_shaderSource->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
 
-    m_shaderSource->addSourceBlock("raster", SHADER_SOURCE(rasters_glsl));
+    m_shaderSource->addSourceBlock("raster", rasters_glsl);
 }
 
 
@@ -390,7 +390,7 @@ void Style::drawSelectionFrame(Tangram::RenderState& rs, const Tangram::Tile &_t
 
 }
 
-void Style::draw(RenderState& rs, const View& _view, Scene& _scene,
+bool Style::draw(RenderState& rs, const View& _view, Scene& _scene,
                  const std::vector<std::shared_ptr<Tile>>& _tiles,
                  const std::vector<std::unique_ptr<Marker>>& _markers) {
 
@@ -400,10 +400,12 @@ void Style::draw(RenderState& rs, const View& _view, Scene& _scene,
     auto markerIt = std::find_if(std::begin(_markers), std::end(_markers),
                                [this](const auto& m){ return m->styleId() == this->m_id && m->mesh(); });
 
+    bool meshDrawn = false;
+
     // Skip when no mesh is to be rendered.
     // This also compiles shaders when they are first used.
     if (tileIt == std::end(_tiles) && markerIt == std::end(_markers)) {
-        return;
+        return false;
     }
 
     onBeginDrawFrame(rs, _view, _scene);
@@ -412,35 +414,44 @@ void Style::draw(RenderState& rs, const View& _view, Scene& _scene,
         rs.colorMask(false, false, false, false);
     }
 
-    for (const auto& tile : _tiles) { draw(rs, *tile); }
-    for (const auto& marker : _markers) { draw(rs, *marker); }
+    for (const auto& tile : _tiles) {
+        meshDrawn |= draw(rs, *tile);
+    }
+    for (const auto& marker : _markers) {
+        meshDrawn |= draw(rs, *marker);
+    }
 
-    if (m_blend == Blending::translucent) {
-        rs.colorMask(true, true, true, true);
-        GL::depthFunc(GL_EQUAL);
+    if (meshDrawn) {
+        if (m_blend == Blending::translucent) {
+            rs.colorMask(true, true, true, true);
+            GL::depthFunc(GL_EQUAL);
 
-        GL::enable(GL_STENCIL_TEST);
-        GL::clear(GL_STENCIL_BUFFER_BIT);
-        GL::stencilFunc(GL_EQUAL, GL_ZERO, 0xFF);
-        GL::stencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+            GL::enable(GL_STENCIL_TEST);
+            GL::clear(GL_STENCIL_BUFFER_BIT);
+            GL::stencilFunc(GL_EQUAL, GL_ZERO, 0xFF);
+            GL::stencilOp(GL_KEEP, GL_KEEP, GL_INCR);
 
-        for (const auto& tile : _tiles) { draw(rs, *tile); }
-        for (const auto& marker : _markers) { draw(rs, *marker); }
+            for (const auto &tile : _tiles) { draw(rs, *tile); }
+            for (const auto &marker : _markers) { draw(rs, *marker); }
 
-        GL::disable(GL_STENCIL_TEST);
-        GL::depthFunc(GL_LESS);
+            GL::disable(GL_STENCIL_TEST);
+            GL::depthFunc(GL_LESS);
+        }
     }
 
     onEndDrawFrame(rs, _view, _scene);
+
+    return meshDrawn;
 }
 
 
-void Style::draw(RenderState& rs, const Tile& _tile) {
+bool Style::draw(RenderState& rs, const Tile& _tile) {
 
     auto& styleMesh = _tile.getMesh(*this);
 
-    if (!styleMesh) { return; }
+    if (!styleMesh) { return false; }
 
+    bool styleMeshDrawn = true;
     TileID tileID = _tile.getID();
 
     if (hasRasters() && !_tile.rasters().empty()) {
@@ -488,6 +499,7 @@ void Style::draw(RenderState& rs, const Tile& _tile) {
 
     if (!styleMesh->draw(rs, *m_shaderProgram)) {
         LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
+        styleMeshDrawn = false;
     }
 
     if (hasRasters()) {
@@ -497,15 +509,18 @@ void Style::draw(RenderState& rs, const Tile& _tile) {
             }
         }
     }
+
+    return styleMeshDrawn;
 }
 
-void Style::draw(RenderState& rs, const Marker& marker) {
+bool Style::draw(RenderState& rs, const Marker& marker) {
 
-    if (marker.styleId() != m_id || !marker.isVisible()) { return; }
+    if (marker.styleId() != m_id || !marker.isVisible()) { return false; }
 
     auto* mesh = marker.mesh();
 
-    if (!mesh) { return; }
+    if (!mesh) { return false; }
+    bool styleMeshDrawn = true;
 
     m_shaderProgram->setUniformMatrix4f(rs, m_mainUniforms.uModel, marker.modelMatrix());
     m_shaderProgram->setUniformf(rs, m_mainUniforms.uTileOrigin,
@@ -514,7 +529,10 @@ void Style::draw(RenderState& rs, const Marker& marker) {
 
     if (!mesh->draw(rs, *m_shaderProgram)) {
         LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
+        styleMeshDrawn = false;
     }
+
+    return styleMeshDrawn;
 }
 
 void Style::setDefaultDrawRule(std::unique_ptr<DrawRuleData>&& _rule) {

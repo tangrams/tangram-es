@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tile/tileID.h"
+#include "platform.h" // UrlRequestHandle
 
 #include <atomic>
 #include <functional>
@@ -122,6 +123,9 @@ public:
     std::shared_ptr<std::vector<char>> rawTileData;
 
     bool dataFromCache = false;
+    bool urlRequestStarted = false;
+
+    UrlRequestHandle urlRequestHandle = 0;
 };
 
 struct TileTaskQueue {

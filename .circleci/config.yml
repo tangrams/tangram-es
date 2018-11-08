@@ -12,14 +12,18 @@ jobs:
       - run: source scripts/run_bench.sh build/linux/bin
   build-android:
     docker:
-      - image: lakoo/android-ndk:25-26.0.1-r15c
+      - image: circleci/android:api-28-ndk-r17b
+    environment:
+      GRADLE_OPTS: -Xmx2048m
     steps:
       - checkout
       - run: git submodule update --init
       - run: cd platforms/android && ./gradlew demo:assembleDebug -Ptangram.abis=armeabi-v7a
   build-deploy-android-snapshot:
     docker:
-      - image: lakoo/android-ndk:25-26.0.1-r15c
+      - image: circleci/android:api-28-ndk-r17b
+    environment:
+      GRADLE_OPTS: -Xmx2048m
     steps:
       - checkout
       - run: git submodule update --init
@@ -27,20 +31,22 @@ jobs:
   build-ios:
     macos:
       xcode: "9.4.0"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       # Check out repository with submodules.
       - checkout
       - run: git submodule update --init
       # Install dependencies.
-      - run: sudo gem install jazzy --no-document
       - run: brew install cmake
       # Build framework and docs.
       - run: make ios-sim BUILD_TYPE=Debug
       - run: make ios-static-sim BUILD_TYPE=Debug
-      - run: make ios-docs
   build-deploy-ios-snapshot:
     macos:
       xcode: "9.4.0"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       # Check out repository with submodules.
       - checkout
@@ -61,6 +67,8 @@ jobs:
   build-deploy-macos-snapshot:
     macos:
       xcode: "9.4.0"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       # Check out repository with submodules.
       - checkout
@@ -76,12 +84,14 @@ jobs:
   build-deploy-ios-release:
     macos:
       xcode: "9.4.0"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       # Check out repository with submodules.
       - checkout
       - run: git submodule update --init
       # Install dependencies.
-      - run: gem install atomos jazzy --no-document
+      - run: sudo gem install jazzy --no-document
       - run: brew install cmake jfrog-cli-go
       # Build the framework in release mode and package it into pod.zip
       - run: make ios-framework-universal BUILD_TYPE=Release

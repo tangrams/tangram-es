@@ -25,7 +25,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NEXTZEN_API_KEY</key>
-	<string>$(NEXTZEN_API_KEY)</string>
+	<string>${NEXTZEN_API_KEY}</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Need location to enable marker tracking.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

@@ -112,7 +112,7 @@ void ShaderSource::addExtensionDeclaration(const std::string& _extension) {
 }
 
 std::string ShaderSource::buildSelectionFragmentSource() const {
-    return SHADER_SOURCE(selection_fs);
+    return selection_fs;
 }
 
 }

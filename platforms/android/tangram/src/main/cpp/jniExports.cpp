@@ -3,6 +3,7 @@
 #include "map.h"
 
 #include <cassert>
+#include <android/bitmap.h>
 
 using namespace Tangram;
 
@@ -22,111 +23,124 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(JNIEnv* jniEnv, jobjectArra
 
 extern "C" {
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble lon, jdouble lat) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setPosition(lon, lat);
+    JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
+        return AndroidPlatform::jniOnLoad(vm);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetPositionEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble lon, jdouble lat, jfloat duration, jint ease) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setPositionEased(lon, lat, duration, static_cast<Tangram::EaseType>(ease));
+    JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved) {
+        AndroidPlatform::jniOnUnload(vm);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray lonLat) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetCameraPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray lonLat, jfloatArray zoomRotationTilt) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        jdouble* arr = jniEnv->GetDoubleArrayElements(lonLat, NULL);
-        map->getPosition(arr[0], arr[1]);
-        jniEnv->ReleaseDoubleArrayElements(lonLat, arr, 0);
+        jdouble* pos = jniEnv->GetDoubleArrayElements(lonLat, NULL);
+        jfloat* zrt = jniEnv->GetFloatArrayElements(zoomRotationTilt, NULL);
+
+        auto camera = map->getCameraPosition();
+        pos[0] = camera.longitude;
+        pos[1] = camera.latitude;
+        zrt[0] = camera.zoom;
+        zrt[1] = camera.rotation;
+        zrt[2] = camera.tilt;
+
+        jniEnv->ReleaseDoubleArrayElements(lonLat, pos, 0);
+        jniEnv->ReleaseFloatArrayElements(zoomRotationTilt, zrt, 0);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetZoom(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat zoom) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeUpdateCameraPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr,
+                                                                                            jint set, jdouble lon, jdouble lat,
+                                                                                            jfloat zoom, jfloat zoomBy,
+                                                                                            jfloat rotation, jfloat rotateBy,
+                                                                                            jfloat tilt, jfloat tiltBy,
+                                                                                            jdouble b1lon, jdouble b1lat,
+                                                                                            jdouble b2lon, jdouble b2lat,
+                                                                                            jintArray jpad,
+                                                                                            jfloat duration, jint ease) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setZoom(zoom);
+
+        CameraUpdate update;
+        update.set = set;
+
+        update.lngLat = LngLat{lon,lat};
+        update.zoom = zoom;
+        update.zoomBy = zoomBy;
+        update.rotation = rotation;
+        update.rotationBy = rotateBy;
+        update.tilt = tilt;
+        update.tiltBy = tiltBy;
+        update.bounds = std::array<LngLat,2>{{LngLat{b1lon, b1lat}, LngLat{b2lon, b2lat}}};
+        if (jpad != NULL) {
+            jint* jpadArray = jniEnv->GetIntArrayElements(jpad, NULL);
+            update.padding = EdgePadding{jpadArray[0], jpadArray[1], jpadArray[2], jpadArray[3]};
+            jniEnv->ReleaseIntArrayElements(jpad, jpadArray, JNI_ABORT);
+        }
+        map->updateCameraPosition(update, duration, static_cast<Tangram::EaseType>(ease));
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetZoomEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat zoom, jfloat duration, jint ease) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetEnclosingCameraPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble aLng, jdouble aLat, jdouble bLng, jdouble bLat,
+                                                                                                  jintArray jpad, jdoubleArray lngLatZoom) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setZoomEased(zoom, duration, static_cast<Tangram::EaseType>(ease));
-    }
-
-    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetZoom(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        return map->getZoom();
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetRotation(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat radians) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setRotation(radians);
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetRotationEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat radians, jfloat duration, jint ease) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setRotationEased(radians, duration, static_cast<Tangram::EaseType>(ease));
-    }
-
-    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetRotation(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        return map->getRotation();
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetTilt(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat radians) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setTilt(radians);
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetTiltEased(JNIEnv* jniEnv, jobject obj,  jlong mapPtr, jfloat radians, jfloat duration, jint ease) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setTiltEased(radians, duration, static_cast<Tangram::EaseType>(ease));
-    }
-
-    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetTilt(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        return map->getTilt();
+        EdgePadding padding;
+        if (jpad != NULL) {
+            jint* jpadArray = jniEnv->GetIntArrayElements(jpad, NULL);
+            padding = EdgePadding(jpadArray[0], jpadArray[1], jpadArray[2], jpadArray[3]);
+            jniEnv->ReleaseIntArrayElements(jpad, jpadArray, JNI_ABORT);
+        }
+        CameraPosition camera = map->getEnclosingCameraPosition(LngLat{aLng,aLat}, LngLat{bLng,bLat}, padding);
+        jdouble* arr = jniEnv->GetDoubleArrayElements(lngLatZoom, NULL);
+        arr[0] = camera.longitude;
+        arr[1] = camera.latitude;
+        arr[2] = camera.zoom;
+        jniEnv->ReleaseDoubleArrayElements(lngLatZoom, arr, 0);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeFlyTo(JNIEnv* jniEnv, jobject obj,  jlong mapPtr, jdouble lon, jdouble lat, jfloat zoom, jfloat duration, jfloat speed) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->flyTo(lon, lat, zoom, duration, speed);
+        CameraPosition camera = map->getCameraPosition();
+        camera.longitude = lon;
+        camera.latitude = lat;
+        camera.zoom = zoom;
+        map->flyTo(camera, duration, speed);
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeCancelCameraAnimation(JNIEnv* jniEnv, jobject obj,  jlong mapPtr) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        map->cancelCameraAnimation();
     }
 
     JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeScreenPositionToLngLat(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray coordinates) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         jdouble* arr = jniEnv->GetDoubleArrayElements(coordinates, NULL);
-        bool ret = map->screenPositionToLngLat(arr[0], arr[1], &arr[0], &arr[1]);
+        bool result = map->screenPositionToLngLat(arr[0], arr[1], &arr[0], &arr[1]);
         jniEnv->ReleaseDoubleArrayElements(coordinates, arr, 0);
-        return ret;
+        return static_cast<jboolean>(result);
     }
 
     JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeLngLatToScreenPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray coordinates) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         jdouble* arr = jniEnv->GetDoubleArrayElements(coordinates, NULL);
-        bool ret = map->lngLatToScreenPosition(arr[0], arr[1], &arr[0], &arr[1]);
+        bool result = map->lngLatToScreenPosition(arr[0], arr[1], &arr[0], &arr[1]);
         jniEnv->ReleaseDoubleArrayElements(coordinates, arr, 0);
-        return ret;
+        return static_cast<jboolean>(result);
     }
 
     JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeInit(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
-        AndroidPlatform::setupJniEnv(jniEnv);
         auto platform = std::make_shared<Tangram::AndroidPlatform>(jniEnv, assetManager, tangramInstance);
         auto map = new Tangram::Map(platform);
         map->setSceneReadyListener([platform](Tangram::SceneID id, const Tangram::SceneError* error) {
             platform->sceneReadyCallback(id, error);
         });
+        map->setCameraAnimationListener([platform](bool success) {
+            platform->cameraAnimationCallback(success);
+        });
+
         return reinterpret_cast<jlong>(map);
     }
 
@@ -200,16 +214,17 @@ extern "C" {
         map->resize(width, height);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeUpdate(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat dt) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeUpdate(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat dt) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        return map->update(dt);
+        auto result = map->update(dt);
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeRender(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeRender(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->render();
+        return map->render();
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetupGL(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
@@ -235,6 +250,30 @@ extern "C" {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         return map->getCameraType();
+    }
+
+    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetMinZoom(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        return map->getMinZoom();
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetMinZoom(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat minZoom) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        map->setMinZoom(minZoom);
+    }
+
+    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetMaxZoom(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        return map->getMaxZoom();
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetMaxZoom(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat maxZoom) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        map->setMaxZoom(maxZoom);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeHandleTapGesture(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY) {
@@ -292,31 +331,30 @@ extern "C" {
         map->setPickRadius(radius);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickFeature(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY, jobject listener) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickFeature(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto object = jniEnv->NewGlobalRef(listener);
-        map->pickFeatureAt(posX, posY, [object](auto pickResult) {
-            Tangram::featurePickCallback(object, pickResult);
+        auto platform = static_cast<AndroidPlatform*>(map->getPlatform().get());
+        map->pickFeatureAt(posX, posY, [=](auto pickResult) {
+            platform->featurePickCallback(pickResult);
         });
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickMarker(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jlong mapPtr, jfloat posX, jfloat posY, jobject listener) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickMarker(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto object = jniEnv->NewGlobalRef(listener);
-        auto instance = jniEnv->NewGlobalRef(tangramInstance);
-        map->pickMarkerAt(posX, posY, [object, instance](auto pickMarkerResult) {
-            Tangram::markerPickCallback(object, instance, pickMarkerResult);
+        auto platform = static_cast<AndroidPlatform*>(map->getPlatform().get());
+        map->pickMarkerAt(posX, posY, [=](auto pickResult) {
+            platform->markerPickCallback(pickResult);
         });
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickLabel(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY, jobject listener) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickLabel(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto object = jniEnv->NewGlobalRef(listener);
-        map->pickLabelAt(posX, posY, [object](auto pickResult) {
-            Tangram::labelPickCallback(object, pickResult);
+        auto platform = static_cast<AndroidPlatform*>(map->getPlatform().get());
+        map->pickLabelAt(posX, posY, [=](auto pickResult) {
+            platform->labelPickCallback(pickResult);
         });
     }
 
@@ -328,54 +366,87 @@ extern "C" {
         return static_cast<jlong>(markerID);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerRemove(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerRemove(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto result = map->markerRemove(static_cast<unsigned int>(markerID));
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetStylingFromString(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jstring styling) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetStylingFromString(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jstring styling) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto styleString = stringFromJString(jniEnv, styling);
         auto result = map->markerSetStylingFromString(static_cast<unsigned int>(markerID), styleString.c_str());
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetStylingFromPath(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jstring path) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetStylingFromPath(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jstring path) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto pathString = stringFromJString(jniEnv, path);
         auto result = map->markerSetStylingFromPath(static_cast<unsigned int>(markerID), pathString.c_str());
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetBitmap(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jint width, jint height, jintArray data) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetBitmap(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jobject jbitmap) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        jint* ptr = jniEnv->GetIntArrayElements(data, NULL);
-        unsigned int* imgData = reinterpret_cast<unsigned int*>(ptr);
-        jniEnv->ReleaseIntArrayElements(data, ptr, JNI_ABORT);
-        auto result = map->markerSetBitmap(static_cast<unsigned int>(markerID), width, height, imgData);
-        return result;
+
+        AndroidBitmapInfo bitmapInfo;
+        if (AndroidBitmap_getInfo(jniEnv, jbitmap, &bitmapInfo) != ANDROID_BITMAP_RESULT_SUCCESS) {
+            return static_cast<jboolean>(false);
+        }
+        if (bitmapInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+            // TODO: Add different conversion functions for other formats.
+            return static_cast<jboolean>(false);
+        }
+        uint32_t* pixelInput;
+        if (AndroidBitmap_lockPixels(jniEnv, jbitmap, (void**)&pixelInput) != ANDROID_BITMAP_RESULT_SUCCESS) {
+            return static_cast<jboolean>(false);
+        }
+        int width = bitmapInfo.width;
+        int height = bitmapInfo.height;
+        uint32_t* pixelOutput = new uint32_t[height * width];
+        int i = 0;
+        for (int row = 0; row < height; row++) {
+            // Flips image upside-down
+            int flippedRow = (height - 1 - row) * width;
+            for (int col = 0; col < width; col++) {
+                uint32_t pixel = pixelInput[i++];
+                // Undo alpha pre-multiplication.
+                auto rgba = reinterpret_cast<uint8_t*>(&pixel);
+                int a = rgba[3];
+                if (a != 0) {
+                    auto alphaInv = 255.f/a;
+                    rgba[0] = static_cast<uint8_t>(rgba[0] * alphaInv);
+                    rgba[1] = static_cast<uint8_t>(rgba[1] * alphaInv );
+                    rgba[2] = static_cast<uint8_t>(rgba[2] * alphaInv);
+                }
+                pixelOutput[flippedRow + col] = pixel;
+            }
+        }
+        AndroidBitmap_unlockPixels(jniEnv, jbitmap);
+        auto result = map->markerSetBitmap(static_cast<unsigned int>(markerID), width, height, pixelOutput);
+        delete[] pixelOutput;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPoint(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdouble lng, jdouble lat) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPoint(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdouble lng, jdouble lat) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto result = map->markerSetPoint(static_cast<unsigned int>(markerID), Tangram::LngLat(lng, lat));
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPointEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdouble lng, jdouble lat, jfloat duration, jint ease) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPointEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdouble lng, jdouble lat, jfloat duration, jint ease) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto result = map->markerSetPointEased(static_cast<unsigned int>(markerID), Tangram::LngLat(lng, lat), duration, static_cast<Tangram::EaseType>(ease));
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPolyline(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdoubleArray jcoordinates, jint count) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPolyline(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdoubleArray jcoordinates, jint count) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         if (!jcoordinates || count == 0) { return false; }
@@ -389,10 +460,10 @@ extern "C" {
         }
 
         auto result = map->markerSetPolyline(static_cast<unsigned int>(markerID), polyline.data(), count);
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPolygon(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdoubleArray jcoordinates, jintArray jcounts, jint rings) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPolygon(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdoubleArray jcoordinates, jintArray jcounts, jint rings) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         if (!jcoordinates || !jcounts || rings == 0) { return false; }
@@ -413,21 +484,21 @@ extern "C" {
         }
 
         auto result = map->markerSetPolygon(static_cast<unsigned int>(markerID), polygonCoords.data(), counts, rings);
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetVisible(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jboolean visible) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetVisible(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jboolean visible) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto result = map->markerSetVisible(static_cast<unsigned int>(markerID), visible);
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetDrawOrder(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jint drawOrder) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetDrawOrder(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jint drawOrder) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto result = map->markerSetDrawOrder(markerID, drawOrder);
-        return result;
+        return static_cast<jboolean>(result);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerRemoveAll(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {

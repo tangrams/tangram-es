@@ -16,6 +16,27 @@ struct nth<1, Tangram::Point> {
 };
 }}
 
+namespace {
+// Tests if a line segment (from point A to B) is outside the edge of a tile
+bool isOutsideTile(const glm::vec2& _a, const glm::vec2& _b) {
+
+    // tweak this adjust if catching too few/many line segments near tile edges
+    // TODO: make tolerance configurable by source if necessary
+    float tolerance = 0.0005;
+    float tile_min = 0.0 + tolerance;
+    float tile_max = 1.0 - tolerance;
+
+    if ( (_a.x < tile_min && _b.x < tile_min) ||
+         (_a.x > tile_max && _b.x > tile_max) ||
+         (_a.y < tile_min && _b.y < tile_min) ||
+         (_a.y > tile_max && _b.y > tile_max) ) {
+        return true;
+    }
+
+    return false;
+}
+}
+
 namespace Tangram {
 
 CapTypes CapTypeFromString(const std::string& str) {
@@ -118,6 +139,9 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
             glm::vec3 a(line[i], 0.f);
             glm::vec3 b(line[i+1], 0.f);
 
+            if (!_ctx.keepTileEdges && isOutsideTile(a, b)) {
+                continue;
+            }
             normalVector = glm::cross(upVector, b - a);
             normalVector = glm::normalize(normalVector);
 
@@ -254,25 +278,6 @@ void addCap(const glm::vec2& _coord, const glm::vec2& _normal, int _numCorners, 
         uB.x = 1.f;
     }
     addFan(_coord, nA, nB, nC, uA, uB, uC, _numCorners, _ctx);
-}
-
-// Tests if a line segment (from point A to B) is outside the edge of a tile
-bool isOutsideTile(const glm::vec2& _a, const glm::vec2& _b) {
-
-    // tweak this adjust if catching too few/many line segments near tile edges
-    // TODO: make tolerance configurable by source if necessary
-    float tolerance = 0.0005;
-    float tile_min = 0.0 + tolerance;
-    float tile_max = 1.0 - tolerance;
-
-    if ( (_a.x < tile_min && _b.x < tile_min) ||
-         (_a.x > tile_max && _b.x > tile_max) ||
-         (_a.y < tile_min && _b.y < tile_min) ||
-         (_a.y > tile_max && _b.y > tile_max) ) {
-        return true;
-    }
-
-    return false;
 }
 
 void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx, size_t _startIndex,

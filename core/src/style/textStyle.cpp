@@ -38,11 +38,9 @@ void TextStyle::constructVertexLayout() {
 void TextStyle::constructShaderProgram() {
 
     if (m_sdf) {
-        m_shaderSource->setSourceStrings(SHADER_SOURCE(sdf_fs),
-                                         SHADER_SOURCE(text_vs));
+        m_shaderSource->setSourceStrings(sdf_fs, text_vs);
     } else {
-        m_shaderSource->setSourceStrings(SHADER_SOURCE(text_fs),
-                                         SHADER_SOURCE(text_vs));
+        m_shaderSource->setSourceStrings(text_fs, text_vs);
     }
 
     m_shaderSource->addSourceBlock("defines", "#define TANGRAM_TEXT\n");

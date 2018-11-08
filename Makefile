@@ -51,7 +51,7 @@ IOS_FRAMEWORK_XCODE_PROJ = tangram.xcodeproj
 ifeq (, $(shell which xcpretty))
 	XCPRETTY =
 else
-	XCPRETTY = | xcpretty && exit \${PIPESTATUS[0]}
+	XCPRETTY = | xcpretty && exit $${PIPESTATUS[0]}
 endif
 
 # Default build type is Release
@@ -169,7 +169,7 @@ clean-tizen-x86:
 	rm -rf ${TIZEN_X86_BUILD_DIR}
 
 android: android-demo
-	@echo "run: 'adb install -r platforms/android/demo/build/outputs/apk/demo-debug.apk'"
+	@echo "run: 'adb install -r platforms/android/demo/build/outputs/apk/debug/demo-debug.apk'"
 
 android-sdk:
 	@cd platforms/android/ && \
@@ -196,6 +196,9 @@ ios: cmake-ios
 
 ios-sim: cmake-ios
 	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo -configuration ${BUILD_TYPE} -sdk iphonesimulator ${XCPRETTY}
+
+ios-xcode: cmake-ios
+	open platforms/ios/Tangram.xcworkspace
 
 ios-docs:
 ifeq (, $(shell which jazzy))

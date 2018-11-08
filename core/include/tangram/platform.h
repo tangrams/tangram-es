@@ -24,7 +24,7 @@ struct UrlResponse {
 };
 
 // Function type for receiving data from a URL request.
-using UrlCallback = std::function<void(UrlResponse)>;
+using UrlCallback = std::function<void(UrlResponse&&)>;
 
 using FontSourceLoader = std::function<std::vector<char>()>;
 

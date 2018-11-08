@@ -19,43 +19,55 @@
 
 @end
 
-@implementation MapViewControllerDelegate
+@implementation MapViewController
 
-- (void)mapView:(TGMapViewController *)view didCaptureScreenshot:(UIImage *)screenshot
+#pragma mark TGMapView Delegate
+
+- (void)mapView:(TGMapView *)view didCaptureScreenshot:(UIImage *)screenshot
 {
     NSLog(@"Did capture screenshot");
 }
 
-- (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView
+- (void)mapViewRegionIsChanging:(TGMapView *)mapView
+{
+    NSLog(@"Region Is Changing");
+}
+
+- (void)mapView:(TGMapView *)mapView regionWillChangeAnimated:(BOOL)animated
+{
+    NSLog(@"Region Will Change animated: %d", animated);
+}
+
+- (void)mapView:(TGMapView *)mapView regionDidChangeAnimated:(BOOL)animated
+{
+    NSLog(@"Region Did Change animated: %d", animated);
+}
+
+- (void)mapViewDidCompleteLoading:(TGMapView *)mapView
 {
     NSLog(@"Did complete view");
     // [mapView captureScreenshot:YES];
 }
 
-- (void)mapView:(TGMapViewController *)mapView didLoadScene:(int)sceneID withError:(nullable NSError *)sceneError
+- (void)mapView:(TGMapView *)mapView didLoadScene:(int)sceneID withError:(nullable NSError *)sceneError
 {
     if (sceneError) {
         NSLog(@"Scene Ready with error %@", sceneError);
         return;
     }
 
-    TGGeoPoint newYork;
+    CLLocationCoordinate2D newYork;
     newYork.longitude = -74.00976419448854;
     newYork.latitude = 40.70532700869127;
 
-    TGGeoPoint cairo;
-    cairo.longitude = 30.00;
-    cairo.latitude = 31.25;
-
-    [mapView setZoom:15];
-    [mapView setPosition:newYork];
+    TGCameraPosition *camera = [[TGCameraPosition alloc] initWithCenter:newYork zoom:15 bearing:0 pitch:0];
+    [mapView setCameraPosition:camera];
 
     // Add a client data source, named 'mz_route_line_transit'
-    MapViewController* vc = (MapViewController *)mapView;
-    vc.mapData = [mapView addDataLayer:@"mz_route_line_transit"];
+    self.mapData = [mapView addDataLayer:@"mz_route_line_transit" generateCentroid:NO];
 }
 
-- (void)mapView:(TGMapViewController *)mapView didSelectMarker:(TGMarkerPickResult *)markerPickResult atScreenPosition:(TGGeoPoint)position;
+- (void)mapView:(TGMapView *)mapView didSelectMarker:(TGMarkerPickResult *)markerPickResult atScreenPosition:(CGPoint)position;
 {
     if (!markerPickResult) {
         return;
@@ -65,10 +77,10 @@
         markerPickResult.marker.point.latitude,
         markerPickResult.marker.point.longitude];
 
-    [(MapViewController*)mapView addAlert:message withTitle:@"Marker pick callback"];
+    [self addAlert:message withTitle:@"Marker pick callback"];
 }
 
-- (void)mapView:(TGMapViewController *)mapView didSelectLabel:(TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position
+- (void)mapView:(TGMapView *)mapView didSelectLabel:(TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position
 {
     if (!labelPickResult) { return; }
 
@@ -78,14 +90,13 @@
         NSLog(@"\t%@ -- %@", key, [[labelPickResult properties] objectForKey:key]);
 
         if ([key isEqualToString:@"name"]) {
-            [(MapViewController*)mapView addAlert:[[labelPickResult properties] objectForKey:key] withTitle:@"Label selection callback"];
+            [self addAlert:[[labelPickResult properties] objectForKey:key] withTitle:@"Label selection callback"];
         }
     }
 }
 
-- (void)mapView:(TGMapViewController *)mapView didSelectFeature:(NSDictionary *)feature atScreenPosition:(CGPoint)position
+- (void)mapView:(TGMapView *)mapView didSelectFeature:(NSDictionary *)feature atScreenPosition:(CGPoint)position
 {
-    // Not feature selected
     if (!feature) { return; }
 
     NSLog(@"Picked features:");
@@ -94,27 +105,23 @@
         NSLog(@"\t%@ -- %@", key, [feature objectForKey:key]);
 
         if ([key isEqualToString:@"name"]) {
-            [(MapViewController*)mapView addAlert:[[feature objectForKey:key] objectForKey:key] withTitle:@"Feature selection callback"];
+            [self addAlert:[[feature objectForKey:key] objectForKey:key] withTitle:@"Feature selection callback"];
         }
     }
 }
 
-@end
+#pragma mark Gesture Delegate
 
-@implementation MapViewControllerRecognizerDelegate
-
-- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeSingleTapGesture:(CGPoint)location
+- (void)mapView:(TGMapView *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeSingleTapGesture:(CGPoint)location
 {
     NSLog(@"Did tap at %f %f", location.x, location.y);
 
-    MapViewController* vc = (MapViewController *)view;
-
-    TGGeoPoint coordinates = [vc screenPositionToLngLat:location];
+    CLLocationCoordinate2D coordinates = [view coordinateFromViewPosition:location];
 
     // Add polyline data layer
     {
         TGFeatureProperties* properties = @{ @"type" : @"line", @"color" : @"#D2655F" };
-        static TGGeoPoint lastCoordinates = {NAN, NAN};
+        static CLLocationCoordinate2D lastCoordinates = {NAN, NAN};
 
         if (!isnan(lastCoordinates.latitude)) {
             TGGeoPolyline* line = [[TGGeoPolyline alloc] init];
@@ -122,7 +129,7 @@
             [line addPoint:lastCoordinates];
             [line addPoint:coordinates];
 
-            [vc.mapData addPolyline:line withProperties:properties];
+            [self.mapData addPolyline:line withProperties:properties];
         }
 
         lastCoordinates = coordinates;
@@ -130,9 +137,9 @@
 
     // Add polygon marker
     {
-        if (!vc.markerPolygon) {
-            vc.markerPolygon = [view markerAdd];
-            vc.markerPolygon.stylingString = @"{ style: 'polygons', color: 'blue', order: 500 }";
+        if (!self.markerPolygon) {
+            self.markerPolygon = [view markerAdd];
+            self.markerPolygon.stylingString = @"{ style: 'polygons', color: 'blue', order: 500 }";
         }
         static TGGeoPolygon* polygon = nil;
         if (!polygon) { polygon = [[TGGeoPolygon alloc] init]; }
@@ -140,7 +147,7 @@
         if ([polygon count] == 0) {
             [polygon startPath:coordinates withSize:5];
         } else if ([polygon count] % 5 == 0) {
-            vc.markerPolygon.polygon = polygon;
+            self.markerPolygon.polygon = polygon;
             [polygon removeAll];
             [polygon startPath:coordinates withSize:5];
         } else {
@@ -156,19 +163,21 @@
     }
 
     // Request feature picking
-    [vc pickFeatureAt:location];
-    [vc pickLabelAt:location];
-    // [vc pickMarkerAt:location];
+    [view pickFeatureAt:location];
+    [view pickLabelAt:location];
+    // [view pickMarkerAt:location];
+
+    TGCameraPosition* camera = [view cameraPosition];
+    camera.center = CLLocationCoordinate2DMake(coordinates.latitude, coordinates.longitude);
+    [view setCameraPosition:camera withDuration:0.5 easeType:TGEaseTypeCubic callback: ^(BOOL canceled){
+        NSLog(@"Animation completed %d", !canceled);
+    }];
 }
 
-- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location
+- (void)mapView:(TGMapView *)mapView recognizer:(UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location
 {
     NSLog(@"Did long press at %f %f", location.x, location.y);
 }
-
-@end
-
-@implementation MapViewController
 
 - (void)addAlert:(NSString *)message withTitle:(NSString *)title
 {
@@ -183,6 +192,8 @@
     [self presentViewController:alert animated:YES completion:nil];
 }
 
+#pragma mark View Controller
+
 - (void)viewWillAppear:(BOOL)animated
 {
     NSString* apiKey = [[[NSBundle mainBundle] infoDictionary] valueForKey:@"NEXTZEN_API_KEY"];
@@ -194,12 +205,14 @@
     NSMutableArray<TGSceneUpdate *>* updates = [[NSMutableArray alloc]init];
     [updates addObject:[[TGSceneUpdate alloc]initWithPath:@"global.sdk_api_key" value:apiKey]];
 
-    [super loadSceneAsyncFromURL:[NSURL URLWithString:@"https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip"] withUpdates:updates];
+    TGMapView *mapView = (TGMapView *)self.view;
+
+    [mapView loadSceneAsyncFromURL:[NSURL URLWithString:@"https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip"] withUpdates:updates];
 
     //Location tracking marker setup
-    TGMarker* markerPoint = [self markerAdd];
+    TGMarker* markerPoint = [mapView markerAdd];
     markerPoint.stylingString = @"{ style: 'points', color: 'white', size: [25px, 25px], collide: false }";
-    TGGeoPoint newYork;
+    CLLocationCoordinate2D newYork;
     newYork.longitude = -74.00976419448854;
     newYork.latitude = 40.70532700869127;
     markerPoint.point = newYork;
@@ -210,8 +223,9 @@
 {
     [super viewDidLoad];
 
-    self.mapViewDelegate = [[MapViewControllerDelegate alloc] init];
-    self.gestureDelegate = [[MapViewControllerRecognizerDelegate alloc] init];
+    TGMapView *mapView = (TGMapView *)self.view;
+    mapView.mapViewDelegate = self;
+    mapView.gestureDelegate = self;
     self.locationManager = [[CLLocationManager alloc] init];
     self.locationManager.delegate = self;
     // Enable for Location Tracking
@@ -231,7 +245,7 @@
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray<CLLocation *> *)locations {
     NSLog(@"Locations came in - %@", locations);
-    TGGeoPoint point = TGGeoPointMake(locations[0].coordinate.longitude, locations[0].coordinate.latitude);
+    CLLocationCoordinate2D point = CLLocationCoordinate2DMake(locations[0].coordinate.longitude, locations[0].coordinate.latitude);
     [self.locationTrackingMarker pointEased:point seconds:1.0 easeType:TGEaseTypeCubic];
 }
 

@@ -3,18 +3,17 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 2/17/17.
+//  Updated by Matt Blair on 8/21/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import <CoreLocation/CoreLocation.h>
 #import <UIKit/UIKit.h>
 #import "TGExport.h"
-#import "TGGeoPoint.h"
-#import "TGGeoPolygon.h"
-#import "TGGeoPolyline.h"
 #import "TGTypes.h"
 
-@class TGMapViewController;
+@class TGGeoPolygon;
+@class TGGeoPolyline;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -33,13 +32,13 @@ TG_EXPORT
  (See `TGEaseType`) from its previous coordinate, if a point geometry hasn't been set any coordinate yet,
  this method will act as `-[TGMarker point]`.
 
- @param coordinates the longitude and latitude where the marker will be placed
+ @param point the longitude and latitude where the marker will be placed
  @param seconds the animation duration given in seconds
  @param ease the ease function to be used between animation timestep
 
  @note Markers can have their geometry set multiple time with possibly different geometry types.
  */
-- (void)pointEased:(TGGeoPoint)coordinates seconds:(float)seconds easeType:(TGEaseType)ease;
+- (void)pointEased:(CLLocationCoordinate2D)point seconds:(NSTimeInterval)seconds easeType:(TGEaseType)ease;
 
 /**
  Sets the styling for a marker with a string of YAML defining a 'draw rule'.
@@ -65,7 +64,7 @@ TG_EXPORT
 
  @note Markers can have their geometry set multiple time with possibly different geometry types.
  */
-@property (assign, nonatomic) TGGeoPoint point;
+@property (assign, nonatomic) CLLocationCoordinate2D point;
 
 /**
  Sets a marker styled to be a polyline (described in a `TGGeoPolyline`).
@@ -88,7 +87,7 @@ TG_EXPORT
  ```swift
  TGMarker marker;
  marker.styling = "{ style: 'points', color: 'white', size: [25px, 25px], order:500 }"
- marker.point = TGGeoPointMake(longitude, latitude)
+ marker.point = CLLocationCoordinate2DMake(longitude, latitude)
  marker.icon = UIIMage(name: "marker-icon.png")
  ```
  @note An icon marker must be styled with a

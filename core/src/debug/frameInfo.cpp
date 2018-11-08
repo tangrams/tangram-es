@@ -121,6 +121,8 @@ void FrameInfo::draw(RenderState& rs, const View& _view, TileManager& _tileManag
             debuginfos.push_back("zoom:" + std::to_string(_view.getZoom()));
             debuginfos.push_back("pos:" + std::to_string(_view.getPosition().x) + "/"
                                  + std::to_string(_view.getPosition().y));
+            auto center = _view.getCenterCoordinates();
+            debuginfos.push_back("LngLat:" + std::to_string(center.longitude) + ", " + std::to_string(center.latitude));
             debuginfos.push_back("tilt:" + std::to_string(_view.getPitch() * 57.3) + "deg");
             debuginfos.push_back("pixel scale:" + std::to_string(_view.pixelScale()));
             debuginfos.push_back("visible tiles:"

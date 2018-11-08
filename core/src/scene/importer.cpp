@@ -62,7 +62,7 @@ Node Importer::applySceneImports(std::shared_ptr<Platform> platform) {
         }
 
         activeDownloads++;
-        m_scene->startUrlRequest(platform, nextUrlToImport, [&, nextUrlToImport](UrlResponse response) {
+        m_scene->startUrlRequest(platform, nextUrlToImport, [&, nextUrlToImport](UrlResponse&& response) {
             std::unique_lock<std::mutex> lock(sceneMutex);
             if (response.error) {
                 LOGE("Unable to retrieve '%s': %s", nextUrlToImport.string().c_str(), response.error);
@@ -127,6 +127,10 @@ void Importer::addSceneString(const Url& sceneUrl, const std::string& sceneStrin
         LOGE("Parsing scene config '%s'", e.what());
         return;
     }
+    if (!sceneNode.IsDefined() || !sceneNode.IsMap()) {
+        LOGE("Scene is not a valid YAML map: %s", sceneUrl.string().c_str());
+        return;
+    }
 
     m_importedScenes[sceneUrl] = sceneNode;
 
@@ -144,13 +148,15 @@ std::vector<Url> Importer::getResolvedImportUrls(const Node& sceneNode, const Ur
         base = getBaseUrlForZipArchive(baseUrl);
     }
 
-    if (const Node& import = sceneNode["import"]) {
-        if (import.IsScalar()) {
-            sceneUrls.push_back(Url(import.Scalar()).resolved(base));
-        } else if (import.IsSequence()) {
-            for (const auto& path : import) {
-                if (path.IsScalar()) {
-                    sceneUrls.push_back(Url(path.Scalar()).resolved(base));
+    if (sceneNode.IsMap()) {
+        if (const Node& import = sceneNode["import"]) {
+            if (import.IsScalar()) {
+                sceneUrls.push_back(Url(import.Scalar()).resolved(base));
+            } else if (import.IsSequence()) {
+                for (const auto &path : import) {
+                    if (path.IsScalar()) {
+                        sceneUrls.push_back(Url(path.Scalar()).resolved(base));
+                    }
                 }
             }
         }

@@ -465,7 +465,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
             auto& task = entry.task;
 
             // Update tile distance to map center for load priority.
-            auto tileCenter = _view.mapProjection->TileCenter(id);
+            auto tileCenter = MapProjection::tileCenter(id);
             double scaleDiv = exp2(id.z - _view.zoom);
             if (scaleDiv < 1) { scaleDiv = 0.1/scaleDiv; } // prefer parent tiles
             task->setPriority(glm::length2(tileCenter - _view.center) * scaleDiv);
@@ -483,7 +483,7 @@ void TileManager::enqueueTask(TileSet& _tileSet, const TileID& _tileID,
                               const ViewState& _view) {
 
     // Keep the items sorted by distance
-    auto tileCenter = _view.mapProjection->TileCenter(_tileID);
+    auto tileCenter = MapProjection::tileCenter(_tileID);
     double distance = glm::length2(tileCenter - _view.center);
 
     auto it = std::upper_bound(m_loadTasks.begin(), m_loadTasks.end(), distance,
@@ -523,11 +523,7 @@ bool TileManager::addTile(TileSet& _tileSet, const TileID& _tileID) {
         if (tile->sourceGeneration() == _tileSet.source->generation()) {
             m_tiles.push_back(tile);
 
-            // Update tile origin based on wrap (set in the new tileID)
-            tile->updateTileOrigin(_tileID.wrap);
-
             // Reset tile on potential internal dynamic data set
-            // TODO rename to resetState() to avoid ambiguity
             tile->resetState();
         } else {
             // Clear stale tile data
@@ -556,11 +552,11 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
 
 
     if (entry.isInProgress()) {
-        entry.clearTask();
-
         // 1. Remove from Datasource. Make sure to cancel
         //  the network request associated with this tile.
-        _tileSet.source->cancelLoadingTile(id);
+        _tileSet.source->cancelLoadingTile(*entry.task);
+
+        entry.clearTask();
 
     } else if (entry.isReady()) {
         // Add to cache

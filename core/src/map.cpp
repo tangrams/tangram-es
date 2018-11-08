@@ -38,7 +38,16 @@ namespace Tangram {
 
 const static size_t MAX_WORKERS = 4;
 
-enum class EaseField { position, zoom, rotation, tilt, all };
+struct CameraEase {
+    struct {
+        glm::dvec2 pos;
+        float zoom;
+        float rotation;
+        float tilt;
+    } start, end;
+};
+
+using CameraAnimator = std::function<uint32_t(float dt)>;
 
 class Map::Impl {
 
@@ -52,15 +61,7 @@ public:
 
     void setScene(std::shared_ptr<Scene>& _scene);
 
-    void setEase(EaseField _f, Ease _e);
-    void clearEase(EaseField _f);
-
-    void setPositionNow(double _lon, double _lat);
-    void setZoomNow(float _z);
-    void setRotationNow(float _radians);
-    void setTiltNow(float _radians);
     void setPositionZoomRotationTiltNow(double _lon, double _lat, float _z, float _radiansRotation, float _radiansTilt);
-
     void setPixelScale(float _pixelsPerPoint);
 
     std::mutex tilesMutex;
@@ -74,8 +75,7 @@ public:
     std::shared_ptr<Platform> platform;
     InputHandler inputHandler;
 
-    std::array<Ease, 5> eases;
-
+    std::unique_ptr<Ease> ease;
     std::shared_ptr<Scene> scene;
     std::shared_ptr<Scene> lastValidScene;
     std::atomic<int32_t> sceneLoadTasks{0};
@@ -91,10 +91,12 @@ public:
 
     bool cacheGlState = false;
     float pickRadius = .5f;
+    bool isCameraEasing = false;
 
     std::vector<SelectionQuery> selectionQueries;
 
     SceneReadyCallback onSceneReady = nullptr;
+    CameraAnimationCallback cameraAnimationListener = nullptr;
 
     void sceneLoadBegin() {
         sceneLoadTasks++;
@@ -109,19 +111,10 @@ public:
 
 };
 
-void Map::Impl::setEase(EaseField _f, Ease _e) {
-    eases[static_cast<size_t>(_f)] = _e;
-    platform->requestRender();
-}
-
-void Map::Impl::clearEase(EaseField _f) {
-    static Ease none = {};
-    size_t i = static_cast<size_t>(_f);
     if (eases[i].cancelCb != nullptr) {
         eases[i].cancelCb();
     }
     eases[i] = none;
-}
 
 static std::bitset<9> g_flags = 0;
 
@@ -174,8 +167,8 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
     }
 
     if (scene->useScenePosition) {
-        glm::dvec2 projPos = view.getMapProjection().LonLatToMeters(scene->startPosition);
-        view.setPosition(projPos.x, projPos.y);
+        auto position = scene->startPosition;
+        view.setCenterCoordinates({position.x, position.y});
         view.setZoom(scene->startZoom);
     }
 
@@ -185,12 +178,6 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
     markerManager.setScene(_scene);
 
     bool animated = scene->animated() == Scene::animate::yes;
-
-    if (scene->animated() == Scene::animate::none) {
-        for (const auto& style : scene->styles()) {
-            animated |= style->isAnimated();
-        }
-    }
 
     if (animated != platform->isContinuousRendering()) {
         platform->setContinuousRendering(animated);
@@ -310,6 +297,10 @@ void Map::setSceneReadyListener(SceneReadyCallback _onSceneReady) {
     impl->onSceneReady = _onSceneReady;
 }
 
+void Map::setCameraAnimationListener(CameraAnimationCallback _cb) {
+    impl->cameraAnimationListener = _cb;
+}
+
 std::shared_ptr<Platform>& Map::getPlatform() {
     return platform;
 }
@@ -412,10 +403,19 @@ bool Map::update(float _dt) {
     bool viewComplete = true;
     bool markersNeedUpdate = false;
 
-    for (auto& ease : impl->eases) {
-        if (!ease.finished()) {
-            ease.update(_dt);
-            viewComplete = false;
+    bool isEasing = false;
+    if (impl->ease) {
+        auto& ease = *(impl->ease);
+        ease.update(_dt);
+
+        if (ease.finished()) {
+            if (impl->cameraAnimationListener) {
+                impl->cameraAnimationListener(true);
+            }
+            impl->ease.reset();
+            isEasing = false;
+        } else {
+            isEasing = true;
         }
         else if (ease.finishCb != nullptr) {
             ease.finishCb();
@@ -424,7 +424,8 @@ bool Map::update(float _dt) {
         }
     }
 
-    impl->inputHandler.update(_dt);
+    bool isFlinging = impl->inputHandler.update(_dt);
+    impl->isCameraEasing = (isEasing || isFlinging);
 
     impl->view.update();
 
@@ -468,7 +469,7 @@ bool Map::update(float _dt) {
     }
 
     // Request render if labels are in fading states or markers are easing.
-    if (labelsNeedUpdate || markersNeedUpdate) {
+    if (impl->isCameraEasing || labelsNeedUpdate || markersNeedUpdate) {
         platform->requestRender();
     }
 
@@ -497,11 +498,11 @@ void Map::pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallb
     platform->requestRender();
 }
 
-void Map::render() {
+bool Map::render() {
 
     // Do not render if any texture resources are in process of being downloaded
     if (impl->scene->pendingTextures > 0) {
-        return;
+        return impl->isCameraEasing;
     }
 
     bool drawSelectionBuffer = getDebugFlag(DebugFlags::selection_buffer);
@@ -554,26 +555,36 @@ void Map::render() {
     if (drawSelectionBuffer) {
         impl->selectionBuffer->drawDebug(impl->renderState, viewport);
         FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
-        return;
+        return impl->isCameraEasing;
     }
 
+    bool drawnAnimatedStyle = false;
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
         // Loop over all styles
         for (const auto& style : impl->scene->styles()) {
 
-            style->draw(impl->renderState,
-                        impl->view, *(impl->scene),
-                        impl->tileManager.getVisibleTiles(),
-                        impl->markerManager.markers());
+            bool styleDrawn = style->draw(impl->renderState,
+                                impl->view, *(impl->scene),
+                                impl->tileManager.getVisibleTiles(),
+                                impl->markerManager.markers());
 
+            drawnAnimatedStyle |= (styleDrawn && style->isAnimated());
         }
+    }
+
+    if (impl->scene->animated() != Scene::animate::no &&
+        drawnAnimatedStyle != platform->isContinuousRendering()) {
+
+        platform->setContinuousRendering(drawnAnimatedStyle);
     }
 
     impl->labels.drawDebug(impl->renderState, impl->view);
 
     FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
+
+    return impl->isCameraEasing;
 }
 
 int Map::getViewportHeight() {
@@ -592,101 +603,268 @@ void Map::captureSnapshot(unsigned int* _data) {
     GL::readPixels(0, 0, impl->view.getWidth(), impl->view.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)_data);
 }
 
-void Map::Impl::setPositionNow(double _lon, double _lat) {
 
-    glm::dvec2 meters = view.getMapProjection().LonLatToMeters({ _lon, _lat});
-    view.setPosition(meters.x, meters.y);
-    inputHandler.cancelFling();
-    platform->requestRender();
+CameraPosition Map::getCameraPosition() {
+    CameraPosition camera;
 
+    getPosition(camera.longitude, camera.latitude);
+    camera.zoom = getZoom();
+    camera.rotation = getRotation();
+    camera.tilt = getTilt();
+
+    return camera;
 }
 
-void Map::setPosition(double _lon, double _lat) {
+void Map::cancelCameraAnimation() {
+    impl->inputHandler.cancelFling();
 
-    impl->setPositionNow(_lon, _lat);
-    impl->clearEase(EaseField::position);
+    impl->ease.reset();
+    impl->isCameraEasing = false;
     impl->clearEase(EaseField::all);
 
+    if (impl->cameraAnimationListener) {
+        impl->cameraAnimationListener(false);
+    }
 }
 
-void Map::setPositionEased(double _lon, double _lat, float _duration, EaseType _e, EaseCancelCb _cancelCb, EaseFinishCb _finishCb) {
+void Map::setCameraPosition(const CameraPosition& _camera) {
+    cancelCameraAnimation();
+
+    impl->view.setCenterCoordinates(LngLat(_camera.longitude, _camera.latitude));
+    impl->view.setZoom(_camera.zoom);
+    impl->view.setRoll(_camera.rotation);
+    impl->view.setPitch(_camera.tilt);
+
+    impl->platform->requestRender();
+}
+
+void Map::setCameraPositionEased(const CameraPosition& _camera, float _duration, EaseType _e) {
+    cancelCameraAnimation();
+
+    CameraEase e;
 
     double lon_start, lat_start;
     getPosition(lon_start, lat_start);
 
-    double dLongitude = _lon - lon_start;
+    double lonEnd = _camera.longitude;
+    double latEnd = _camera.latitude;
+
+    double dLongitude = lonEnd - lonStart;
     if (dLongitude > 180.0) {
-        _lon -= 360.0;
+        lonEnd -= 360.0;
     } else if (dLongitude < -180.0) {
-        _lon += 360.0;
+        lonEnd += 360.0;
     }
 
-    auto cb = [=](float t) { impl->setPositionNow(ease(lon_start, _lon, t, _e), ease(lat_start, _lat, t, _e)); };
-    impl->setEase(EaseField::position, { _duration, cb, _cancelCb, _finishCb });
+    e.start.pos = MapProjection::lngLatToProjectedMeters({lonStart, latStart});
+    e.end.pos = MapProjection::lngLatToProjectedMeters({lonEnd, latEnd});
     impl->clearEase(EaseField::all);
 
+    e.start.zoom = getZoom();
+    e.end.zoom = _camera.zoom;
+
+    float radiansStart = getRotation();
+
+    // Ease over the smallest angular distance needed
+    float radiansDelta = glm::mod(_camera.rotation - radiansStart, (float)TWO_PI);
+    if (radiansDelta > PI) { radiansDelta -= TWO_PI; }
+
+    e.start.rotation = radiansStart;
+    e.end.rotation = radiansStart + radiansDelta;
+
+    e.start.tilt = getTilt();
+    e.end.tilt = _camera.tilt;
+
+    impl->ease = std::make_unique<Ease>(_duration,
+        [=](float t) {
+            impl->view.setPosition(ease(e.start.pos.x, e.end.pos.x, t, _e),
+                                   ease(e.start.pos.y, e.end.pos.y, t, _e));
+            impl->view.setZoom(ease(e.start.zoom, e.end.zoom, t, _e));
+
+            impl->view.setRoll(ease(e.start.rotation, e.end.rotation, t, _e));
+
+            impl->view.setPitch(ease(e.start.tilt, e.end.tilt, t, _e));
+        });
+
+    platform->requestRender();
+}
+
+
+void Map::updateCameraPosition(const CameraUpdate& _update, float _duration, EaseType _e) {
+    impl->clearEase(EaseField::all); 
+
+    CameraPosition camera;
+    if ((_update.set & CameraUpdate::SET_CAMERA) != 0) {
+        camera = getCameraPosition();
+    }
+    if ((_update.set & CameraUpdate::SET_BOUNDS) != 0) {
+        camera = getEnclosingCameraPosition(_update.bounds[0], _update.bounds[1], _update.padding);
+    }
+    if ((_update.set & CameraUpdate::SET_LNGLAT) != 0) {
+        camera.longitude = _update.lngLat.longitude;
+        camera.latitude = _update.lngLat.latitude;
+    }
+    if ((_update.set & CameraUpdate::SET_ZOOM) != 0) {
+        camera.zoom = _update.zoom;
+    }
+    if ((_update.set & CameraUpdate::SET_ROTATION) != 0) {
+        camera.rotation = _update.rotation;
+    }
+    if ((_update.set & CameraUpdate::SET_TILT) != 0) {
+        camera.tilt = _update.tilt;
+    }
+    if ((_update.set & CameraUpdate::SET_ZOOM_BY) != 0) {
+        camera.zoom += _update.zoomBy;
+    }
+    if ((_update.set & CameraUpdate::SET_ROTATION_BY) != 0) {
+        camera.rotation += _update.rotationBy;
+    }
+    if ((_update.set & CameraUpdate::SET_TILT_BY) != 0) {
+        camera.tilt += _update.tiltBy;
+    }
+
+    if (_duration == 0.f) {
+        setCameraPosition(camera);
+    } else {
+        setCameraPositionEased(camera, _duration, _e);
+    }
+}
+
+void Map::setPosition(double _lon, double _lat) {
+    cancelCameraAnimation();
+
+    glm::dvec2 meters = MapProjection::lngLatToProjectedMeters({_lon, _lat});
+    impl->view.setPosition(meters.x, meters.y);
+    impl->inputHandler.cancelFling();
+    impl->platform->requestRender();
 }
 
 void Map::getPosition(double& _lon, double& _lat) {
-
-    glm::dvec2 meters(impl->view.getPosition().x, impl->view.getPosition().y);
-    glm::dvec2 degrees = impl->view.getMapProjection().MetersToLonLat(meters);
-    _lon = LngLat::wrapLongitude(degrees.x);
-    _lat = degrees.y;
-
-}
-
-void Map::Impl::setZoomNow(float _z) {
-
-    view.setZoom(_z);
-    inputHandler.cancelFling();
-    platform->requestRender();
-
+    LngLat degrees = impl->view.getCenterCoordinates();
+    _lon = degrees.longitude;
+    _lat = degrees.latitude;
 }
 
 void Map::setZoom(float _z) {
+    cancelCameraAnimation();
 
-    impl->setZoomNow(_z);
-    impl->clearEase(EaseField::zoom);
-
+    impl->view.setZoom(_z);
+    impl->inputHandler.cancelFling();
+    impl->platform->requestRender();
 }
 
-void Map::setZoomEased(float _z, float _duration, EaseType _e, EaseCancelCb _cancelCb, EaseFinishCb _finishCb) { 
-
-    float z_start = getZoom();
-    auto cb = [=](float t) { impl->setZoomNow(ease(z_start, _z, t, _e)); };
-    impl->setEase(EaseField::zoom, { _duration, cb, _cancelCb, _finishCb }); 
-    impl->clearEase(EaseField::all); 
-
+float Map::getZoom() {
+    return impl->view.getZoom();
 }
 
-void Map::flyTo(double _lon, double _lat, float _z, float _duration, float _speed) {
+void Map::setMinZoom(float _minZoom) {
+    impl->view.setMinZoom(_minZoom);
+}
 
-    double lonStart = 0., latStart = 0.;
-    getPosition(lonStart, latStart);
+float Map::getMinZoom() {
+    return impl->view.getMinZoom();
+}
+
+void Map::setMaxZoom(float _maxZoom) {
+    impl->view.setMaxZoom(_maxZoom);
+}
+
+float Map::getMaxZoom() {
+    return impl->view.getMaxZoom();
+}
+
+void Map::setRotation(float _radians) {
+    cancelCameraAnimation();
+
+    impl->view.setRoll(_radians);
+    impl->platform->requestRender();
+    impl->clearEase(EaseField::all);
+}
+
+float Map::getRotation() {
+    return impl->view.getRoll();
+}
+
+void Map::setTilt(float _radians) {
+    cancelCameraAnimation();
+
+    impl->view.setPitch(_radians);
+    impl->platform->requestRender();
+}
+
+float Map::getTilt() {
+    return impl->view.getPitch();
+}
+
+CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, EdgePadding _pad) {
+    const View& view = impl->view;
+
+    // Convert the bounding coordinates into Mercator meters.
+    ProjectedMeters aMeters = MapProjection::lngLatToProjectedMeters(_a);
+    ProjectedMeters bMeters = MapProjection::lngLatToProjectedMeters(_b);
+    ProjectedMeters dMeters = glm::abs(aMeters - bMeters);
+
+    // Calculate the inner size of the view that the bounds must fit within.
+    glm::dvec2 innerSize(view.getWidth() / view.pixelScale(), view.getHeight() / view.pixelScale());
+    innerSize -= glm::dvec2((_pad.left + _pad.right), (_pad.top + _pad.bottom));
+
+    // Calculate the map scale that fits the bounds into the inner size in each dimension.
+    glm::dvec2 metersPerPixel = dMeters / innerSize;
+
+    // Take the value from the larger dimension to calculate the final zoom.
+    double maxMetersPerPixel = std::max(metersPerPixel.x, metersPerPixel.y);
+    double zoom = -std::log2(maxMetersPerPixel * MapProjection::tileSize() / MapProjection::EARTH_CIRCUMFERENCE_METERS);
+
+    // Adjust the center of the final visible region using the padding converted to Mercator meters.
+    glm::dvec2 paddingMeters = glm::dvec2(_pad.right - _pad.left, _pad.top - _pad.bottom) * maxMetersPerPixel;
+    glm::dvec2 centerMeters = 0.5 * (aMeters + bMeters + paddingMeters);
+
+    LngLat centerLngLat = MapProjection::projectedMetersToLngLat(centerMeters);
+
+    CameraPosition camera;
+    camera.zoom = static_cast<float>(zoom);
+    camera.longitude = centerLngLat.longitude;
+    camera.latitude = centerLngLat.latitude;
+    return camera;
+}
+
+void Map::flyTo(const CameraPosition& _camera, float _duration, float _speed) {
+
+    double lngStart = 0., latStart = 0., lngEnd = _camera.longitude, latEnd = _camera.latitude;
+    getPosition(lngStart, latStart);
     float zStart = getZoom();
+    float rStart = getRotation();
+    float tStart = getTilt();
 
-    double dLongitude = _lon - lonStart;
+    // Ease over the smallest angular distance needed
+    float radiansDelta = glm::mod(_camera.rotation - rStart, (float)TWO_PI);
+    if (radiansDelta > PI) { radiansDelta -= TWO_PI; }
+    float rEnd = rStart + radiansDelta;
+
+    double dLongitude = lngEnd - lngStart;
     if (dLongitude > 180.0) {
-        _lon -= 360.0;
+        lngEnd -= 360.0;
     } else if (dLongitude < -180.0) {
-        _lon += 360.0;
+        lngEnd += 360.0;
     }
 
-    const MapProjection& projection = impl->view.getMapProjection();
-    glm::dvec2 a = projection.LonLatToMeters(glm::dvec2(lonStart, latStart));
-    glm::dvec2 b = projection.LonLatToMeters(glm::dvec2(_lon, _lat));
+    ProjectedMeters a = MapProjection::lngLatToProjectedMeters(LngLat(lngStart, latStart));
+    ProjectedMeters b = MapProjection::lngLatToProjectedMeters(LngLat(lngEnd, latEnd));
 
     double distance = 0.0;
     auto fn = getFlyToFunction(impl->view,
                                glm::dvec3(a.x, a.y, zStart),
-                               glm::dvec3(b.x, b.y, _z),
+                               glm::dvec3(b.x, b.y, _camera.zoom),
                                distance);
+
+    EaseType e = EaseType::cubic;
     auto cb =
         [=](float t) {
             glm::dvec3 pos = fn(t);
             impl->view.setPosition(pos.x, pos.y);
             impl->view.setZoom(pos.z);
+            impl->view.setRoll(ease(rStart, rEnd, t, e));
+            impl->view.setPitch(ease(tStart, _camera.tilt, t, e));
             impl->platform->requestRender();
         };
 
@@ -694,82 +872,7 @@ void Map::flyTo(double _lon, double _lat, float _z, float _duration, float _spee
 
     float duration = _duration > 0 ? _duration : distance / _speed;
 
-    impl->setEase(EaseField::zoom, { duration, cb });
-
-}
-
-float Map::getZoom() {
-
-    return impl->view.getZoom();
-
-}
-
-void Map::Impl::setRotationNow(float _radians) {
-
-    view.setRoll(_radians);
-    platform->requestRender();
-
-}
-
-void Map::setRotation(float _radians) {
-
-    impl->setRotationNow(_radians);
-    impl->clearEase(EaseField::rotation);
-    impl->clearEase(EaseField::all);
-
-}
-
-void Map::setRotationEased(float _radians, float _duration, EaseType _e, EaseCancelCb _cancelCb, EaseFinishCb _finishCb) {
-
-    float radians_start = getRotation();
-
-    // Ease over the smallest angular distance needed
-    float radians_delta = glm::mod(_radians - radians_start, (float)TWO_PI);
-    if (radians_delta > PI) { radians_delta -= TWO_PI; }
-    _radians = radians_start + radians_delta;
-
-    auto cb = [=](float t) { impl->setRotationNow(ease(radians_start, _radians, t, _e)); };
-    impl->setEase(EaseField::rotation, { _duration, cb, _cancelCb, _finishCb });
-    impl->clearEase(EaseField::all);
-
-}
-
-float Map::getRotation() {
-
-    return impl->view.getRoll();
-
-}
-
-
-void Map::Impl::setTiltNow(float _radians) {
-
-    view.setPitch(_radians);
-    platform->requestRender();
-
-}
-
-void Map::setTilt(float _radians) {
-
-    impl->setTiltNow(_radians);
-    impl->clearEase(EaseField::tilt);
-    impl->clearEase(EaseField::all);
-
-}
-
-void Map::setTiltEased(float _radians, float _duration, EaseType _e, EaseCancelCb _cancelCb, EaseFinishCb _finishCb) {
-
-    float tilt_start = getTilt();
-    auto cb = [=](float t) { impl->setTiltNow(ease(tilt_start, _radians, t, _e)); };
-    impl->setEase(EaseField::tilt, { _duration, cb, _cancelCb, _finishCb });
-    impl->clearEase(EaseField::all);
-
-}
-
-float Map::getTilt() {
-
-    return impl->view.getPitch();
-
-}
+    cancelCameraAnimation();
 
 void Map::Impl::setPositionZoomRotationTiltNow(double _lon, double _lat, float _z, float _radiansRotation, float _radiansTilt) {
 
@@ -832,24 +935,25 @@ void Map::clearEasing() {
         impl->clearEase(EaseField(i));
     }
 
+    impl->ease = std::make_unique<Ease>(duration, cb);
+
+    platform->requestRender();
 }
 
 bool Map::screenPositionToLngLat(double _x, double _y, double* _lng, double* _lat) {
 
-    double intersection = impl->view.screenToGroundPlane(_x, _y);
-    glm::dvec3 eye = impl->view.getPosition();
-    glm::dvec2 meters(_x + eye.x, _y + eye.y);
-    glm::dvec2 lngLat = impl->view.getMapProjection().MetersToLonLat(meters);
-    *_lng = LngLat::wrapLongitude(lngLat.x);
-    *_lat = lngLat.y;
+    bool intersection = false;
+    LngLat lngLat = impl->view.screenPositionToLngLat(_x, _y, intersection);
+    *_lng = lngLat.longitude;
+    *_lat = lngLat.latitude;
 
-    return (intersection >= 0);
+    return intersection;
 }
 
 bool Map::lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y) {
     bool clipped = false;
 
-    glm::vec2 screenCoords = impl->view.lonLatToScreenPosition(_lng, _lat, clipped);
+    glm::vec2 screenCoords = impl->view.lngLatToScreenPosition(_lng, _lat, clipped);
 
     *_x = screenCoords.x;
     *_y = screenCoords.y;
@@ -987,45 +1091,38 @@ void Map::markerRemoveAll() {
 }
 
 void Map::handleTapGesture(float _posX, float _posY) {
-
+    cancelCameraAnimation();
     impl->inputHandler.handleTapGesture(_posX, _posY);
-
 }
 
 void Map::handleDoubleTapGesture(float _posX, float _posY) {
-
+    cancelCameraAnimation();
     impl->inputHandler.handleDoubleTapGesture(_posX, _posY);
-
 }
 
 void Map::handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
-
+    cancelCameraAnimation();
     impl->inputHandler.handlePanGesture(_startX, _startY, _endX, _endY);
-
 }
 
 void Map::handleFlingGesture(float _posX, float _posY, float _velocityX, float _velocityY) {
-
+    cancelCameraAnimation();
     impl->inputHandler.handleFlingGesture(_posX, _posY, _velocityX, _velocityY);
-
 }
 
 void Map::handlePinchGesture(float _posX, float _posY, float _scale, float _velocity) {
-
+    cancelCameraAnimation();
     impl->inputHandler.handlePinchGesture(_posX, _posY, _scale, _velocity);
-
 }
 
 void Map::handleRotateGesture(float _posX, float _posY, float _radians) {
-
+    cancelCameraAnimation();
     impl->inputHandler.handleRotateGesture(_posX, _posY, _radians);
-
 }
 
 void Map::handleShoveGesture(float _distance) {
-
+    cancelCameraAnimation();
     impl->inputHandler.handleShoveGesture(_distance);
-
 }
 
 void Map::setupGL() {

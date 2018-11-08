@@ -170,7 +170,7 @@ UrlRequestHandle OSXPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
 
         // Run the callback from the requester.
         if (_callback) {
-            _callback(urlResponse);
+            _callback(std::move(urlResponse));
         }
     };
 

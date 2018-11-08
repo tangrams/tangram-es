@@ -3,12 +3,21 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 2/24/16.
+//  Updated by Matt Blair on 8/21/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
-#import "TGMapViewController+Internal.h"
-#import <memory>
-#import <vector>
+#import "TGGeoPolygon.h"
+#import "TGGeoPolyline.h"
+#import "TGMapData.h"
+#import "TGMapData+Internal.h"
+#import "TGMapView.h"
+#import "TGMapView+Internal.h"
+#import "TGTypes+Internal.h"
+
+#include "tangram.h"
+#include <memory>
+#include <vector>
 
 typedef std::vector<Tangram::LngLat> Line;
 typedef std::vector<Line> Polygon;
@@ -18,7 +27,7 @@ typedef std::vector<Line> Polygon;
 }
 
 @property (copy, nonatomic) NSString* name;
-@property (weak, nonatomic) TGMapViewController* map;
+@property (weak, nonatomic) TGMapView* map;
 
 @end
 
@@ -32,7 +41,7 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
 
 @implementation TGMapData
 
-- (instancetype)initWithMapView:(__weak TGMapViewController *)mapView name:(NSString *)name source:(std::shared_ptr<Tangram::ClientGeoJsonSource>)source
+- (instancetype)initWithMapView:(__weak TGMapView *)mapView name:(NSString *)name source:(std::shared_ptr<Tangram::ClientGeoJsonSource>)source
 {
     self = [super init];
 
@@ -45,7 +54,7 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
     return self;
 }
 
-- (void)addPoint:(TGGeoPoint)coordinates withProperties:(TGFeatureProperties *)properties
+- (void)addPoint:(CLLocationCoordinate2D)point withProperties:(TGFeatureProperties *)properties
 {
     if (!self.map) {
         return;
@@ -54,7 +63,7 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
     Tangram::Properties tgProperties;
     tangramProperties(properties, tgProperties);
 
-    Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
+    Tangram::LngLat lngLat(point.longitude, point.latitude);
     dataSource->addPoint(tgProperties, lngLat);
 }
 
@@ -68,10 +77,9 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
     tangramProperties(properties, tgProperties);
 
     Polygon tgPolygon;
-    Tangram::LngLat* coordinates = reinterpret_cast<Tangram::LngLat*>([polygon coordinates]);
-    int* rings = reinterpret_cast<int*>([polygon rings]);
-
-    size_t ringsCount = [polygon ringsCount];
+    CLLocationCoordinate2D* coordinates = polygon.coordinates;
+    int* rings = polygon.rings;
+    size_t ringsCount = polygon.ringsCount;
     size_t ringStart = 0;
     size_t ringEnd = 0;
 
@@ -80,7 +88,9 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
         auto& polygonRing = tgPolygon.back();
 
         ringEnd += rings[i];
-        polygonRing.insert(polygonRing.begin(), coordinates + ringStart, coordinates + ringEnd);
+        for (auto i = ringStart; i < ringEnd; i++) {
+            polygonRing.push_back(TGConvertCLLocationCoordinate2DToCoreLngLat(coordinates[i]));
+        }
         ringStart = ringEnd + 1;
     }
 
@@ -97,8 +107,11 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
     tangramProperties(properties, tgProperties);
 
     Line tgPolyline;
-    Tangram::LngLat* coordinates = reinterpret_cast<Tangram::LngLat*>([polyline coordinates]);
-    tgPolyline.insert(tgPolyline.begin(), coordinates, coordinates + [polyline count]);
+    CLLocationCoordinate2D* coordinates = polyline.coordinates;
+    size_t count = polyline.count;
+    for (size_t i = 0; i < count; i++) {
+        tgPolyline.push_back(TGConvertCLLocationCoordinate2DToCoreLngLat(coordinates[i]));
+    }
     dataSource->addLine(tgProperties, tgPolyline);
 }
 
@@ -121,14 +134,15 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
     [self.map clearDataSource:dataSource];
 }
 
-- (void)remove
+- (BOOL)remove
 {
     if (!self.map) {
-        return;
+        return NO;
     }
 
-    [self.map removeDataSource:dataSource name:self.name];
+    BOOL removed = [self.map removeDataSource:dataSource name:self.name];
     self.map = nil;
+    return removed;
 }
 
 @end

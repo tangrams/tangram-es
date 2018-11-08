@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D20C4A55212B6D94005BDB9A /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D20C4A54212B6D93005BDB9A /* GLKit.framework */; };
+		D222B92521642BCA007E6FD6 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = D222B92321642BCA007E6FD6 /* Info.plist */; };
 		D298723520D05F6F009A0AB8 /* MapViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723120D05F6E009A0AB8 /* MapViewController.m */; };
 		D298723620D05F6F009A0AB8 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723220D05F6E009A0AB8 /* main.m */; };
 		D298723720D05F6F009A0AB8 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723320D05F6E009A0AB8 /* AppDelegate.m */; };
@@ -43,6 +45,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D20C4A54212B6D93005BDB9A /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
+		D222B92321642BCA007E6FD6 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../../../build/ios/Info.plist; sourceTree = "<group>"; };
 		D298721620D05D8E009A0AB8 /* TangramDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TangramDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D298723020D05F6E009A0AB8 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		D298723120D05F6E009A0AB8 /* MapViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MapViewController.m; sourceTree = "<group>"; };
@@ -52,7 +56,6 @@
 		D298723920D05F7A009A0AB8 /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
 		D298723A20D05F7A009A0AB8 /* Main_iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main_iPhone.storyboard; sourceTree = "<group>"; };
 		D298723B20D05F7A009A0AB8 /* Main_iPad.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main_iPad.storyboard; sourceTree = "<group>"; };
-		D298723F20D05F88009A0AB8 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D2DB6A9320DAE14A0043E74F /* TangramMap.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TangramMap.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2F0601F20E6DFAF00CB442F /* TangramDemo-static.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TangramDemo-static.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2F0603A20E6E31200CB442F /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
@@ -74,6 +77,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D20C4A55212B6D94005BDB9A /* GLKit.framework in Frameworks */,
 				D2F0604720EACEB700CB442F /* libtangram-static.a in Frameworks */,
 				D2F0603F20E6E33300CB442F /* libc++.tbd in Frameworks */,
 				D2F0603D20E6E32200CB442F /* libz.tbd in Frameworks */,
@@ -87,6 +91,7 @@
 		D235656F20D9BA77006E3D13 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D20C4A54212B6D93005BDB9A /* GLKit.framework */,
 				D2F0604620EACEB700CB442F /* libtangram-static.a */,
 				D2F0603E20E6E33300CB442F /* libc++.tbd */,
 				D2F0603C20E6E32200CB442F /* libz.tbd */,
@@ -99,7 +104,7 @@
 		D298720D20D05D8E009A0AB8 = {
 			isa = PBXGroup;
 			children = (
-				D298723F20D05F88009A0AB8 /* Info.plist */,
+				D222B92321642BCA007E6FD6 /* Info.plist */,
 				D298723820D05F7A009A0AB8 /* resources */,
 				D298722F20D05F6E009A0AB8 /* src */,
 				D298721720D05D8E009A0AB8 /* Products */,
@@ -229,6 +234,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D222B92521642BCA007E6FD6 /* Info.plist in Resources */,
 				D2F0604320EA9AD000CB442F /* LaunchScreen.xib in Resources */,
 				D2F0604420EA9AD000CB442F /* Main_iPhone.storyboard in Resources */,
 				D2F0604520EA9AD000CB442F /* Main_iPad.storyboard in Resources */,
@@ -379,7 +385,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
-				INFOPLIST_FILE = Info.plist;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				INFOPLIST_FILE = ../../../build/ios/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.mapzen.ios.TangramDemo;
@@ -395,7 +402,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
-				INFOPLIST_FILE = Info.plist;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				INFOPLIST_FILE = ../../../build/ios/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				ONLY_ACTIVE_ARCH = YES;
@@ -413,7 +421,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
 				HEADER_SEARCH_PATHS = ../../../build/ios/Include;
-				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_FILE = ../../../build/ios/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = "";
@@ -431,7 +439,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
 				HEADER_SEARCH_PATHS = ../../../build/ios/Include;
-				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_FILE = ../../../build/ios/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = "";

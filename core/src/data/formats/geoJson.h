@@ -2,17 +2,17 @@
 
 #include "data/tileData.h"
 #include "util/json.h"
+#include "util/types.h"
 #include <functional>
 #include <memory>
 
 namespace Tangram {
 
 class TileTask;
-class MapProjection;
 
 namespace GeoJson {
 
-using Transform = std::function<Point(glm::dvec2 _lonLat)>;
+using Transform = std::function<Point(LngLat _lngLat)>;
 
 bool isFeatureCollection(const JsonValue& _in);
 
@@ -28,7 +28,7 @@ Feature getFeature(const JsonValue& _in, const Transform& _proj, int32_t _source
 
 Layer getLayer(const JsonValue& _in, const Transform& _proj, int32_t _sourceId);
 
-std::shared_ptr<TileData> parseTile(const TileTask& _task, const MapProjection& _projection, int32_t _sourceId);
+std::shared_ptr<TileData> parseTile(const TileTask& _task, int32_t _sourceId);
 
 } // namespace GeoJson
 

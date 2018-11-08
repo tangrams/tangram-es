@@ -34,8 +34,7 @@ const static std::string key_name("name");
 TextStyleBuilder::TextStyleBuilder(const TextStyle& _style) : m_style(_style) {}
 
 void TextStyleBuilder::setup(const Tile& _tile){
-    m_tileSize = _tile.getProjection()->TileSize();
-    m_tileSize *= m_style.pixelScale();
+    m_tileSize = MapProjection::tileSize() * m_style.pixelScale();
 
     // < 1.0 when overzooming a tile
     m_tileScale = pow(2, _tile.getID().s - _tile.getID().z);
@@ -47,7 +46,7 @@ void TextStyleBuilder::setup(const Tile& _tile){
 }
 
 void TextStyleBuilder::setup(const Marker& marker, int zoom) {
-    float metersPerTile = 2.f * MapProjection::HALF_CIRCUMFERENCE * exp2(-zoom);
+    float metersPerTile = MapProjection::metersPerTileAtZoom(zoom);
 
     // In general, a Marker won't cover the same area as a tile, so the effective
     // "tile size" for building a Marker is the size of a tile in pixels multiplied
@@ -636,7 +635,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         if (_rule.get(StyleParamKey::text_repeat_distance, repeatDistance)) {
             p.labelOptions.repeatDistance = repeatDistance.value;
         } else {
-            p.labelOptions.repeatDistance = View::s_pixelsPerTile;
+            p.labelOptions.repeatDistance = MapProjection::tileSize();
         }
 
         if (p.labelOptions.repeatDistance > 0.f) {
@@ -673,7 +672,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
             p.labelOptions.repeatDistance = repeatDistance.value;
         } else {
-            p.labelOptions.repeatDistance = View::s_pixelsPerTile;
+            p.labelOptions.repeatDistance = MapProjection::tileSize();
         }
 
         if (p.labelOptions.repeatDistance > 0.f) {

@@ -1,6 +1,8 @@
 #include "glfwApp.h"
 #include <GLFW/glfw3.h>
 #include <cstdlib>
+#include <atomic>
+#include "gl.h"
 
 #ifndef BUILD_NUM_STRING
 #define BUILD_NUM_STRING ""
@@ -50,6 +52,8 @@ double last_y_down = 0.0;
 double last_x_velocity = 0.0;
 double last_y_velocity = 0.0;
 
+std::atomic<bool> wireframe_mode;
+
 Tangram::MarkerID marker = 0;
 Tangram::MarkerID poiMarker = 0;
 Tangram::MarkerID polyline = 0;
@@ -91,6 +95,10 @@ void parseArgs(int argc, char* argv[]) {
             break;
         }
     }
+}
+
+void setWireframeMode(bool state) {
+    wireframe_mode = state;
 }
 
 void setScene(const std::string& _path, const std::string& _yaml) {
@@ -174,8 +182,16 @@ void run() {
 
         // Render
         map->update(delta);
+        const bool wireframe = wireframe_mode;
+        if(wireframe) {
+            glPolygonMode(GL_FRONT, GL_LINE);
+            glPolygonMode(GL_BACK, GL_LINE);
+        }
         map->render();
-
+        if(wireframe) {
+            glPolygonMode(GL_FRONT, GL_FILL);
+            glPolygonMode(GL_BACK, GL_FILL);
+        }
         // Swap front and back buffers
         glfwSwapBuffers(main_window);
 
@@ -250,72 +266,23 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
         Tangram::LngLat tapped, current;
         map->screenPositionToLngLat(x, y, &tapped.longitude, &tapped.latitude);
         map->getPosition(current.longitude, current.latitude);
-        map->setZoomEased(map->getZoom() + 1.f, duration, EaseType::quint);
-        map->setPositionEased(
-            0.5 * (tapped.longitude + current.longitude),
-            0.5 * (tapped.latitude + current.latitude),
-            duration, EaseType::quint);
+        auto pos = map->getCameraPosition();
+        pos.zoom += 1.f;
+        pos.longitude = 0.5 * (tapped.longitude + current.longitude);
+        pos.latitude = 0.5 * (tapped.latitude + current.latitude);
+
+        map->setCameraPositionEased(pos, duration, EaseType::quint);
     } else if ((time - last_time_pressed) < single_tap_time) {
         // Single tap recognized
         Tangram::LngLat p;
         map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
+        double xx, yy;
+        map->lngLatToScreenPosition(p.longitude, p.latitude, &xx, &yy);
 
-
-        if (!marker) {
-            marker = map->markerAdd();
-
-            map->markerSetStylingFromPath(marker, markerStylingPath.c_str());
-            map->markerSetPoint(marker, p);
-            map->markerSetDrawOrder(marker, mods);
-            logMsg("Added Marker with zOrder: %d\n", mods);
-        } else {
-            static bool visible = true;
-            map->markerSetPoint(marker, p);
-            map->markerSetVisible(marker, visible);
-            visible = !visible;
-        }
-
-        map->pickFeatureAt(x, y, [](const Tangram::FeaturePickResult* featurePickResult) {
-            if (!featurePickResult) { return; }
-            std::string name;
-            if (featurePickResult->properties->getString("name", name)) {
-                logMsg("Selected %s", name.c_str());
-            }
-        });
-
-        map->pickLabelAt(x, y, [&](const Tangram::LabelPickResult* labelPickResult) {
-            if (!labelPickResult) { return; }
-            std::string type = labelPickResult->type == Tangram::LabelType::text ? "text" : "icon";
-            std::string name;
-            if (labelPickResult->touchItem.properties->getString("name", name)) {
-                logMsg("Touched label %s %s", type.c_str(), name.c_str());
-            }
-            map->markerSetPoint(marker, labelPickResult->coordinates);
-            map->markerSetVisible(marker, true);
-        });
-
-        map->pickMarkerAt(x, y, [](const Tangram::MarkerPickResult* markerPickResult) {
-            if (!markerPickResult) { return; }
-            logMsg("Selected marker id %d", markerPickResult->id);
-        });
-
-        static double last_x = 0, last_y = 0;
-
-        if (!polyline) {
-            polyline = map->markerAdd();
-            map->markerSetStylingFromString(polyline, polylineStyle.c_str());
-        }
-
-        if (last_x != 0) {
-            Tangram::LngLat coords[2];
-            map->screenPositionToLngLat(x, y, &coords[0].longitude, &coords[0].latitude);
-            map->screenPositionToLngLat(last_x, last_y, &coords[1].longitude, &coords[1].latitude);
-
-            map->markerSetPolyline(polyline, coords, 2);
-        }
-
-        last_x = x;
-        last_y = y;
+        logMsg("------\n");
+        logMsg("LngLat: %f, %f\n", p.longitude, p.latitude);
+        logMsg("Clicked:  %f, %f\n", x, y);
+        logMsg("Remapped: %f, %f\n", xx, yy);
 
         platform->requestRender();
     }
@@ -372,6 +339,8 @@ void scrollCallback(GLFWwindow* window, double scrollx, double scrolly) {
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
+    CameraPosition camera = map->getCameraPosition();
+
     if (action == GLFW_PRESS) {
         switch (key) {
             case GLFW_KEY_1:
@@ -407,12 +376,18 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             case GLFW_KEY_R:
                 loadSceneFile();
                 break;
-            case GLFW_KEY_Z:
-                map->setZoomEased(map->getZoom() + 1.f, 1.5f);
+            case GLFW_KEY_Z: {
+                auto pos = map->getCameraPosition();
+                pos.zoom += 1.f;
+                map->setCameraPositionEased(pos, 1.5f);
                 break;
-            case GLFW_KEY_N:
-                map->setRotationEased(0.f, 1.f);
+            }
+            case GLFW_KEY_N: {
+                auto pos = map->getCameraPosition();
+                pos.rotation = 0.f;
+                map->setCameraPositionEased(pos, 1.f);
                 break;
+            }
             case GLFW_KEY_S:
                 if (pixel_scale == 1.0) {
                     pixel_scale = 2.0;
@@ -459,19 +434,34 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 map->setZoom(14);
                 break;
             case GLFW_KEY_F3:
-                map->flyTo(8.82, 53.08, 16., 0.0, 2.0);
+                camera.longitude = 8.82;
+                camera.latitude = 53.08;
+                camera.zoom = 16.f;
+                map->flyTo(camera, -1.f, 2.0);
                 break;
             case GLFW_KEY_F4:
-                map->flyTo(8.82, 53.08, 10., 0.0, 2.5);
+                camera.longitude = 8.82;
+                camera.latitude = 53.08;
+                camera.zoom = 10.f;
+                map->flyTo(camera, -1.f, 2.5);
                 break;
             case GLFW_KEY_F5:
-                map->flyTo(-74.00976419448854, 40.70532700869127, 16., 4.);
+                camera.longitude = -74.00976419448854;
+                camera.latitude = 40.70532700869127;
+                camera.zoom = 16.f;
+                map->flyTo(camera, 4.);
                 break;
             case GLFW_KEY_F6:
-                map->flyTo(-122.41, 37.7749, 16., 0.0, 4.0);
+                camera.longitude = -122.41;
+                camera.latitude = 37.7749;
+                camera.zoom = 16.f;
+                map->flyTo(camera, -1.f, 4.0);
                 break;
             case GLFW_KEY_F7:
-                map->flyTo(139.839478, 35.652832, 16., 0.0, 1.0);
+                camera.longitude = 139.839478;
+                camera.latitude = 35.652832;
+                camera.zoom = 16.f;
+                map->flyTo(camera, -1.f, 1.0);
                 break;
             case GLFW_KEY_W:
                 map->onMemoryWarning();

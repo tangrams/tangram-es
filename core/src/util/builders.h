@@ -42,13 +42,14 @@ struct PolygonBuilder {
 
     PolygonVertexFn addVertex;
     size_t numVertices = 0;
+    bool keepTileEdges;
     bool useTexCoords;
 
     mapbox::detail::Earcut<uint16_t> earcut;
 
     PolygonBuilder(PolygonVertexFn _addVertex = [](auto&,auto&,auto&){},
-                   bool _useTexCoords = true)
-        : addVertex(_addVertex), useTexCoords(_useTexCoords){}
+                   bool _kte = true, bool _useTexCoords = true)
+        : addVertex(_addVertex), keepTileEdges(_kte), useTexCoords(_useTexCoords){}
 
     void clear() {
         numVertices = 0;

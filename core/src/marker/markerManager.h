@@ -92,7 +92,6 @@ private:
     std::vector<std::unique_ptr<Marker>> m_markers;
     std::vector<std::string> m_jsFnList;
     fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilders;
-    MapProjection* m_mapProjection = nullptr;
 
     uint32_t m_idCounter = 0;
     int m_zoom = 0;

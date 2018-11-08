@@ -417,7 +417,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& _
 
     float minLineLength = std::max(params.size.x, params.size.y) *
         params.placementMinLengthRatio * m_style.pixelScale() /
-        (View::s_pixelsPerTile * m_tileScale);
+        (MapProjection::tileSize() * m_tileScale);
 
     switch(params.placement) {
         case LabelProperty::Placement::vertex: {
@@ -460,7 +460,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& _
             if (lineLength <= minLineLength) { break; }
 
             float spacing = params.placementSpacing * m_style.pixelScale() /
-                (View::s_pixelsPerTile * m_tileScale);
+                (MapProjection::tileSize() * m_tileScale);
 
             int numLabels = std::max(std::floor(lineLength / spacing), 1.0f);
             float remainderLength = lineLength - (numLabels - 1) * spacing;

@@ -24,6 +24,8 @@ typedef NS_ENUM(NSInteger, TGEaseType) {
     TGEaseTypeQuint,
     /// Sine ease type `f(t) = 0.5 - 0.5 * cos(PI * t)`
     TGEaseTypeSine,
+    /// Default ease type
+    TGEaseTypeDefault = TGEaseTypeCubic,
 };
 
 /**

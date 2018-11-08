@@ -2,8 +2,7 @@
 
 #include "platform.h"
 
-#ifdef __OBJC__
-#import "TGMapViewController.h"
+@class TGMapView;
 
 namespace Tangram {
 
@@ -11,7 +10,7 @@ class iOSPlatform : public Platform {
 
 public:
 
-    iOSPlatform(__weak TGMapViewController* _viewController);
+    iOSPlatform(__weak TGMapView* _mapView);
     void requestRender() const override;
     void setContinuousRendering(bool _isContinuous) override;
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
@@ -21,10 +20,8 @@ public:
 
 private:
 
-    __weak TGMapViewController* m_viewController;
+    __weak TGMapView* m_mapView;
 
 };
 
 } // namespace Tangram
-
-#endif // __OBJC__
