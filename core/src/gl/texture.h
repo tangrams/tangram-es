@@ -52,12 +52,12 @@ class Texture {
 
 public:
 
-    Texture(TextureOptions _options);
+    explicit Texture(TextureOptions _options);
 
     Texture(const uint8_t* data, size_t length, TextureOptions _options);
 
-    Texture(Texture&& _other);
-    Texture& operator=(Texture&& _other);
+    Texture(Texture&& _other) noexcept;
+    Texture& operator=(Texture&& _other) noexcept;
 
     virtual ~Texture();
 

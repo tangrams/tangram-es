@@ -40,7 +40,7 @@ Texture::~Texture() {
 bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
     unsigned char* pixels = nullptr;
     int width = 0, height = 0, comp = 0;
-    pixels = stbi_load_from_memory(data, length, &width, &height, &comp, STBI_rgb_alpha);
+    pixels = stbi_load_from_memory(data, static_cast<int>(length), &width, &height, &comp, STBI_rgb_alpha);
 
     if (pixels) {
         // stbi_load_from_memory loads the image as a series of scanlines starting from
@@ -52,7 +52,7 @@ bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
 
         resize(width, height);
 
-        setPixelData(rgbaPixels, width * height);
+        setPixelData(rgbaPixels, static_cast<size_t>(width * height));
 
         stbi_image_free(pixels);
 
@@ -68,11 +68,11 @@ bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
     return false;
 }
 
-Texture::Texture(Texture&& _other) {
+Texture::Texture(Texture&& _other) noexcept {
     *this = std::move(_other);
 }
 
-Texture& Texture::operator=(Texture&& _other) {
+Texture& Texture::operator=(Texture&& _other) noexcept {
     m_glHandle = _other.m_glHandle;
     _other.m_glHandle = 0;
 
@@ -172,13 +172,13 @@ void Texture::update(RenderState& rs, GLuint _textureUnit) {
     }
 
     if (m_glHandle == 0) {
-        if (m_data.size() == 0) {
+        if (m_data.empty()) {
             size_t divisor = sizeof(GLuint) / getBytesPerPixel();
             m_data.resize((m_width * m_height) / divisor, 0);
         }
     }
 
-    GLuint* data = m_data.size() > 0 ? m_data.data() : nullptr;
+    GLuint* data = m_data.empty() ? nullptr : m_data.data();
 
     update(rs, _textureUnit, data);
 

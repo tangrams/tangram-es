@@ -76,7 +76,7 @@ RasterSource::RasterSource(const std::string& _name, std::unique_ptr<DataSource>
 }
 
 std::shared_ptr<Texture> RasterSource::createTexture(const std::vector<char>& _rawTileData) {
-    if (_rawTileData.size() == 0) {
+    if (_rawTileData.empty()) {
         return m_emptyTexture;
     }
 
