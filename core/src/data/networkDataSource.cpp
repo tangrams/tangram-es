@@ -78,15 +78,17 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
 
     auto& dlTask = static_cast<BinaryTileTask&>(*task);
     dlTask.urlRequestHandle = m_platform->startUrlRequest(url, onRequestFinish);
+    dlTask.urlRequestStarted = true;
 
     return true;
 }
 
 void NetworkDataSource::cancelLoadingTile(TileTask& task) {
     auto& dlTask = static_cast<BinaryTileTask&>(task);
-    if (dlTask.urlRequestHandle >= 0) {
+    if (dlTask.urlRequestStarted) {
+        dlTask.urlRequestStarted = false;
+
         m_platform->cancelUrlRequest(dlTask.urlRequestHandle);
-        dlTask.urlRequestHandle = -1;
     }
 }
 

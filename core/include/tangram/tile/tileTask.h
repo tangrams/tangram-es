@@ -123,8 +123,9 @@ public:
     std::shared_ptr<std::vector<char>> rawTileData;
 
     bool dataFromCache = false;
+    bool urlRequestStarted = false;
 
-    UrlRequestHandle urlRequestHandle = -1;
+    UrlRequestHandle urlRequestHandle = 0;
 };
 
 struct TileTaskQueue {
