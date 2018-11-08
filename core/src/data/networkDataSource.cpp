@@ -60,12 +60,15 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
 
     UrlCallback onRequestFinish = [callback, task, url](UrlResponse&& response) {
 
+        if (!task->source()) {
+            LOGW("URL Callback for deleted TileSource '%s'", url.string().c_str());
+            return;
+        }
         if (task->isCanceled()) {
             return;
         }
-
         if (response.error) {
-            LOGE("Error for URL request '%s': %s", url.string().c_str(), response.error);
+            LOGW("Error for URL request '%s': %s", url.string().c_str(), response.error);
             return;
         }
 

@@ -43,7 +43,8 @@ public:
     std::unique_ptr<Tile> getTile();
     void setTile(std::unique_ptr<Tile>&& _tile);
 
-    TileSource& source() { return *m_source; }
+    std::shared_ptr<TileSource> source() { return m_source.lock(); }
+    int64_t sourceId() { return m_sourceId; }
     int64_t sourceGeneration() const { return m_sourceGeneration; }
 
     TileID tileId() const { return m_tileId; }
@@ -93,11 +94,12 @@ protected:
     const int m_subTaskId;
 
     // Save shared reference to Datasource while building tile
-    std::shared_ptr<TileSource> m_source;
+    std::weak_ptr<TileSource> m_source;
 
     // Vector of tasks to download raster samplers
     std::vector<std::shared_ptr<TileTask>> m_subTasks;
 
+    const int64_t m_sourceId;
     const int64_t m_sourceGeneration;
 
     // Tile result, set when tile was  sucessfully created

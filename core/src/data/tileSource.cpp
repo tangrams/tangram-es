@@ -98,7 +98,7 @@ void TileSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
     }
 
     for (auto& subTask : _task->subTasks()) {
-        subTask->source().loadTileData(subTask, _cb);
+        subTask->source()->loadTileData(subTask, _cb);
     }
 }
 
@@ -117,7 +117,7 @@ void TileSource::cancelLoadingTile(TileTask& _task) {
     if (m_sources) { m_sources->cancelLoadingTile(_task); }
 
     for (auto& subTask : _task.subTasks()) {
-        subTask->source().cancelLoadingTile(*subTask);
+        subTask->source()->cancelLoadingTile(*subTask);
     }
 }
 
