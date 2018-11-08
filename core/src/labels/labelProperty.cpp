@@ -20,8 +20,10 @@ const std::map<std::string, Anchor> s_AnchorMap = {
     {"right", Anchor::right},
     {"top-left", Anchor::top_left},
     {"top-right", Anchor::top_right},
+    {"top-center", Anchor::top_center},
     {"bottom-left", Anchor::bottom_left},
     {"bottom-right", Anchor::bottom_right},
+    {"bottom-center", Anchor::bottom_center},
 };
 
 bool anchor(const std::string& _anchor, Anchor& _out) {
@@ -42,8 +44,10 @@ glm::vec2 anchorDirection(Anchor _anchor) {
         case right: direction = glm::vec2(1.0, 0.0); break;
         case top_left: direction = glm::vec2(-1.0, -1.0); break;
         case top_right: direction = glm::vec2(1.0, -1.0); break;
+        case top_center: direction = glm::vec2(0.0, 1.0); break;
         case bottom_left: direction = glm::vec2(-1.0, 1.0); break;
         case bottom_right: direction = glm::vec2(1.0, 1.0); break;
+        case bottom_center: direction = glm::vec2(0.0, -1.0); break;
         case center: direction = glm::vec2(0.0, 0.0); break;
     }
 

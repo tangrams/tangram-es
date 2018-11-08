@@ -26,8 +26,10 @@ enum Anchor : uint8_t {
     right,
     top_left,
     top_right,
+    top_center,
     bottom_left,
     bottom_right,
+    bottom_center,
 };
 
 constexpr int max_anchors = 9;
@@ -95,6 +97,11 @@ struct Anchors {
                 min.y = -1.0f;
                 max.x = 1.0f;
                 break;
+            case top_center:
+                min.y = -1.0f;
+                min.x = std::min(min.x, -0.5f);
+                max.x = std::max(max.x, 0.5f);
+                break;
             case bottom_left:
                 min.x = -1.0f;
                 max.y = 1.0f;
@@ -102,6 +109,11 @@ struct Anchors {
             case bottom_right:
                 max.x = 1.0f;
                 max.y = 1.0f;
+                break;
+            case bottom_center:
+                max.y = 1.0f;
+                min.x = std::min(min.x, -0.5f);
+                max.x = std::max(max.x, 0.5f);
                 break;
             }
         }
