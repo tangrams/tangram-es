@@ -91,7 +91,7 @@ struct TestTileSource : TileSource {
         _cb.func(std::move(_task));
     }
 
-    void cancelLoadingTile(const TileID& _tile) override {}
+    void cancelLoadingTile(TileTask& _tile) override {}
 
     std::shared_ptr<TileData> parse(const TileTask& _task) const override {
         return nullptr;

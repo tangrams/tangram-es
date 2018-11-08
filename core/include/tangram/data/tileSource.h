@@ -56,8 +56,8 @@ public:
         virtual bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) = 0;
 
         /* Stops any running I/O tasks pertaining to @_tile */
-        virtual void cancelLoadingTile(const TileID& _tile) {
-            if (next) { next->cancelLoadingTile(_tile); }
+        virtual void cancelLoadingTile(TileTask& _task) {
+            if (next) { next->cancelLoadingTile(_task); }
         }
 
         virtual void clear() { if (next) next->clear(); }
@@ -99,8 +99,8 @@ public:
      */
     virtual void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb);
 
-    /* Stops any running I/O tasks pertaining to @_tile */
-    virtual void cancelLoadingTile(const TileID& _tile);
+    /* Stops any running I/O tasks pertaining to @_task */
+    virtual void cancelLoadingTile(TileTask& _task);
 
     /* Parse a <TileTask> with data into a <TileData>, returning an empty TileData on failure */
     virtual std::shared_ptr<TileData> parse(const TileTask& _task) const;
