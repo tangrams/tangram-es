@@ -17,23 +17,16 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include <cassert>
 #include <cstring> // for memset
 
 namespace Tangram {
 
-Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _options)
-    : m_options(_options) {
-
-    m_glHandle = 0;
-    m_shouldResize = false;
-    m_target = GL_TEXTURE_2D;
-    resize(_width, _height);
+Texture::Texture(TextureOptions _options) : m_options(_options) {
 }
 
-Texture::Texture(const std::vector<char>& _data, TextureOptions options)
-    : Texture(0u, 0u, options) {
-
-    loadImageFromMemory(_data);
+Texture::Texture(const uint8_t* data, size_t length, TextureOptions options) : Texture(options) {
+    loadImageFromMemory(data, length);
 }
 
 Texture::~Texture() {
@@ -42,13 +35,10 @@ Texture::~Texture() {
     }
 }
 
-bool Texture::loadImageFromMemory(const std::vector<char>& _data) {
+bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
     unsigned char* pixels = nullptr;
-    int width, height, comp;
-
-    if (_data.size() != 0) {
-        pixels = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(_data.data()), _data.size(), &width, &height, &comp, STBI_rgb_alpha);
-    }
+    int width = 0, height = 0, comp = 0;
+    pixels = stbi_load_from_memory(data, length, &width, &height, &comp, STBI_rgb_alpha);
 
     if (pixels) {
         // stbi_load_from_memory loads the image as a series of scanlines starting from
@@ -96,11 +86,11 @@ Texture& Texture::operator=(Texture&& _other) {
     return *this;
 }
 
-void Texture::setData(const GLuint* _data, unsigned int _dataSize) {
+void Texture::setData(const GLuint* data, size_t length) {
 
     m_data.clear();
 
-    m_data.insert(m_data.begin(), _data, _data + _dataSize);
+    m_data.insert(m_data.begin(), data, data + length);
 
     setDirty(0, m_height);
 }
@@ -257,9 +247,11 @@ void Texture::update(RenderState& rs, GLuint _textureUnit, const GLuint* data) {
     m_dirtyRanges.clear();
 }
 
-void Texture::resize(const unsigned int _width, const unsigned int _height) {
-    m_width = _width;
-    m_height = _height;
+void Texture::resize(int width, int height) {
+    assert(width >= 0);
+    assert(height >= 0);
+    m_width = width;
+    m_height = height;
 
     if (!(Hardware::supportsTextureNPOT) &&
         !(isPowerOfTwo(m_width) && isPowerOfTwo(m_height)) &&

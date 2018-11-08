@@ -584,16 +584,13 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
             LOGE("Can't decode Base64 texture");
             return nullptr;
         }
-        texture = std::make_shared<Texture>(0, 0, options);
+        texture = std::make_shared<Texture>(options);
 
-        std::vector<char> textureData;
-        auto cdata = reinterpret_cast<char*>(blob.data());
-        textureData.insert(textureData.begin(), cdata, cdata + blob.size());
-        if (!texture->loadImageFromMemory(textureData)) {
+        if (!texture->loadImageFromMemory(blob.data(), blob.size())) {
             LOGE("Invalid Base64 texture");
         }
     } else {
-        texture = std::make_shared<Texture>(std::vector<char>(), options);
+        texture = std::make_shared<Texture>(options);
         texture->spriteAtlas() = std::move(_atlas);
 
         scene->pendingTextures++;
@@ -602,7 +599,9 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
                     LOGE("Error retrieving URL '%s': %s", url.string().c_str(), response.error);
                 } else {
                     if (texture) {
-                        if (!texture->loadImageFromMemory(std::move(response.content))) {
+                        auto data = reinterpret_cast<const uint8_t*>(response.content.data());
+                        auto length = response.content.size();
+                        if (!texture->loadImageFromMemory(data, length)) {
                             LOGE("Invalid texture data from URL '%s'", url.string().c_str());
                         }
                         if (texture->spriteAtlas()) {

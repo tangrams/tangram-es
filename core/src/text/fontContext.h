@@ -32,7 +32,8 @@ struct GlyphTexture {
         return options;
     }
 
-    GlyphTexture() : texture(size, size, textureOptions()) {
+    GlyphTexture() : texture(textureOptions()) {
+        texture.resize(size, size);
         texData.resize(size * size);
     }
 

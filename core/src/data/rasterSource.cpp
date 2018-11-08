@@ -72,8 +72,7 @@ RasterSource::RasterSource(const std::string& _name, std::unique_ptr<DataSource>
     : TileSource(_name, std::move(_sources), _zoomOptions),
       m_texOptions(_options) {
 
-    std::vector<char> data = {};
-    m_emptyTexture = std::make_shared<Texture>(data, m_texOptions);
+    m_emptyTexture = std::make_shared<Texture>(m_texOptions);
 }
 
 std::shared_ptr<Texture> RasterSource::createTexture(const std::vector<char>& _rawTileData) {
@@ -81,7 +80,9 @@ std::shared_ptr<Texture> RasterSource::createTexture(const std::vector<char>& _r
         return m_emptyTexture;
     }
 
-    auto texture = std::make_shared<Texture>(_rawTileData, m_texOptions);
+    auto data = reinterpret_cast<const uint8_t*>(_rawTileData.data());
+    auto length = _rawTileData.size();
+    auto texture = std::make_shared<Texture>(data, length, m_texOptions);
 
     return texture;
 }

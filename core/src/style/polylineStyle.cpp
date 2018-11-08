@@ -121,7 +121,8 @@ void PolylineStyle::constructShaderProgram() {
         // provides precision for dash patterns that are a fraction of line width
         auto pixels = DashArray::render(m_dashArray, dash_scale);
 
-        m_texture = std::make_shared<Texture>(1, pixels.size(), options);
+        m_texture = std::make_shared<Texture>(options);
+        m_texture->resize(1, pixels.size());
         m_texture->setData(pixels.data(), pixels.size());
 
         if (m_dashBackground) {

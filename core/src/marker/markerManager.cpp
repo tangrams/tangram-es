@@ -87,9 +87,9 @@ bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const un
     m_dirty = true;
 
     TextureOptions options;
-    auto texture = std::make_unique<Texture>(width, height, options);
-    unsigned int size = width * height;
-    texture->setData(bitmapData, size);
+    auto texture = std::make_unique<Texture>(options);
+    texture->resize(width, height);
+    texture->setData(bitmapData, width * height);
 
     marker->setTexture(std::move(texture));
 

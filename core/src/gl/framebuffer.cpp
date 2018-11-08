@@ -117,7 +117,8 @@ void FrameBuffer::init(RenderState& _rs) {
         options.minFilter = TextureMinFilter::NEAREST;
         options.magFilter = TextureMagFilter::NEAREST;
 
-        m_texture = std::make_unique<Texture>(m_width, m_height, options);
+        m_texture = std::make_unique<Texture>(options);
+        m_texture->resize(m_width, m_height);
         m_texture->update(_rs, 0);
 
         GL::framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
