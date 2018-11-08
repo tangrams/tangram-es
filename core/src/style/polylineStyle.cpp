@@ -123,7 +123,7 @@ void PolylineStyle::constructShaderProgram() {
 
         m_texture = std::make_shared<Texture>(options);
         m_texture->resize(1, pixels.size());
-        m_texture->setData(pixels.data(), pixels.size());
+        m_texture->setPixelData(pixels.data(), pixels.size());
 
         if (m_dashBackground) {
             m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LINE_BACKGROUND_COLOR vec3(" +

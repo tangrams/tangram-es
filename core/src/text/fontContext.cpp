@@ -106,7 +106,7 @@ void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_
                                  dst, gw, gh, width,
                                  &m_sdfBuffer[0]);
 
-    texture.setDirty(gy, gh);
+    texture.setRowsDirty(gy, gh);
     m_textures[id].dirty = true;
 }
 

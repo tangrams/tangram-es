@@ -591,7 +591,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
         }
     } else {
         texture = std::make_shared<Texture>(options);
-        texture->spriteAtlas() = std::move(_atlas);
+        texture->setSpriteAtlas(std::move(_atlas));
 
         scene->pendingTextures++;
         scene->startUrlRequest(platform, url, [&, url, scene, texture](UrlResponse&& response) {
@@ -604,8 +604,8 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
                         if (!texture->loadImageFromMemory(data, length)) {
                             LOGE("Invalid texture data from URL '%s'", url.string().c_str());
                         }
-                        if (texture->spriteAtlas()) {
-                            texture->spriteAtlas()->updateSpriteNodes({texture->getWidth(), texture->getHeight()});
+                        if (texture->getSpriteAtlas()) {
+                            texture->getSpriteAtlas()->updateSpriteNodes({texture->getWidth(), texture->getHeight()});
                         }
                     }
                 }

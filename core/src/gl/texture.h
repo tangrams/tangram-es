@@ -61,6 +61,15 @@ public:
 
     virtual ~Texture();
 
+    bool loadImageFromMemory(const uint8_t* data, size_t length);
+
+    /* Sets texture pixel data */
+    void setPixelData(const GLuint* data, size_t length);
+
+    void setRowsDirty(int start, int count);
+
+    void setSpriteAtlas(std::unique_ptr<SpriteAtlas> sprites);
+
     /* Perform texture updates, should be called at least once and after adding data or resizing */
     virtual void update(RenderState& rs, GLuint _textureSlot);
 
@@ -69,66 +78,48 @@ public:
     /* Resize the texture */
     void resize(int width, int height);
 
+    void bind(RenderState& rs, GLuint _unit);
+
     /* Width and Height texture getters */
     int getWidth() const { return m_width; }
     int getHeight() const { return m_height; }
 
-    void bind(RenderState& rs, GLuint _unit);
+    GLuint getGlHandle() const { return m_glHandle; }
 
-    void setDirty(size_t yOffset, size_t height);
+    float getDensity() const { return m_options.density; }
 
-    GLuint getGlHandle() { return m_glHandle; }
-
-    /* Sets texture data
-     *
-     * Has less priority than set sub data
-     */
-    void setData(const GLuint* data, size_t length);
-
-    /* Update a region of the texture */
-    void setSubData(const GLuint* _subData, uint16_t _xoff, uint16_t _yoff,
-                    uint16_t _width, uint16_t _height, uint16_t _stride);
+    const auto& getSpriteAtlas() const { return m_spriteAtlas; }
 
     /* Checks whether the texture has valid data and has been successfully uploaded to GPU */
     bool isValid() const;
 
-    typedef std::pair<GLuint, GLuint> TextureSlot;
+    size_t getBytesPerPixel() const;
 
-    static void invalidateAllTextures();
+    size_t getBufferSize() const;
 
-    bool loadImageFromMemory(const uint8_t* data, size_t length);
-
-    static void flipImageData(unsigned char *result, int w, int h, int depth);
-    static void flipImageData(GLuint *result, int w, int h);
-
-    size_t bytesPerPixel();
-    size_t bufferSize();
-
-    auto& spriteAtlas() { return m_spriteAtlas; }
-    const auto& spriteAtlas() const { return m_spriteAtlas; }
-
-    float density() const { return m_options.density; }
+    static void flipImageData(GLuint* result, int width, int height);
 
 protected:
+
+    struct DirtyRowRange {
+        int min;
+        int max;
+    };
 
     void generate(RenderState& rs, GLuint _textureUnit);
 
     TextureOptions m_options;
-    std::vector<GLuint> m_data;
-    GLuint m_glHandle = 0;
 
-    struct DirtyRange {
-        size_t min;
-        size_t max;
-    };
-    std::vector<DirtyRange> m_dirtyRanges;
+    std::vector<GLuint> m_data;
+
+    std::vector<DirtyRowRange> m_dirtyRows;
+
+    GLuint m_glHandle = 0;
 
     bool m_shouldResize = false;
 
     int m_width = 0;
     int m_height = 0;
-
-    GLenum m_target = GL_TEXTURE_2D;
 
     RenderState* m_rs = nullptr;
 
@@ -138,4 +129,4 @@ private:
 
 };
 
-}
+} // namespace Tangram
