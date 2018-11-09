@@ -12,7 +12,8 @@ public:
 };
 
 TEST_CASE("Merging of dirty Regions - Non overlapping, test ordering", "[Texture]") {
-    TestTexture texture(512, 512);
+    TestTexture texture(TextureOptions{});
+    texture.resize(512, 512);
     REQUIRE(texture.dirtyRanges().size() == 0);
 
     // A range from 20-30
@@ -42,7 +43,8 @@ TEST_CASE("Merging of dirty Regions - Non overlapping, test ordering", "[Texture
 }
 
 TEST_CASE("Merging of dirty Regions - Merge overlapping", "[Texture]") {
-    TestTexture texture(512, 512);
+    TestTexture texture(TextureOptions{});
+    texture.resize(512, 512);
     REQUIRE(texture.dirtyRanges().size() == 0);
 
     // range from 50-100
@@ -60,7 +62,8 @@ TEST_CASE("Merging of dirty Regions - Merge overlapping", "[Texture]") {
 TEST_CASE("Merging of dirty Regions - Merge three regions, when 3rd region is added", "[Texture]") {
     { // just touching
 
-        TestTexture texture(512, 512);
+        TestTexture texture(TextureOptions{});
+        texture.resize(512, 512);
         REQUIRE(texture.dirtyRanges().size() == 0);
 
         // range from 50-100
@@ -84,7 +87,8 @@ TEST_CASE("Merging of dirty Regions - Merge three regions, when 3rd region is ad
 
     { // overlapping
 
-        TestTexture texture(512, 512);
+        TestTexture texture(TextureOptions{});
+        texture.resize(512, 512);
         REQUIRE(texture.dirtyRanges().size() == 0);
 
         // range from 50-150
