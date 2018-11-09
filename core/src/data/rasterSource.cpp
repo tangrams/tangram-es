@@ -14,8 +14,9 @@ public:
         : BinaryTileTask(_tileId, _source, _subTask) {}
 
     std::shared_ptr<Texture> m_texture;
-    RasterSource* rasterSource() {
-        return reinterpret_cast<RasterSource*>(m_source.lock().get());
+
+    std::shared_ptr<RasterSource> rasterSource() {
+        return reinterpret_cast<std::weak_ptr<RasterSource>*>(&m_source)->lock();
     }
 
     bool hasData() const override {
@@ -31,9 +32,12 @@ public:
     }
 
     void process(TileBuilder& _tileBuilder) override {
+        auto source = rasterSource();
+        if (!source) { return; }
+
         if (!m_texture) {
             // Decode texture data
-            m_texture = rasterSource()->createTexture(*rawTileData);
+            m_texture = source->createTexture(*rawTileData);
         }
 
         // Create tile geometries
@@ -43,7 +47,10 @@ public:
     }
 
     void complete() override {
-        auto raster = rasterSource()->getRaster(*this);
+        auto source = rasterSource();
+        if (!source) { return; }
+
+        auto raster = source->getRaster(*this);
         assert(raster.isValid());
 
         m_tile->rasters().push_back(std::move(raster));
@@ -55,7 +62,10 @@ public:
     }
 
     void complete(TileTask& _mainTask) override {
-        auto raster = rasterSource()->getRaster(*this);
+        auto source = rasterSource();
+        if (!source) { return; }
+
+        auto raster = source->getRaster(*this);
         assert(raster.isValid());
 
         _mainTask.tile()->rasters().push_back(std::move(raster));

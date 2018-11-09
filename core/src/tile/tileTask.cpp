@@ -34,6 +34,8 @@ void TileTask::setTile(std::unique_ptr<Tile>&& _tile) {
 void TileTask::process(TileBuilder& _tileBuilder) {
 
     auto source = m_source.lock();
+    if (!source) { return; }
+
     auto tileData = source->parse(*this);
 
     if (tileData) {

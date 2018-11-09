@@ -60,7 +60,8 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
 
     UrlCallback onRequestFinish = [callback, task, url](UrlResponse&& response) {
 
-        if (!task->source()) {
+        auto source = task->source();
+        if (!source) {
             LOGW("URL Callback for deleted TileSource '%s'", url.string().c_str());
             return;
         }
