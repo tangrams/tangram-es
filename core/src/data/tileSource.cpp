@@ -67,14 +67,8 @@ void TileSource::createSubTasks(std::shared_ptr<TileTask> _task) {
     size_t index = 0;
 
     for (auto& subSource : m_rasterSources) {
-        TileID subTileID = _task->tileId();
-
-        // get tile for lower zoom if we are past max zoom
-        if (subTileID.z > subSource->maxZoom()) {
-            subTileID = subTileID.withMaxSourceZoom(subSource->maxZoom());
-        }
-
-        _task->subTasks().push_back(subSource->createTask(subTileID, index++));
+        TileID subTileID = subSource->getFallbackTileID(_task->tileId());
+        _task->subTasks().push_back(subSource->createTask(subTileID.zoomBiasAdjusted(subSource->zoomBias()).withMaxSourceZoom(subSource->maxZoom()), index++));
     }
 }
 
@@ -83,6 +77,16 @@ void TileSource::clearData() {
     if (m_sources) { m_sources->clear(); }
 
     m_generation++;
+}
+
+TileID TileSource::getFallbackTileID(const TileID& _tileID) {
+
+    if (m_sources) {
+        return m_sources->getFallbackTileID(_tileID, maxZoom(), zoomBias());
+    }
+    else {
+        return _tileID;
+    }
 }
 
 void TileSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {

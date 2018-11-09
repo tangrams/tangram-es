@@ -22,11 +22,14 @@ public:
 
     ~MBTilesDataSource();
 
+    TileID getFallbackTileID(const TileID& _tileID, int32_t _maxZoom, int32_t _zoomBias) override;
+
     bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
 
     void clear() override {}
 
 private:
+    bool hasTileData(const TileID& _tileId);
     bool getTileData(const TileID& _tileId, std::vector<char>& _data);
     void storeTileData(const TileID& _tileId, const std::vector<char>& _data);
     bool loadNextSource(std::shared_ptr<TileTask> _task, TileTaskCb _cb);

@@ -132,6 +132,28 @@ MBTilesDataSource::MBTilesDataSource(std::shared_ptr<Platform> _platform, std::s
 MBTilesDataSource::~MBTilesDataSource() {
 }
 
+TileID MBTilesDataSource::getFallbackTileID(const TileID& _tileID, int32_t _maxZoom, int32_t _zoomBias) {
+
+    if (hasTileData(_tileID.zoomBiasAdjusted(_zoomBias).withMaxSourceZoom(_maxZoom))) {
+        return _tileID;
+    }
+
+    TileID tileID(_tileID);
+
+    if (_zoomBias > 0) {
+        while (!hasTileData(tileID.zoomBiasAdjusted(_zoomBias)) && tileID.z > _zoomBias) {
+            tileID = tileID.zoomBiasAdjusted(_zoomBias);
+        }
+    }
+    else {
+        while (!hasTileData(tileID) && tileID.z > 0) {
+            tileID = tileID.getParent(_zoomBias);
+        }
+    }
+
+    return tileID;
+}
+
 bool MBTilesDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
 
     if (m_offlineMode) {
@@ -420,6 +442,37 @@ void MBTilesDataSource::initSchema(SQLite::Database& db, std::string _name, std:
     } catch (std::exception& e) {
         LOGE("Unable to setup SQLite MBTiles database: %s", e.what());
     }
+}
+
+bool MBTilesDataSource::hasTileData(const TileID& _tileId) {
+
+    for (int i = 0; i < m_queries.size(); ++i) {
+        auto &stmt = m_queries[i]->getTileData;
+        try {
+            // Google TMS to WMTS
+            // https://github.com/mapbox/node-mbtiles/blob/
+            // 4bbfaf991969ce01c31b95184c4f6d5485f717c3/lib/mbtiles.js#L149
+            int z = _tileId.z;
+            int y = (1 << z) - 1 - _tileId.y;
+
+            stmt.bind(1, z);
+            stmt.bind(2, _tileId.x);
+            stmt.bind(3, y);
+
+            if (stmt.executeStep()) {
+                stmt.reset();
+                return true;
+            }
+
+        } catch (std::exception &e) {
+            LOGE("MBTiles SQLite get tile_data statement failed: %s", e.what());
+        }
+        try {
+            stmt.reset();
+        } catch (...) {}
+    }
+
+    return false;
 }
 
 bool MBTilesDataSource::getTileData(const TileID& _tileId, std::vector<char>& _data) {

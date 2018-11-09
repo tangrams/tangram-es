@@ -55,6 +55,8 @@ public:
 
         virtual bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) = 0;
 
+        virtual TileID getFallbackTileID(const TileID& _tileID, int32_t _maxZoom, int32_t _zoomBias) = 0;
+
         /* Stops any running I/O tasks pertaining to @_tile */
         virtual void cancelLoadingTile(TileTask& _task) {
             if (next) { next->cancelLoadingTile(_task); }
@@ -90,6 +92,8 @@ public:
      * @return the mime-type of the DataSource.
      */
     virtual const char* mimeType() const;
+
+    TileID getFallbackTileID(const TileID& _tileID);
 
     /* Fetches data for the map tile specified by @_tileID
      *
