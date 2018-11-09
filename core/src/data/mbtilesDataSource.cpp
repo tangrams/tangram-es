@@ -446,31 +446,29 @@ void MBTilesDataSource::initSchema(SQLite::Database& db, std::string _name, std:
 
 bool MBTilesDataSource::hasTileData(const TileID& _tileId) {
 
-    for (int i = 0; i < m_queries.size(); ++i) {
-        auto &stmt = m_queries[i]->getTileData;
-        try {
-            // Google TMS to WMTS
-            // https://github.com/mapbox/node-mbtiles/blob/
-            // 4bbfaf991969ce01c31b95184c4f6d5485f717c3/lib/mbtiles.js#L149
-            int z = _tileId.z;
-            int y = (1 << z) - 1 - _tileId.y;
+    auto& stmt = m_queries->getTileData;
+    try {
+        // Google TMS to WMTS
+        // https://github.com/mapbox/node-mbtiles/blob/
+        // 4bbfaf991969ce01c31b95184c4f6d5485f717c3/lib/mbtiles.js#L149
+        int z = _tileId.z;
+        int y = (1 << z) - 1 - _tileId.y;
 
-            stmt.bind(1, z);
-            stmt.bind(2, _tileId.x);
-            stmt.bind(3, y);
+        stmt.bind(1, z);
+        stmt.bind(2, _tileId.x);
+        stmt.bind(3, y);
 
-            if (stmt.executeStep()) {
-                stmt.reset();
-                return true;
-            }
-
-        } catch (std::exception &e) {
-            LOGE("MBTiles SQLite get tile_data statement failed: %s", e.what());
-        }
-        try {
+        if (stmt.executeStep()) {
             stmt.reset();
-        } catch (...) {}
+            return true;
+        }
+
+    } catch (std::exception& e) {
+        LOGE("MBTiles SQLite get tile_data statement failed: %s", e.what());
     }
+    try {
+        stmt.reset();
+    } catch(...) {}
 
     return false;
 }
