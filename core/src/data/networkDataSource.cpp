@@ -58,9 +58,7 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
         m_urlSubdomainIndex = (m_urlSubdomainIndex + 1) % m_urlSubdomains.size();
     }
 
-    UrlCallback onRequestFinish = [this, callback, task, url](UrlResponse&& response) mutable {
-
-        removePending(task->tileId(), false);
+    UrlCallback onRequestFinish = [callback, task, url](UrlResponse&& response) {
 
         if (task->isCanceled()) {
             return;
@@ -78,39 +76,20 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
         callback.func(task);
     };
 
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        auto requestHandle = m_platform->startUrlRequest(url, onRequestFinish);
-        m_pending.push_back({ tileId, requestHandle });
-    }
+    auto& dlTask = static_cast<BinaryTileTask&>(*task);
+    dlTask.urlRequestHandle = m_platform->startUrlRequest(url, onRequestFinish);
+    dlTask.urlRequestStarted = true;
 
     return true;
 }
 
-void NetworkDataSource::removePending(const TileID& tile, bool cancelRequest) {
-    UrlRequestHandle pendingRequestToCancel = 0;
-    bool foundRequest = false;
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        for (auto it = m_pending.begin(); it != m_pending.end(); ++it) {
-            if (it->tile == tile) {
-                pendingRequestToCancel = it->request;
-                foundRequest = true;
-                // This invalidates our iterators, so we break immediately.
-                m_pending.erase(it);
-                break;
-            }
-        }
-    }
-    // Cancelling a request will run its callback, which can call into this function again,
-    // so we must perform the cancellation outside the mutex lock or we'll deadlock.
-    if (cancelRequest && foundRequest) {
-        m_platform->cancelUrlRequest(pendingRequestToCancel);
-    }
-}
+void NetworkDataSource::cancelLoadingTile(TileTask& task) {
+    auto& dlTask = static_cast<BinaryTileTask&>(task);
+    if (dlTask.urlRequestStarted) {
+        dlTask.urlRequestStarted = false;
 
-void NetworkDataSource::cancelLoadingTile(const TileID& tile) {
-    removePending(tile, true);
+        m_platform->cancelUrlRequest(dlTask.urlRequestHandle);
+    }
 }
 
 }
