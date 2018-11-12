@@ -44,7 +44,7 @@ struct TextureOptions {
     TextureWrap wrapS = TextureWrap::CLAMP_TO_EDGE;
     TextureWrap wrapT = TextureWrap::CLAMP_TO_EDGE;
     PixelFormat pixelFormat = PixelFormat::RGBA;
-    float density = 1.f;
+    float displayScale = 1.f; // 0.5 for a "@2x" image.
     bool generateMipmaps = false;
 };
 
@@ -86,7 +86,7 @@ public:
 
     GLuint getGlHandle() const { return m_glHandle; }
 
-    float getDensity() const { return m_options.density; }
+    float getDisplayScale() const { return m_options.displayScale; }
 
     const auto& getSpriteAtlas() const { return m_spriteAtlas; }
 

@@ -667,7 +667,7 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
     }
 
     if (Node density = textureConfig["density"]) {
-        YamlUtil::getFloat(density, options.density);
+        options.displayScale = 1.f / YamlUtil::getFloatOrDefault(density, 1.f);
     }
 
     std::unique_ptr<SpriteAtlas> atlas;

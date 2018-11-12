@@ -310,7 +310,7 @@ bool PointStyleBuilder::evalSizeParam(const DrawRule& _rule, Parameters& _params
     glm::vec2 spriteSize(NAN);
 
     if (_texture) {
-        spriteSize = glm::vec2{_texture->getWidth(), _texture->getHeight()} / _texture->getDensity();
+        spriteSize = glm::vec2{_texture->getWidth(), _texture->getHeight()} * _texture->getDisplayScale();
 
         const auto &atlas = _texture->getSpriteAtlas();
         if (atlas) {
@@ -318,7 +318,7 @@ bool PointStyleBuilder::evalSizeParam(const DrawRule& _rule, Parameters& _params
                 !atlas->getSpriteNode(_params.spriteDefault, spriteNode)) {
                 return false;
             }
-            spriteSize = spriteNode.m_size / _texture->getDensity();
+            spriteSize = spriteNode.m_size * _texture->getDisplayScale();
         } else if ( !_params.sprite.empty() || !_params.spriteDefault.empty()) {
             // missing sprite atlas for texture but sprite specified in draw rule
             return false;
