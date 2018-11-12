@@ -31,57 +31,11 @@ static const std::vector<std::string> s_geometryStrings = {
 };
 
 StyleContext::StyleContext() {
-    m_ctx = duk_create_heap_default();
-
-    //// Create global geometry constants
-    // TODO make immutable
-    duk_push_number(m_ctx, GeometryType::points);
-    duk_put_global_string(m_ctx, "point");
-
-    duk_push_number(m_ctx, GeometryType::lines);
-    duk_put_global_string(m_ctx, "line");
-
-    duk_push_number(m_ctx, GeometryType::polygons);
-    duk_put_global_string(m_ctx, "polygon");
-
-    //// Create global 'feature' object
-    // Get Proxy constructor
-    // -> [cons]
-    duk_eval_string(m_ctx, "Proxy");
-
-    // Add feature object
-    // -> [cons, { __obj: this }]
-    duk_idx_t featureObj = duk_push_object(m_ctx);
-    duk_push_pointer(m_ctx, this);
-    duk_put_prop_string(m_ctx, featureObj, INSTANCE_ID);
-
-    // Add handler object
-    // -> [cons, {...}, { get: func, has: func }]
-    duk_idx_t handlerObj = duk_push_object(m_ctx);
-    // Add 'get' property to handler
-    duk_push_c_function(m_ctx, jsGetProperty, 3 /*nargs*/);
-    duk_put_prop_string(m_ctx, handlerObj, "get");
-    // Add 'has' property to handler
-    duk_push_c_function(m_ctx, jsHasProperty, 2 /*nargs*/);
-    duk_put_prop_string(m_ctx, handlerObj, "has");
-
-    // Call proxy constructor
-    // [cons, feature, handler ] -> [obj|error]
-    if (duk_pnew(m_ctx, 2) == 0) {
-        // put feature proxy object in global scope
-        if (!duk_put_global_string(m_ctx, "feature")) {
-            LOGE("Initialization failed");
-        }
-    } else {
-        LOGE("Failure: %s", duk_safe_to_string(m_ctx, -1));
-        duk_pop(m_ctx);
-    }
-
-    DUMP("init\n");
+    m_jsContext = JsContext::create();
 }
 
 StyleContext::~StyleContext() {
-    duk_destroy_heap(m_ctx);
+    JsContext::destroy(m_jsContext);
 }
 
 // Convert a scalar node to a boolean, double, or string (in that order)
@@ -174,66 +128,24 @@ void StyleContext::initFunctions(const Scene& _scene) {
 }
 
 bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {
-
-    auto arr_idx = duk_push_array(m_ctx);
-    int id = 0;
-
-    bool ok = true;
-
+    uint32_t id = 0;
+    bool error = false;
     for (auto& function : _functions) {
-        duk_push_string(m_ctx, function.c_str());
-        duk_push_string(m_ctx, "");
-
-        if (duk_pcompile(m_ctx, DUK_COMPILE_FUNCTION) == 0) {
-            duk_put_prop_index(m_ctx, arr_idx, id);
-        } else {
-            LOGW("Compile failed: %s\n%s\n---",
-                 duk_safe_to_string(m_ctx, -1),
-                 function.c_str());
-            duk_pop(m_ctx);
-            ok = false;
-        }
-        id++;
-    }
-
-    if (!duk_put_global_string(m_ctx, FUNC_ID)) {
-        LOGE("'fns' object not set");
+        id = JsContext::addFunction(m_jsContext, function, error);
     }
 
     m_functionCount = id;
 
     DUMP("setFunctions\n");
-    return ok;
+    return !error;
 }
 
 bool StyleContext::addFunction(const std::string& _function) {
-    // Get all functions (array) in context
-    if (!duk_get_global_string(m_ctx, FUNC_ID)) {
-        LOGE("AddFunction - functions array not initialized");
-        duk_pop(m_ctx); // pop [undefined] sitting at stack top
-        return false;
-    }
+    bool error = false;
+    JsContext::addFunction(m_jsContext, _function, error);
+    m_functionCount++;
 
-    int id = m_functionCount++;
-    bool ok = true;
-
-    duk_push_string(m_ctx, _function.c_str());
-    duk_push_string(m_ctx, "");
-
-    if (duk_pcompile(m_ctx, DUK_COMPILE_FUNCTION) == 0) {
-        duk_put_prop_index(m_ctx, -2, id);
-    } else {
-        LOGW("Compile failed: %s\n%s\n---",
-             duk_safe_to_string(m_ctx, -1),
-             _function.c_str());
-        duk_pop(m_ctx);
-        ok = false;
-    }
-
-    // Pop the functions array off the stack
-    duk_pop(m_ctx);
-
-    return ok;
+    return !error;
 }
 
 void StyleContext::setFeature(const Feature& _feature) {
@@ -269,11 +181,9 @@ void StyleContext::setKeyword(const std::string& _key, Value _val) {
     if (entry == _val) { return; }
 
     if (_val.is<std::string>()) {
-        duk_push_string(m_ctx, _val.get<std::string>().c_str());
-        duk_put_global_string(m_ctx, _key.c_str());
+        JsContext::setGlobalString(m_jsContext, _key, _val.get<std::string>());
     } else if (_val.is<double>()) {
-        duk_push_number(m_ctx, _val.get<double>());
-        duk_put_global_string(m_ctx, _key.c_str());
+        JsContext::setGlobalNumber(m_jsContext, _key, _val.get<double>());
     }
 
     entry = std::move(_val);
@@ -291,69 +201,24 @@ const Value& StyleContext::getKeyword(const std::string& _key) const {
 }
 
 void StyleContext::clear() {
-    m_feature = nullptr;
-}
-
-bool StyleContext::evalFunction(FunctionID id) {
-    // Get all functions (array) in context
-    if (!duk_get_global_string(m_ctx, FUNC_ID)) {
-        LOGE("EvalFilterFn - functions array not initialized");
-        duk_pop(m_ctx); // pop [undefined] sitting at stack top
-        return false;
-    }
-
-    // Get function at index `id` from functions array, put it at stack top
-    if (!duk_get_prop_index(m_ctx, -1, id)) {
-        LOGE("EvalFilterFn - function %d not set", id);
-        duk_pop(m_ctx); // pop "undefined" sitting at stack top
-        duk_pop(m_ctx); // pop functions (array) now sitting at stack top
-        return false;
-    }
-
-    // pop fns array
-    duk_remove(m_ctx, -2);
-
-    // call popped function (sitting at stack top), evaluated value is put on stack top
-    if (duk_pcall(m_ctx, 0) != 0) {
-        LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
-        duk_pop(m_ctx);
-        return false;
-    }
-
-    return true;
+    JsContext::setCurrentFeature(m_jsContext, nullptr);
 }
 
 bool StyleContext::evalFilter(FunctionID _id) {
-
-    if (!evalFunction(_id)) { return false; };
-
-    // Evaluate the "truthiness" of the function result at the top of the stack.
-    bool result = duk_to_boolean(m_ctx, -1);
-
-    // pop result
-    duk_pop(m_ctx);
-
+    bool result = JsContext::evaluateBooleanFunction(m_jsContext, _id);
     return result;
 }
 
 bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) {
-
-    if (!evalFunction(_id)) { return false; }
-
-    // parse evaluated result at stack top
-    parseStyleResult(_key, _val);
-
-    // pop result, empty stack
-    duk_pop(m_ctx);
-
-    return !_val.is<none_type>();
-}
-
-void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const {
     _val = none_type{};
 
-    if (duk_is_string(m_ctx, -1)) {
-        std::string value(duk_get_string(m_ctx, -1));
+    auto jsValue = JsContext::getFunctionResult(m_jsContext, _id);
+    if (!jsValue) {
+        return false;
+    }
+
+    if (JsContext::valueIsString(m_jsContext, jsValue)) {
+        std::string value = JsContext::valueGetString(m_jsContext, jsValue);
 
         switch (_key) {
             case StyleParamKey::outline_style:
@@ -387,8 +252,8 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 break;
         }
 
-    } else if (duk_is_boolean(m_ctx, -1)) {
-        bool value = duk_get_boolean(m_ctx, -1);
+    } else if (JsContext::valueIsBool(m_jsContext, jsValue)) {
+        bool value = JsContext::valueGetBool(m_jsContext, jsValue);
 
         switch (_key) {
             case StyleParamKey::interactive:
@@ -403,10 +268,8 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 break;
         }
 
-    } else if (duk_is_array(m_ctx, -1)) {
-        duk_get_prop_string(m_ctx, -1, "length");
-        int len = duk_get_int(m_ctx, -1);
-        duk_pop(m_ctx);
+    } else if (JsContext::valueIsArray(m_jsContext, jsValue)) {
+        auto len = JsContext::valueGetArraySize(m_jsContext, jsValue);
 
         switch (_key) {
             case StyleParamKey::extrude: {
@@ -415,13 +278,13 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                     break;
                 }
 
-                duk_get_prop_index(m_ctx, -1, 0);
-                double v1 = duk_get_number(m_ctx, -1);
-                duk_pop(m_ctx);
+                auto valueAt0 = JsContext::valueGetArrayElement(m_jsContext, jsValue, 0);
+                double v1 = JsContext::valueGetDouble(m_jsContext, valueAt0);
+                JsContext::releaseValue(m_jsContext, valueAt0);
 
-                duk_get_prop_index(m_ctx, -1, 1);
-                double v2 = duk_get_number(m_ctx, -1);
-                duk_pop(m_ctx);
+                auto valueAt1 = JsContext::valueGetArrayElement(m_jsContext, jsValue, 1);
+                double v2 = JsContext::valueGetDouble(m_jsContext, valueAt1);
+                JsContext::releaseValue(m_jsContext, valueAt1);
 
                 _val = glm::vec2(v1, v2);
                 break;
@@ -434,23 +297,23 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                     LOGW("Wrong array size for color: '%d'.", len);
                     break;
                 }
-                duk_get_prop_index(m_ctx, -1, 0);
-                double r = duk_get_number(m_ctx, -1);
-                duk_pop(m_ctx);
+                auto valueAt0 = JsContext::valueGetArrayElement(m_jsContext, jsValue, 0);
+                double r = JsContext::valueGetDouble(m_jsContext, valueAt0);
+                JsContext::releaseValue(m_jsContext, valueAt0);
 
-                duk_get_prop_index(m_ctx, -1, 1);
-                double g = duk_get_number(m_ctx, -1);
-                duk_pop(m_ctx);
+                auto valueAt1 = JsContext::valueGetArrayElement(m_jsContext, jsValue, 1);
+                double g = JsContext::valueGetDouble(m_jsContext, valueAt1);
+                JsContext::releaseValue(m_jsContext, valueAt1);
 
-                duk_get_prop_index(m_ctx, -1, 2);
-                double b = duk_get_number(m_ctx, -1);
-                duk_pop(m_ctx);
+                auto valueAt2 = JsContext::valueGetArrayElement(m_jsContext, jsValue, 2);
+                double b = JsContext::valueGetDouble(m_jsContext, valueAt2);
+                JsContext::releaseValue(m_jsContext, valueAt2);
 
                 double a = 1.0;
                 if (len == 4) {
-                    duk_get_prop_index(m_ctx, -1, 3);
-                    a = duk_get_number(m_ctx, -1);
-                    duk_pop(m_ctx);
+                    auto valueAt3 = JsContext::valueGetArrayElement(m_jsContext, jsValue, 3);
+                    a = JsContext::valueGetDouble(m_jsContext, valueAt3);
+                    JsContext::releaseValue(m_jsContext, valueAt3);
                 }
 
                 _val = ColorF(r, g, b, a).toColor().abgr;
@@ -459,43 +322,40 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
             default:
                 break;
         }
-
-    } else if (duk_is_nan(m_ctx, -1)) {
-        // Ignore setting value
-        LOGD("duk evaluates JS method to NAN.\n");
-    } else if (duk_is_number(m_ctx, -1)) {
-
+    } else if (JsContext::valueIsNumber(m_jsContext, jsValue)) {
+        double number = JsContext::valueGetDouble(m_jsContext, jsValue);
+        if (std::isnan(number)) {
+            LOGD("duk evaluates JS method to NAN.\n");
+        }
         switch (_key) {
             case StyleParamKey::text_source:
             case StyleParamKey::text_source_left:
             case StyleParamKey::text_source_right:
-                _val = doubleToString(static_cast<double>(duk_get_number(m_ctx, -1)));
+                _val = doubleToString(number);
                 break;
             case StyleParamKey::extrude:
-                _val = glm::vec2(0.f, static_cast<float>(duk_get_number(m_ctx, -1)));
+                _val = glm::vec2(0.f, number);
                 break;
             case StyleParamKey::placement_spacing: {
-                double v = duk_get_number(m_ctx, -1);
-                _val = StyleParam::Width{static_cast<float>(v), Unit::pixel};
+                _val = StyleParam::Width{static_cast<float>(number), Unit::pixel};
                 break;
             }
             case StyleParamKey::width:
             case StyleParamKey::outline_width: {
                 // TODO more efficient way to return pixels.
                 // atm this only works by return value as string
-                double v = duk_get_number(m_ctx, -1);
-                _val = StyleParam::Width{static_cast<float>(v)};
+                _val = StyleParam::Width{static_cast<float>(number)};
                 break;
             }
             case StyleParamKey::angle:
             case StyleParamKey::text_font_stroke_width:
             case StyleParamKey::placement_min_length_ratio: {
-                _val = static_cast<float>(duk_get_number(m_ctx, -1));
+                _val = static_cast<float>(number);
                 break;
             }
             case StyleParamKey::size: {
                 StyleParam::SizeValue vec;
-                vec.x.value = static_cast<float>(duk_get_number(m_ctx, -1));
+                vec.x.value = static_cast<float>(number);
                 _val = vec;
                 break;
             }
@@ -506,65 +366,24 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
             case StyleParamKey::outline_color:
             case StyleParamKey::text_font_fill:
             case StyleParamKey::text_font_stroke_color: {
-                _val = static_cast<uint32_t>(duk_get_uint(m_ctx, -1));
+                _val = static_cast<uint32_t>(number);
                 break;
             }
             default:
                 break;
         }
-    } else if (duk_is_null_or_undefined(m_ctx, -1)) {
+    } else if (JsContext::valueIsUndefined(m_jsContext, jsValue)) {
         // Explicitly set value as 'undefined'. This is important for some styling rules.
         _val = Undefined();
     } else {
         LOGW("Unhandled return type from Javascript style function for %d.", _key);
     }
 
+    JsContext::releaseValue(m_jsContext, jsValue);
+
     DUMP("parseStyleResult\n");
+
+    return !_val.is<none_type>();
 }
 
-// Implements Proxy handler.has(target_object, key)
-duk_ret_t StyleContext::jsHasProperty(duk_context *_ctx) {
-
-    duk_get_prop_string(_ctx, 0, INSTANCE_ID);
-    auto* attr = static_cast<const StyleContext*> (duk_to_pointer(_ctx, -1));
-    if (!attr || !attr->m_feature) {
-        LOGE("Error: no context set %p %p", attr, attr ? attr->m_feature : nullptr);
-        duk_pop(_ctx);
-        return 0;
-    }
-
-    const char* key = duk_require_string(_ctx, 1);
-    duk_push_boolean(_ctx, attr->m_feature->props.contains(key));
-
-    return 1;
-}
-
-// Implements Proxy handler.get(target_object, key)
-duk_ret_t StyleContext::jsGetProperty(duk_context *_ctx) {
-
-    // Get the StyleContext instance from JS Feature object (first parameter).
-    duk_get_prop_string(_ctx, 0, INSTANCE_ID);
-    auto* attr = static_cast<const StyleContext*> (duk_to_pointer(_ctx, -1));
-    if (!attr || !attr->m_feature) {
-        LOGE("Error: no context set %p %p",  attr, attr ? attr->m_feature : nullptr);
-        duk_pop(_ctx);
-        return 0;
-    }
-
-    // Get the property name (second parameter)
-    const char* key = duk_require_string(_ctx, 1);
-
-    auto it = attr->m_feature->props.get(key);
-    if (it.is<std::string>()) {
-        duk_push_string(_ctx, it.get<std::string>().c_str());
-    } else if (it.is<double>()) {
-        duk_push_number(_ctx, it.get<double>());
-    } else {
-        duk_push_undefined(_ctx);
-    }
-    // FIXME: Distinguish Booleans here as well
-
-    return 1;
-}
-
-}
+} // namespace Tangram

@@ -23,21 +23,6 @@ set_target_properties(css-color-parser-cpp PROPERTIES CXX_STANDARD 14 CXX_STANDA
 
 target_include_directories(css-color-parser-cpp PUBLIC css-color-parser-cpp)
 
-## duktape ##
-#############
-add_library(duktape
-  ${CMAKE_CURRENT_SOURCE_DIR}/duktape/duktape.c)
-
-target_compile_options(duktape PRIVATE
-  -fstrict-aliasing
-  -fomit-frame-pointer
-  -std=c99
-  -Wall)
-
-target_include_directories(duktape
-  PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/duktape)
-
 ## miniz ##
 ###########
 add_library(miniz
