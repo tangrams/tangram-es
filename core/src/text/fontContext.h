@@ -26,7 +26,14 @@ struct GlyphTexture {
 
     static constexpr int size = 256;
 
-    GlyphTexture() : texture(size, size) {
+    static constexpr TextureOptions textureOptions() {
+        TextureOptions options;
+        options.pixelFormat = PixelFormat::ALPHA;
+        return options;
+    }
+
+    GlyphTexture() : texture(textureOptions()) {
+        texture.resize(size, size);
         texData.resize(size * size);
     }
 

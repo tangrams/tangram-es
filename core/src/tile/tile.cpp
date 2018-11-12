@@ -95,7 +95,7 @@ size_t Tile::getMemoryUsage() const {
         }
         for (auto& raster : m_rasters) {
             if (raster.texture) {
-                m_memoryUsage += raster.texture->bufferSize();
+                m_memoryUsage += raster.texture->getBufferSize();
             }
         }
     }

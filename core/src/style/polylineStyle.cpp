@@ -115,12 +115,15 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderSource->setSourceStrings(polyline_fs, polyline_vs);
 
     if (m_dashArray.size() > 0) {
-        TextureOptions options {GL_RGBA, GL_RGBA, {GL_NEAREST, GL_NEAREST}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
+        TextureOptions options;
+        options.minFilter = TextureMinFilter::NEAREST;
+        options.magFilter = TextureMagFilter::NEAREST;
         // provides precision for dash patterns that are a fraction of line width
         auto pixels = DashArray::render(m_dashArray, dash_scale);
 
-        m_texture = std::make_shared<Texture>(1, pixels.size(), options);
-        m_texture->setData(pixels.data(), pixels.size());
+        m_texture = std::make_shared<Texture>(options);
+        m_texture->resize(1, pixels.size());
+        m_texture->setPixelData(pixels.data(), pixels.size());
 
         if (m_dashBackground) {
             m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LINE_BACKGROUND_COLOR vec3(" +

@@ -310,15 +310,15 @@ bool PointStyleBuilder::evalSizeParam(const DrawRule& _rule, Parameters& _params
     glm::vec2 spriteSize(NAN);
 
     if (_texture) {
-        spriteSize = glm::vec2{_texture->getWidth(), _texture->getHeight()} * _texture->invDensity();
+        spriteSize = glm::vec2{_texture->getWidth(), _texture->getHeight()} * _texture->getDisplayScale();
 
-        const auto &atlas = _texture->spriteAtlas();
+        const auto &atlas = _texture->getSpriteAtlas();
         if (atlas) {
             if (!atlas->getSpriteNode(_params.sprite, spriteNode) &&
                 !atlas->getSpriteNode(_params.spriteDefault, spriteNode)) {
                 return false;
             }
-            spriteSize = spriteNode.m_size * _texture->invDensity();
+            spriteSize = spriteNode.m_size * _texture->getDisplayScale();
         } else if ( !_params.sprite.empty() || !_params.spriteDefault.empty()) {
             // missing sprite atlas for texture but sprite specified in draw rule
             return false;
@@ -358,7 +358,7 @@ bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, const T
     _quad = glm::vec4(0.0, 1.0, 1.0, 0.0);
 
     if (_texture) {
-        const auto& atlas = _texture->spriteAtlas();
+        const auto& atlas = _texture->getSpriteAtlas();
         if (atlas) {
             SpriteNode spriteNode;
             if (!atlas->getSpriteNode(_params.sprite, spriteNode) &&

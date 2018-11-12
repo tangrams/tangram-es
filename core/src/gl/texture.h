@@ -11,42 +11,64 @@ namespace Tangram {
 
 class RenderState;
 
-struct TextureFiltering {
-    GLenum min;
-    GLenum mag;
+enum class TextureMinFilter : GLenum {
+    NEAREST = GL_NEAREST,
+    LINEAR = GL_LINEAR,
+    NEAREST_MIPMAP_NEAREST = GL_NEAREST_MIPMAP_NEAREST,
+    LINEAR_MIPMAP_NEAREST = GL_LINEAR_MIPMAP_NEAREST,
+    NEAREST_MIPMAP_LINEAR = GL_NEAREST_MIPMAP_LINEAR,
+    LINEAR_MIPMAP_LINEAR = GL_LINEAR_MIPMAP_LINEAR,
 };
 
-struct TextureWrapping {
-    GLenum wraps;
-    GLenum wrapt;
+enum class TextureMagFilter : GLenum {
+    NEAREST = GL_NEAREST,
+    LINEAR = GL_LINEAR,
+};
+
+enum class TextureWrap : GLenum {
+    CLAMP_TO_EDGE = GL_CLAMP_TO_EDGE,
+    REPEAT = GL_REPEAT,
+};
+
+enum class PixelFormat : GLenum {
+    ALPHA = GL_ALPHA,
+    LUMINANCE = GL_LUMINANCE,
+    LUMINANCE_ALPHA = GL_LUMINANCE_ALPHA,
+    RGB = GL_RGB,
+    RGBA = GL_RGBA,
 };
 
 struct TextureOptions {
-    GLenum internalFormat;
-    GLenum format;
-    TextureFiltering filtering;
-    TextureWrapping wrapping;
+    TextureMinFilter minFilter = TextureMinFilter::LINEAR;
+    TextureMagFilter magFilter = TextureMagFilter::LINEAR;
+    TextureWrap wrapS = TextureWrap::CLAMP_TO_EDGE;
+    TextureWrap wrapT = TextureWrap::CLAMP_TO_EDGE;
+    PixelFormat pixelFormat = PixelFormat::RGBA;
+    float displayScale = 1.f; // 0.5 for a "@2x" image.
+    bool generateMipmaps = false;
 };
-
-#define DEFAULT_TEXTURE_OPTION \
-    {GL_ALPHA, GL_ALPHA, \
-    {GL_LINEAR, GL_LINEAR}, \
-    {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}}
 
 class Texture {
 
 public:
 
-    Texture(unsigned int _width, unsigned int _height, TextureOptions _options = DEFAULT_TEXTURE_OPTION,
-            bool _generateMipmaps = false, float _density = 1.f);
+    explicit Texture(TextureOptions _options);
 
-    Texture(const std::vector<char>& _data, TextureOptions _options = DEFAULT_TEXTURE_OPTION,
-            bool _generateMipmaps = false, float _density = 1.f);
+    Texture(const uint8_t* data, size_t length, TextureOptions _options);
 
-    Texture(Texture&& _other);
-    Texture& operator=(Texture&& _other);
+    Texture(Texture&& _other) noexcept;
+    Texture& operator=(Texture&& _other) noexcept;
 
     virtual ~Texture();
+
+    bool loadImageFromMemory(const uint8_t* data, size_t length);
+
+    /* Sets texture pixel data */
+    void setPixelData(const GLuint* data, size_t length);
+
+    void setRowsDirty(int start, int count);
+
+    void setSpriteAtlas(std::unique_ptr<SpriteAtlas> sprites);
 
     /* Perform texture updates, should be called at least once and after adding data or resizing */
     virtual void update(RenderState& rs, GLuint _textureSlot);
@@ -54,81 +76,57 @@ public:
     virtual void update(RenderState& rs, GLuint _textureSlot, const GLuint* data);
 
     /* Resize the texture */
-    void resize(const unsigned int _width, const unsigned int _height);
-
-    /* Width and Height texture getters */
-    unsigned int getWidth() const { return m_width; }
-    unsigned int getHeight() const { return m_height; }
+    void resize(int width, int height);
 
     void bind(RenderState& rs, GLuint _unit);
 
-    void setDirty(size_t yOffset, size_t height);
+    /* Width and Height texture getters */
+    int getWidth() const { return m_width; }
+    int getHeight() const { return m_height; }
 
-    GLuint getGlHandle() { return m_glHandle; }
+    GLuint getGlHandle() const { return m_glHandle; }
 
-    /* Sets texture data
-     *
-     * Has less priority than set sub data
-     */
-    void setData(const GLuint* _data, unsigned int _dataSize);
+    float getDisplayScale() const { return m_options.displayScale; }
 
-    /* Update a region of the texture */
-    void setSubData(const GLuint* _subData, uint16_t _xoff, uint16_t _yoff,
-                    uint16_t _width, uint16_t _height, uint16_t _stride);
+    const auto& getSpriteAtlas() const { return m_spriteAtlas; }
 
     /* Checks whether the texture has valid data and has been successfully uploaded to GPU */
     bool isValid() const;
 
-    typedef std::pair<GLuint, GLuint> TextureSlot;
+    size_t getBytesPerPixel() const;
 
-    static void invalidateAllTextures();
+    size_t getBufferSize() const;
 
-    static bool isRepeatWrapping(TextureWrapping _wrapping);
-
-    bool loadImageFromMemory(const std::vector<char>& _data);
-
-    static void flipImageData(unsigned char *result, int w, int h, int depth);
-    static void flipImageData(GLuint *result, int w, int h);
-
-    size_t bytesPerPixel();
-    size_t bufferSize();
-
-    auto& spriteAtlas() { return m_spriteAtlas; }
-    const auto& spriteAtlas() const { return m_spriteAtlas; }
-
-    float invDensity() const { return m_invDensity; }
+    static void flipImageData(GLuint* result, int width, int height);
 
 protected:
+
+    struct DirtyRowRange {
+        int min;
+        int max;
+    };
 
     void generate(RenderState& rs, GLuint _textureUnit);
 
     TextureOptions m_options;
+
     std::vector<GLuint> m_data;
-    GLuint m_glHandle;
 
-    struct DirtyRange {
-        size_t min;
-        size_t max;
-    };
-    std::vector<DirtyRange> m_dirtyRanges;
+    std::vector<DirtyRowRange> m_dirtyRows;
 
-    bool m_shouldResize;
+    GLuint m_glHandle = 0;
 
-    unsigned int m_width;
-    unsigned int m_height;
+    bool m_shouldResize = false;
 
-    GLenum m_target;
+    int m_width = 0;
+    int m_height = 0;
 
     RenderState* m_rs = nullptr;
 
 private:
 
-    bool m_generateMipmaps;
-    // used to determine css size by using as a multiplier with the defined texture size/sprite size
-    float m_invDensity = 1.f;
-
     std::unique_ptr<SpriteAtlas> m_spriteAtlas;
 
 };
 
-}
+} // namespace Tangram

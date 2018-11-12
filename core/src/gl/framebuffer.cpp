@@ -113,13 +113,12 @@ void FrameBuffer::init(RenderState& _rs) {
         GL::framebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                     GL_RENDERBUFFER, m_glColorRenderBufferHandle);
     } else {
-        TextureOptions options =
-            {GL_RGBA, GL_RGBA,
-            {GL_NEAREST, GL_NEAREST},
-            {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}
-        };
+        TextureOptions options;
+        options.minFilter = TextureMinFilter::NEAREST;
+        options.magFilter = TextureMagFilter::NEAREST;
 
-        m_texture = std::make_unique<Texture>(m_width, m_height, options);
+        m_texture = std::make_unique<Texture>(options);
+        m_texture->resize(m_width, m_height);
         m_texture->update(_rs, 0);
 
         GL::framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
