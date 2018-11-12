@@ -6,6 +6,8 @@ find_package(OpenGL REQUIRED)
 
 include(cmake/glfw.cmake)
 
+add_subdirectory(platforms/common/duktape)
+
 add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes" "Resources")
 
 add_executable(tangram
@@ -17,6 +19,7 @@ add_executable(tangram
   platforms/common/imgui_impl_opengl3.cpp
   platforms/common/glfwApp.cpp
   platforms/common/appleAllowedFonts.mm
+  platforms/common/jsContextDuktape.cpp
   ${RESOURCES}
 )
 
@@ -31,6 +34,7 @@ target_link_libraries(tangram
   PRIVATE
   tangram-core
   imgui
+  duktape
   glfw
   ${GLFW_LIBRARIES}
   ${OPENGL_LIBRARIES}

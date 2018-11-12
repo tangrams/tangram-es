@@ -2,6 +2,7 @@
 
 #include "scene/styleParam.h"
 #include "util/fastmap.h"
+#include "jsContext.h"
 
 #include <array>
 #include <functional>
@@ -79,10 +80,7 @@ public:
     const Value& getKeyword(const std::string& _key) const;
 
 private:
-    static int jsGetProperty(duk_context *_ctx);
-    static int jsHasProperty(duk_context *_ctx);
 
-    bool evalFunction(FunctionID id);
     void parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
     void parseSceneGlobals(const YAML::Node& node);
 
@@ -96,7 +94,7 @@ private:
 
     const Feature* m_feature = nullptr;
 
-    mutable duk_context *m_ctx;
+    JsContext::Instance* m_jsContext = nullptr;
 };
 
 }
