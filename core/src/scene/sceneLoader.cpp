@@ -1808,7 +1808,12 @@ void SceneLoader::loadBackground(Node background, const std::shared_ptr<Scene>& 
         if (StyleParam::parseColor(colorNode, colorResult)) {
             scene->background() = colorResult;
         } else {
-            LOGW("Cannot parse color: %s", Dump(colorNode).c_str());
+            Stops stopsResult = Stops::Colors(colorNode);
+            if (stopsResult.frames.size() > 0) {
+                scene->backgroundStops() = stopsResult;
+            } else {
+                LOGW("Cannot parse color: %s", Dump(colorNode).c_str());
+            }
         }
     }
 }
