@@ -52,7 +52,7 @@ bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
 
         resize(width, height);
 
-        setPixelData(rgbaPixels, static_cast<size_t>(width * height));
+        setPixelData(rgbaPixels, width * height);
 
         stbi_image_free(pixels);
 
@@ -87,7 +87,7 @@ Texture& Texture::operator=(Texture&& _other) noexcept {
     return *this;
 }
 
-void Texture::setPixelData(const GLuint *data, size_t length) {
+void Texture::setPixelData(const GLuint* data, size_t length) {
 
     m_data.clear();
 
