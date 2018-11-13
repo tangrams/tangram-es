@@ -2,7 +2,7 @@
 // Created by Matt Blair on 11/9/18.
 //
 #include <log.h>
-#include "jsContext.h"
+#include "DuktapeJavaScriptContext.h"
 
 #include "data/tileData.h"
 #include "util/variant.h"
@@ -10,6 +10,9 @@
 #include "duktape.h"
 
 namespace Tangram {
+
+
+
 namespace JsContext {
 
 const static char INSTANCE_ID[] = "\xff""\xff""obj";
@@ -19,73 +22,6 @@ struct Instance {
     duk_context* ctx = nullptr;
     Feature* feature = nullptr;
 };
-
-// Used for proxy object.
-static int jsGetProperty(duk_context *_ctx);
-static int jsHasProperty(duk_context *_ctx);
-
-Instance* create() {
-    auto ctx = duk_create_heap_default();
-    auto instance = new Instance();
-    instance->ctx = ctx;
-
-    //// Create global geometry constants
-    // TODO make immutable
-    duk_push_number(ctx, GeometryType::points);
-    duk_put_global_string(ctx, "point");
-
-    duk_push_number(ctx, GeometryType::lines);
-    duk_put_global_string(ctx, "line");
-
-    duk_push_number(ctx, GeometryType::polygons);
-    duk_put_global_string(ctx, "polygon");
-
-    //// Create global 'feature' object
-    // Get Proxy constructor
-    // -> [cons]
-    duk_eval_string(ctx, "Proxy");
-
-    // Add feature object
-    // -> [cons, { __obj: this }]
-    duk_idx_t featureObj = duk_push_object(ctx);
-    duk_push_pointer(ctx, instance);
-    duk_put_prop_string(ctx, featureObj, INSTANCE_ID);
-
-    // Add handler object
-    // -> [cons, {...}, { get: func, has: func }]
-    duk_idx_t handlerObj = duk_push_object(ctx);
-    // Add 'get' property to handler
-    duk_push_c_function(ctx, jsGetProperty, 3 /*nargs*/);
-    duk_put_prop_string(ctx, handlerObj, "get");
-    // Add 'has' property to handler
-    duk_push_c_function(ctx, jsHasProperty, 2 /*nargs*/);
-    duk_put_prop_string(ctx, handlerObj, "has");
-
-    // Call proxy constructor
-    // [cons, feature, handler ] -> [obj|error]
-    if (duk_pnew(ctx, 2) == 0) {
-        // put feature proxy object in global scope
-        if (!duk_put_global_string(ctx, "feature")) {
-            LOGE("Initialization failed");
-        }
-    } else {
-        LOGE("Failure: %s", duk_safe_to_string(ctx, -1));
-        duk_pop(ctx);
-    }
-
-    // Set up 'fns' array.
-    duk_push_array(ctx);
-    if (!duk_put_global_string(ctx, FUNC_ID)) {
-        LOGE("'fns' object not set");
-    }
-
-    return instance;
-}
-
-void destroy(Instance* instance) {
-    duk_destroy_heap(instance->ctx);
-    delete instance;
-}
 
 void setGlobalString(Instance* instance, const std::string& name, const std::string& value) {
     auto ctx = instance->ctx;
@@ -265,32 +201,119 @@ Value* valueGetArrayElement(Instance* instance, Value* value, size_t index) {
     return element;
 }
 
+} // namespace JsContext
+
+const static char INSTANCE_ID[] = "\xff""\xff""obj";
+const static char FUNC_ID[] = "\xff""\xff""fns";
+
+DuktapeJavaScriptContext::DuktapeJavaScriptContext() {
+    _ctx = duk_create_heap_default();
+
+    //// Create global geometry constants
+    // TODO make immutable
+    duk_push_number(_ctx, GeometryType::points);
+    duk_put_global_string(_ctx, "point");
+
+    duk_push_number(_ctx, GeometryType::lines);
+    duk_put_global_string(_ctx, "line");
+
+    duk_push_number(_ctx, GeometryType::polygons);
+    duk_put_global_string(_ctx, "polygon");
+
+    //// Create global 'feature' object
+    // Get Proxy constructor
+    // -> [cons]
+    duk_eval_string(_ctx, "Proxy");
+
+    // Add feature object
+    // -> [cons, { __obj: this }]
+    duk_idx_t featureObj = duk_push_object(_ctx);
+    duk_push_pointer(_ctx, this);
+    duk_put_prop_string(_ctx, featureObj, INSTANCE_ID);
+
+    // Add handler object
+    // -> [cons, {...}, { get: func, has: func }]
+    duk_idx_t handlerObj = duk_push_object(_ctx);
+    // Add 'get' property to handler
+    duk_push_c_function(_ctx, jsGetProperty, 3 /*nargs*/);
+    duk_put_prop_string(_ctx, handlerObj, "get");
+    // Add 'has' property to handler
+    duk_push_c_function(_ctx, jsHasProperty, 2 /*nargs*/);
+    duk_put_prop_string(_ctx, handlerObj, "has");
+
+    // Call proxy constructor
+    // [cons, feature, handler ] -> [obj|error]
+    if (duk_pnew(_ctx, 2) == 0) {
+        // put feature proxy object in global scope
+        if (!duk_put_global_string(_ctx, "feature")) {
+            LOGE("Initialization failed");
+        }
+    } else {
+        LOGE("Failure: %s", duk_safe_to_string(_ctx, -1));
+        duk_pop(_ctx);
+    }
+
+    // Set up 'fns' array.
+    duk_push_array(_ctx);
+    if (!duk_put_global_string(_ctx, FUNC_ID)) {
+        LOGE("'fns' object not set");
+    }
+}
+
+DuktapeJavaScriptContext::~DuktapeJavaScriptContext() {
+    duk_destroy_heap(_ctx);
+}
+
+void DuktapeJavaScriptContext::setGlobalString(const std::string& name, const std::string& value) {
+
+}
+
+void DuktapeJavaScriptContext::setGlobalNumber(const std::string& name, double value) {
+
+}
+
+void DuktapeJavaScriptContext::setCurrentFeature(Feature* feature) {
+
+}
+
+uint32_t DuktapeJavaScriptContext::addFunction(const std::string& source, bool& error) {
+    return 0;
+}
+
+bool DuktapeJavaScriptContext::evaluateBooleanFunction(uint32_t index) {
+    return false;
+}
+
+JSValue DuktapeJavaScriptContext::getFunctionResult(uint32_t index) {
+    return Tangram::JSValue();
+}
+
 
 // Implements Proxy handler.has(target_object, key)
-int jsHasProperty(duk_context *_ctx) {
+int DuktapeJavaScriptContext::jsHasProperty(duk_context *_ctx) {
 
     duk_get_prop_string(_ctx, 0, INSTANCE_ID);
-    auto* instance = static_cast<const Instance*>(duk_to_pointer(_ctx, -1));
-    if (!instance || !instance->feature) {
-        LOGE("Error: no context set %p %p", instance, instance ? instance->feature : nullptr);
+    auto context = static_cast<const DuktapeJavaScriptContext*>(duk_to_pointer(_ctx, -1));
+    if (!context || !context->_feature) {
+        LOGE("Error: no context set %p %p", context, context ? context->_feature : nullptr);
         duk_pop(_ctx);
         return 0;
     }
 
     const char* key = duk_require_string(_ctx, 1);
-    duk_push_boolean(_ctx, instance->feature->props.contains(key));
+    duk_push_boolean(_ctx, context->_feature->props.contains(key));
 
     return 1;
 }
 
 // Implements Proxy handler.get(target_object, key)
-int jsGetProperty(duk_context *_ctx) {
+int DuktapeJavaScriptContext::jsGetProperty(duk_context *_ctx) {
 
-    // Get the StyleContext instance from JS Feature object (first parameter).
+    // Get the JavaScriptContext instance from JS Feature object (first parameter).
     duk_get_prop_string(_ctx, 0, INSTANCE_ID);
-    auto* instance = static_cast<const Instance*>(duk_to_pointer(_ctx, -1));
-    if (!instance || !instance->feature) {
-        LOGE("Error: no context set %p %p",  instance, instance ? instance->feature : nullptr);
+    auto context = static_cast<const DuktapeJavaScriptContext*>(duk_to_pointer(_ctx, -1));
+    if (!context || !context->_feature) {
+        LOGE("Error: no context set %p %p",  context, context ? context->_feature : nullptr);
         duk_pop(_ctx);
         return 0;
     }
@@ -298,7 +321,7 @@ int jsGetProperty(duk_context *_ctx) {
     // Get the property name (second parameter)
     const char* key = duk_require_string(_ctx, 1);
 
-    auto it = instance->feature->props.get(key);
+    auto it = context->_feature->props.get(key);
     if (it.is<std::string>()) {
         duk_push_string(_ctx, it.get<std::string>().c_str());
     } else if (it.is<double>()) {
@@ -311,5 +334,59 @@ int jsGetProperty(duk_context *_ctx) {
     return 1;
 }
 
-} // namespace JsContext
+DuktapeJavaScriptValue::~DuktapeJavaScriptValue() {
+
+}
+
+bool DuktapeJavaScriptValue::isUndefined() {
+    return false;
+}
+
+bool DuktapeJavaScriptValue::isNull() {
+    return false;
+}
+
+bool DuktapeJavaScriptValue::isBool() {
+    return false;
+}
+
+bool DuktapeJavaScriptValue::isNumber() {
+    return false;
+}
+
+bool DuktapeJavaScriptValue::isString() {
+    return false;
+}
+
+bool DuktapeJavaScriptValue::isArray() {
+    return false;
+}
+
+bool DuktapeJavaScriptValue::isObject() {
+    return false;
+}
+
+bool DuktapeJavaScriptValue::toBool() {
+    return false;
+}
+
+int DuktapeJavaScriptValue::toInt() {
+    return 0;
+}
+
+double DuktapeJavaScriptValue::toDouble() {
+    return 0;
+}
+
+std::string DuktapeJavaScriptValue::toString() {
+    return std::string();
+}
+
+JSValue DuktapeJavaScriptValue::getValueAtIndex(size_t index) {
+    return Tangram::JSValue();
+}
+
+JSValue DuktapeJavaScriptValue::getValueForProperty(const std::string& name) {
+    return Tangram::JSValue();
+}
 } // namespace Tangram
