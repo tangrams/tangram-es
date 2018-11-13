@@ -2,7 +2,7 @@
 
 #include "scene/styleParam.h"
 #include "util/fastmap.h"
-#include "jsContext.h"
+#include "IJavaScriptContext.h"
 
 #include <array>
 #include <functional>
