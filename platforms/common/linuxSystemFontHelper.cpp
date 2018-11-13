@@ -4,52 +4,137 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <chrono>
+#include <log.h>
+
 namespace Tangram {
+
+std::chrono::time_point<std::chrono::system_clock> t_start, t_last;
+#define LOGTimeInit() do { t_last = t_start = std::chrono::system_clock::now(); } while(0)
+#define LOGTime(msg) do { \
+        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now(); \
+        std::chrono::duration<double> t1 = now - t_start;               \
+        std::chrono::duration<double> t2 = now - t_last;                \
+        t_last = now;                                                   \
+        LOGW(">>>> " msg " %.6f / %.6f", t1.count(), t2.count()); } while(0)
 
 std::vector<std::string> systemFallbackFonts(FcConfig* fcConfig) {
 
-    std::string style = "Regular";
+    LOGTimeInit();
+
     std::vector<std::string> fallbackFonts;
 
-    /*
-     * Read system fontconfig to get list of fallback font for each supported language
-     */
-    FcStrSet* fcLangs = FcGetLangs();
-    FcStrList* fcLangList = FcStrListCreate(fcLangs);
-    FcChar8* fcLang;
-    while ((fcLang = FcStrListNext(fcLangList))) {
-        FcValue fcStyleValue, fcLangValue;
+    FcPattern *pat = FcPatternBuild (0,
+                          FC_LANG, FcTypeString, "en",
+                          FC_WIDTH, FcTypeInteger, FC_WIDTH_NORMAL,
+                          FC_WEIGHT, FcTypeInteger, FC_WEIGHT_NORMAL,
+                          FC_SLANT, FcTypeInteger, FC_SLANT_ROMAN,
+                          FC_SCALABLE, FcTypeBool, FcTrue,
+                          (char *) 0);
 
-        fcStyleValue.type = fcLangValue.type = FcType::FcTypeString;
-        fcStyleValue.u.s = reinterpret_cast<const FcChar8*>(style.c_str());
-        fcLangValue.u.s = fcLang;
+    FcConfigSubstitute(fcConfig, pat, FcMatchPattern);
+    FcDefaultSubstitute(pat);
+    // FcPatternPrint(pat);
 
-        // create a pattern with style and family font properties
-        FcPattern* pat = FcPatternCreate();
+    FcResult result;
+    FcFontSet *fs = FcFontSort(fcConfig, pat, FcTrue, NULL, &result);
+    FcPatternDestroy(pat);
 
-        FcPatternAdd(pat, FC_STYLE, fcStyleValue, true);
-        FcPatternAdd(pat, FC_LANG, fcLangValue, true);
-        //FcPatternPrint(pat);
-
-        FcConfigSubstitute(fcConfig, pat, FcMatchPattern);
-        FcDefaultSubstitute(pat);
-
-        FcResult res;
-        FcPattern* font = FcFontMatch(fcConfig, pat, &res);
-        if (font) {
-            FcChar8* file = nullptr;
-            if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
-                // Make sure this font file is not previously added.
-                if (std::find(fallbackFonts.begin(), fallbackFonts.end(),
-                              reinterpret_cast<char*>(file)) == fallbackFonts.end()) {
-                    fallbackFonts.emplace_back(reinterpret_cast<char*>(file));
-                }
-            }
-            FcPatternDestroy(font);
-        }
-        FcPatternDestroy(pat);
+    if (!fs || (result != FcResultMatch)) {
+        return fallbackFonts;
     }
-    FcStrListDone(fcLangList);
+
+    //FcCharSet *fcs = FcCharSetCreate();
+
+    FcLangSet *fls = FcLangSetCreate();
+    FcLangSet *empty = FcLangSetCreate();
+
+    int count = 0;
+    for (int i = 0; i < fs->nfont; i++) {
+        FcPattern *font = fs->fonts[i];
+
+        //FcPatternPrint(font);
+        // FcChar8 *s = FcNameUnparse(font);
+        // printf("Font: %s\n", s);
+        // free(s);
+
+        int w;
+        if (FcPatternGetInteger(font, FC_WEIGHT, 0, &w) != FcResultMatch || w != FC_WEIGHT_REGULAR) {
+            continue;
+        }
+        if (FcPatternGetInteger(font, FC_SLANT, 0, &w) != FcResultMatch || w != FC_SLANT_ROMAN) {
+            continue;
+        }
+        if (FcPatternGetBool(font, FC_COLOR, 0, &w) != FcResultMatch || w != FcFalse) {
+            continue;
+        }
+        if (FcPatternGetBool(font, FC_SCALABLE, 0, &w) != FcResultMatch || w != FcTrue) {
+            continue;
+        }
+        // if (FcPatternGetBool(font, FC_VARIABLE, 0, &w) != FcResultMatch || w != FcTrue) {
+        //     continue;
+        // }
+
+        // FcCharSet *cs = NULL;
+        // if (FcPatternGetCharSet(font, FC_CHARSET, 0, &cs) != FcResultMatch) {
+        //     LOGW("no charset!");
+        //     continue;
+        // }
+        // if (FcCharSetIsSubset(cs, fcs)) {
+        //     LOGW("charset included!");
+        //     continue;
+        // }
+        // LOGW("Add chars: %d", FcCharSetSubtractCount(cs, fcs));
+
+        // FcCharSet *u = FcCharSetUnion(cs, fcs);
+        // FcCharSetDestroy(fcs);
+        // fcs = u;
+        FcChar8 *file;
+
+        if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
+            FcLangSet *ls = NULL;
+            if (FcPatternGetLangSet(font, FC_LANG, 0, &ls) != FcResultMatch) {
+                continue;
+            }
+
+            FcLangSet *r = FcLangSetSubtract(ls, fls);
+            if (FcLangSetEqual(r, empty)) {
+                //printf("langset included! %s\n", reinterpret_cast<char*>(file));
+                continue;
+            }
+
+            // FcStrSet *langs = FcLangSetGetLangs(r);
+            // FcStrList *ll = FcStrListCreate(langs);
+            // FcChar8 *l;
+            // FcStrListFirst(ll);
+            // while ((l = FcStrListNext(ll)) != NULL) {
+            //     printf(">%s\n", l);
+            // }
+            // FcStrListDone(ll);
+            // FcStrSetDestroy(langs);
+
+            FcLangSet *u = FcLangSetUnion(ls, fls);
+            FcLangSetDestroy(fls);
+            fls = u;
+
+            if (std::find(fallbackFonts.begin(), fallbackFonts.end(),
+                          reinterpret_cast<char*>(file)) == fallbackFonts.end()) {
+                fallbackFonts.emplace_back(reinterpret_cast<char*>(file));
+                LOGW("Add: %s", reinterpret_cast<char*>(file));
+                count++;
+            }
+        }
+    }
+
+    LOGW("Count %d / %d", count, fs->nfont);
+
+    FcFontSetDestroy(fs);
+    // if (fcs) FcCharSetDestroy(fcs);
+
+    if (fls) FcLangSetDestroy(fls);
+    if (empty) FcLangSetDestroy(empty);
+
+    LOGTime("check");
 
     return fallbackFonts;
 }
