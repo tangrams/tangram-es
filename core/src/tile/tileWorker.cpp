@@ -76,7 +76,7 @@ void TileWorker::run(Worker* instance) {
                     if (a->isProxy() != b->isProxy()) {
                         return !a->isProxy();
                     }
-                    if (a->source().id() == b->source().id() &&
+                    if (a->sourceId() == b->sourceId() &&
                         a->sourceGeneration() != b->sourceGeneration()) {
                         return a->sourceGeneration() < b->sourceGeneration();
                     }

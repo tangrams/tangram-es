@@ -15,6 +15,10 @@ public:
 
     std::shared_ptr<Texture> m_texture;
 
+    std::shared_ptr<RasterSource> rasterSource() {
+        return reinterpret_cast<std::weak_ptr<RasterSource>*>(&m_source)->lock();
+    }
+
     bool hasData() const override {
         return bool(rawTileData) || bool(m_texture);
     }
@@ -28,8 +32,8 @@ public:
     }
 
     void process(TileBuilder& _tileBuilder) override {
-
-        auto source = reinterpret_cast<RasterSource*>(m_source.get());
+        auto source = rasterSource();
+        if (!source) { return; }
 
         if (!m_texture) {
             // Decode texture data
@@ -43,7 +47,8 @@ public:
     }
 
     void complete() override {
-        auto source = reinterpret_cast<RasterSource*>(m_source.get());
+        auto source = rasterSource();
+        if (!source) { return; }
 
         auto raster = source->getRaster(*this);
         assert(raster.isValid());
@@ -57,7 +62,8 @@ public:
     }
 
     void complete(TileTask& _mainTask) override {
-        auto source = reinterpret_cast<RasterSource*>(m_source.get());
+        auto source = rasterSource();
+        if (!source) { return; }
 
         auto raster = source->getRaster(*this);
         assert(raster.isValid());

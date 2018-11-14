@@ -12,6 +12,7 @@ TileTask::TileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _su
     m_tileId(_tileId),
     m_subTaskId(_subTask),
     m_source(_source),
+    m_sourceId(_source->id()),
     m_sourceGeneration(_source->generation()),
     m_ready(false),
     m_canceled(false),
@@ -32,10 +33,13 @@ void TileTask::setTile(std::unique_ptr<Tile>&& _tile) {
 
 void TileTask::process(TileBuilder& _tileBuilder) {
 
-    auto tileData = m_source->parse(*this);
+    auto source = m_source.lock();
+    if (!source) { return; }
+
+    auto tileData = source->parse(*this);
 
     if (tileData) {
-        m_tile = _tileBuilder.build(m_tileId, *tileData, *m_source);
+        m_tile = _tileBuilder.build(m_tileId, *tileData, *source);
         m_ready = true;
     } else {
         cancel();
