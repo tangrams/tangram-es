@@ -69,7 +69,7 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
             return;
         }
         if (response.error) {
-            LOGW("Error for URL request '%s': %s", url.string().c_str(), response.error);
+            LOGD("URL request '%s': %s", url.string().c_str(), response.error);
             return;
         }
 
