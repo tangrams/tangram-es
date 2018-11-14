@@ -347,20 +347,23 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
 
             if (entry.tile) {
                 m_tiles.push_back(entry.tile);
-
-                auto sourceGeneration = entry.tile->sourceGeneration();
-                if (!entry.isInProgress() && (sourceGeneration < generation)) {
-                    // Tile needs update - enqueue for loading
-                    entry.task = _tileSet.source->createTask(visTileId);
-                    enqueueTask(_tileSet, visTileId, _view);
-                }
             } else if (entry.needsLoading()) {
                 // Not yet available - enqueue for loading
                 if (!entry.task) {
                     entry.task = _tileSet.source->createTask(visTileId);
                 }
                 enqueueTask(_tileSet, visTileId, _view);
+            }
 
+            // NB: Special handling to update tiles from ClientDataSource.
+            // Can be removed once ClientDataSource is immutable
+            if (entry.tile) {
+                auto sourceGeneration = entry.tile->sourceGeneration();
+                if ((sourceGeneration < generation) && !entry.isInProgress()) {
+                    // Tile needs update - enqueue for loading
+                    entry.task = _tileSet.source->createTask(visTileId);
+                    enqueueTask(_tileSet, visTileId, _view);
+                }
             } else if (entry.isCanceled()) {
                 auto sourceGeneration = entry.task->sourceGeneration();
                 if (sourceGeneration < generation) {
