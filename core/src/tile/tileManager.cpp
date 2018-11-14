@@ -44,10 +44,6 @@ struct TileManager::TileEntry {
     uint8_t m_proxies;
     bool m_visible;
 
-    bool isReady() {
-        return bool(tile);
-    }
-
     bool isInProgress() {
         return bool(task) && !task->isCanceled();
     }
@@ -349,7 +345,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
             auto& entry = curTilesIt->second;
             entry.setVisible(true);
 
-            if (entry.isReady()) {
+            if (entry.tile) {
                 m_tiles.push_back(entry.tile);
 
                 auto sourceGeneration = entry.tile->sourceGeneration();
@@ -408,7 +404,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
             auto& entry = curTilesIt->second;
 
             if (entry.getProxyCounter() > 0) {
-                if (entry.isReady()) {
+                if (entry.tile) {
                     m_tiles.push_back(entry.tile);
                 } else if (entry.isInProgress()) {
                     if (curTileId.z >= maxZoom || curTileId.z <= minZoom) {
@@ -451,7 +447,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
         }
         DBG("> %s - ready:%d proxy:%d/%d loading:%d rDone:%d rLoading:%d rPending:%d canceled:%d",
              it.first.toString().c_str(),
-             entry.isReady(),
+             bool(entry.tile),
              entry.getProxyCounter(),
              entry.m_proxies,
              entry.task && !entry.task->isReady(),
@@ -473,7 +469,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
             task->setProxyState(entry.getProxyCounter() > 0);
         }
 
-        if (entry.isReady()) {
+        if (entry.tile) {
             // Mark as proxy
             entry.tile->setProxyState(entry.getProxyCounter() > 0);
         }
@@ -559,7 +555,7 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
 
         entry.clearTask();
 
-    } else if (entry.isReady()) {
+    } else if (entry.tile) {
         // Add to cache
         auto poppedTiles = m_tileCache->put(_tileSet.source->id(), entry.tile);
         for (auto& tileID : poppedTiles) {
@@ -590,7 +586,7 @@ bool TileManager::updateProxyTile(TileSet& _tileSet, TileEntry& _tile,
                 auto& entry = it->second;
                 entry.incProxyCounter();
 
-                if (entry.isReady()) {
+                if (entry.tile) {
                     m_tiles.push_back(entry.tile);
                 }
                 return true;
