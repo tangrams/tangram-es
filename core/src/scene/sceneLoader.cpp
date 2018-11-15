@@ -379,7 +379,7 @@ void SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
 
     if (const Node& lights = config["lights"]) {
         for (const auto& light : lights) {
-            try { loadLight(light, _scene); }
+            try { loadLight(light, *_scene); }
             catch (const YAML::RepresentationException& e) {
                 LOGNode("Parsing light: '%s'", light, e.what());
             }
@@ -396,7 +396,7 @@ void SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
     _scene->lightBlocks() = Light::assembleLights(_scene->lights());
     LOGTime("lights");
 
-    loadBackground(config["scene"]["background"], _scene);
+    loadBackground(config["scene"]["background"], *_scene);
 
     Node animated = config["scene"]["animated"];
     if (animated) {
@@ -1214,7 +1214,7 @@ void SceneLoader::parseLightPosition(Node positionNode, PointLight& light) {
     }
 }
 
-void SceneLoader::loadLight(const std::pair<Node, Node>& node, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
 
     const Node light = node.second;
     const std::string& name = node.first.Scalar();
@@ -1324,7 +1324,7 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, const std::shared
         }
     }
 
-    scene->lights().push_back(std::move(sceneLight));
+    scene.lights().push_back(std::move(sceneLight));
 }
 
 void SceneLoader::loadCamera(const Node& _camera, Scene& _scene) {
@@ -1897,18 +1897,18 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {
     scene.layers().push_back({ std::move(sublayer), source, collections });
 }
 
-void SceneLoader::loadBackground(Node background, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadBackground(Node background, Scene& scene) {
 
     if (!background) { return; }
 
     if (Node colorNode = background["color"]) {
         Color colorResult;
         if (StyleParam::parseColor(colorNode, colorResult)) {
-            scene->background() = colorResult;
+            scene.background() = colorResult;
         } else {
             Stops stopsResult = Stops::Colors(colorNode);
             if (stopsResult.frames.size() > 0) {
-                scene->backgroundStops() = stopsResult;
+                scene.backgroundStops() = stopsResult;
             } else {
                 LOGW("Cannot parse color: %s", Dump(colorNode).c_str());
             }
