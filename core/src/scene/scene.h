@@ -158,10 +158,10 @@ public:
 
     std::vector<SceneError> errors;
 
-    bool update(const View& _view, Labels& _labels, float _dt);
+    bool update(const View& _view, float _dt);
     void renderBeginFrame(RenderState& _rs);
     bool render(RenderState& _rs, View& _view);
-    void renderSelection(RenderState& _rs, View& _view, Labels& _labels,
+    void renderSelection(RenderState& _rs, View& _view,
                          FrameBuffer& _selectionBuffer,
                          std::vector<SelectionQuery>& _selectionQueries);
 
@@ -174,6 +174,7 @@ public:
 
     TileManager* tileManager() { return m_tileManager.get(); }
     MarkerManager* markerManager() { return m_markerManager.get(); }
+    Labels* labelManager() { return m_labelManager.get(); }
 
     void initTileManager() {
         m_tileManager->setTileSources(m_tileSources);
@@ -239,6 +240,7 @@ private:
     std::unique_ptr<TileWorker> m_tileWorker;
     std::unique_ptr<TileManager> m_tileManager;
     std::unique_ptr<MarkerManager> m_markerManager;
+    std::unique_ptr<Labels> m_labelManager;
     std::unique_ptr<View> m_view;
 
 };
