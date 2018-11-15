@@ -1,6 +1,7 @@
 #include "scene/scene.h"
 
 #include "data/tileSource.h"
+#include "gl/framebuffer.h"
 #include "gl/shaderProgram.h"
 #include "labels/labels.h"
 #include "scene/dataLayer.h"
@@ -9,6 +10,7 @@
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
 #include "selection/featureSelection.h"
+#include "selection/selectionQuery.h"
 #include "style/material.h"
 #include "style/style.h"
 #include "text/fontContext.h"
@@ -224,4 +226,45 @@ bool Scene::update(View& _view, Labels& _labels, float _dt) {
     return tilesChanged || tilesLoading;
 }
 
+void Scene::renderBeginFrame(RenderState& _rs) {
+    for (const auto& style : m_styles) {
+        style->onBeginFrame(_rs);
+    }
+}
+
+bool Scene::render(RenderState& _rs, View& _view) {
+
+    bool drawnAnimatedStyle = false;
+    for (const auto& style : m_styles) {
+
+        bool styleDrawn = style->draw(_rs, _view, *this,
+                                      m_tileManager->getVisibleTiles(),
+                                      m_markerManager->markers());
+
+        drawnAnimatedStyle |= (styleDrawn && style->isAnimated());
+    }
+    return drawnAnimatedStyle;
+}
+
+void Scene::renderSelection(RenderState& _rs, View& _view, Labels& _labels,
+                            FrameBuffer& _selectionBuffer,
+                            std::vector<SelectionQuery>& _selectionQueries) {
+
+    for (const auto& style : m_styles) {
+
+        style->drawSelectionFrame(_rs, _view, *this,
+                                  m_tileManager->getVisibleTiles(),
+                                  m_markerManager->markers());
+    }
+
+    std::vector<SelectionColorRead> colorCache;
+    // Resolve feature selection queries
+    for (const auto& selectionQuery : _selectionQueries) {
+        selectionQuery.process(_view, _selectionBuffer,
+                               *m_markerManager,
+                               *m_tileManager,
+                               _labels, colorCache);
+    }
+
+}
 }

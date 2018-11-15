@@ -508,9 +508,7 @@ bool Map::render() {
     // Delete batch of gl resources
     impl->renderState.flushResourceDeletion();
 
-    for (const auto& style : impl->scene->styles()) {
-        style->onBeginFrame(impl->renderState);
-    }
+    impl->scene->renderBeginFrame(impl->renderState);
 
     // Render feature selection pass to offscreen framebuffer
     if (impl->selectionQueries.size() > 0 || drawSelectionBuffer) {
@@ -518,19 +516,8 @@ bool Map::render() {
 
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
-        for (const auto& style : impl->scene->styles()) {
-
-            style->drawSelectionFrame(impl->renderState, impl->view, *(impl->scene),
-                                      impl->scene->tileManager()->getVisibleTiles(),
-                                      impl->scene->markerManager()->markers());
-        }
-
-        std::vector<SelectionColorRead> colorCache;
-        // Resolve feature selection queries
-        for (const auto& selectionQuery : impl->selectionQueries) {
-            selectionQuery.process(impl->view, *impl->selectionBuffer, *impl->scene->markerManager(),
-                                   *impl->scene->tileManager(), impl->labels, colorCache);
-        }
+        impl->scene->renderSelection(impl->renderState, impl->view, impl->labels,
+                                     *impl->selectionBuffer, impl->selectionQueries);
 
         impl->selectionQueries.clear();
     }
@@ -556,17 +543,7 @@ bool Map::render() {
     bool drawnAnimatedStyle = false;
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
-
-        // Loop over all styles
-        for (const auto& style : impl->scene->styles()) {
-
-            bool styleDrawn = style->draw(impl->renderState,
-                                          impl->view, *(impl->scene),
-                                          impl->scene->tileManager()->getVisibleTiles(),
-                                          impl->scene->markerManager()->markers());
-
-            drawnAnimatedStyle |= (styleDrawn && style->isAnimated());
-        }
+        drawnAnimatedStyle = impl->scene->render(impl->renderState, impl->view);
     }
 
     if (impl->scene->animated() != Scene::animate::no &&
