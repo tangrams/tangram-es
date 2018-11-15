@@ -110,11 +110,11 @@ target_include_directories(tangram-core
   # TODO: These headers shouldn't be public, but Platform classes use them.
   src
   # TODO: This header shouldn't be public, but we use it in propertyItem.h
+  deps/glm
   deps/variant/include
   PRIVATE
   generated
   deps
-  deps/glm
   deps/earcut/include
   deps/isect2d/include
   deps/hash-library
@@ -135,7 +135,6 @@ target_include_directories(tangram-core
 target_link_libraries(tangram-core
   PRIVATE
   ${MBTILES_LIBS}
-  duktape
   css-color-parser-cpp
   yaml-cpp
   alfons
