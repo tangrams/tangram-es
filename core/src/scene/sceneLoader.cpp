@@ -96,7 +96,7 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
     LOGTime("applySources");
 
     _scene->initTileManager();
-    _scene->updateTiles(0);
+    //_scene->updateTiles(0);
 
     // Load font resources
     _scene->fontContext()->loadFonts();

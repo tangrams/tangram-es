@@ -2,6 +2,7 @@
 
 #include "data/tileSource.h"
 #include "gl/shaderProgram.h"
+#include "labels/labels.h"
 #include "scene/dataLayer.h"
 #include "scene/importer.h"
 #include "scene/light.h"
@@ -190,8 +191,37 @@ void Scene::setPixelScale(float _scale) {
 
 }
 
-void Scene::updateTiles(float dt) {
+bool Scene::update(View& _view, Labels& _labels, float _dt) {
 
+    m_time += _dt;
+
+    bool markersChanged = m_markerManager->update(_view, _dt);
+
+    for (const auto& style : m_styles) {
+        style->onBeginUpdate();
+    }
+
+    m_tileManager->updateTileSets(_view);
+
+    auto& tiles = m_tileManager->getVisibleTiles();
+    auto& markers = m_markerManager->markers();
+
+    if (_view.changedOnLastUpdate() ||
+        m_tileManager->hasTileSetChanged() ||
+        markersChanged) {
+
+        for (const auto& tile : tiles) {
+            tile->update(_dt, _view);
+        }
+        _labels.updateLabelSet(_view.state(), _dt, *this, tiles, markers, *m_tileManager);
+    } else {
+        _labels.updateLabels(_view.state(), _dt, m_styles, tiles, markers);
+    }
+
+    bool tilesChanged = m_tileManager->hasTileSetChanged();
+    bool tilesLoading = m_tileManager->hasLoadingTiles();
+
+    return tilesChanged || tilesLoading;
 }
 
 }
