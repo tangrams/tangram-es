@@ -537,8 +537,7 @@ extern "C" {
 
         assert(mapPtr > 0);
         assert(sourcePtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto source = reinterpret_cast<Tangram::ClientGeoJsonSource*>(map->getPlatform(), sourcePtr);
+        auto source = reinterpret_cast<Tangram::ClientGeoJsonSource*>(sourcePtr);
 
         size_t n_points = jniEnv->GetArrayLength(jcoordinates) / 2;
         size_t n_rings = (jrings == NULL) ? 0 : jniEnv->GetArrayLength(jrings);
@@ -593,8 +592,7 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeAddGeoJson(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong sourcePtr, jstring geojson) {
         assert(mapPtr > 0);
         assert(sourcePtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto source = reinterpret_cast<Tangram::ClientGeoJsonSource*>(map->getPlatform(), sourcePtr);
+        auto source = reinterpret_cast<Tangram::ClientGeoJsonSource*>(sourcePtr);
         auto data = stringFromJString(jniEnv, geojson);
         source->addData(data);
     }
