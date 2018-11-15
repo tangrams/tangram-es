@@ -35,6 +35,7 @@ class Style;
 class Texture;
 class TileSource;
 class ZipArchive;
+class Labels;
 
 // Delimiter used in sceneloader for style params and layer-sublayer naming
 const std::string DELIMITER = ":";
@@ -126,7 +127,6 @@ public:
 
     void addZipArchive(Url url, std::shared_ptr<ZipArchive> zipArchive);
 
-    void updateTime(float _dt) { m_time += _dt; }
     float time() const { return m_time; }
 
     int addIdForName(const std::string& _name);
@@ -154,7 +154,7 @@ public:
 
     std::vector<SceneError> errors;
 
-    void updateTiles(float dt);
+    bool update(View& _view, Labels& _labels, float _dt);
 
     TileManager* tileManager() { return m_tileManager.get(); }
     MarkerManager* markerManager() { return m_markerManager.get(); }

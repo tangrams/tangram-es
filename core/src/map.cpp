@@ -413,8 +413,6 @@ bool Map::update(float _dt) {
 
     FrameInfo::beginUpdate();
 
-    impl->scene->updateTime(_dt);
-
     bool viewComplete = true;
     bool markersNeedUpdate = false;
 
@@ -436,44 +434,17 @@ bool Map::update(float _dt) {
 
     bool isFlinging = impl->inputHandler.update(_dt);
     impl->isCameraEasing = (isEasing || isFlinging);
-
     impl->view.update();
 
-    bool markersChanged = impl->scene->markerManager()->update(impl->view, _dt);
-
-    for (const auto& style : impl->scene->styles()) {
-        style->onBeginUpdate();
-    }
-
-    impl->scene->updateTiles(_dt);
-
+    bool tilesLoading;
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
-
-        impl->scene->tileManager()->updateTileSets(impl->view);
-
-        auto& tiles = impl->scene->tileManager()->getVisibleTiles();
-        auto& markers = impl->scene->markerManager()->markers();
-
-        if (impl->view.changedOnLastUpdate() ||
-            impl->scene->tileManager()->hasTileSetChanged() ||
-            markersChanged) {
-
-            for (const auto& tile : tiles) {
-                tile->update(_dt, impl->view);
-            }
-            impl->labels.updateLabelSet(impl->view.state(), _dt, impl->scene, tiles, markers,
-                                        *impl->scene->tileManager());
-        } else {
-            impl->labels.updateLabels(impl->view.state(), _dt, impl->scene->styles(), tiles, markers);
-        }
+        tilesLoading = impl->scene->update(impl->view, impl->labels, _dt);
     }
 
     FrameInfo::endUpdate();
 
     bool viewChanged = impl->view.changedOnLastUpdate();
-    bool tilesChanged = impl->scene->tileManager()->hasTileSetChanged();
-    bool tilesLoading = impl->scene->tileManager()->hasLoadingTiles();
     bool labelsNeedUpdate = impl->labels.needUpdate();
 
     if (viewChanged || tilesLoading || labelsNeedUpdate || impl->sceneLoadTasks > 0) {
@@ -485,8 +456,8 @@ bool Map::update(float _dt) {
         platform->requestRender();
     }
 
-    LOGTO("View complete:%d vc:%d tl:%d tc:%d easing:%d label:%d maker:%d ",
-          viewComplete, viewChanged, tilesLoading, tilesChanged,
+    LOGTO("View complete:%d vc:%d tl:%d easing:%d label:%d maker:%d ",
+          viewComplete, viewChanged, tilesLoading,
           impl->isCameraEasing, labelsNeedUpdate, markersNeedUpdate);
 
     return viewComplete;
