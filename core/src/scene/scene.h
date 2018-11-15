@@ -3,6 +3,7 @@
 #include "map.h"
 #include "platform.h"
 #include "stops.h"
+#include "tile/tileManager.h"
 #include "util/color.h"
 #include "util/url.h"
 #include "util/yamlPath.h"
@@ -60,16 +61,15 @@ public:
         glm::vec2 obliqueAxis = {0, 1};
     };
 
-    Camera m_camera;
-
     enum animate {
         yes, no, none
     };
 
-    Scene();
-    Scene(std::shared_ptr<const Platform> _platform, const Url& _url);
-    Scene(std::shared_ptr<const Platform> _platform, const std::string& _yaml, const Url& _url);
+    //Scene();
+    Scene(std::shared_ptr<Platform> _platform, const Url& _url);
+    Scene(std::shared_ptr<Platform> _platform, const std::string& _yaml, const Url& _url);
     Scene(const Scene& _other) = delete;
+    Scene(Scene&& _other) = delete;
 
     ~Scene();
 
@@ -153,7 +153,21 @@ public:
 
     std::vector<SceneError> errors;
 
+    void updateTiles(float dt);
+
+    TileManager* tileManager() { return m_tileManager.get(); }
+
+    void initTileManager() {
+        m_tileManager->setTileSources(m_tileSources);
+    }
+
+    void startTileWorker() {
+        m_tileWorker->setScene(*this);
+    }
+
 private:
+
+    Camera m_camera;
 
     // The URL from which this scene was loaded
     Url m_url;
@@ -201,6 +215,10 @@ private:
     float m_pixelScale = 1.0f;
 
     float m_time = 0.0;
+
+
+    std::unique_ptr<TileWorker> m_tileWorker;
+    std::unique_ptr<TileManager> m_tileManager;
 
 };
 

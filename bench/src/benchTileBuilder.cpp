@@ -55,6 +55,8 @@ void globalSetup() {
         LOGE("Invalid scene file '%s'", scene_file);
         exit(-1);
     }
+    SceneLoader::applyGlobals(*scene);
+    SceneLoader::applySources(platform, *scene);
     SceneLoader::applyConfig(platform, scene);
     scene->fontContext()->loadFonts();
 

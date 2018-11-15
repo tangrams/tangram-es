@@ -74,10 +74,19 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
         return false;
     }
 
+    applyGlobals(*_scene);
+
+    applySources(_platform, *_scene);
+
+    _scene->initTileManager();
+    _scene->updateTiles(0);
+
     // Load font resources
     _scene->fontContext()->loadFonts();
 
     applyConfig(_platform, _scene);
+
+    _scene->startTileWorker();
 
     return true;
 }
@@ -114,15 +123,6 @@ bool SceneLoader::applyUpdates(const std::shared_ptr<Platform>& platform, Scene&
     return true;
 }
 
-void printFilters(const SceneLayer& layer, int indent){
-    LOG("%*s >>> %s\n", indent, "", layer.name().c_str());
-    layer.filter().print(indent + 2);
-
-    for (auto& l : layer.sublayers()) {
-        printFilters(l, indent + 2);
-    }
-};
-
 void createGlobalRefs(const Node& node, Scene& scene, YamlPathBuffer& path) {
     switch(node.Type()) {
     case NodeType::Scalar: {
@@ -154,18 +154,21 @@ void createGlobalRefs(const Node& node, Scene& scene, YamlPathBuffer& path) {
     }
 }
 
-void SceneLoader::applyGlobals(Node root, Scene& scene) {
+void SceneLoader::applyGlobals(Scene& _scene) {
+
+    const Node& config = _scene.config();
+    const auto& globals = config["global"];
+    if (!globals) { return; }
 
     YamlPathBuffer path;
-    createGlobalRefs(root, scene, path);
-    const auto& globals = root["global"];
-    if (!scene.globalRefs().empty() && !globals.IsMap()) {
+    createGlobalRefs(config, _scene, path);
+    if (!_scene.globalRefs().empty() && !globals.IsMap()) {
         LOGW("Missing global references");
     }
 
-    for (auto& globalRef : scene.globalRefs()) {
+    for (auto& globalRef : _scene.globalRefs()) {
         Node target, global;
-        bool targetPathIsValid = globalRef.first.get(root, target);
+        bool targetPathIsValid = globalRef.first.get(config, target);
         bool globalPathIsValid = globalRef.second.get(globals, global);
         if (targetPathIsValid && globalPathIsValid && target.IsDefined() && global.IsDefined()) {
             target = global;
@@ -177,9 +180,45 @@ void SceneLoader::applyGlobals(Node root, Scene& scene) {
     }
 }
 
+void SceneLoader::applySources(const std::shared_ptr<Platform>& _platform, Scene& _scene) {
+
+    const Node& config = _scene.config();
+
+    if (const Node& sources = config["sources"]) {
+        for (const auto& source : sources) {
+            std::string srcName = source.first.Scalar();
+            try { loadSource(_platform, srcName, source.second, sources, _scene); }
+            catch (const YAML::RepresentationException& e) {
+                LOGNode("Parsing sources: '%s'", source, e.what());
+            }
+        }
+    } else {
+        LOGW("No source defined in the yaml scene configuration.");
+    }
+
+    if (const Node& layers = config["layers"]) {
+        for (const auto& layer : layers) {
+            if (Node data = layer.second["data"]) {
+                if (const Node& data_source = data["source"]) {
+                    if (data_source.IsScalar()) {
+                        auto source = data_source.Scalar();
+                        auto dataSource = _scene.getTileSource(source);
+                        if (dataSource) {
+                            dataSource->generateGeometry(true);
+                        } else {
+                            LOGW("Can't find data source %s for layer %s",
+                                 source.c_str(), layer.first.Scalar().c_str());
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const std::shared_ptr<Scene>& _scene) {
 
-    Node& config = _scene->config();
+    const Node& config = _scene->config();
 
     // Instantiate built-in styles
     _scene->styles().emplace_back(new PolygonStyle("polygons"));
@@ -190,48 +229,31 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
     _scene->styles().emplace_back(new PointStyle("points", _scene->fontContext()));
     _scene->styles().emplace_back(new RasterStyle("raster"));
 
-    if (config["global"]) {
-        applyGlobals(config, *_scene);
-    }
-
-
-    if (Node sources = config["sources"]) {
-        for (const auto& source : sources) {
-            std::string srcName = source.first.Scalar();
-            try { loadSource(_platform, srcName, source.second, sources, _scene); }
-            catch (YAML::RepresentationException e) {
-                LOGNode("Parsing sources: '%s'", source, e.what());
-            }
-        }
-    } else {
-        LOGW("No source defined in the yaml scene configuration.");
-    }
-
-    if (Node textures = config["textures"]) {
+    if (const Node& textures = config["textures"]) {
         for (const auto& texture : textures) {
             try { loadTexture(_platform, texture, _scene); }
-            catch (YAML::RepresentationException e) {
+            catch (const YAML::RepresentationException& e) {
                 LOGNode("Parsing texture: '%s'", texture, e.what());
             }
         }
     }
 
-    if (Node fonts = config["fonts"]) {
+    if (const Node& fonts = config["fonts"]) {
         if (fonts.IsMap()) {
             for (const auto& font : fonts) {
                 try { loadFont(_platform, font, _scene); }
-                catch (YAML::RepresentationException e) {
+                catch (const YAML::RepresentationException& e) {
                     LOGNode("Parsing font: '%s'", font, e.what());
                 }
             }
         }
     }
 
-    if (Node styles = config["styles"]) {
+    if (const Node& styles = config["styles"]) {
         StyleMixer mixer;
         try {
             mixer.mixStyleNodes(styles);
-        } catch (YAML::RepresentationException e) {
+        } catch (const YAML::RepresentationException& e) {
             LOGNode("Mixing styles: '%s'", styles, e.what());
         }
         for (const auto& entry : styles) {
@@ -240,7 +262,7 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
                 auto config = entry.second;
                 loadStyle(_platform, name, config, _scene);
             }
-            catch (YAML::RepresentationException e) {
+            catch (const YAML::RepresentationException& e) {
                 LOGNode("Parsing style: '%s'", entry, e.what());
             }
         }
@@ -261,19 +283,19 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
         }
     }
 
-    if (Node layers = config["layers"]) {
+    if (const Node& layers = config["layers"]) {
         for (const auto& layer : layers) {
             try { loadLayer(layer, _scene); }
-            catch (YAML::RepresentationException e) {
+            catch (const YAML::RepresentationException& e) {
                 LOGNode("Parsing layer: '%s'", layer, e.what());
             }
         }
     }
 
-    if (Node lights = config["lights"]) {
+    if (const Node& lights = config["lights"]) {
         for (const auto& light : lights) {
             try { loadLight(light, _scene); }
-            catch (YAML::RepresentationException e) {
+            catch (const YAML::RepresentationException& e) {
                 LOGNode("Parsing light: '%s'", light, e.what());
             }
         }
@@ -288,15 +310,15 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
 
     _scene->lightBlocks() = Light::assembleLights(_scene->lights());
 
-    if (Node camera = config["camera"]) {
+    if (const Node& camera = config["camera"]) {
         try { loadCamera(camera, _scene); }
-        catch (YAML::RepresentationException e) {
+        catch (const YAML::RepresentationException& e) {
             LOGNode("Parsing camera: '%s'", camera, e.what());
         }
 
-    } else if (Node cameras = config["cameras"]) {
+    } else if (const Node& cameras = config["cameras"]) {
         try { loadCameras(cameras, _scene); }
-        catch (YAML::RepresentationException e) {
+        catch (const YAML::RepresentationException& e) {
             LOGNode("Parsing cameras: '%s'", cameras, e.what());
         }
     }
@@ -930,8 +952,8 @@ bool SceneLoader::loadStyle(const std::shared_ptr<Platform>& platform, const std
 }
 
 void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const std::string& name,
-                             const Node& source, const Node& sources, const std::shared_ptr<Scene>& _scene) {
-    if (_scene->getTileSource(name)) {
+                             const Node& source, const Node& sources, Scene& _scene) {
+    if (_scene.getTileSource(name)) {
         LOGW("Duplicate TileSource: %s", name.c_str());
         return;
     }
@@ -1086,7 +1108,7 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         }
     }
 
-    _scene->tileSources().push_back(sourcePtr);
+    _scene.tileSources().push_back(sourcePtr);
 
     if (auto rasters = source["rasters"]) {
         loadSourceRasters(platform, sourcePtr, source["rasters"], sources, _scene);
@@ -1095,17 +1117,17 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
 }
 
 void SceneLoader::loadSourceRasters(const std::shared_ptr<Platform>& platform, std::shared_ptr<TileSource> &source,
-                                    Node rasterNode, const Node& sources, const std::shared_ptr<Scene>& scene) {
+                                    Node rasterNode, const Node& sources, Scene& scene) {
     if (rasterNode.IsSequence()) {
         for (const auto& raster : rasterNode) {
             std::string srcName = raster.Scalar();
             try {
                 loadSource(platform, srcName, sources[srcName], sources, scene);
-            } catch (YAML::RepresentationException e) {
+            } catch (const YAML::RepresentationException& e) {
                 LOGNode("Parsing sources: '%s'", sources[srcName], e.what());
                 return;
             }
-            source->addRasterSource(scene->getTileSource(srcName));
+            source->addRasterSource(scene.getTileSource(srcName));
         }
     }
 }
@@ -1332,6 +1354,15 @@ void SceneLoader::loadCameras(Node _cameras, const std::shared_ptr<Scene>& _scen
         loadCamera(entry.second, _scene);
     }
 }
+
+void printFilters(const SceneLayer& layer, int indent){
+    LOG("%*s >>> %s\n", indent, "", layer.name().c_str());
+    layer.filter().print(indent + 2);
+
+    for (auto& l : layer.sublayers()) {
+        printFilters(l, indent + 2);
+    }
+};
 
 Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
 
@@ -1771,9 +1802,11 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, const std::share
     auto sublayer = loadSublayer(layer.second, name, scene);
 
     if (Node data = layer.second["data"]) {
-        if (Node data_source = data["source"]) {
+
+        if (const Node& data_source = data["source"]) {
             if (data_source.IsScalar()) {
                 source = data_source.Scalar();
+
                 auto dataSource = scene->getTileSource(source);
                 // Makes sure to set the data source as a primary tile geometry generation source.
                 // A data source is geometry generating source only when its used within a layer's data block

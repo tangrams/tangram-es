@@ -98,7 +98,7 @@ void TileWorker::run(Worker* instance) {
     }
 }
 
-void TileWorker::setScene(std::shared_ptr<Scene>& _scene) {
+void TileWorker::setScene(Scene& _scene) {
     for (auto& worker : m_workers) {
         worker->tileBuilder = std::make_unique<TileBuilder>(_scene);
     }
