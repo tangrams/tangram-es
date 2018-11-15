@@ -163,6 +163,13 @@ public:
                          FrameBuffer& _selectionBuffer,
                          std::vector<SelectionQuery>& _selectionQueries);
 
+    Color background(int _zoom) {
+        if (m_backgroundStops.frames.size() > 0) {
+            return m_backgroundStops.evalColor(_zoom);
+        }
+        return m_background;
+    }
+
     TileManager* tileManager() { return m_tileManager.get(); }
     MarkerManager* markerManager() { return m_markerManager.get(); }
 
