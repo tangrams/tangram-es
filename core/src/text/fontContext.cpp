@@ -17,7 +17,7 @@ namespace Tangram {
 
 const std::vector<float> FontContext::s_fontRasterSizes = { 16, 28, 40 };
 
-FontContext::FontContext(std::shared_ptr<const Platform> _platform) :
+FontContext::FontContext(std::shared_ptr<Platform> _platform) :
     m_sdfRadius(SDF_WIDTH),
     m_atlas(*this, GlyphTexture::size, m_sdfRadius),
     m_batch(m_atlas, m_scratch),

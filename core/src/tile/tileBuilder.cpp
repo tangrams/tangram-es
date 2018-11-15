@@ -15,13 +15,13 @@
 
 namespace Tangram {
 
-TileBuilder::TileBuilder(std::shared_ptr<Scene> _scene)
+TileBuilder::TileBuilder(Scene& _scene)
     : m_scene(_scene) {
 
-    m_styleContext.initFunctions(*_scene);
+    m_styleContext.initFunctions(_scene);
 
     // Initialize StyleBuilders
-    for (auto& style : _scene->styles()) {
+    for (auto& style : _scene.styles()) {
         m_styleBuilder[style->getName()] = style->createBuilder();
     }
 }
@@ -64,10 +64,10 @@ void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer
         bool interactive = false;
         if (rule.get(StyleParamKey::interactive, interactive) && interactive) {
             if (selectionColor == 0) {
-                selectionColor = m_scene->featureSelection()->nextColorIdentifier();
+                selectionColor = m_scene.featureSelection()->nextColorIdentifier();
             }
             rule.selectionColor = selectionColor;
-            rule.featureSelection = m_scene->featureSelection().get();
+            rule.featureSelection = m_scene.featureSelection().get();
         } else {
             rule.selectionColor = 0;
         }
@@ -101,7 +101,7 @@ std::unique_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
 
     auto tile = std::make_unique<Tile>(_tileID, _source.id(), _source.generation());
 
-    tile->initGeometry(m_scene->styles().size());
+    tile->initGeometry(m_scene.styles().size());
 
     m_styleContext.setKeywordZoom(_tileID.s);
 
@@ -110,7 +110,7 @@ std::unique_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
             builder.second->setup(*tile);
     }
 
-    for (const auto& datalayer : m_scene->layers()) {
+    for (const auto& datalayer : m_scene.layers()) {
 
         if (datalayer.source() != _source.name()) { continue; }
 
@@ -135,7 +135,7 @@ std::unique_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
         builder.second->addLayoutItems(m_labelLayout);
     }
 
-    float tileSize = MapProjection::tileSize() * m_scene->pixelScale();
+    float tileSize = MapProjection::tileSize() * m_scene.pixelScale();
 
     m_labelLayout.process(_tileID, tile->getInverseScale(), tileSize);
 

@@ -52,6 +52,9 @@ struct TestContext {
             LOGE("Parsing scene config '%s'", e.what());
             return;
         }
+        SceneLoader::applyGlobals(*scene);
+        SceneLoader::applySources(platform, *scene);
+
         SceneLoader::applyConfig(platform, scene);
 
         scene->fontContext()->loadFonts();
@@ -60,7 +63,7 @@ struct TestContext {
         styleContext.setKeywordZoom(0);
 
         source = *scene->tileSources().begin();
-        tileBuilder = std::make_unique<TileBuilder>(scene);
+        tileBuilder = std::make_unique<TileBuilder>(*scene);
     }
 
     void loadTile(const char* path){

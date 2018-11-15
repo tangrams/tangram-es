@@ -19,7 +19,7 @@ class TileBuilder {
 
 public:
 
-    TileBuilder(std::shared_ptr<Scene> _scene);
+    explicit TileBuilder(Scene& _scene);
 
     ~TileBuilder();
 
@@ -27,14 +27,14 @@ public:
 
     std::unique_ptr<Tile> build(TileID _tileID, const TileData& _data, const TileSource& _source);
 
-    const Scene& scene() const { return *m_scene; }
+    const Scene& scene() const { return m_scene; }
 
 private:
 
     // Determine and apply DrawRules for a @_feature
     void applyStyling(const Feature& _feature, const SceneLayer& _layer);
 
-    std::shared_ptr<Scene> m_scene;
+    Scene& m_scene;
 
     StyleContext m_styleContext;
     DrawRuleMergeSet m_ruleSet;

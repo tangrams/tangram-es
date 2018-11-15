@@ -21,19 +21,22 @@ namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
 
-Scene::Scene() : id(s_serial++) {}
+//Scene::Scene() : id(s_serial++) {}
 
-Scene::Scene(std::shared_ptr<const Platform> _platform, const Url& _url)
+Scene::Scene(std::shared_ptr<Platform> _platform, const Url& _url)
     : id(s_serial++),
       m_url(_url),
       m_fontContext(std::make_shared<FontContext>(_platform)),
-      m_featureSelection(std::make_unique<FeatureSelection>()) {
-}
+      m_featureSelection(std::make_unique<FeatureSelection>()),
+      m_tileWorker(std::make_unique<TileWorker>(_platform, 2)),
+      m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)) {}
 
-Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _yaml, const Url& _url)
+Scene::Scene(std::shared_ptr<Platform> _platform, const std::string& _yaml, const Url& _url)
     : id(s_serial++),
       m_fontContext(std::make_shared<FontContext>(_platform)),
-      m_featureSelection(std::make_unique<FeatureSelection>()) {
+      m_featureSelection(std::make_unique<FeatureSelection>()),
+      m_tileWorker(std::make_unique<TileWorker>(_platform, 2)),
+      m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)) {
 
     m_url = _url;
     m_yaml = _yaml;
@@ -54,7 +57,9 @@ void Scene::copyConfig(const Scene& _other) {
     m_zipArchives = _other.m_zipArchives;
 }
 
-Scene::~Scene() {}
+Scene::~Scene() {
+    //m_tileWorker->stop();
+}
 
 const Style* Scene::findStyle(const std::string& _name) const {
 
@@ -174,6 +179,10 @@ void Scene::setPixelScale(float _scale) {
         style->setPixelScale(_scale);
     }
     m_fontContext->setPixelScale(_scale);
+}
+
+void Scene::updateTiles(float dt) {
+
 }
 
 }
