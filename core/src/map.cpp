@@ -80,7 +80,6 @@ public:
     // NB: Destruction of (managed and loading) tiles must happen
     // before implicit destruction of 'scene' above!
     // In particular any references of Labels and Markers to FontContext
-    MarkerManager markerManager;
     std::unique_ptr<FrameBuffer> selectionBuffer = std::make_unique<FrameBuffer>(0, 0);
 
     bool cacheGlState = false;
@@ -167,8 +166,6 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
     }
 
     inputHandler.setView(view);
-
-    markerManager.setScene(_scene);
 
     bool animated = scene->animated() == Scene::animate::yes;
 
@@ -399,7 +396,9 @@ bool Map::update(float _dt) {
     impl->jobQueue.runJobs();
 
     // Wait until font and texture resources are fully loaded
-    if (impl->scene->pendingFonts > 0 || impl->scene->pendingTextures > 0) {
+    if (!impl->scene->markerManager() ||
+        impl->scene->pendingFonts > 0 ||
+        impl->scene->pendingTextures > 0) {
         platform->requestRender();
         LOGTO("Waiting for Scene fonts:%d textures:%d",
               impl->scene->pendingFonts.load(), impl->scene->pendingTextures.load());
@@ -434,7 +433,7 @@ bool Map::update(float _dt) {
 
     impl->view.update();
 
-    bool markersChanged = impl->markerManager.update(impl->view, _dt);
+    bool markersChanged = impl->scene->markerManager()->update(impl->view, _dt);
 
     for (const auto& style : impl->scene->styles()) {
         style->onBeginUpdate();
@@ -448,7 +447,7 @@ bool Map::update(float _dt) {
         impl->scene->tileManager()->updateTileSets(impl->view);
 
         auto& tiles = impl->scene->tileManager()->getVisibleTiles();
-        auto& markers = impl->markerManager.markers();
+        auto& markers = impl->scene->markerManager()->markers();
 
         if (impl->view.changedOnLastUpdate() ||
             impl->scene->tileManager()->hasTileSetChanged() ||
@@ -512,7 +511,8 @@ void Map::pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallb
 bool Map::render() {
 
     // Do not render if any texture resources are in process of being downloaded
-    if (impl->scene->pendingTextures > 0) {
+    if (!impl->scene->markerManager() ||
+        impl->scene->pendingTextures > 0) {
         return impl->isCameraEasing;
     }
 
@@ -545,13 +545,13 @@ bool Map::render() {
 
             style->drawSelectionFrame(impl->renderState, impl->view, *(impl->scene),
                                       impl->scene->tileManager()->getVisibleTiles(),
-                                      impl->markerManager.markers());
+                                      impl->scene->markerManager()->markers());
         }
 
         std::vector<SelectionColorRead> colorCache;
         // Resolve feature selection queries
         for (const auto& selectionQuery : impl->selectionQueries) {
-            selectionQuery.process(impl->view, *impl->selectionBuffer, impl->markerManager,
+            selectionQuery.process(impl->view, *impl->selectionBuffer, *impl->scene->markerManager(),
                                    *impl->scene->tileManager(), impl->labels, colorCache);
         }
 
@@ -586,7 +586,7 @@ bool Map::render() {
             bool styleDrawn = style->draw(impl->renderState,
                                           impl->view, *(impl->scene),
                                           impl->scene->tileManager()->getVisibleTiles(),
-                                                                   impl->markerManager.markers());
+                                          impl->scene->markerManager()->markers());
 
             drawnAnimatedStyle |= (styleDrawn && style->isAnimated());
         }
@@ -936,12 +936,6 @@ void Map::Impl::setPixelScale(float _pixelsPerPoint) {
     }
     view.setPixelScale(_pixelsPerPoint);
     scene->setPixelScale(_pixelsPerPoint);
-
-    // Tiles must be rebuilt to apply the new pixel scale to labels.
-    scene->tileManager()->clearTileSets();
-
-    // Markers must be rebuilt to apply the new pixel scale.
-    markerManager.rebuildAll();
 }
 
 void Map::setCameraType(int _type) {
@@ -985,71 +979,83 @@ void Map::clearTileSource(TileSource& _source, bool _data, bool _tiles) {
 }
 
 MarkerID Map::markerAdd() {
-    return impl->markerManager.add();
+    if (!impl->scene->markerManager()) { return false; }
+    return impl->scene->markerManager()->add();
 }
 
 bool Map::markerRemove(MarkerID _marker) {
-    bool success = impl->markerManager.remove(_marker);
+    if (!impl->scene->markerManager()) { return false; }
+    bool success = impl->scene->markerManager()->remove(_marker);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetPoint(MarkerID _marker, LngLat _lngLat) {
-    bool success = impl->markerManager.setPoint(_marker, _lngLat);
+    if (!impl->scene->markerManager()) { return false; }
+    bool success = impl->scene->markerManager()->setPoint(_marker, _lngLat);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetPointEased(MarkerID _marker, LngLat _lngLat, float _duration, EaseType ease) {
-    bool success = impl->markerManager.setPointEased(_marker, _lngLat, _duration, ease);
+    if (!impl->scene->markerManager()) { return false; }
+    bool success = impl->scene->markerManager()->setPointEased(_marker, _lngLat, _duration, ease);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetPolyline(MarkerID _marker, LngLat* _coordinates, int _count) {
-    bool success = impl->markerManager.setPolyline(_marker, _coordinates, _count);
+    if (!impl->scene->markerManager()) { return false; }
+    bool success = impl->scene->markerManager()->setPolyline(_marker, _coordinates, _count);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetPolygon(MarkerID _marker, LngLat* _coordinates, int* _counts, int _rings) {
-    bool success = impl->markerManager.setPolygon(_marker, _coordinates, _counts, _rings);
+    if (!impl->scene->markerManager()) { return false; }
+    bool success = impl->scene->markerManager()->setPolygon(_marker, _coordinates, _counts, _rings);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetStylingFromString(MarkerID _marker, const char* _styling) {
-    bool success = impl->markerManager.setStylingFromString(_marker, _styling);
+    if (!impl->scene->markerManager()) { return false; }
+    bool success = impl->scene->markerManager()->setStylingFromString(_marker, _styling);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetStylingFromPath(MarkerID _marker, const char* _path) {
-    bool success = impl->markerManager.setStylingFromPath(_marker, _path);
+    if (!impl->scene->markerManager()) { return false; }
+    bool success = impl->scene->markerManager()->setStylingFromPath(_marker, _path);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetBitmap(MarkerID _marker, int _width, int _height, const unsigned int* _data) {
-    bool success = impl->markerManager.setBitmap(_marker, _width, _height, _data);
+    if (!impl->scene->markerManager()) { return false; }
+    bool success = impl->scene->markerManager()->setBitmap(_marker, _width, _height, _data);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetVisible(MarkerID _marker, bool _visible) {
-    bool success = impl->markerManager.setVisible(_marker, _visible);
+    if (!impl->scene->markerManager()) { return false; }
+    bool success = impl->scene->markerManager()->setVisible(_marker, _visible);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetDrawOrder(MarkerID _marker, int _drawOrder) {
-    bool success = impl->markerManager.setDrawOrder(_marker, _drawOrder);
+    if (!impl->scene->markerManager()) { return false; }
+    bool success = impl->scene->markerManager()->setDrawOrder(_marker, _drawOrder);
     platform->requestRender();
     return success;
 }
 
 void Map::markerRemoveAll() {
-    impl->markerManager.removeAll();
+    if (!impl->scene->markerManager()) { return; }
+    impl->scene->markerManager()->removeAll();
     platform->requestRender();
 }
 
@@ -1095,8 +1101,7 @@ void Map::setupGL() {
     impl->renderState.invalidate();
 
     impl->scene->tileManager()->clearTileSets();
-
-    impl->markerManager.rebuildAll();
+    //impl->scene->markerManager()->rebuildAll();
 
     if (impl->selectionBuffer->valid()) {
         impl->selectionBuffer = std::make_unique<FrameBuffer>(impl->selectionBuffer->getWidth(),
