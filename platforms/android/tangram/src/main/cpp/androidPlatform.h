@@ -1,10 +1,11 @@
 #pragma once
 
 #include "platform.h"
+#include "util/asyncWorker.h"
+
 
 #include <jni.h>
 #include <android/asset_manager.h>
-
 #include <atomic>
 #include <mutex>
 #include <string>
@@ -64,6 +65,8 @@ private:
     // m_callbackMutex should be locked any time m_callbacks is accessed.
     std::mutex m_callbackMutex;
     std::unordered_map<UrlRequestHandle, UrlCallback> m_callbacks;
+
+    AsyncWorker m_fileWorker;
 
 };
 
