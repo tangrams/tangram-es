@@ -285,7 +285,7 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
 
     if (const Node& layers = config["layers"]) {
         for (const auto& layer : layers) {
-            try { loadLayer(layer, _scene); }
+            try { loadLayer(layer, *_scene); }
             catch (const YAML::RepresentationException& e) {
                 LOGNode("Parsing layer: '%s'", layer, e.what());
             }
@@ -887,7 +887,7 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
     if (const Node& drawNode = styleNode["draw"]) {
         std::vector<StyleParam> params;
         int ruleID = scene->addIdForName(style.getName());
-        parseStyleParams(drawNode, scene, "", params);
+        parseStyleParams(drawNode, *scene, "", params);
         /*Note:  ruleID and name is immaterial here, as these are only used for rule merging, but
          * style's default styling rules are applied post rule merging for any style parameter which
          * was not assigned during merging step.
@@ -1537,8 +1537,8 @@ Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
     return Filter();
 }
 
-void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& scene,
-                                   const std::string& prefix, std::vector<StyleParam>& out) {
+void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string& prefix,
+                                   std::vector<StyleParam>& out) {
 
     for (const auto& prop : params) {
 
@@ -1571,7 +1571,7 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
 
             if (val.compare(0, 8, "function") == 0) {
                 StyleParam param(key);
-                param.function = scene->addJsFunction(val);
+                param.function = scene.addJsFunction(val);
                 out.push_back(std::move(param));
             } else {
                 out.push_back(StyleParam{ key, value });
@@ -1584,23 +1584,23 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
                 if (styleKey != StyleParamKey::none) {
 
                     if (StyleParam::isColor(styleKey)) {
-                        scene->stops().push_back(Stops::Colors(value));
-                        out.push_back(StyleParam{ styleKey, &(scene->stops().back()) });
+                        scene.stops().push_back(Stops::Colors(value));
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
                     } else if (StyleParam::isSize(styleKey)) {
-                        scene->stops().push_back(Stops::Sizes(value, StyleParam::unitSetForStyleParam(styleKey)));
-                        out.push_back(StyleParam{ styleKey, &(scene->stops().back()) });
+                        scene.stops().push_back(Stops::Sizes(value, StyleParam::unitSetForStyleParam(styleKey)));
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
                     } else if (StyleParam::isWidth(styleKey)) {
-                        scene->stops().push_back(Stops::Widths(value, StyleParam::unitSetForStyleParam(styleKey)));
-                        out.push_back(StyleParam{ styleKey, &(scene->stops().back()) });
+                        scene.stops().push_back(Stops::Widths(value, StyleParam::unitSetForStyleParam(styleKey)));
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
                     } else if (StyleParam::isOffsets(styleKey)) {
-                        scene->stops().push_back(Stops::Offsets(value, StyleParam::unitSetForStyleParam(styleKey)));
-                        out.push_back(StyleParam{ styleKey, &(scene->stops().back()) });
+                        scene.stops().push_back(Stops::Offsets(value, StyleParam::unitSetForStyleParam(styleKey)));
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
                     } else if (StyleParam::isFontSize(styleKey)) {
-                        scene->stops().push_back(Stops::FontSize(value));
-                        out.push_back(StyleParam{ styleKey, &(scene->stops().back()) });
+                        scene.stops().push_back(Stops::FontSize(value));
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
                     } else if (StyleParam::isNumberType(styleKey)) {
-                        scene->stops().push_back(Stops::Numbers(value));
-                        out.push_back(StyleParam{ styleKey, &(scene->stops().back()) });
+                        scene.stops().push_back(Stops::Numbers(value));
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
                     }
                 } else {
                     LOGW("Unknown style parameter %s", key.c_str());
@@ -1718,8 +1718,7 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
     return true;
 }
 
-void SceneLoader::parseTransition(Node params, const std::shared_ptr<Scene>& scene, std::string _prefix,
-                                  std::vector<StyleParam>& out) {
+void SceneLoader::parseTransition(Node params, Scene& scene, std::string _prefix, std::vector<StyleParam>& out) {
 
     // First iterate over the mapping of 'events', we currently recognize 'hide', 'selected', and 'show'.
     for (const auto& event : params) {
@@ -1745,8 +1744,7 @@ void SceneLoader::parseTransition(Node params, const std::shared_ptr<Scene>& sce
     }
 }
 
-SceneLayer SceneLoader::loadSublayer(const Node& layer, const std::string& layerName,
-                                     const std::shared_ptr<Scene>& scene) {
+SceneLayer SceneLoader::loadSublayer(const Node& layer, const std::string& layerName, Scene& scene) {
 
     std::vector<SceneLayer> sublayers;
     std::vector<DrawRuleData> rules;
@@ -1767,12 +1765,12 @@ SceneLayer SceneLoader::loadSublayer(const Node& layer, const std::string& layer
                 parseStyleParams(ruleNode.second, scene, "", params);
 
                 const std::string& ruleName = ruleNode.first.Scalar();
-                int ruleId = scene->addIdForName(ruleName);
+                int ruleId = scene.addIdForName(ruleName);
 
                 rules.push_back({ ruleName, ruleId, std::move(params) });
             }
         } else if (key == "filter") {
-            filter = generateFilter(member.second, *scene);
+            filter = generateFilter(member.second, scene);
             if (!filter.isValid()) {
                 LOGNode("Invalid 'filter' in layer '%s'", member.second, layerName.c_str());
                 return { layerName, {}, {}, {}, false };
@@ -1792,7 +1790,7 @@ SceneLayer SceneLoader::loadSublayer(const Node& layer, const std::string& layer
     return { layerName, std::move(filter), rules, std::move(sublayers), enabled };
 }
 
-void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {
 
     const std::string& name = layer.first.Scalar();
 
@@ -1838,7 +1836,7 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, const std::share
     }
 
 
-    scene->layers().push_back({ std::move(sublayer), source, collections });
+    scene.layers().push_back({ std::move(sublayer), source, collections });
 }
 
 void SceneLoader::loadBackground(Node background, const std::shared_ptr<Scene>& scene) {

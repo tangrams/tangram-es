@@ -54,7 +54,7 @@ struct SceneLoader {
     static void loadSourceRasters(const std::shared_ptr<Platform>& platform, std::shared_ptr<TileSource>& source, Node rasterNode,
                                   const Node& sources, Scene& scene);
     static void loadTexture(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& texture, const std::shared_ptr<Scene>& scene);
-    static void loadLayer(const std::pair<Node, Node>& layer, const std::shared_ptr<Scene>& scene);
+    static void loadLayer(const std::pair<Node, Node>& layer, Scene& scene);
     static void loadLight(const std::pair<Node, Node>& light, const std::shared_ptr<Scene>& scene);
     static void loadCameras(Node cameras, const std::shared_ptr<Scene>& scene);
     static void loadCamera(const Node& camera, const std::shared_ptr<Scene>& scene);
@@ -62,7 +62,7 @@ struct SceneLoader {
     static void loadMaterial(const std::shared_ptr<Platform>& platform, Node matNode, Material& material, const std::shared_ptr<Scene>& scene, Style& style);
     static void loadShaderConfig(const std::shared_ptr<Platform>& platform, Node shaders, Style& style, const std::shared_ptr<Scene>& scene);
     static void loadFont(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& font, const std::shared_ptr<Scene>& scene);
-    static SceneLayer loadSublayer(const Node& layer, const std::string& name, const std::shared_ptr<Scene>& scene);
+    static SceneLayer loadSublayer(const Node& layer, const std::string& name, Scene& scene);
     static Filter generateFilter(Node filter, Scene& scene);
     static Filter generateAnyFilter(Node filter, Scene& scene);
     static Filter generateAllFilter(Node filter, Scene& scene);
@@ -80,9 +80,8 @@ struct SceneLoader {
     static MaterialTexture loadMaterialTexture(const std::shared_ptr<Platform>& platform, Node matCompNode,
                                                const std::shared_ptr<Scene>& scene, Style& style);
 
-    static void parseStyleParams(Node params, const std::shared_ptr<Scene>& scene, const std::string& propPrefix,
-                                 std::vector<StyleParam>& out);
-    static void parseTransition(Node params, const std::shared_ptr<Scene>& scene, std::string _prefix, std::vector<StyleParam>& out);
+    static void parseStyleParams(Node params, Scene& scene, const std::string& propPrefix, std::vector<StyleParam>& out);
+    static void parseTransition(Node params, Scene& scene, std::string _prefix, std::vector<StyleParam>& out);
 
     static bool parseStyleUniforms(const std::shared_ptr<Platform>& platform, const Node& value,
                                    const std::shared_ptr<Scene>& scene, StyleUniform& styleUniform);
