@@ -47,7 +47,7 @@ public:
 
     static constexpr int max_textures = 64;
 
-    FontContext(std::shared_ptr<const Platform> _platform);
+    FontContext(std::shared_ptr<Platform> _platform);
     virtual ~FontContext() {}
 
     void loadFonts();

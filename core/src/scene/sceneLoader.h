@@ -43,15 +43,16 @@ struct SceneLoader {
     static bool applyConfig(const std::shared_ptr<Platform>& platform, const std::shared_ptr<Scene>& scene);
     static bool applyUpdates(const std::shared_ptr<Platform>& platform, Scene& scene,
                              const std::vector<SceneUpdate>& updates);
-    static void applyGlobals(Node root, Scene& scene);
+    static void applyGlobals(Scene& scene);
+    static void applySources(const std::shared_ptr<Platform>& _platform, Scene& scene);
 
     /*** all public for testing ***/
 
     static void loadBackground(Node background, const std::shared_ptr<Scene>& scene);
     static void loadSource(const std::shared_ptr<Platform>& platform, const std::string& name,
-                           const Node& source, const Node& sources, const std::shared_ptr<Scene>& scene);
+                           const Node& source, const Node& sources, Scene& scene);
     static void loadSourceRasters(const std::shared_ptr<Platform>& platform, std::shared_ptr<TileSource>& source, Node rasterNode,
-                                  const Node& sources, const std::shared_ptr<Scene>& scene);
+                                  const Node& sources, Scene& scene);
     static void loadTexture(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& texture, const std::shared_ptr<Scene>& scene);
     static void loadLayer(const std::pair<Node, Node>& layer, const std::shared_ptr<Scene>& scene);
     static void loadLight(const std::pair<Node, Node>& light, const std::shared_ptr<Scene>& scene);

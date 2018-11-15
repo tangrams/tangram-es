@@ -1,6 +1,5 @@
 #include "map.h"
 
-#include "data/clientGeoJsonSource.h"
 #include "debug/textDisplay.h"
 #include "debug/frameInfo.h"
 #include "gl.h"
@@ -22,7 +21,6 @@
 #include "text/fontContext.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
-#include "tile/tileManager.h"
 #include "util/asyncWorker.h"
 #include "util/fastmap.h"
 #include "util/inputHandler.h"
@@ -36,7 +34,7 @@
 
 namespace Tangram {
 
-const static size_t MAX_WORKERS = 2;
+//const static size_t MAX_WORKERS = 2;
 
 struct CameraEase {
     struct {
@@ -55,9 +53,8 @@ public:
     Impl(std::shared_ptr<Platform> _platform) :
         platform(_platform),
         inputHandler(_platform, view),
-        scene(std::make_shared<Scene>(_platform, Url())),
-        tileWorker(_platform, MAX_WORKERS),
-        tileManager(_platform, tileWorker) {}
+        scene(std::make_shared<Scene>(_platform, Url())) {}
+
 
     void setScene(std::shared_ptr<Scene>& _scene);
 
@@ -83,8 +80,6 @@ public:
     // NB: Destruction of (managed and loading) tiles must happen
     // before implicit destruction of 'scene' above!
     // In particular any references of Labels and Markers to FontContext
-    TileWorker tileWorker;
-    TileManager tileManager;
     MarkerManager markerManager;
     std::unique_ptr<FrameBuffer> selectionBuffer = std::make_unique<FrameBuffer>(0, 0);
 
@@ -96,6 +91,8 @@ public:
 
     SceneReadyCallback onSceneReady = nullptr;
     CameraAnimationCallback cameraAnimationListener = nullptr;
+
+    std::vector<std::shared_ptr<TileSource>> clientTileSources;
 
     void sceneLoadBegin() {
         sceneLoadTasks++;
@@ -119,7 +116,9 @@ Map::Map(std::shared_ptr<Platform> _platform) : platform(_platform) {
 
 Map::~Map() {
     // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
-    impl->tileWorker.stop();
+    //impl->tileWorker.stop();
+    impl->scene.reset();
+
     impl->asyncWorker.reset();
 
     // Make sure other threads are stopped before calling stop()!
@@ -168,14 +167,20 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
     }
 
     inputHandler.setView(view);
-    tileManager.setTileSources(_scene->tileSources());
-    tileWorker.setScene(_scene);
+
     markerManager.setScene(_scene);
 
     bool animated = scene->animated() == Scene::animate::yes;
 
     if (animated != platform->isContinuousRendering()) {
         platform->setContinuousRendering(animated);
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(tilesMutex);
+        for (auto& source : clientTileSources) {
+            scene->tileManager()->addClientTileSource(source);
+        }
     }
 }
 
@@ -303,7 +308,7 @@ std::shared_ptr<Platform>& Map::getPlatform() {
 }
 
 SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
-
+#if 0
     impl->sceneLoadBegin();
 
     std::vector<SceneUpdate> updates = _sceneUpdates;
@@ -362,6 +367,8 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
         });
 
     return nextScene->id;
+#endif
+    return 0;
 }
 
 void Map::setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath) {
@@ -433,23 +440,25 @@ bool Map::update(float _dt) {
         style->onBeginUpdate();
     }
 
+    impl->scene->updateTiles(_dt);
+
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
-        impl->tileManager.updateTileSets(impl->view);
+        impl->scene->tileManager()->updateTileSets(impl->view);
 
-        auto& tiles = impl->tileManager.getVisibleTiles();
+        auto& tiles = impl->scene->tileManager()->getVisibleTiles();
         auto& markers = impl->markerManager.markers();
 
         if (impl->view.changedOnLastUpdate() ||
-            impl->tileManager.hasTileSetChanged() ||
+            impl->scene->tileManager()->hasTileSetChanged() ||
             markersChanged) {
 
             for (const auto& tile : tiles) {
                 tile->update(_dt, impl->view);
             }
             impl->labels.updateLabelSet(impl->view.state(), _dt, impl->scene, tiles, markers,
-                                        impl->tileManager);
+                                        *impl->scene->tileManager());
         } else {
             impl->labels.updateLabels(impl->view.state(), _dt, impl->scene->styles(), tiles, markers);
         }
@@ -458,8 +467,8 @@ bool Map::update(float _dt) {
     FrameInfo::endUpdate();
 
     bool viewChanged = impl->view.changedOnLastUpdate();
-    bool tilesChanged = impl->tileManager.hasTileSetChanged();
-    bool tilesLoading = impl->tileManager.hasLoadingTiles();
+    bool tilesChanged = impl->scene->tileManager()->hasTileSetChanged();
+    bool tilesLoading = impl->scene->tileManager()->hasLoadingTiles();
     bool labelsNeedUpdate = impl->labels.needUpdate();
 
     if (viewChanged || tilesLoading || labelsNeedUpdate || impl->sceneLoadTasks > 0) {
@@ -535,7 +544,7 @@ bool Map::render() {
         for (const auto& style : impl->scene->styles()) {
 
             style->drawSelectionFrame(impl->renderState, impl->view, *(impl->scene),
-                                      impl->tileManager.getVisibleTiles(),
+                                      impl->scene->tileManager()->getVisibleTiles(),
                                       impl->markerManager.markers());
         }
 
@@ -543,7 +552,7 @@ bool Map::render() {
         // Resolve feature selection queries
         for (const auto& selectionQuery : impl->selectionQueries) {
             selectionQuery.process(impl->view, *impl->selectionBuffer, impl->markerManager,
-                                   impl->tileManager, impl->labels, colorCache);
+                                   *impl->scene->tileManager(), impl->labels, colorCache);
         }
 
         impl->selectionQueries.clear();
@@ -563,7 +572,7 @@ bool Map::render() {
 
     if (drawSelectionBuffer) {
         impl->selectionBuffer->drawDebug(impl->renderState, viewport);
-        FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
+        FrameInfo::draw(impl->renderState, impl->view, *impl->scene->tileManager());
         return impl->isCameraEasing;
     }
 
@@ -575,9 +584,9 @@ bool Map::render() {
         for (const auto& style : impl->scene->styles()) {
 
             bool styleDrawn = style->draw(impl->renderState,
-                                impl->view, *(impl->scene),
-                                impl->tileManager.getVisibleTiles(),
-                                impl->markerManager.markers());
+                                          impl->view, *(impl->scene),
+                                          impl->scene->tileManager()->getVisibleTiles(),
+                                                                   impl->markerManager.markers());
 
             drawnAnimatedStyle |= (styleDrawn && style->isAnimated());
         }
@@ -591,7 +600,7 @@ bool Map::render() {
 
     impl->labels.drawDebug(impl->renderState, impl->view);
 
-    FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
+    FrameInfo::draw(impl->renderState, impl->view, *impl->scene->tileManager());
 
     return impl->isCameraEasing;
 }
@@ -929,7 +938,7 @@ void Map::Impl::setPixelScale(float _pixelsPerPoint) {
     scene->setPixelScale(_pixelsPerPoint);
 
     // Tiles must be rebuilt to apply the new pixel scale to labels.
-    tileManager.clearTileSets();
+    scene->tileManager()->clearTileSets();
 
     // Markers must be rebuilt to apply the new pixel scale.
     markerManager.rebuildAll();
@@ -949,19 +958,27 @@ int Map::getCameraType() {
 }
 
 void Map::addTileSource(std::shared_ptr<TileSource> _source) {
+    impl->clientTileSources.push_back(_source);
+
     std::lock_guard<std::mutex> lock(impl->tilesMutex);
-    impl->tileManager.addClientTileSource(_source);
+    impl->scene->tileManager()->addClientTileSource(_source);
 }
 
 bool Map::removeTileSource(TileSource& source) {
+    for (auto it = impl->clientTileSources.begin(); it != impl->clientTileSources.end(); ++it) {
+        if (it->get() == &source) {
+            impl->clientTileSources.erase(it);
+            break;
+        }
+    }
     std::lock_guard<std::mutex> lock(impl->tilesMutex);
-    return impl->tileManager.removeClientTileSource(source);
+    return impl->scene->tileManager()->removeClientTileSource(source);
 }
 
 void Map::clearTileSource(TileSource& _source, bool _data, bool _tiles) {
     std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
-    if (_tiles) { impl->tileManager.clearTileSet(_source.id()); }
+    if (_tiles) { impl->scene->tileManager()->clearTileSet(_source.id()); }
     if (_data) { _source.clearData(); }
 
     platform->requestRender();
@@ -1077,7 +1094,7 @@ void Map::setupGL() {
 
     impl->renderState.invalidate();
 
-    impl->tileManager.clearTileSets();
+    impl->scene->tileManager()->clearTileSets();
 
     impl->markerManager.rebuildAll();
 
@@ -1108,7 +1125,7 @@ void Map::runAsyncTask(std::function<void()> _task) {
 
 void Map::onMemoryWarning() {
 
-    impl->tileManager.clearTileSets(true);
+    impl->scene->tileManager()->clearTileSets(true);
 
     if (impl->scene && impl->scene->fontContext()) {
         impl->scene->fontContext()->releaseFonts();
