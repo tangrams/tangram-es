@@ -92,6 +92,19 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
     applyGlobals(*_scene);
     LOGTime("applyGlobals");
 
+    applyTextures(_platform, _scene);
+    LOGTime("textures");
+
+    _scene->fontContext()->loadFonts();
+    LOGTime("initFonts");
+
+    applyFonts(_platform, _scene);
+    LOGTime("fonts");
+
+    applyStyles(_platform, _scene);
+    LOGTime("styles");
+
+    //
     applySources(_platform, *_scene);
     LOGTime("applySources");
 
@@ -99,21 +112,23 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
     LOGTime("applyCameras");
 
     _scene->initTileManager();
-
     _scene->tileManager()->updateTileSets(*_scene->view());
     LOGTime("loadTiles");
-    //_scene->updateTiles(0);
 
-    // Load font resources
-    _scene->fontContext()->loadFonts();
-    LOGTime("loadFonts");
-
-    applyConfig(_platform, _scene);
+    applyLayers(*_scene);
+    LOGTime("layers");
 
     // TODO this is messy ...
     _scene->setPixelScale(_scene->view()->pixelScale());
 
+    for (auto& style : _scene->styles()) {
+        style->build(*_scene);
+    }
+
     _scene->startTileWorker();
+
+
+    LOGTime("built styles");
 
     return true;
 }
@@ -297,18 +312,8 @@ void SceneLoader::applyCameras(Scene& _scene) {
     view->update();
 }
 
-void SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const std::shared_ptr<Scene>& _scene) {
-
+void SceneLoader::applyTextures(const std::shared_ptr<Platform>& _platform, const std::shared_ptr<Scene>& _scene) {
     const Node& config = _scene->config();
-
-    // Instantiate built-in styles
-    _scene->styles().emplace_back(new PolygonStyle("polygons"));
-    _scene->styles().emplace_back(new PolylineStyle("lines"));
-    _scene->styles().emplace_back(new DebugTextStyle("debugtext", _scene->fontContext(), true));
-    _scene->styles().emplace_back(new TextStyle("text", _scene->fontContext(), true));
-    _scene->styles().emplace_back(new DebugStyle("debug"));
-    _scene->styles().emplace_back(new PointStyle("points", _scene->fontContext()));
-    _scene->styles().emplace_back(new RasterStyle("raster"));
 
     if (const Node& textures = config["textures"]) {
         for (const auto& texture : textures) {
@@ -318,7 +323,10 @@ void SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
             }
         }
     }
-    LOGTime("textures");
+}
+
+void SceneLoader::applyFonts(const std::shared_ptr<Platform>& _platform, const std::shared_ptr<Scene>& _scene) {
+    const Node& config = _scene->config();
 
     if (const Node& fonts = config["fonts"]) {
         if (fonts.IsMap()) {
@@ -330,7 +338,19 @@ void SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
             }
         }
     }
-    LOGTime("fonts");
+}
+
+void SceneLoader::applyStyles(const std::shared_ptr<Platform>& _platform, const std::shared_ptr<Scene>& _scene) {
+    const Node& config = _scene->config();
+
+    // Instantiate built-in styles
+    _scene->styles().emplace_back(new PolygonStyle("polygons"));
+    _scene->styles().emplace_back(new PolylineStyle("lines"));
+    _scene->styles().emplace_back(new DebugTextStyle("debugtext", _scene->fontContext(), true));
+    _scene->styles().emplace_back(new TextStyle("text", _scene->fontContext(), true));
+    _scene->styles().emplace_back(new DebugStyle("debug"));
+    _scene->styles().emplace_back(new PointStyle("points", _scene->fontContext()));
+    _scene->styles().emplace_back(new RasterStyle("raster"));
 
     if (const Node& styles = config["styles"]) {
         StyleMixer mixer;
@@ -365,49 +385,46 @@ void SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
             pointStyle->setTextures(_scene->textures());
         }
     }
-    LOGTime("styles");
+}
+
+void SceneLoader::applyLayers(Scene& _scene) {
+    const Node& config = _scene.config();
 
     if (const Node& layers = config["layers"]) {
         for (const auto& layer : layers) {
-            try { loadLayer(layer, *_scene); }
+            try { loadLayer(layer, _scene); }
             catch (const YAML::RepresentationException& e) {
                 LOGNode("Parsing layer: '%s'", layer, e.what());
             }
         }
     }
-    LOGTime("layers");
 
     if (const Node& lights = config["lights"]) {
         for (const auto& light : lights) {
-            try { loadLight(light, *_scene); }
+            try { loadLight(light, _scene); }
             catch (const YAML::RepresentationException& e) {
                 LOGNode("Parsing light: '%s'", light, e.what());
             }
         }
     }
 
-    if (_scene->lights().empty()) {
+    if (_scene.lights().empty()) {
         // Add an ambient light if nothing else is specified
         std::unique_ptr<AmbientLight> amb(new AmbientLight("defaultLight"));
         amb->setAmbientColor({ 1.f, 1.f, 1.f, 1.f });
-        _scene->lights().push_back(std::move(amb));
+        _scene.lights().push_back(std::move(amb));
     }
 
-    _scene->lightBlocks() = Light::assembleLights(_scene->lights());
+    _scene.lightBlocks() = Light::assembleLights(_scene.lights());
     LOGTime("lights");
 
-    loadBackground(config["scene"]["background"], *_scene);
+    loadBackground(config["scene"]["background"], _scene);
 
     Node animated = config["scene"]["animated"];
     if (animated) {
-        _scene->animated(YamlUtil::getBoolOrDefault(animated, false));
+        _scene.animated(YamlUtil::getBoolOrDefault(animated, false));
     }
-    LOGTime("---");
 
-    for (auto& style : _scene->styles()) {
-        style->build(*_scene);
-    }
-    LOGTime("build styles");
 }
 
 void SceneLoader::loadShaderConfig(const std::shared_ptr<Platform>& platform, Node shaders, Style& style,
