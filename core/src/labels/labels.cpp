@@ -204,13 +204,12 @@ std::shared_ptr<Tile> findProxy(int32_t _sourceID, const TileID& _proxyID,
     return nullptr;
 }
 
-void Labels::skipTransitions(const std::shared_ptr<Scene>& _scene,
-                             const std::vector<std::shared_ptr<Tile>>& _tiles,
+void Labels::skipTransitions(Scene& _scene, const std::vector<std::shared_ptr<Tile>>& _tiles,
                              TileManager& _tileManager, float _currentZoom) const {
 
     std::vector<const Style*> styles;
 
-    for (const auto& style : _scene->styles()) {
+    for (const auto& style : _scene.styles()) {
         if (dynamic_cast<const TextStyle*>(style.get()) ||
             dynamic_cast<const PointStyle*>(style.get())) {
             styles.push_back(style.get());
@@ -221,7 +220,7 @@ void Labels::skipTransitions(const std::shared_ptr<Scene>& _scene,
         TileID tileID = tile->getID();
         std::shared_ptr<Tile> proxy;
 
-        auto source = _scene->getTileSource(tile->sourceID());
+        auto source = _scene.getTileSource(tile->sourceID());
         if (!source) {
             source = _tileManager.getClientTileSource(tile->sourceID());
             // If tiles for this source exist, this source must exist (either tile or client source)
@@ -444,8 +443,7 @@ bool Labels::withinRepeatDistance(Label *_label) {
     return false;
 }
 
-void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
-                            const std::shared_ptr<Scene>& _scene,
+void Labels::updateLabelSet(const ViewState& _viewState, float _dt, Scene& _scene,
                             const std::vector<std::shared_ptr<Tile>>& _tiles,
                             const std::vector<std::unique_ptr<Marker>>& _markers,
                             TileManager& _tileManager) {
@@ -454,7 +452,7 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
     m_obbs.clear();
 
     /// Collect and update labels from visible tiles
-    updateLabels(_viewState, _dt, _scene->styles(), _tiles, _markers, false);
+    updateLabels(_viewState, _dt, _scene.styles(), _tiles, _markers, false);
 
     std::sort(m_labels.begin(), m_labels.end(), Labels::priorityComparator);
 
