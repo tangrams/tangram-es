@@ -34,7 +34,7 @@ add_library(tangram-core
   src/labels/labelCollider.cpp
   src/labels/labelProperty.cpp
   src/labels/labelSet.cpp
-  src/labels/labels.cpp
+  src/labels/labelManager.cpp
   src/labels/spriteLabel.cpp
   src/labels/textLabel.cpp
   src/marker/marker.cpp

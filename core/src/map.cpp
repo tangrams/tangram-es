@@ -9,7 +9,7 @@
 #include "gl/primitives.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
-#include "labels/labels.h"
+#include "labels/labelManager.h"
 #include "marker/marker.h"
 #include "marker/markerManager.h"
 #include "platform.h"
