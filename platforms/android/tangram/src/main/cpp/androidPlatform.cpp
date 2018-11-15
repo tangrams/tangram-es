@@ -295,14 +295,15 @@ UrlRequestHandle AndroidPlatform::startUrlRequest(Url _url, UrlCallback _callbac
 
     // Get the current value of the request counter and add one, atomically.
     UrlRequestHandle requestHandle = m_urlRequestCount++;
+    if (!_callback) { return requestHandle; }
 
     // If the requested URL does not use HTTP or HTTPS, retrieve it synchronously.
     if (!_url.hasHttpScheme()) {
-        UrlResponse response;
-        response.content = bytesFromFile(_url);
-        if (_callback) {
-            _callback(std::move(response));
-        }
+        m_fileWorker.enqueue([=](){
+             UrlResponse response;
+             response.content = bytesFromFile(_url);
+             _callback(std::move(response));
+        });
         return requestHandle;
     }
 
