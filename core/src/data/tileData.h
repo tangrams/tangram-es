@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glm/vec3.hpp"
+#include "glm/vec2.hpp"
 #include "data/properties.h"
 
 #include <vector>
