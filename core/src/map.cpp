@@ -66,7 +66,6 @@ public:
     JobQueue jobQueue;
     // Current interactive view
     View view;
-    Labels labels;
     std::unique_ptr<AsyncWorker> asyncWorker = std::make_unique<AsyncWorker>();
     std::shared_ptr<Platform> platform;
     InputHandler inputHandler;
@@ -411,13 +410,13 @@ bool Map::update(float _dt) {
     bool tilesLoading;
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
-        tilesLoading = impl->scene->update(impl->view, impl->labels, _dt);
+        tilesLoading = impl->scene->update(impl->view, _dt);
     }
 
     FrameInfo::endUpdate();
 
     bool viewChanged = impl->view.changedOnLastUpdate();
-    bool labelsNeedUpdate = impl->labels.needUpdate();
+    bool labelsNeedUpdate = impl->scene->labelManager()->needUpdate();
 
     if (viewChanged || tilesLoading || labelsNeedUpdate || impl->sceneLoadTasks > 0) {
         viewComplete = false;
@@ -488,7 +487,7 @@ bool Map::render() {
 
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
-        impl->scene->renderSelection(impl->renderState, impl->view, impl->labels,
+        impl->scene->renderSelection(impl->renderState, impl->view,
                                      *impl->selectionBuffer, impl->selectionQueries);
 
         impl->selectionQueries.clear();
@@ -521,7 +520,6 @@ bool Map::render() {
         platform->setContinuousRendering(drawnAnimatedStyle);
     }
 
-    impl->labels.drawDebug(impl->renderState, impl->view);
 
     FrameInfo::draw(impl->renderState, impl->view, *impl->scene->tileManager());
 
