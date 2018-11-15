@@ -33,18 +33,20 @@ Scene::Scene(std::shared_ptr<Platform> _platform, const Url& _url, std::unique_p
       m_featureSelection(std::make_unique<FeatureSelection>()),
       m_tileWorker(std::make_unique<TileWorker>(_platform, 2)),
       m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)),
+      m_labelManager(std::make_unique<Labels>()),
       m_view(std::move(_view)) {
 
 }
 
 Scene::Scene(std::shared_ptr<Platform> _platform, const std::string& _yaml, const Url& _url, std::unique_ptr<View> _view)
     : id(s_serial++),
+      m_url(_url),
+      m_yaml(_yaml),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()),
       m_tileWorker(std::make_unique<TileWorker>(_platform, 2)),
       m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)),
-      m_url(_url),
-      m_yaml(_yaml),
+      m_labelManager(std::make_unique<Labels>()),
       m_view(std::move(_view)) {}
 
 void Scene::copyConfig(const Scene& _other) {
@@ -195,7 +197,7 @@ void Scene::setPixelScale(float _scale) {
 
 }
 
-bool Scene::update(const View& _view, Labels& _labels, float _dt) {
+bool Scene::update(const View& _view, float _dt) {
 
     m_time += _dt;
 
@@ -217,9 +219,9 @@ bool Scene::update(const View& _view, Labels& _labels, float _dt) {
         for (const auto& tile : tiles) {
             tile->update(_dt, _view);
         }
-        _labels.updateLabelSet(_view.state(), _dt, *this, tiles, markers, *m_tileManager);
+        m_labelManager->updateLabelSet(_view.state(), _dt, *this, tiles, markers, *m_tileManager);
     } else {
-        _labels.updateLabels(_view.state(), _dt, m_styles, tiles, markers);
+        m_labelManager->updateLabels(_view.state(), _dt, m_styles, tiles, markers);
     }
 
     bool tilesChanged = m_tileManager->hasTileSetChanged();
@@ -248,8 +250,7 @@ bool Scene::render(RenderState& _rs, View& _view) {
     return drawnAnimatedStyle;
 }
 
-void Scene::renderSelection(RenderState& _rs, View& _view, Labels& _labels,
-                            FrameBuffer& _selectionBuffer,
+void Scene::renderSelection(RenderState& _rs, View& _view, FrameBuffer& _selectionBuffer,
                             std::vector<SelectionQuery>& _selectionQueries) {
 
     for (const auto& style : m_styles) {
@@ -263,9 +264,8 @@ void Scene::renderSelection(RenderState& _rs, View& _view, Labels& _labels,
     // Resolve feature selection queries
     for (const auto& selectionQuery : _selectionQueries) {
         selectionQuery.process(_view, _selectionBuffer,
-                               *m_markerManager,
-                               *m_tileManager,
-                               _labels, colorCache);
+                               *m_markerManager, *m_tileManager,
+                               *m_labelManager, colorCache);
     }
 
 }
