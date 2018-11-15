@@ -18,6 +18,8 @@ using JSContext = std::unique_ptr<IJavaScriptContext>;
 using JSScopeMarker = int32_t;
 using JSFunctionIndex = uint32_t;
 
+JSContext createJavaScriptContext();
+
 class IJavaScriptValue {
 
 public:
@@ -70,11 +72,9 @@ protected:
     virtual JSValue newArray() = 0;
     virtual JSValue newObject() = 0;
     virtual JSValue newFunction(const std::string& value) = 0;
-
     virtual JSValue getFunctionResult(JSFunctionIndex index) = 0;
 
     virtual JSScopeMarker getScopeMarker() = 0;
-
     virtual void resetToScopeMarker(JSScopeMarker marker) = 0;
 
     friend JavaScriptScope;
@@ -87,6 +87,7 @@ public:
     explicit JavaScriptScope(IJavaScriptContext& context) : _context(context) {
         _scopeMarker = _context.getScopeMarker();
     }
+
     ~JavaScriptScope() {
         _context.resetToScopeMarker(_scopeMarker);
     }
@@ -94,37 +95,14 @@ public:
     JavaScriptScope& operator=(const JavaScriptScope& other) = delete;
     JavaScriptScope& operator=(JavaScriptScope&& other) = delete;
 
-    JSValue newNull() {
-        return _context.newNull();
-    }
-
-    JSValue newBoolean(bool value) {
-        return _context.newBoolean(value);
-    }
-
-    JSValue newNumber(double value) {
-        return _context.newNumber(value);
-    }
-
-    JSValue newString(const std::string& value) {
-        return _context.newString(value);
-    }
-
-    JSValue newArray() {
-        return _context.newArray();
-    }
-
-    JSValue newObject() {
-        return _context.newObject();
-    }
-
-    JSValue newFunction(const std::string& value) {
-        return _context.newFunction(value);
-    }
-
-    JSValue getFunctionResult(JSFunctionIndex index) {
-        return _context.getFunctionResult(index);
-    }
+    JSValue newNull() { return _context.newNull(); }
+    JSValue newBoolean(bool value) { return _context.newBoolean(value); }
+    JSValue newNumber(double value) { return _context.newNumber(value); }
+    JSValue newString(const std::string& value) { return _context.newString(value); }
+    JSValue newArray() { return _context.newArray(); }
+    JSValue newObject() { return _context.newObject(); }
+    JSValue newFunction(const std::string& value) { return _context.newFunction(value); }
+    JSValue getFunctionResult(JSFunctionIndex index) { return _context.getFunctionResult(index); }
 
 private:
 

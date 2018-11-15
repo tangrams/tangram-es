@@ -12,11 +12,11 @@
 
 namespace Tangram {
 
-DuktapeJavaScriptValue::DuktapeJavaScriptValue(duk_context* ctx, duk_idx_t index) : _ctx(ctx), _index(index) {}
-
-DuktapeJavaScriptValue::~DuktapeJavaScriptValue() {
-    duk_pop(_ctx); // FIXME
+JSContext createJavaScriptContext() {
+    return JSContext(new DuktapeJavaScriptContext());
 }
+
+DuktapeJavaScriptValue::DuktapeJavaScriptValue(duk_context* ctx, duk_idx_t index) : _ctx(ctx), _index(index) {}
 
 bool DuktapeJavaScriptValue::isUndefined() {
     return duk_is_undefined(_ctx, _index) != 0;
@@ -78,23 +78,31 @@ JSValue DuktapeJavaScriptValue::getValueForProperty(const std::string& name) {
 
 void DuktapeJavaScriptValue::setValueAtIndex(size_t index, JSValue value) {
     auto dukValue = reinterpret_cast<DuktapeJavaScriptValue*>(value.get());
-    duk_dup(_ctx, dukValue->_index);
+    dukValue->ensureExistsOnStackTop();
     duk_put_prop_index(_ctx, _index, static_cast<duk_uarridx_t>(index));
-    // TODO: This doesn't remove the original value from the stack. Might overflow if called enough in one scope.
 }
 
 void DuktapeJavaScriptValue::setValueForProperty(const std::string& name, JSValue value) {
     auto dukValue = reinterpret_cast<DuktapeJavaScriptValue*>(value.get());
-    duk_dup(_ctx, dukValue->_index);
+    dukValue->ensureExistsOnStackTop();
     duk_put_prop_lstring(_ctx, _index, name.data(), name.length());
-    // TODO: This doesn't remove the original value from the stack. Might overflow if called enough in one scope.
+
+}
+
+void DuktapeJavaScriptValue::ensureExistsOnStackTop() {
+    auto dukTopIndex = duk_get_top_index(_ctx);
+    if (_index != dukTopIndex) {
+        duk_require_stack_top(_ctx, dukTopIndex + 1);
+        duk_dup(_ctx, _index);
+    }
 }
 
 const static char INSTANCE_ID[] = "\xff""\xff""obj";
 const static char FUNC_ID[] = "\xff""\xff""fns";
 
 DuktapeJavaScriptContext::DuktapeJavaScriptContext() {
-    _ctx = duk_create_heap_default();
+    // Create duktape heap with default allocation functions and custom fatal error handler.
+    _ctx = duk_create_heap(nullptr, nullptr, nullptr, nullptr, fatalErrorHandler);
 
     //// Create global geometry constants
     // TODO make immutable
@@ -153,7 +161,7 @@ DuktapeJavaScriptContext::~DuktapeJavaScriptContext() {
 
 void DuktapeJavaScriptContext::setGlobalValue(const std::string& name, JSValue value) {
     auto dukValue = reinterpret_cast<DuktapeJavaScriptValue*>(value.get());
-    duk_dup(_ctx, dukValue->getStackIndex());
+    dukValue->ensureExistsOnStackTop();
     duk_put_global_lstring(_ctx, name.data(), name.length());
 }
 
@@ -272,7 +280,8 @@ int DuktapeJavaScriptContext::jsHasProperty(duk_context *_ctx) {
     }
 
     const char* key = duk_require_string(_ctx, 1);
-    duk_push_boolean(_ctx, context->_feature->props.contains(key));
+    auto result = static_cast<duk_bool_t>(context->_feature->props.contains(key));
+    duk_push_boolean(_ctx, result);
 
     return 1;
 }
@@ -303,6 +312,11 @@ int DuktapeJavaScriptContext::jsGetProperty(duk_context *_ctx) {
     // FIXME: Distinguish Booleans here as well
 
     return 1;
+}
+
+void DuktapeJavaScriptContext::fatalErrorHandler(void*, const char* message) {
+    LOGE("Fatal Error in DuktapeJavaScriptContext: %s", message);
+    abort();
 }
 
 bool DuktapeJavaScriptContext::evaluateFunction(uint32_t index) {
