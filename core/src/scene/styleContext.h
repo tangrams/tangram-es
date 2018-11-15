@@ -2,16 +2,13 @@
 
 #include "scene/styleParam.h"
 #include "util/fastmap.h"
-#include "IJavaScriptContext.h"
+#include "util/IJavaScriptContext.h"
 
 #include <array>
 #include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
-
-struct duk_hthread;
-typedef struct duk_hthread duk_context;
 
 namespace YAML {
     class Node;
@@ -34,7 +31,7 @@ public:
     using FunctionID = uint32_t;
 
     StyleContext();
-    ~StyleContext();
+    ~StyleContext() = default;
 
     /*
      * Set currently processed Feature
@@ -81,8 +78,7 @@ public:
 
 private:
 
-    void parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
-    void parseSceneGlobals(const YAML::Node& node);
+    JSValue parseSceneGlobals(JavaScriptScope& jsScope, const YAML::Node& node);
 
     std::array<Value, 4> m_keywords;
     int m_keywordGeom= -1;
@@ -94,7 +90,7 @@ private:
 
     const Feature* m_feature = nullptr;
 
-    JsContext::Instance* m_jsContext = nullptr;
+    JSContext m_jsContext = nullptr;
 };
 
 }
