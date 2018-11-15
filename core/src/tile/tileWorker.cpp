@@ -43,11 +43,12 @@ void TileWorker::run(Worker* instance) {
             std::unique_lock<std::mutex> lock(m_mutex);
 
             m_condition.wait(lock, [&, this]{
-                    return !m_running || !m_queue.empty();
+                    return !m_running || !m_queue.empty() || !instance->tileBuilder;
                 });
 
             if (instance->tileBuilder) {
                 builder = std::move(instance->tileBuilder);
+                builder->init();
                 LOG("Passed new TileBuilder to TileWorker");
             }
 

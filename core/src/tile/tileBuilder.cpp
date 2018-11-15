@@ -8,25 +8,22 @@
 #include "scene/dataLayer.h"
 #include "scene/scene.h"
 #include "selection/featureSelection.h"
-#include "style/style.h"
 #include "tile/tile.h"
 #include "util/mapProjection.h"
 #include "view/view.h"
 
 namespace Tangram {
 
-TileBuilder::TileBuilder(Scene& _scene)
-    : m_scene(_scene) {
-
-    m_styleContext.initFunctions(_scene);
+void TileBuilder::init() {
+    m_styleContext.initFunctions(m_scene);
 
     // Initialize StyleBuilders
-    for (auto& style : _scene.styles()) {
-        m_styleBuilder[style->getName()] = style->createBuilder();
+    for (auto& style : m_scene.styles()) {
+        if (auto builder = style->createBuilder()) {
+            m_styleBuilder[style->getName()] = std::move(builder);
+        }
     }
 }
-
-TileBuilder::~TileBuilder() {}
 
 StyleBuilder* TileBuilder::getStyleBuilder(const std::string& _name) {
     auto it = m_styleBuilder.find(_name);
@@ -106,8 +103,7 @@ std::unique_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
     m_styleContext.setKeywordZoom(_tileID.s);
 
     for (auto& builder : m_styleBuilder) {
-        if (builder.second)
-            builder.second->setup(*tile);
+        if (builder.second) { builder.second->setup(*tile); }
     }
 
     for (const auto& datalayer : m_scene.layers()) {
