@@ -4,11 +4,11 @@
 #include "labels/labelCollider.h"
 #include "scene/styleContext.h"
 #include "scene/drawRule.h"
+#include "style/style.h"
 
 namespace Tangram {
 
 class DataLayer;
-class StyleBuilder;
 class Tile;
 class TileSource;
 struct Feature;
@@ -21,8 +21,6 @@ public:
 
     explicit TileBuilder(Scene& _scene);
 
-    ~TileBuilder();
-
     StyleBuilder* getStyleBuilder(const std::string& _name);
 
     std::unique_ptr<Tile> build(TileID _tileID, const TileData& _data, const TileSource& _source);
@@ -31,6 +29,8 @@ public:
 
     // For testing
     TileBuilder(Scene& _scene, StyleContext* _styleContext);
+
+    void init();
 
 private:
 
