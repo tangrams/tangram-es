@@ -15,7 +15,7 @@ public:
 
     DuktapeJavaScriptValue(duk_context* ctx, duk_idx_t index);
 
-    ~DuktapeJavaScriptValue() override;
+    ~DuktapeJavaScriptValue() override = default;
 
     bool isUndefined() override;
     bool isNull() override;
@@ -38,6 +38,8 @@ public:
     void setValueForProperty(const std::string& name, JSValue value) override;
 
     auto getStackIndex() { return _index; }
+
+    void ensureExistsOnStackTop();
 
 private:
 
@@ -71,11 +73,9 @@ protected:
     JSValue newArray() override;
     JSValue newObject() override;
     JSValue newFunction(const std::string& value) override;
-
     JSValue getFunctionResult(JSFunctionIndex index) override;
 
     JSScopeMarker getScopeMarker() override;
-
     void resetToScopeMarker(JSScopeMarker marker) override;
 
 private:
@@ -83,6 +83,8 @@ private:
     // Used for proxy object.
     static int jsGetProperty(duk_context *_ctx);
     static int jsHasProperty(duk_context *_ctx);
+
+    static void fatalErrorHandler(void* userData, const char* message);
 
     bool evaluateFunction(uint32_t index);
 
