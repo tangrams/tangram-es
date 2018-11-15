@@ -14,6 +14,7 @@ namespace Tangram {
 class Platform;
 class TileSource;
 class Scene;
+class SceneOptions;
 
 enum LabelType {
     icon,
@@ -424,11 +425,9 @@ protected:
 
     std::unique_ptr<Platform> platform;
 
-    SceneID loadSceneAsync(std::shared_ptr<Scene> _scene,
-                           const std::vector<SceneUpdate>& _sceneUpdates = {});
+    SceneID loadSceneAsync(std::unique_ptr<SceneOptions> _sceneOptions);
 
-    SceneID loadScene(std::shared_ptr<Scene> _scene,
-                      const std::vector<SceneUpdate>& _sceneUpdates = {});
+    SceneID loadScene(std::unique_ptr<SceneOptions> _sceneOptions);
 
 private:
 

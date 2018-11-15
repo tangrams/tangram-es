@@ -9,7 +9,7 @@ namespace Tangram {
 class MarkerManager;
 class FrameBuffer;
 class TileManager;
-class Labels;
+class LabelManager;
 class View;
 
 enum class QueryType {
@@ -32,7 +32,8 @@ public:
     SelectionQuery(glm::vec2 _position, float _radius, QueryCallback _queryCallback);
 
     void process(const View& _view, const FrameBuffer& _framebuffer, const MarkerManager& _markerManager,
-                 const TileManager& _tileManager, const Labels& _labels, std::vector<SelectionColorRead>& _cache) const;
+                 const TileManager& _tileManager, const LabelManager& _labelManager,
+                 std::vector<SelectionColorRead>& _cache) const;
 
     QueryType type() const;
 

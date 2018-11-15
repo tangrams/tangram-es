@@ -31,7 +31,7 @@ public:
 
     bool isRunning() const { return m_running; }
 
-    void setScene(std::shared_ptr<Scene>& _scene);
+    void setScene(Scene& _scene);
 
 private:
 

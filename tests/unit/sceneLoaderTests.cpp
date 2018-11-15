@@ -16,15 +16,15 @@ using YAML::Node;
 
 TEST_CASE("Style with the same name as a built-in style are ignored") {
     MockPlatform platform;
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform, Url());
-    SceneLoader::loadStyle(platform, "polygons", Node(), scene);
+    auto scene = std::make_shared<Scene>(platform, std::make_unique<SceneOptions>(Url()));
+    SceneLoader::loadStyle("polygons", Node(), scene);
     REQUIRE(scene->styles().size() == 0);
 
 }
 
 TEST_CASE("Correctly instantiate a style from a YAML configuration") {
     MockPlatform platform;
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform, Url());
+    auto scene = std::make_shared<Scene>(platform, std::make_unique<SceneOptions>(Url()));
 
     scene->styles().emplace_back(new PolygonStyle("polygons"));
     scene->styles().emplace_back(new PolylineStyle("lines"));
@@ -39,7 +39,7 @@ TEST_CASE("Correctly instantiate a style from a YAML configuration") {
             emission: 0.0
         )END");
 
-    SceneLoader::loadStyle(platform, "roads", node, scene);
+    SceneLoader::loadStyle("roads", node, scene);
 
     auto& styles = scene->styles();
 

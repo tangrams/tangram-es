@@ -12,7 +12,7 @@
 
 #include <algorithm>
 
-#define DBG(...) // LOGD(__VA_ARGS__)
+#define DBG(...) LOG(__VA_ARGS__)
 
 namespace Tangram {
 
@@ -173,6 +173,8 @@ TileManager::~TileManager() {
 
 void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>& _sources) {
 
+    LOG("setTileSources %d", _sources.size());
+
     m_tileCache->clear();
 
     // Remove all (non-client datasources) sources and respective tileSets not present in the
@@ -201,7 +203,7 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
                          [&](const TileSet& a) {
                              return a.source->name() == source->name();
                          }) == m_tileSets.end()) {
-            LOGN("add source %s", source->name().c_str());
+            LOGW("add source %s", source->name().c_str());
             m_tileSets.push_back({ source, false });
         } else {
             LOGW("Duplicate named datasource (not added): %s", source->name().c_str());
@@ -464,7 +466,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
                 else { rasterLoading++; }
             }
         }
-        DBG("> %s - ready:%d proxy:%d/%d loading:%d rDone:%d rLoading:%d rPending:%d canceled:%d",
+        DBG("> %s - ready:%d proxy:%d/%d loading:%d rDone:%d rLoading:%d canceled:%d",
              it.first.toString().c_str(),
              bool(entry.tile),
              entry.getProxyCounter(),
@@ -472,7 +474,6 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
              entry.task && !entry.task->isReady(),
              rasterDone,
              rasterLoading,
-             entry.rastersPending(),
              entry.task && entry.task->isCanceled());
 #endif
 
@@ -522,10 +523,13 @@ void TileManager::loadTiles() {
         auto& entry = tileIt->second;
 
         tileSet.source->loadTileData(entry.task, m_dataCallback);
+
+        DBG("> load %s", tileId.toString().c_str());
+
     }
 
-    DBG("loading:%d pending:%d cache: %fMB",
-        m_loadTasks.size(), m_loadPending,
+    DBG("loading:%d cache: %fMB",
+        m_loadTasks.size(),
         (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
 
     m_loadTasks.clear();

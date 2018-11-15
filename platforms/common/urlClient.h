@@ -15,7 +15,7 @@ class UrlClient {
 public:
 
     struct Options {
-        uint32_t numberOfThreads = 4;
+        uint32_t numberOfThreads = 6;
         uint32_t connectionTimeoutMs = 3000;
         uint32_t requestTimeoutMs = 30000;
     };
