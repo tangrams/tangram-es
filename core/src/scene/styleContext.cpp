@@ -8,17 +8,13 @@
 #include "scene/scene.h"
 #include "util/mapProjection.h"
 #include "util/builders.h"
-
-#include "duktape.h"
+#include "util/yamlUtil.h"
 
 #define DUMP(...) // do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
 #define DBG(...) do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
 
 
 namespace Tangram {
-
-const static char INSTANCE_ID[] = "\xff""\xff""obj";
-const static char FUNC_ID[] = "\xff""\xff""fns";
 
 static const std::string key_geom("$geometry");
 static const std::string key_zoom("$zoom");
@@ -31,74 +27,63 @@ static const std::vector<std::string> s_geometryStrings = {
 };
 
 StyleContext::StyleContext() {
-    m_jsContext = JsContext::create();
-}
-
-StyleContext::~StyleContext() {
-    JsContext::destroy(m_jsContext);
+    m_jsContext = createJavaScriptContext();
 }
 
 // Convert a scalar node to a boolean, double, or string (in that order)
 // and for the first conversion that works, push it to the top of the JS stack.
-void pushYamlScalarAsJsPrimitive(duk_context* ctx, const YAML::Node& node) {
+JSValue pushYamlScalarAsJsPrimitive(JavaScriptScope& jsScope, const YAML::Node& node) {
     bool booleanValue = false;
     double numberValue = 0.;
-    if (YAML::convert<bool>::decode(node, booleanValue)) {
-        duk_push_boolean(ctx, booleanValue);
-    } else if (YAML::convert<double>::decode(node, numberValue)) {
-        duk_push_number(ctx, numberValue);
+    if (YamlUtil::getBool(node, booleanValue)) {
+        return jsScope.newBoolean(booleanValue);
+    } else if (YamlUtil::getDouble(node, numberValue)) {
+        return jsScope.newNumber(numberValue);
     } else {
-        duk_push_string(ctx, node.Scalar().c_str());
+        return jsScope.newString(node.Scalar());
     }
 }
 
-void pushYamlScalarAsJsFunctionOrString(duk_context* ctx, const YAML::Node& node) {
-    auto scalar = node.Scalar().c_str();
-    duk_push_string(ctx, scalar); // Push function source.
-    duk_push_string(ctx, ""); // Push a "filename".
-    if (duk_pcompile(ctx, DUK_COMPILE_FUNCTION) != 0) { // Compile function.
-        auto error = duk_safe_to_string(ctx, -1);
-        LOGW("Compile failed in global function: %s\n%s\n---", error, scalar);
-        duk_pop(ctx); // Pop error.
-        duk_push_string(ctx, scalar); // Push property as a string.
+JSValue pushYamlScalarAsJsFunctionOrString(JavaScriptScope& jsScope, const YAML::Node& node) {
+    auto value = jsScope.newFunction(node.Scalar());
+    if (value) {
+        return value;
     }
+    return jsScope.newString(node.Scalar());
 }
 
-void StyleContext::parseSceneGlobals(const YAML::Node& node) {
+JSValue StyleContext::parseSceneGlobals(JavaScriptScope& jsScope, const YAML::Node& node) {
     switch(node.Type()) {
-    case YAML::NodeType::Scalar:
-        {
-            auto& scalar = node.Scalar();
-            if (scalar.compare(0, 8, "function") == 0) {
-                pushYamlScalarAsJsFunctionOrString(m_ctx, node);
-            } else {
-                pushYamlScalarAsJsPrimitive(m_ctx, node);
-            }
-            break;
+    case YAML::NodeType::Scalar: {
+        auto& scalar = node.Scalar();
+        if (scalar.compare(0, 8, "function") == 0) {
+            return pushYamlScalarAsJsFunctionOrString(jsScope, node);
+        } else {
+            return pushYamlScalarAsJsPrimitive(jsScope, node);
         }
-    case YAML::NodeType::Sequence:
-        {
-            auto seqObj = duk_push_array(m_ctx);
-            for (size_t i = 0; i < node.size(); i++) {
-                parseSceneGlobals(node[i]);
-                duk_put_prop_index(m_ctx, seqObj, i);
-            }
-            break;
+        break;
+    }
+    case YAML::NodeType::Sequence: {
+        auto jsArray = jsScope.newArray();
+        for (size_t i = 0; i < node.size(); i++) {
+            jsArray->setValueAtIndex(i, parseSceneGlobals(jsScope, node[i]));
         }
-    case YAML::NodeType::Map:
-        {
-            auto mapObj = duk_push_object(m_ctx);
-            for (const auto& entry : node) {
-                if (!entry.first.IsScalar()) {
-                    continue; // Can't put non-scalar keys in JS objects.
-                }
-                parseSceneGlobals(entry.second);
-                duk_put_prop_string(m_ctx, mapObj, entry.first.Scalar().c_str());
+        return jsArray;
+        break;
+    }
+    case YAML::NodeType::Map: {
+        auto jsObject = jsScope.newObject();
+        for (const auto& entry : node) {
+            if (!entry.first.IsScalar()) {
+                continue; // Can't put non-scalar keys in JS objects.
             }
-            break;
+            jsObject->setValueForProperty(entry.first.Scalar(), parseSceneGlobals(jsScope, entry.second));
         }
+        return jsObject;
+        break;
+    }
     default:
-        duk_push_null(m_ctx);
+        return jsScope.newNull();
         break;
     }
 }
@@ -107,13 +92,11 @@ void StyleContext::setSceneGlobals(const YAML::Node& sceneGlobals) {
 
     if (!sceneGlobals) { return; }
 
-    //[ "ctx" ]
-    // globalObject
-    duk_push_object(m_ctx);
+    JavaScriptScope jsScope(*m_jsContext);
 
-    parseSceneGlobals(sceneGlobals);
+    auto jsValue = parseSceneGlobals(jsScope, sceneGlobals);
 
-    duk_put_global_string(m_ctx, "global");
+    m_jsContext->setGlobalValue("global", std::move(jsValue));
 }
 
 void StyleContext::initFunctions(const Scene& _scene) {
@@ -131,7 +114,7 @@ bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {
     uint32_t id = 0;
     bool error = false;
     for (auto& function : _functions) {
-        id = JsContext::addFunction(m_jsContext, function, error);
+        id = m_jsContext->addFunction(function, error);
     }
 
     m_functionCount = id;
@@ -142,9 +125,8 @@ bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {
 
 bool StyleContext::addFunction(const std::string& _function) {
     bool error = false;
-    JsContext::addFunction(m_jsContext, _function, error);
+    m_jsContext->addFunction(_function, error);
     m_functionCount++;
-
     return !error;
 }
 
@@ -156,6 +138,8 @@ void StyleContext::setFeature(const Feature& _feature) {
         setKeyword(key_geom, s_geometryStrings[m_feature->geometryType]);
         m_keywordGeom = m_feature->geometryType;
     }
+
+    m_jsContext->setCurrentFeature(&_feature);
 }
 
 void StyleContext::setKeywordZoom(int _zoom) {
@@ -180,11 +164,17 @@ void StyleContext::setKeyword(const std::string& _key, Value _val) {
     Value& entry = m_keywords[static_cast<uint8_t>(keywordKey)];
     if (entry == _val) { return; }
 
-    if (_val.is<std::string>()) {
-        JsContext::setGlobalString(m_jsContext, _key, _val.get<std::string>());
-    } else if (_val.is<double>()) {
-        JsContext::setGlobalNumber(m_jsContext, _key, _val.get<double>());
+    {
+        JavaScriptScope jsScope(*m_jsContext);
+        JSValue value;
+        if (_val.is<std::string>()) {
+            value = jsScope.newString(_val.get<std::string>());
+        } else if (_val.is<double>()) {
+            value = jsScope.newNumber(_val.get<double>());
+        }
+        m_jsContext->setGlobalValue(_key, std::move(value));
     }
+
 
     entry = std::move(_val);
 }
@@ -201,24 +191,25 @@ const Value& StyleContext::getKeyword(const std::string& _key) const {
 }
 
 void StyleContext::clear() {
-    JsContext::setCurrentFeature(m_jsContext, nullptr);
+    m_jsContext->setCurrentFeature(nullptr);
 }
 
 bool StyleContext::evalFilter(FunctionID _id) {
-    bool result = JsContext::evaluateBooleanFunction(m_jsContext, _id);
+    bool result = m_jsContext->evaluateBooleanFunction(_id);
     return result;
 }
 
 bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) {
     _val = none_type{};
 
-    auto jsValue = JsContext::getFunctionResult(m_jsContext, _id);
+    JavaScriptScope jsScope(*m_jsContext);
+    auto jsValue = jsScope.getFunctionResult(_id);
     if (!jsValue) {
         return false;
     }
 
-    if (JsContext::valueIsString(m_jsContext, jsValue)) {
-        std::string value = JsContext::valueGetString(m_jsContext, jsValue);
+    if (jsValue->isString()) {
+        std::string value = jsValue->toString();
 
         switch (_key) {
             case StyleParamKey::outline_style:
@@ -252,8 +243,8 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
                 break;
         }
 
-    } else if (JsContext::valueIsBool(m_jsContext, jsValue)) {
-        bool value = JsContext::valueGetBool(m_jsContext, jsValue);
+    } else if (jsValue->isBoolean()) {
+        bool value = jsValue->toBool();
 
         switch (_key) {
             case StyleParamKey::interactive:
@@ -268,8 +259,8 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
                 break;
         }
 
-    } else if (JsContext::valueIsArray(m_jsContext, jsValue)) {
-        auto len = JsContext::valueGetArraySize(m_jsContext, jsValue);
+    } else if (jsValue->isArray()) {
+        auto len = jsValue->getLength();
 
         switch (_key) {
             case StyleParamKey::extrude: {
@@ -278,13 +269,8 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
                     break;
                 }
 
-                auto valueAt0 = JsContext::valueGetArrayElement(m_jsContext, jsValue, 0);
-                double v1 = JsContext::valueGetDouble(m_jsContext, valueAt0);
-                JsContext::releaseValue(m_jsContext, valueAt0);
-
-                auto valueAt1 = JsContext::valueGetArrayElement(m_jsContext, jsValue, 1);
-                double v2 = JsContext::valueGetDouble(m_jsContext, valueAt1);
-                JsContext::releaseValue(m_jsContext, valueAt1);
+                double v1 = jsValue->getValueAtIndex(0)->toDouble();
+                double v2 = jsValue->getValueAtIndex(1)->toDouble();
 
                 _val = glm::vec2(v1, v2);
                 break;
@@ -297,33 +283,21 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
                     LOGW("Wrong array size for color: '%d'.", len);
                     break;
                 }
-                auto valueAt0 = JsContext::valueGetArrayElement(m_jsContext, jsValue, 0);
-                double r = JsContext::valueGetDouble(m_jsContext, valueAt0);
-                JsContext::releaseValue(m_jsContext, valueAt0);
-
-                auto valueAt1 = JsContext::valueGetArrayElement(m_jsContext, jsValue, 1);
-                double g = JsContext::valueGetDouble(m_jsContext, valueAt1);
-                JsContext::releaseValue(m_jsContext, valueAt1);
-
-                auto valueAt2 = JsContext::valueGetArrayElement(m_jsContext, jsValue, 2);
-                double b = JsContext::valueGetDouble(m_jsContext, valueAt2);
-                JsContext::releaseValue(m_jsContext, valueAt2);
-
+                double r = jsValue->getValueAtIndex(0)->toDouble();
+                double g = jsValue->getValueAtIndex(1)->toDouble();
+                double b = jsValue->getValueAtIndex(2)->toDouble();
                 double a = 1.0;
                 if (len == 4) {
-                    auto valueAt3 = JsContext::valueGetArrayElement(m_jsContext, jsValue, 3);
-                    a = JsContext::valueGetDouble(m_jsContext, valueAt3);
-                    JsContext::releaseValue(m_jsContext, valueAt3);
+                    a = jsValue->getValueAtIndex(3)->toDouble();
                 }
-
                 _val = ColorF(r, g, b, a).toColor().abgr;
                 break;
             }
             default:
                 break;
         }
-    } else if (JsContext::valueIsNumber(m_jsContext, jsValue)) {
-        double number = JsContext::valueGetDouble(m_jsContext, jsValue);
+    } else if (jsValue->isNumber()) {
+        double number = jsValue->toDouble();
         if (std::isnan(number)) {
             LOGD("duk evaluates JS method to NAN.\n");
         }
@@ -372,14 +346,12 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
             default:
                 break;
         }
-    } else if (JsContext::valueIsUndefined(m_jsContext, jsValue)) {
+    } else if (jsValue->isUndefined()) {
         // Explicitly set value as 'undefined'. This is important for some styling rules.
         _val = Undefined();
     } else {
         LOGW("Unhandled return type from Javascript style function for %d.", _key);
     }
-
-    JsContext::releaseValue(m_jsContext, jsValue);
 
     DUMP("parseStyleResult\n");
 
