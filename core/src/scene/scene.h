@@ -36,6 +36,8 @@ class Texture;
 class TileSource;
 class ZipArchive;
 class Labels;
+class FrameBuffer;
+class SelectionQuery;
 
 // Delimiter used in sceneloader for style params and layer-sublayer naming
 const std::string DELIMITER = ":";
@@ -155,6 +157,11 @@ public:
     std::vector<SceneError> errors;
 
     bool update(View& _view, Labels& _labels, float _dt);
+    void renderBeginFrame(RenderState& _rs);
+    bool render(RenderState& _rs, View& _view);
+    void renderSelection(RenderState& _rs, View& _view, Labels& _labels,
+                         FrameBuffer& _selectionBuffer,
+                         std::vector<SelectionQuery>& _selectionQueries);
 
     TileManager* tileManager() { return m_tileManager.get(); }
     MarkerManager* markerManager() { return m_markerManager.get(); }
