@@ -95,7 +95,13 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
     applySources(_platform, *_scene);
     LOGTime("applySources");
 
+    applyCameras(*_scene);
+    LOGTime("applyCameras");
+
     _scene->initTileManager();
+
+    _scene->tileManager()->updateTileSets(*_scene->view());
+    LOGTime("loadTiles");
     //_scene->updateTiles(0);
 
     // Load font resources
@@ -103,6 +109,9 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
     LOGTime("loadFonts");
 
     applyConfig(_platform, _scene);
+
+    // TODO this is messy ...
+    _scene->setPixelScale(_scene->view()->pixelScale());
 
     _scene->startTileWorker();
 
@@ -234,7 +243,61 @@ void SceneLoader::applySources(const std::shared_ptr<Platform>& _platform, Scene
     }
 }
 
-bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const std::shared_ptr<Scene>& _scene) {
+void SceneLoader::applyCameras(Scene& _scene) {
+
+    const Node& config = _scene.config();
+
+    if (const Node& camera = config["camera"]) {
+        try { loadCamera(camera, _scene); }
+        catch (const YAML::RepresentationException& e) {
+            LOGNode("Parsing camera: '%s'", camera, e.what());
+        }
+
+    } else if (const Node& cameras = config["cameras"]) {
+        try { loadCameras(cameras, _scene); }
+        catch (const YAML::RepresentationException& e) {
+            LOGNode("Parsing cameras: '%s'", cameras, e.what());
+        }
+    }
+
+    auto& camera = _scene.camera();
+    auto& view = _scene.view();
+
+    view->setCameraType(camera.type);
+
+    switch (camera.type) {
+    case CameraType::perspective:
+        view->setVanishingPoint(camera.vanishingPoint.x, camera.vanishingPoint.y);
+        if (camera.fovStops) {
+            view->setFieldOfViewStops(camera.fovStops);
+        } else {
+            view->setFieldOfView(camera.fieldOfView);
+        }
+        break;
+    case CameraType::isometric:
+        view->setObliqueAxis(camera.obliqueAxis.x, camera.obliqueAxis.y);
+        break;
+    case CameraType::flat:
+        break;
+    }
+
+    if (camera.maxTiltStops) {
+        view->setMaxPitchStops(camera.maxTiltStops);
+    } else {
+        view->setMaxPitch(camera.maxTilt);
+    }
+
+    if (_scene.useScenePosition) {
+        auto position = _scene.startPosition;
+        view->setCenterCoordinates({position.x, position.y});
+        view->setZoom(_scene.startZoom);
+    }
+
+    LOGE("UPDATE VIEW %f %f %f", view->getZoom(), view->getCenterCoordinates().longitude, view->getCenterCoordinates().latitude);
+    view->update();
+}
+
+void SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const std::shared_ptr<Scene>& _scene) {
 
     const Node& config = _scene->config();
 
@@ -333,33 +396,18 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
     _scene->lightBlocks() = Light::assembleLights(_scene->lights());
     LOGTime("lights");
 
-    if (const Node& camera = config["camera"]) {
-        try { loadCamera(camera, _scene); }
-        catch (const YAML::RepresentationException& e) {
-            LOGNode("Parsing camera: '%s'", camera, e.what());
-        }
-
-    } else if (const Node& cameras = config["cameras"]) {
-        try { loadCameras(cameras, _scene); }
-        catch (const YAML::RepresentationException& e) {
-            LOGNode("Parsing cameras: '%s'", cameras, e.what());
-        }
-    }
-
     loadBackground(config["scene"]["background"], _scene);
 
     Node animated = config["scene"]["animated"];
     if (animated) {
         _scene->animated(YamlUtil::getBoolOrDefault(animated, false));
     }
-    LOGTime("lights");
+    LOGTime("---");
 
     for (auto& style : _scene->styles()) {
         style->build(*_scene);
     }
     LOGTime("build styles");
-
-    return true;
 }
 
 void SceneLoader::loadShaderConfig(const std::shared_ptr<Platform>& platform, Node shaders, Style& style,
@@ -1279,9 +1327,9 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, const std::shared
     scene->lights().push_back(std::move(sceneLight));
 }
 
-void SceneLoader::loadCamera(const Node& _camera, const std::shared_ptr<Scene>& _scene) {
+void SceneLoader::loadCamera(const Node& _camera, Scene& _scene) {
 
-    auto& camera = _scene->camera();
+    auto& camera = _scene.camera();
 
     if (Node active = _camera["active"]) {
         if (!YamlUtil::getBoolOrDefault(active, false)) {
@@ -1359,11 +1407,11 @@ void SceneLoader::loadCamera(const Node& _camera, const std::shared_ptr<Scene>& 
         }
     }
 
-    _scene->startPosition = glm::dvec2(x, y);
-    _scene->startZoom = z;
+    _scene.startPosition = glm::dvec2(x, y);
+    _scene.startZoom = z;
 }
 
-void SceneLoader::loadCameras(Node _cameras, const std::shared_ptr<Scene>& _scene) {
+void SceneLoader::loadCameras(const Node& _cameras, Scene& _scene) {
 
     // To correctly match the behavior of the webGL library we'll need a place
     // to store multiple view instances.  Since we only have one global view

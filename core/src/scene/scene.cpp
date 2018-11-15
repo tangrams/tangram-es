@@ -26,24 +26,26 @@ static std::atomic<int32_t> s_serial;
 
 //Scene::Scene() : id(s_serial++) {}
 
-Scene::Scene(std::shared_ptr<Platform> _platform, const Url& _url)
+Scene::Scene(std::shared_ptr<Platform> _platform, const Url& _url, std::unique_ptr<View> _view)
     : id(s_serial++),
       m_url(_url),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()),
       m_tileWorker(std::make_unique<TileWorker>(_platform, 2)),
-      m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)) {}
+      m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)),
+      m_view(std::move(_view)) {
 
-Scene::Scene(std::shared_ptr<Platform> _platform, const std::string& _yaml, const Url& _url)
+}
+
+Scene::Scene(std::shared_ptr<Platform> _platform, const std::string& _yaml, const Url& _url, std::unique_ptr<View> _view)
     : id(s_serial++),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()),
       m_tileWorker(std::make_unique<TileWorker>(_platform, 2)),
-      m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)) {
-
-    m_url = _url;
-    m_yaml = _yaml;
-}
+      m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)),
+      m_url(_url),
+      m_yaml(_yaml),
+      m_view(std::move(_view)) {}
 
 void Scene::copyConfig(const Scene& _other) {
 
@@ -184,7 +186,7 @@ void Scene::setPixelScale(float _scale) {
     m_fontContext->setPixelScale(_scale);
 
     // Tiles must be rebuilt to apply the new pixel scale to labels.
-    m_tileManager->clearTileSets();
+    // FIXME m_tileManager->clearTileSets();
 
     // Markers must be rebuilt to apply the new pixel scale.
     if (m_markerManager) {
@@ -193,7 +195,7 @@ void Scene::setPixelScale(float _scale) {
 
 }
 
-bool Scene::update(View& _view, Labels& _labels, float _dt) {
+bool Scene::update(const View& _view, Labels& _labels, float _dt) {
 
     m_time += _dt;
 

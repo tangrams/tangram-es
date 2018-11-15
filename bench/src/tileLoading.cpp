@@ -42,7 +42,7 @@ struct TestContext {
         Url sceneUrl(path);
         platform->putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(path));
 
-        scene = std::make_shared<Scene>(platform, sceneUrl);
+        scene = std::make_shared<Scene>(platform, sceneUrl, std::make_unique<View>());
         Importer importer(scene);
 
         try {
@@ -55,7 +55,7 @@ struct TestContext {
         SceneLoader::applyGlobals(*scene);
         SceneLoader::applySources(platform, *scene);
 
-        SceneLoader::applyConfig(platform, scene);
+        //SceneLoader::applyConfig(platform, scene);
 
         scene->fontContext()->loadFonts();
 

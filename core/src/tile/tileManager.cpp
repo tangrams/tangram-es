@@ -12,7 +12,7 @@
 
 #include <algorithm>
 
-#define DBG(...) LOGD(__VA_ARGS__)
+#define DBG(...) LOG(__VA_ARGS__)
 
 namespace Tangram {
 
@@ -506,6 +506,9 @@ void TileManager::loadTiles() {
         auto& entry = tileIt->second;
 
         tileSet.source->loadTileData(entry.task, m_dataCallback);
+
+        DBG("> load %s", tileId.toString().c_str());
+
     }
 
     DBG("loading:%d cache: %fMB",

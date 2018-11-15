@@ -40,10 +40,11 @@ struct SceneLoader {
     static bool loadScene(const std::shared_ptr<Platform>& _platform, std::shared_ptr<Scene> _scene,
                           const std::vector<SceneUpdate>& updates = {});
 
-    static bool applyConfig(const std::shared_ptr<Platform>& platform, const std::shared_ptr<Scene>& scene);
+    static void applyConfig(const std::shared_ptr<Platform>& platform, const std::shared_ptr<Scene>& scene);
     static bool applyUpdates(const std::shared_ptr<Platform>& platform, Scene& scene,
                              const std::vector<SceneUpdate>& updates);
     static void applyGlobals(Scene& scene);
+    static void applyCameras(Scene& scene);
     static void applySources(const std::shared_ptr<Platform>& _platform, Scene& scene);
 
     /*** all public for testing ***/
@@ -56,8 +57,8 @@ struct SceneLoader {
     static void loadTexture(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& texture, const std::shared_ptr<Scene>& scene);
     static void loadLayer(const std::pair<Node, Node>& layer, Scene& scene);
     static void loadLight(const std::pair<Node, Node>& light, const std::shared_ptr<Scene>& scene);
-    static void loadCameras(Node cameras, const std::shared_ptr<Scene>& scene);
-    static void loadCamera(const Node& camera, const std::shared_ptr<Scene>& scene);
+    static void loadCameras(const Node& cameras, Scene& scene);
+    static void loadCamera(const Node& camera, Scene& scene);
     static void loadStyleProps(const std::shared_ptr<Platform>& platform, Style& style, Node styleNode, const std::shared_ptr<Scene>& scene);
     static void loadMaterial(const std::shared_ptr<Platform>& platform, Node matNode, Material& material, const std::shared_ptr<Scene>& scene, Style& style);
     static void loadShaderConfig(const std::shared_ptr<Platform>& platform, Node shaders, Style& style, const std::shared_ptr<Scene>& scene);
