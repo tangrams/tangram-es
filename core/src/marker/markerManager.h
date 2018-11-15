@@ -21,10 +21,8 @@ class MarkerManager {
 
 public:
 
-    MarkerManager();
+    explicit MarkerManager(Scene& scene);
     ~MarkerManager();
-    // Set the Scene object whose styling information will be used to build markers.
-    void setScene(std::shared_ptr<Scene> scene);
 
     // Create a new, empty marker and return its ID. An ID of 0 indicates an invalid marker.
     MarkerID add();
@@ -87,8 +85,9 @@ private:
     bool buildStyling(Marker& marker);
     bool buildMesh(Marker& marker, int zoom);
 
+    Scene& m_scene;
+
     std::unique_ptr<StyleContext> m_styleContext;
-    std::shared_ptr<Scene> m_scene;
     std::vector<std::unique_ptr<Marker>> m_markers;
     std::vector<std::string> m_jsFnList;
     fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilders;

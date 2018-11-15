@@ -179,6 +179,15 @@ void Scene::setPixelScale(float _scale) {
         style->setPixelScale(_scale);
     }
     m_fontContext->setPixelScale(_scale);
+
+    // Tiles must be rebuilt to apply the new pixel scale to labels.
+    m_tileManager->clearTileSets();
+
+    // Markers must be rebuilt to apply the new pixel scale.
+    if (m_markerManager) {
+        m_markerManager->rebuildAll();
+    }
+
 }
 
 void Scene::updateTiles(float dt) {
