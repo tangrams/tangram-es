@@ -1,19 +1,23 @@
 #include "scene/scene.h"
 
 #include "data/tileSource.h"
+#include "gl/framebuffer.h"
 #include "gl/shaderProgram.h"
+#include "labels/labelManager.h"
 #include "scene/dataLayer.h"
 #include "scene/importer.h"
 #include "scene/light.h"
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
 #include "selection/featureSelection.h"
+#include "selection/selectionQuery.h"
 #include "style/material.h"
 #include "style/style.h"
 #include "text/fontContext.h"
 #include "util/mapProjection.h"
 #include "util/util.h"
 #include "util/zipArchive.h"
+#include "log.h"
 
 #include <algorithm>
 
@@ -21,24 +25,24 @@ namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
 
-Scene::Scene() : id(s_serial++) {}
 
-Scene::Scene(Platform& _platform, const Url& _url)
+Scene::Scene(Platform& _platform) : id(s_serial++), m_platform(_platform) {}
+
+Scene::Scene(Platform& _platform, std::unique_ptr<SceneOptions> _sceneOptions, std::unique_ptr<View> _view)
     : id(s_serial++),
-      m_url(_url),
+      m_platform(_platform),
+      m_options(std::move(_sceneOptions)),
       m_fontContext(std::make_shared<FontContext>(_platform)),
-      m_featureSelection(std::make_unique<FeatureSelection>()) {
+      m_featureSelection(std::make_unique<FeatureSelection>()),
+      m_tileWorker(std::make_unique<TileWorker>(_platform, 2)),
+      m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)),
+      m_labelManager(std::make_unique<LabelManager>()),
+      m_view(std::move(_view)) {
+    m_pixelScale = m_view->pixelScale();
+    m_fontContext->setPixelScale(m_pixelScale);
 }
 
-Scene::Scene(Platform& _platform, const std::string& _yaml, const Url& _url)
-    : id(s_serial++),
-      m_fontContext(std::make_shared<FontContext>(_platform)),
-      m_featureSelection(std::make_unique<FeatureSelection>()) {
-
-    m_url = _url;
-    m_yaml = _yaml;
-}
-
+#if 0
 void Scene::copyConfig(const Scene& _other) {
 
     m_featureSelection.reset(new FeatureSelection());
@@ -53,8 +57,11 @@ void Scene::copyConfig(const Scene& _other) {
 
     m_zipArchives = _other.m_zipArchives;
 }
+#endif
 
-Scene::~Scene() {}
+Scene::~Scene() {
+    //m_tileWorker->stop();
+}
 
 const Style* Scene::findStyle(const std::string& _name) const {
 
@@ -73,7 +80,7 @@ Style* Scene::findStyle(const std::string& _name) {
     return nullptr;
 }
 
-UrlRequestHandle Scene::startUrlRequest(Platform& platform, Url url, UrlCallback callback) {
+UrlRequestHandle Scene::startUrlRequest(const Url& url, UrlCallback callback) {
     if (url.scheme() == "zip") {
         UrlResponse response;
         // URL for a file in a zip archive, get the encoded source URL.
@@ -102,7 +109,7 @@ UrlRequestHandle Scene::startUrlRequest(Platform& platform, Url url, UrlCallback
     }
 
     // For non-zip URLs, send it to the platform.
-    return platform.startUrlRequest(url, std::move(callback));
+    return m_platform.startUrlRequest(url, std::move(callback));
 }
 
 void Scene::addZipArchive(Url url, std::shared_ptr<ZipArchive> zipArchive) {
@@ -169,11 +176,96 @@ std::shared_ptr<TileSource> Scene::getTileSource(const std::string& name) {
 }
 
 void Scene::setPixelScale(float _scale) {
+    if (m_pixelScale == _scale) { return; }
+    LOGD("setPixelScale %f", _scale);
+
     m_pixelScale = _scale;
+
     for (auto& style : m_styles) {
         style->setPixelScale(_scale);
     }
     m_fontContext->setPixelScale(_scale);
+
+    // Tiles must be rebuilt to apply the new pixel scale to labels.
+    m_tileManager->clearTileSets();
+
+    // Markers must be rebuilt to apply the new pixel scale.
+    if (m_markerManager) {
+        m_markerManager->rebuildAll();
+    }
+
 }
 
+bool Scene::update(const View& _view, float _dt) {
+
+    m_time += _dt;
+
+    bool markersChanged = m_markerManager->update(_view, _dt);
+
+    for (const auto& style : m_styles) {
+        style->onBeginUpdate();
+    }
+
+    m_tileManager->updateTileSets(_view);
+
+    auto& tiles = m_tileManager->getVisibleTiles();
+    auto& markers = m_markerManager->markers();
+
+    if (_view.changedOnLastUpdate() ||
+        m_tileManager->hasTileSetChanged() ||
+        markersChanged) {
+
+        for (const auto& tile : tiles) {
+            tile->update(_dt, _view);
+        }
+        m_labelManager->updateLabelSet(_view.state(), _dt, *this, tiles, markers, *m_tileManager);
+    } else {
+        m_labelManager->updateLabels(_view.state(), _dt, m_styles, tiles, markers);
+    }
+
+    bool tilesChanged = m_tileManager->hasTileSetChanged();
+    bool tilesLoading = m_tileManager->hasLoadingTiles();
+
+    return tilesChanged || tilesLoading;
+}
+
+void Scene::renderBeginFrame(RenderState& _rs) {
+    for (const auto& style : m_styles) {
+        style->onBeginFrame(_rs);
+    }
+}
+
+bool Scene::render(RenderState& _rs, View& _view) {
+
+    bool drawnAnimatedStyle = false;
+    for (const auto& style : m_styles) {
+
+        bool styleDrawn = style->draw(_rs, _view, *this,
+                                      m_tileManager->getVisibleTiles(),
+                                      m_markerManager->markers());
+
+        drawnAnimatedStyle |= (styleDrawn && style->isAnimated());
+    }
+    return drawnAnimatedStyle;
+}
+
+void Scene::renderSelection(RenderState& _rs, View& _view, FrameBuffer& _selectionBuffer,
+                            std::vector<SelectionQuery>& _selectionQueries) {
+
+    for (const auto& style : m_styles) {
+
+        style->drawSelectionFrame(_rs, _view, *this,
+                                  m_tileManager->getVisibleTiles(),
+                                  m_markerManager->markers());
+    }
+
+    std::vector<SelectionColorRead> colorCache;
+    // Resolve feature selection queries
+    for (const auto& selectionQuery : _selectionQueries) {
+        selectionQuery.process(_view, _selectionBuffer,
+                               *m_markerManager, *m_tileManager,
+                               *m_labelManager, colorCache);
+    }
+
+}
 }

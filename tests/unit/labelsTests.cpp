@@ -1,6 +1,6 @@
 #include "catch.hpp"
 #include "gl/dynamicQuadMesh.h"
-#include "labels/labels.h"
+#include "labels/labelManager.h"
 #include "labels/textLabel.h"
 #include "labels/textLabels.h"
 #include "map.h"
@@ -117,7 +117,7 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
         TestTransform(ScreenTransform::Buffer& _buffer, Range& _range) : transform(_buffer, _range) {}
     };
 
-    class TestLabels : public Labels {
+    class TestLabels : public LabelManager {
     public:
         TestLabels(View& _v) {
             m_isect2d.resize({1, 1}, {_v.getWidth(), _v.getHeight()});

@@ -43,11 +43,12 @@ void TileWorker::run(Worker* instance) {
             std::unique_lock<std::mutex> lock(m_mutex);
 
             m_condition.wait(lock, [&, this]{
-                    return !m_running || !m_queue.empty();
+                    return !m_running || !m_queue.empty() || !instance->tileBuilder;
                 });
 
             if (instance->tileBuilder) {
                 builder = std::move(instance->tileBuilder);
+                builder->init();
                 LOGTO("Passed new TileBuilder to TileWorker");
             }
 
@@ -98,13 +99,14 @@ void TileWorker::run(Worker* instance) {
     }
 }
 
-void TileWorker::setScene(std::shared_ptr<Scene>& _scene) {
+void TileWorker::setScene(Scene& _scene) {
     for (auto& worker : m_workers) {
         worker->tileBuilder = std::make_unique<TileBuilder>(_scene);
     }
 }
 
 void TileWorker::enqueue(std::shared_ptr<TileTask> task) {
+    LOG("%d enqueue %s", m_running, task->tileId().toString().c_str());
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         if (!m_running) {

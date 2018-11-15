@@ -91,7 +91,7 @@ struct ImportMockPlatform : public MockPlatform {
 
 
 std::shared_ptr<Scene> getScene(MockPlatform& platform, const Url& url) {
-    return std::make_shared<Scene>(platform, url);
+    return std::make_shared<Scene>(platform, std::make_unique<SceneOptions>(url));
 }
 
 TEST_CASE("Imported scenes are merged with the parent scene", "[import][core]") {
@@ -293,7 +293,8 @@ TEST_CASE("Scene load from source string", "[import][core]") {
         null_at_end: null
     )END";
 
-    auto scene = std::make_shared<Scene>(platform, base_yaml, Url("/resource_root/"));
+    auto scene = std::make_shared<Scene>(platform,
+                                         std::make_unique<SceneOptions>(base_yaml, Url("/resource_root/")));
 
     Importer importer(scene);
 

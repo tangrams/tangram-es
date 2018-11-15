@@ -74,8 +74,8 @@ add_library(tangram-core
   src/labels/labelProperty.cpp
   src/labels/labelSet.h
   src/labels/labelSet.cpp
-  src/labels/labels.h
-  src/labels/labels.cpp
+  src/labels/labelManager.h
+  src/labels/labelManager.cpp
   src/labels/spriteLabel.h
   src/labels/spriteLabel.cpp
   src/labels/textLabel.h

@@ -241,7 +241,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::text_source", "[Duktape][evalStyle
 
 TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFilter]") {
     MockPlatform platform;
-    Scene scene(platform, Url());
+    Scene scene(platform);
     YAML::Node n0 = YAML::Load(R"(filter: function() { return feature.sort_key === 2; })");
     YAML::Node n1 = YAML::Load(R"(filter: function() { return feature.name === 'test'; })");
 
@@ -284,7 +284,8 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
 
 TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][evalStyle]") {
     MockPlatform platform;
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform, Url());
+    Scene scene(platform);
+
     YAML::Node n0 = YAML::Load(R"(
             draw:
                 color: function() { return '#ffff00ff'; }
@@ -296,14 +297,14 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
 
     SceneLoader::parseStyleParams(n0["draw"], scene, "", styles);
 
-    REQUIRE(scene->functions().size() == 3);
+    REQUIRE(scene.functions().size() == 3);
 
     // for (auto& str : scene.functions()) {
     //     logMsg("F: '%s'\n", str.c_str());
     // }
 
     StyleContext ctx;
-    ctx.initFunctions(*scene);
+    ctx.initFunctions(scene);
 
     for (auto& style : styles) {
         //logMsg("S: %d - '%s' %d\n", style.key, style.toString().c_str(), style.function);
@@ -333,7 +334,7 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
 
 TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
     MockPlatform platform;
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform, Url());
+    Scene scene(platform);
     YAML::Node n0 = YAML::Load(R"(
             global:
                 width: 2
@@ -351,14 +352,14 @@ TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
 
     std::vector<StyleParam> styles;
 
-    scene->config() = n0;
+    scene.config() = n0;
 
     SceneLoader::parseStyleParams(n0["draw"], scene, "", styles);
 
-    REQUIRE(scene->functions().size() == 4);
+    REQUIRE(scene.functions().size() == 4);
 
     StyleContext ctx;
-    ctx.initFunctions(*scene);
+    ctx.initFunctions(scene);
 
     for (auto& style : styles) {
         if (style.key == StyleParamKey::color) {
