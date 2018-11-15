@@ -92,6 +92,16 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
     applyGlobals(*_scene);
     LOGTime("applyGlobals");
 
+    applySources(_platform, *_scene);
+    LOGTime("applySources");
+
+    applyCameras(*_scene);
+    LOGTime("applyCameras");
+
+    _scene->initTileManager();
+    _scene->tileManager()->updateTileSets(*_scene->view());
+    LOGTime("loadTiles");
+
     applyTextures(_platform, _scene);
     LOGTime("textures");
 
@@ -104,22 +114,8 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
     applyStyles(_platform, _scene);
     LOGTime("styles");
 
-    //
-    applySources(_platform, *_scene);
-    LOGTime("applySources");
-
-    applyCameras(*_scene);
-    LOGTime("applyCameras");
-
-    _scene->initTileManager();
-    _scene->tileManager()->updateTileSets(*_scene->view());
-    LOGTime("loadTiles");
-
     applyLayers(*_scene);
     LOGTime("layers");
-
-    // TODO this is messy ...
-    _scene->setPixelScale(_scene->view()->pixelScale());
 
     for (auto& style : _scene->styles()) {
         style->build(*_scene);
@@ -308,7 +304,8 @@ void SceneLoader::applyCameras(Scene& _scene) {
         view->setZoom(_scene.startZoom);
     }
 
-    LOGE("UPDATE VIEW %f %f %f", view->getZoom(), view->getCenterCoordinates().longitude, view->getCenterCoordinates().latitude);
+    LOGE("UPDATE VIEW %fx%f - %f %f %f", view->getWidth(), view->getHeight(), view->getZoom(),
+         view->getCenterCoordinates().longitude, view->getCenterCoordinates().latitude);
     view->update();
 }
 
@@ -380,6 +377,7 @@ void SceneLoader::applyStyles(const std::shared_ptr<Platform>& _platform, const 
     auto& styles = _scene->styles();
     for(uint32_t i = 0; i < styles.size(); i++) {
         styles[i]->setID(i);
+        styles[i]->setPixelScale(_scene->pixelScale());
 
         if (auto pointStyle = dynamic_cast<PointStyle*>(styles[i].get())) {
             pointStyle->setTextures(_scene->textures());
@@ -958,7 +956,7 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
             if (styleTexture) {
                 pointStyle->setDefaultTexture(styleTexture);
             } else {
-                LOGW("Undefined texture name %s", textureName.c_str());
+                LOGW("U ndefined texture name %s", textureName.c_str());
             }
         } else if (auto polylineStyle = dynamic_cast<PolylineStyle*>(&style)) {
             const std::string& textureName = textureNode.Scalar();

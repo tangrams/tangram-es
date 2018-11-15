@@ -131,7 +131,7 @@ Map::~Map() {
 void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
 
     scene = _scene;
-
+    scene->setPixelScale(view.pixelScale());
     scene->view()->setSize(view.getWidth(), view.getHeight());
 
     view = *_scene->view();
@@ -347,13 +347,9 @@ void Map::resize(int _newWidth, int _newHeight) {
     LOGS("resize: %d x %d", _newWidth, _newHeight);
     LOG("resize: %d x %d", _newWidth, _newHeight);
 
-    // FIXME not needed?? impl->renderState.viewport(0, 0, _newWidth, _newHeight);
-
     impl->view.setSize(_newWidth, _newHeight);
 
     impl->selectionBuffer = std::make_unique<FrameBuffer>(_newWidth/2, _newHeight/2);
-
-    Primitives::setResolution(impl->renderState, _newWidth, _newHeight);
 }
 
 bool Map::update(float _dt) {
@@ -451,6 +447,8 @@ bool Map::render() {
 
     // Cache default framebuffer handle used for rendering
     impl->renderState.cacheDefaultFramebuffer();
+
+    Primitives::setResolution(impl->renderState, impl->view.getWidth(), impl->view.getHeight());
 
     FrameInfo::beginFrame();
 
@@ -823,9 +821,7 @@ bool Map::lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _
 }
 
 void Map::setPixelScale(float _pixelsPerPoint) {
-
     impl->setPixelScale(_pixelsPerPoint);
-
 }
 
 void Map::Impl::setPixelScale(float _pixelsPerPoint) {
@@ -841,16 +837,12 @@ void Map::Impl::setPixelScale(float _pixelsPerPoint) {
 }
 
 void Map::setCameraType(int _type) {
-
     impl->view.setCameraType(static_cast<CameraType>(_type));
     platform->requestRender();
-
 }
 
 int Map::getCameraType() {
-
     return static_cast<int>(impl->view.cameraType());
-
 }
 
 void Map::addTileSource(std::shared_ptr<TileSource> _source) {
@@ -1002,7 +994,7 @@ void Map::setupGL() {
 
     impl->renderState.invalidate();
 
-    impl->scene->tileManager()->clearTileSets();
+    //impl->scene->tileManager()->clearTileSets();
     //impl->scene->markerManager()->rebuildAll();
 
     if (impl->selectionBuffer->valid()) {
