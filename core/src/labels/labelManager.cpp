@@ -1,4 +1,4 @@
-#include "labels/labels.h"
+#include "labels/labelManager.h"
 
 #include "data/tileSource.h"
 #include "gl/primitives.h"
@@ -28,13 +28,13 @@
 
 namespace Tangram {
 
-Labels::Labels()
+LabelManager::LabelManager()
     : m_needUpdate(false),
       m_lastZoom(0.0f) {}
 
-Labels::~Labels() {}
+LabelManager::~LabelManager() {}
 
-void Labels::processLabelUpdate(const ViewState& _viewState, const LabelSet* _labelSet, Style* _style,
+void LabelManager::processLabelUpdate(const ViewState& _viewState, const LabelSet* _labelSet, Style* _style,
                                 const Tile* _tile, const Marker* _marker, const glm::mat4& _mvp,
                                 float _dt, bool _drawAll, bool _onlyRender, bool _isProxy) {
 
@@ -85,7 +85,7 @@ void Labels::processLabelUpdate(const ViewState& _viewState, const LabelSet* _la
     }
 }
 
-std::pair<Label*, const Tile*> Labels::getLabel(uint32_t _selectionColor) const {
+std::pair<Label*, const Tile*> LabelManager::getLabel(uint32_t _selectionColor) const {
 
     for (auto& entry : m_selectionLabels) {
 
@@ -98,7 +98,7 @@ std::pair<Label*, const Tile*> Labels::getLabel(uint32_t _selectionColor) const 
     return {nullptr, nullptr};
 }
 
-void Labels::updateLabels(const ViewState& _viewState, float _dt,
+void LabelManager::updateLabels(const ViewState& _viewState, float _dt,
                           const std::vector<std::unique_ptr<Style>>& _styles,
                           const std::vector<std::shared_ptr<Tile>>& _tiles,
                           const std::vector<std::unique_ptr<Marker>>& _markers,
@@ -156,7 +156,7 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
     }
 }
 
-void Labels::skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const {
+void LabelManager::skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const {
 
     for (const auto& style : _styles) {
 
@@ -204,7 +204,7 @@ std::shared_ptr<Tile> findProxy(int32_t _sourceID, const TileID& _proxyID,
     return nullptr;
 }
 
-void Labels::skipTransitions(Scene& _scene, const std::vector<std::shared_ptr<Tile>>& _tiles,
+void LabelManager::skipTransitions(Scene& _scene, const std::vector<std::shared_ptr<Tile>>& _tiles,
                              TileManager& _tileManager, float _currentZoom) const {
 
     std::vector<const Style*> styles;
@@ -244,7 +244,7 @@ void Labels::skipTransitions(Scene& _scene, const std::vector<std::shared_ptr<Ti
     }
 }
 
-bool Labels::priorityComparator(const LabelEntry& _a, const LabelEntry& _b) {
+bool LabelManager::priorityComparator(const LabelEntry& _a, const LabelEntry& _b) {
     if (_a.proxy != _b.proxy) {
         return _b.proxy;
     }
@@ -287,7 +287,7 @@ bool Labels::priorityComparator(const LabelEntry& _a, const LabelEntry& _b) {
     return l1 < l2;
 }
 
-bool Labels::zOrderComparator(const LabelEntry& _a, const LabelEntry& _b) {
+bool LabelManager::zOrderComparator(const LabelEntry& _a, const LabelEntry& _b) {
 
     if (_a.style != _b.style) {
         return _a.style < _b.style;
@@ -318,7 +318,7 @@ bool Labels::zOrderComparator(const LabelEntry& _a, const LabelEntry& _b) {
     return bool(_a.tile);
 }
 
-void Labels::handleOcclusions(const ViewState& _viewState) {
+void LabelManager::handleOcclusions(const ViewState& _viewState) {
 
     m_isect2d.clear();
     m_repeatGroups.clear();
@@ -428,7 +428,7 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
     }
 }
 
-bool Labels::withinRepeatDistance(Label *_label) {
+bool LabelManager::withinRepeatDistance(Label *_label) {
     float threshold2 = pow(_label->options().repeatDistance, 2);
 
     auto it = m_repeatGroups.find(_label->options().repeatGroup);
@@ -443,7 +443,7 @@ bool Labels::withinRepeatDistance(Label *_label) {
     return false;
 }
 
-void Labels::updateLabelSet(const ViewState& _viewState, float _dt, Scene& _scene,
+void LabelManager::updateLabelSet(const ViewState& _viewState, float _dt, Scene& _scene,
                             const std::vector<std::shared_ptr<Tile>>& _tiles,
                             const std::vector<std::unique_ptr<Marker>>& _markers,
                             TileManager& _tileManager) {
@@ -454,7 +454,7 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt, Scene& _scen
     /// Collect and update labels from visible tiles
     updateLabels(_viewState, _dt, _scene.styles(), _tiles, _markers, false);
 
-    std::sort(m_labels.begin(), m_labels.end(), Labels::priorityComparator);
+    std::sort(m_labels.begin(), m_labels.end(), LabelManager::priorityComparator);
 
     /// Mark labels to skip transitions
 
@@ -473,7 +473,7 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt, Scene& _scen
         m_needUpdate |= entry.label->evalState(_dt);
     }
 
-    std::sort(m_labels.begin(), m_labels.end(), Labels::zOrderComparator);
+    std::sort(m_labels.begin(), m_labels.end(), LabelManager::zOrderComparator);
 
     Label::AABB screenBounds{0, 0, _viewState.viewportSize.x, _viewState.viewportSize.y};
 
@@ -494,7 +494,7 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt, Scene& _scen
     }
 }
 
-void Labels::drawDebug(RenderState& rs, const View& _view) {
+void LabelManager::drawDebug(RenderState& rs, const View& _view) {
 
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
         return;

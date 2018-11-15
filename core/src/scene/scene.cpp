@@ -3,7 +3,7 @@
 #include "data/tileSource.h"
 #include "gl/framebuffer.h"
 #include "gl/shaderProgram.h"
-#include "labels/labels.h"
+#include "labels/labelManager.h"
 #include "scene/dataLayer.h"
 #include "scene/importer.h"
 #include "scene/light.h"
@@ -33,7 +33,7 @@ Scene::Scene(std::shared_ptr<Platform> _platform, const Url& _url, std::unique_p
       m_featureSelection(std::make_unique<FeatureSelection>()),
       m_tileWorker(std::make_unique<TileWorker>(_platform, 2)),
       m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)),
-      m_labelManager(std::make_unique<Labels>()),
+      m_labelManager(std::make_unique<LabelManager>()),
       m_view(std::move(_view)) {
 
 }
@@ -46,7 +46,7 @@ Scene::Scene(std::shared_ptr<Platform> _platform, const std::string& _yaml, cons
       m_featureSelection(std::make_unique<FeatureSelection>()),
       m_tileWorker(std::make_unique<TileWorker>(_platform, 2)),
       m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)),
-      m_labelManager(std::make_unique<Labels>()),
+      m_labelManager(std::make_unique<LabelManager>()),
       m_view(std::move(_view)) {}
 
 void Scene::copyConfig(const Scene& _other) {
