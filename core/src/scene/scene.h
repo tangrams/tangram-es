@@ -1,6 +1,7 @@
 #pragma once
 
 #include "map.h"
+#include "marker/markerManager.h"
 #include "platform.h"
 #include "stops.h"
 #include "tile/tileManager.h"
@@ -156,6 +157,7 @@ public:
     void updateTiles(float dt);
 
     TileManager* tileManager() { return m_tileManager.get(); }
+    MarkerManager* markerManager() { return m_markerManager.get(); }
 
     void initTileManager() {
         m_tileManager->setTileSources(m_tileSources);
@@ -163,6 +165,7 @@ public:
 
     void startTileWorker() {
         m_tileWorker->setScene(*this);
+        m_markerManager = std::make_unique<MarkerManager>(*this);
     }
 
 private:
@@ -219,6 +222,7 @@ private:
 
     std::unique_ptr<TileWorker> m_tileWorker;
     std::unique_ptr<TileManager> m_tileManager;
+    std::unique_ptr<MarkerManager> m_markerManager;
 
 };
 
