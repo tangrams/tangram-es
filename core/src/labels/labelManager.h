@@ -26,12 +26,12 @@ class Style;
 class Scene;
 class TileManager;
 
-class Labels {
+class LabelManager {
 
 public:
-    Labels();
+    LabelManager();
 
-    virtual ~Labels();
+    virtual ~LabelManager();
 
     void drawDebug(RenderState& rs, const View& _view);
 

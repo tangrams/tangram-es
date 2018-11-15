@@ -27,6 +27,7 @@ namespace Tangram {
 class DataLayer;
 class FeatureSelection;
 class FontContext;
+class LabelManager;
 class Light;
 class MapProjection;
 class Platform;
@@ -35,7 +36,6 @@ class Style;
 class Texture;
 class TileSource;
 class ZipArchive;
-class Labels;
 class FrameBuffer;
 class SelectionQuery;
 
@@ -174,7 +174,7 @@ public:
 
     TileManager* tileManager() { return m_tileManager.get(); }
     MarkerManager* markerManager() { return m_markerManager.get(); }
-    Labels* labelManager() { return m_labelManager.get(); }
+    LabelManager* labelManager() { return m_labelManager.get(); }
 
     void initTileManager() {
         m_tileManager->setTileSources(m_tileSources);
@@ -240,7 +240,7 @@ private:
     std::unique_ptr<TileWorker> m_tileWorker;
     std::unique_ptr<TileManager> m_tileManager;
     std::unique_ptr<MarkerManager> m_markerManager;
-    std::unique_ptr<Labels> m_labelManager;
+    std::unique_ptr<LabelManager> m_labelManager;
     std::unique_ptr<View> m_view;
 
 };
