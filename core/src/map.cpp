@@ -52,7 +52,7 @@ class Map::Impl {
 public:
     explicit Impl(std::shared_ptr<Platform> _platform) :
         platform(_platform),
-        inputHandler(_platform, view),
+        inputHandler(view),
         scene(std::make_shared<Scene>(_platform, Url(), std::make_unique<View>())) {}
 
 
@@ -406,7 +406,7 @@ bool Map::update(float _dt) {
     }
 
     // Request render if labels are in fading states or markers are easing.
-    if (impl->isCameraEasing || labelsNeedUpdate || markersNeedUpdate) {
+    if (isFlinging || impl->isCameraEasing || labelsNeedUpdate || markersNeedUpdate) {
         platform->requestRender();
     }
 
@@ -956,36 +956,43 @@ void Map::markerRemoveAll() {
 void Map::handleTapGesture(float _posX, float _posY) {
     cancelCameraAnimation();
     impl->inputHandler.handleTapGesture(_posX, _posY);
+    impl->platform->requestRender();
 }
 
 void Map::handleDoubleTapGesture(float _posX, float _posY) {
     cancelCameraAnimation();
     impl->inputHandler.handleDoubleTapGesture(_posX, _posY);
+    impl->platform->requestRender();
 }
 
 void Map::handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
     cancelCameraAnimation();
     impl->inputHandler.handlePanGesture(_startX, _startY, _endX, _endY);
+    impl->platform->requestRender();
 }
 
 void Map::handleFlingGesture(float _posX, float _posY, float _velocityX, float _velocityY) {
     cancelCameraAnimation();
     impl->inputHandler.handleFlingGesture(_posX, _posY, _velocityX, _velocityY);
+    impl->platform->requestRender();
 }
 
 void Map::handlePinchGesture(float _posX, float _posY, float _scale, float _velocity) {
     cancelCameraAnimation();
     impl->inputHandler.handlePinchGesture(_posX, _posY, _scale, _velocity);
+    impl->platform->requestRender();
 }
 
 void Map::handleRotateGesture(float _posX, float _posY, float _radians) {
     cancelCameraAnimation();
     impl->inputHandler.handleRotateGesture(_posX, _posY, _radians);
+    impl->platform->requestRender();
 }
 
 void Map::handleShoveGesture(float _distance) {
     cancelCameraAnimation();
     impl->inputHandler.handleShoveGesture(_distance);
+    impl->platform->requestRender();
 }
 
 void Map::setupGL() {
