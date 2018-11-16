@@ -2,7 +2,7 @@
 // Created by Matt Blair on 11/15/18.
 //
 
-#include "JSCoreJavaScriptContext.h"
+#include "JSCoreContext.h"
 #include "log.h"
 #include "data/tileData.h"
 #include "util/variant.h"
@@ -10,58 +10,58 @@
 namespace Tangram {
 
 JSContext createJavaScriptContext() {
-    return JSContext(new JSCoreJavaScriptContext());
+    return JSContext(new JSCoreContext());
 }
 
-JSCoreJavaScriptValue::JSCoreJavaScriptValue(JSContextRef ctx, JSValueRef value) : _ctx(ctx), _value(value) {
+JSCoreValue::JSCoreValue(JSContextRef ctx, JSValueRef value) : _ctx(ctx), _value(value) {
     JSValueProtect(_ctx, _value);
 }
 
-JSCoreJavaScriptValue::~JSCoreJavaScriptValue() {
+JSCoreValue::~JSCoreValue() {
     JSValueUnprotect(_ctx, _value);
 }
 
-bool JSCoreJavaScriptValue::isUndefined() {
+bool JSCoreValue::isUndefined() {
     return JSValueIsUndefined(_ctx, _value);
 }
 
-bool JSCoreJavaScriptValue::isNull() {
+bool JSCoreValue::isNull() {
     return JSValueIsNull(_ctx, _value);
 }
 
-bool JSCoreJavaScriptValue::isBoolean() {
+bool JSCoreValue::isBoolean() {
     return JSValueIsBoolean(_ctx, _value);
 }
 
-bool JSCoreJavaScriptValue::isNumber() {
+bool JSCoreValue::isNumber() {
     return JSValueIsNumber(_ctx, _value);
 }
 
-bool JSCoreJavaScriptValue::isString() {
+bool JSCoreValue::isString() {
     return JSValueIsString(_ctx, _value);
 }
 
-bool JSCoreJavaScriptValue::isArray() {
+bool JSCoreValue::isArray() {
     return JSValueIsArray(_ctx, _value);
 }
 
-bool JSCoreJavaScriptValue::isObject() {
+bool JSCoreValue::isObject() {
     return JSValueIsObject(_ctx, _value);
 }
 
-bool JSCoreJavaScriptValue::toBool() {
+bool JSCoreValue::toBool() {
     return JSValueToBoolean(_ctx, _value);
 }
 
-int JSCoreJavaScriptValue::toInt() {
+int JSCoreValue::toInt() {
     return static_cast<int>(JSValueToNumber(_ctx, _value, nullptr));
 }
 
-double JSCoreJavaScriptValue::toDouble() {
+double JSCoreValue::toDouble() {
     return JSValueToNumber(_ctx, _value, nullptr);
 }
 
-std::string JSCoreJavaScriptValue::toString() {
+std::string JSCoreValue::toString() {
     JSStringRef jsString = JSValueToStringCopy(_ctx, _value, nullptr);
     std::string result(JSStringGetMaximumUTF8CStringSize(jsString), '\0');
     size_t bytesWrittenIncludingNull = JSStringGetUTF8CString(jsString, &result[0], result.capacity());
@@ -70,40 +70,40 @@ std::string JSCoreJavaScriptValue::toString() {
     return result;
 }
 
-size_t JSCoreJavaScriptValue::getLength() {
+size_t JSCoreValue::getLength() {
     JSStringRef jsLengthProperty = JSStringCreateWithUTF8CString("length");
     JSObjectRef jsObject = JSValueToObject(_ctx, _value, nullptr);
     JSValueRef jsLengthValue = JSObjectGetProperty(_ctx, jsObject, jsLengthProperty, nullptr);
     return static_cast<size_t>(JSValueToNumber(_ctx, jsLengthValue, nullptr));
 }
 
-JSValue JSCoreJavaScriptValue::getValueAtIndex(size_t index) {
+JSValue JSCoreValue::getValueAtIndex(size_t index) {
     JSObjectRef jsObject = JSValueToObject(_ctx, _value, nullptr);
     JSValueRef jsValue = JSObjectGetPropertyAtIndex(_ctx, jsObject, static_cast<uint32_t>(index), nullptr);
-    return JSValue(new JSCoreJavaScriptValue(_ctx, jsValue));
+    return JSValue(new JSCoreValue(_ctx, jsValue));
 }
 
-JSValue JSCoreJavaScriptValue::getValueForProperty(const std::string& name) {
+JSValue JSCoreValue::getValueForProperty(const std::string& name) {
     JSObjectRef jsObject = JSValueToObject(_ctx, _value, nullptr);
     JSStringRef jsPropertyName = JSStringCreateWithUTF8CString(name.c_str());
     JSValueRef jsPropertyValue = JSObjectGetProperty(_ctx, jsObject, jsPropertyName, nullptr);
-    return JSValue(new JSCoreJavaScriptValue(_ctx, jsPropertyValue));
+    return JSValue(new JSCoreValue(_ctx, jsPropertyValue));
 }
 
-void JSCoreJavaScriptValue::setValueAtIndex(size_t index, JSValue value) {
+void JSCoreValue::setValueAtIndex(size_t index, JSValue value) {
     JSObjectRef jsObject = JSValueToObject(_ctx, _value, nullptr);
-    JSValueRef jsValueForIndex = reinterpret_cast<JSCoreJavaScriptValue*>(value.get())->getValueRef();
+    JSValueRef jsValueForIndex = reinterpret_cast<JSCoreValue*>(value.get())->getValueRef();
     JSObjectSetPropertyAtIndex(_ctx, jsObject, static_cast<uint32_t>(index), jsValueForIndex, nullptr);
 }
 
-void JSCoreJavaScriptValue::setValueForProperty(const std::string& name, JSValue value) {
+void JSCoreValue::setValueForProperty(const std::string& name, JSValue value) {
     JSObjectRef jsObject = JSValueToObject(_ctx, _value, nullptr);
     JSStringRef jsPropertyName = JSStringCreateWithUTF8CString(name.c_str());
-    JSValueRef jsValueForProperty = reinterpret_cast<JSCoreJavaScriptValue*>(value.get())->getValueRef();
+    JSValueRef jsValueForProperty = reinterpret_cast<JSCoreValue*>(value.get())->getValueRef();
     JSObjectSetProperty(_ctx, jsObject, jsPropertyName, jsValueForProperty, kJSPropertyAttributeNone, nullptr);
 }
 
-JSCoreJavaScriptContext::JSCoreJavaScriptContext() {
+JSCoreContext::JSCoreContext() {
     _contextGroup = JSContextGroupCreate();
     _context = JSGlobalContextCreateInGroup(_contextGroup, nullptr);
 
@@ -120,24 +120,24 @@ JSCoreJavaScriptContext::JSCoreJavaScriptContext() {
     JSStringRelease(jsFeatureName);
 }
 
-JSCoreJavaScriptContext::~JSCoreJavaScriptContext() {
+JSCoreContext::~JSCoreContext() {
     JSGlobalContextRelease(_context);
     JSContextGroupRelease(_contextGroup);
 }
 
-void JSCoreJavaScriptContext::setGlobalValue(const std::string& name, JSValue value) {
+void JSCoreContext::setGlobalValue(const std::string& name, JSValue value) {
     JSObjectRef jsGlobalObject = JSContextGetGlobalObject(_context);
     JSStringRef jsPropertyName = JSStringCreateWithUTF8CString(name.c_str());
-    JSValueRef jsValueForProperty = reinterpret_cast<JSCoreJavaScriptValue*>(value.get())->getValueRef();
+    JSValueRef jsValueForProperty = reinterpret_cast<JSCoreValue*>(value.get())->getValueRef();
     JSObjectSetProperty(_context, jsGlobalObject, jsPropertyName, jsValueForProperty, kJSPropertyAttributeNone, nullptr);
     JSStringRelease(jsPropertyName);
 }
 
-void JSCoreJavaScriptContext::setCurrentFeature(const Feature* feature) {
+void JSCoreContext::setCurrentFeature(const Feature* feature) {
     _feature = feature;
 }
 
-JSFunctionIndex JSCoreJavaScriptContext::addFunction(const std::string& source, bool& error) {
+JSFunctionIndex JSCoreContext::addFunction(const std::string& source, bool& error) {
     auto newFunctionIndex = static_cast<JSFunctionIndex>(_functions.size());
     JSObjectRef jsFunctionObject = compileFunction(source);
     if (!jsFunctionObject) {
@@ -150,7 +150,7 @@ JSFunctionIndex JSCoreJavaScriptContext::addFunction(const std::string& source, 
     return newFunctionIndex;
 }
 
-bool JSCoreJavaScriptContext::evaluateBooleanFunction(JSFunctionIndex index) {
+bool JSCoreContext::evaluateBooleanFunction(JSFunctionIndex index) {
     auto resultValue = getFunctionResult(index);
     if (resultValue) {
         return resultValue->toBool();
@@ -158,61 +158,61 @@ bool JSCoreJavaScriptContext::evaluateBooleanFunction(JSFunctionIndex index) {
     return false;
 }
 
-JSValue JSCoreJavaScriptContext::newNull() {
+JSValue JSCoreContext::newNull() {
     JSValueRef jsValue = JSValueMakeNull(_context);
-    return JSValue(new JSCoreJavaScriptValue(_context, jsValue));
+    return JSValue(new JSCoreValue(_context, jsValue));
 }
 
-JSValue JSCoreJavaScriptContext::newBoolean(bool value) {
+JSValue JSCoreContext::newBoolean(bool value) {
     JSValueRef jsValue = JSValueMakeBoolean(_context, value);
-    return JSValue(new JSCoreJavaScriptValue(_context, jsValue));
+    return JSValue(new JSCoreValue(_context, jsValue));
 }
 
-JSValue JSCoreJavaScriptContext::newNumber(double value) {
+JSValue JSCoreContext::newNumber(double value) {
     JSValueRef jsValue = JSValueMakeNumber(_context, value);
-    return JSValue(new JSCoreJavaScriptValue(_context, jsValue));
+    return JSValue(new JSCoreValue(_context, jsValue));
 }
 
-JSValue JSCoreJavaScriptContext::newString(const std::string& value) {
+JSValue JSCoreContext::newString(const std::string& value) {
     JSStringRef jsString = JSStringCreateWithUTF8CString(value.c_str());
     JSValueRef jsValue = JSValueMakeString(_context, jsString);
-    return JSValue(new JSCoreJavaScriptValue(_context, jsValue));
+    return JSValue(new JSCoreValue(_context, jsValue));
 }
 
-JSValue JSCoreJavaScriptContext::newArray() {
+JSValue JSCoreContext::newArray() {
     JSObjectRef jsObject = JSObjectMakeArray(_context, 0, nullptr, nullptr);
-    return JSValue(new JSCoreJavaScriptValue(_context, jsObject));
+    return JSValue(new JSCoreValue(_context, jsObject));
 }
 
-JSValue JSCoreJavaScriptContext::newObject() {
+JSValue JSCoreContext::newObject() {
     JSObjectRef jsObject = JSObjectMake(_context, nullptr, nullptr);
-    return JSValue(new JSCoreJavaScriptValue(_context, jsObject));
+    return JSValue(new JSCoreValue(_context, jsObject));
 }
 
-JSValue JSCoreJavaScriptContext::newFunction(const std::string& value) {
+JSValue JSCoreContext::newFunction(const std::string& value) {
     JSObjectRef jsFunctionObject = compileFunction(value);
-    return JSValue(new JSCoreJavaScriptValue(_context, jsFunctionObject));
+    return JSValue(new JSCoreValue(_context, jsFunctionObject));
 }
 
-JSValue JSCoreJavaScriptContext::getFunctionResult(JSFunctionIndex index) {
+JSValue JSCoreContext::getFunctionResult(JSFunctionIndex index) {
     if (index > _functions.size()) {
         return nullptr;
     }
     JSObjectRef jsFunctionObject = _functions[index];
     JSValueRef jsResultValue = JSObjectCallAsFunction(_context, jsFunctionObject, nullptr, 0, nullptr, nullptr);
-    return JSValue(new JSCoreJavaScriptValue(_context, jsResultValue));
+    return JSValue(new JSCoreValue(_context, jsResultValue));
 }
 
-JSScopeMarker JSCoreJavaScriptContext::getScopeMarker() {
+JSScopeMarker JSCoreContext::getScopeMarker() {
     // Not needed for JSCore implementation.
     return 0;
 }
 
-void JSCoreJavaScriptContext::resetToScopeMarker(JSScopeMarker) {
+void JSCoreContext::resetToScopeMarker(JSScopeMarker) {
     // Not needed for JSCore implementation.
 }
 
-JSObjectRef JSCoreJavaScriptContext::compileFunction(const std::string& source) {
+JSObjectRef JSCoreContext::compileFunction(const std::string& source) {
     // Get the function body within the enclosing {}'s.
     auto bodyStart = source.find('{') + 1;
     auto bodyEnd = source.rfind('}') - 1;
@@ -231,8 +231,8 @@ JSObjectRef JSCoreJavaScriptContext::compileFunction(const std::string& source) 
     return jsObject;
 }
 
-bool JSCoreJavaScriptContext::jsHasPropertyCallback(JSContextRef context, JSObjectRef object, JSStringRef property) {
-    auto jsCoreContext = reinterpret_cast<JSCoreJavaScriptContext*>(JSObjectGetPrivate(object));
+bool JSCoreContext::jsHasPropertyCallback(JSContextRef, JSObjectRef object, JSStringRef property) {
+    auto jsCoreContext = reinterpret_cast<JSCoreContext*>(JSObjectGetPrivate(object));
     if (!jsCoreContext) {
         return false;
     }
@@ -245,8 +245,8 @@ bool JSCoreJavaScriptContext::jsHasPropertyCallback(JSContextRef context, JSObje
     return feature->props.contains(nameBuffer);
 }
 
-JSValueRef JSCoreJavaScriptContext::jsGetPropertyCallback(JSContextRef context, JSObjectRef object, JSStringRef property, JSValueRef* exception) {
-    auto jsCoreContext = reinterpret_cast<JSCoreJavaScriptContext*>(JSObjectGetPrivate(object));
+JSValueRef JSCoreContext::jsGetPropertyCallback(JSContextRef context, JSObjectRef object, JSStringRef property, JSValueRef*) {
+    auto jsCoreContext = reinterpret_cast<JSCoreContext*>(JSObjectGetPrivate(object));
     if (!jsCoreContext) {
         return nullptr;
     }
