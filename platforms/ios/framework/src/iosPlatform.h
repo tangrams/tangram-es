@@ -11,6 +11,7 @@ class iOSPlatform : public Platform {
 public:
 
     iOSPlatform(__weak TGMapView* _mapView);
+    void shutdown() override {}
     void requestRender() const override;
     void setContinuousRendering(bool _isContinuous) override;
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
