@@ -373,8 +373,10 @@ bool Map::update(float _dt) {
         impl->scene->pendingFonts > 0 ||
         impl->scene->pendingTextures > 0) {
         platform->requestRender();
-        LOGTO("Waiting for Scene fonts:%d textures:%d",
-              impl->scene->pendingFonts.load(), impl->scene->pendingTextures.load());
+        LOGO("Waiting for scene:%d fonts:%d textures:%d",
+             bool(impl->scene->markerManager()),
+             impl->scene->pendingFonts > 0,
+             impl->scene->pendingTextures > 0);
         return false;
     }
 
