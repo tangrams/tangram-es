@@ -13,6 +13,8 @@ add_definitions(-DNEXTZEN_API_KEY="${NEXTZEN_API_KEY}")
 include(FindPkgConfig)
 pkg_check_modules(FONTCONFIG REQUIRED "fontconfig")
 
+add_subdirectory(platforms/common/duktape)
+
 add_executable(tangram
   platforms/rpi/src/context.cpp
   platforms/rpi/src/main.cpp
@@ -20,6 +22,7 @@ add_executable(tangram
   platforms/common/urlClient.cpp
   platforms/common/linuxSystemFontHelper.cpp
   platforms/common/platform_gl.cpp
+  platforms/common/DuktapeContext.cpp
 )
 
 target_include_directories(tangram
@@ -35,6 +38,7 @@ target_include_directories(tangram
 target_link_libraries(tangram
   PRIVATE
   tangram-core
+  duktape
   ${FONTCONFIG_LDFLAGS}
   curl
   EGL
