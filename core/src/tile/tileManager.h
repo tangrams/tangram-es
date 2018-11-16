@@ -34,7 +34,7 @@ class TileManager {
 
 public:
 
-    TileManager(std::shared_ptr<Platform> platform, TileTaskQueue& _tileWorker);
+    TileManager(Platform& platform, TileTaskQueue& _tileWorker);
 
     virtual ~TileManager();
 

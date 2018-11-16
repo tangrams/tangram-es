@@ -12,10 +12,8 @@ using namespace Tangram;
 
 int main(int argc, char* argv[]) {
 
-    auto platform = std::make_shared<LinuxPlatform>();
-
     // Create the windowed app.
-    GlfwApp::create(platform, 1024, 768);
+    GlfwApp::create(std::make_unique<LinuxPlatform>(), 1024, 768);
 
     GlfwApp::sceneFile = "res/scene.yaml";
     GlfwApp::parseArgs(argc, argv);

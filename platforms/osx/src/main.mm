@@ -72,10 +72,8 @@ using namespace Tangram;
 
 int main(int argc, char* argv[]) {
 
-    auto platform = std::make_shared<OSXPlatform>();
-
     // Create the windowed app.
-    GlfwApp::create(platform, 1024, 768);
+    GlfwApp::create(std::make_unique<OSXPlatform>(), 1024, 768);
 
     // Menu and window changes must come after window is created.
     [TGPreferences setup];
