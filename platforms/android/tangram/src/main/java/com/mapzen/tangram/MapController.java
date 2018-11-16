@@ -1352,6 +1352,7 @@ public class MapController implements Renderer {
     private final Object cameraAnimationCallbackLock = new Object();
     private boolean isGLRendererSet = false;
     private boolean isPrevCameraEasing = false;
+    private boolean isPrevMapViewComplete = false;
     private Runnable setMapRegionAnimatingRunnable = new Runnable() {
         @Override
         public void run() {
@@ -1380,10 +1381,10 @@ public class MapController implements Renderer {
             return;
         }
 
-        boolean viewComplete;
+        boolean mapViewComplete;
         boolean isCameraEasing;
         synchronized(this) {
-            viewComplete = nativeUpdate(mapPointer, delta);
+            mapViewComplete = nativeUpdate(mapPointer, delta);
             isCameraEasing = nativeRender(mapPointer);
         }
 
@@ -1393,7 +1394,7 @@ public class MapController implements Renderer {
             uiThreadHandler.post(setMapRegionIdleRunnable);
         }
 
-        isPrevCameraEasing = isCameraEasing;
+        boolean viewComplete = mapViewComplete && !isPrevMapViewComplete;
 
         if (viewComplete) {
             if (mapChangeListener != null) {
@@ -1406,6 +1407,9 @@ public class MapController implements Renderer {
                 frameCaptureCallback = null;
             }
         }
+
+        isPrevCameraEasing = isCameraEasing;
+        isPrevMapViewComplete = mapViewComplete;
     }
 
     @Override

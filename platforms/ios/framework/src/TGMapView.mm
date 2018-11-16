@@ -54,7 +54,7 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
 @interface TGMapView () <UIGestureRecognizerDelegate, GLKViewDelegate> {
     BOOL _shouldCaptureFrame;
     BOOL _captureFrameWaitForViewComplete;
-    BOOL _viewComplete;
+    BOOL _prevMapViewComplete;
     BOOL _viewInBackground;
     BOOL _renderRequested;
 }
@@ -139,7 +139,7 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
                                name:UIApplicationDidBecomeActiveNotification
                              object:nil];
 
-    _viewComplete = NO;
+    _prevMapViewComplete = NO;
     _captureFrameWaitForViewComplete = YES;
     _shouldCaptureFrame = NO;
     _viewInBackground = [UIApplication sharedApplication].applicationState == UIApplicationStateBackground;
@@ -328,18 +328,19 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
         _renderRequested = NO;
 
         CFTimeInterval dt = _displayLink.targetTimestamp - _displayLink.timestamp;
-        _viewComplete = self.map->update(dt);
+        BOOL mapViewComplete = self.map->update(dt);
+        BOOL viewComplete = mapViewComplete && !_prevMapViewComplete;
 
         // When invoking delegate selectors like this below, we don't need to check whether the delegate is `nil`. `nil` is
         // a valid object that returns `0`, `nil`, or `NO` from all messages, including `respondsToSelector`. So we can use
         // `respondsToSelector` to check for delegate nullity and selector response at the same time. MEB 2018.7.16
 
-        if (_viewComplete && [self.mapViewDelegate respondsToSelector:@selector(mapViewDidCompleteLoading:)]) {
+        if (viewComplete && [self.mapViewDelegate respondsToSelector:@selector(mapViewDidCompleteLoading:)]) {
             [self.mapViewDelegate mapViewDidCompleteLoading:self];
         }
 
         if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didCaptureScreenshot:)]) {
-            if (_shouldCaptureFrame && (!_captureFrameWaitForViewComplete || _viewComplete)) {
+            if (_shouldCaptureFrame && (!_captureFrameWaitForViewComplete || viewComplete)) {
 
                 UIImage *screenshot = [_glView snapshot];
 
@@ -355,6 +356,8 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
                 _shouldCaptureFrame = NO;
             }
         }
+
+        _prevMapViewComplete = mapViewComplete;
 
         [self.glView display];
     }
