@@ -37,30 +37,30 @@ struct StyleUniform {
 struct SceneLoader {
     using Node = YAML::Node;
 
-    static bool loadScene(const std::shared_ptr<Platform>& _platform, std::shared_ptr<Scene> _scene,
+    static bool loadScene(Platform& _platform, std::shared_ptr<Scene> _scene,
                           const std::vector<SceneUpdate>& updates = {});
 
-    static bool applyConfig(const std::shared_ptr<Platform>& platform, const std::shared_ptr<Scene>& scene);
-    static bool applyUpdates(const std::shared_ptr<Platform>& platform, Scene& scene,
+    static bool applyConfig(Platform& platform, const std::shared_ptr<Scene>& scene);
+    static bool applyUpdates(Platform& platform, Scene& scene,
                              const std::vector<SceneUpdate>& updates);
     static void applyGlobals(Node root, Scene& scene);
 
     /*** all public for testing ***/
 
     static void loadBackground(Node background, const std::shared_ptr<Scene>& scene);
-    static void loadSource(const std::shared_ptr<Platform>& platform, const std::string& name,
+    static void loadSource(Platform& platform, const std::string& name,
                            const Node& source, const Node& sources, const std::shared_ptr<Scene>& scene);
-    static void loadSourceRasters(const std::shared_ptr<Platform>& platform, std::shared_ptr<TileSource>& source, Node rasterNode,
+    static void loadSourceRasters(Platform& platform, std::shared_ptr<TileSource>& source, Node rasterNode,
                                   const Node& sources, const std::shared_ptr<Scene>& scene);
-    static void loadTexture(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& texture, const std::shared_ptr<Scene>& scene);
+    static void loadTexture(Platform& platform, const std::pair<Node, Node>& texture, const std::shared_ptr<Scene>& scene);
     static void loadLayer(const std::pair<Node, Node>& layer, const std::shared_ptr<Scene>& scene);
     static void loadLight(const std::pair<Node, Node>& light, const std::shared_ptr<Scene>& scene);
     static void loadCameras(Node cameras, const std::shared_ptr<Scene>& scene);
     static void loadCamera(const Node& camera, const std::shared_ptr<Scene>& scene);
-    static void loadStyleProps(const std::shared_ptr<Platform>& platform, Style& style, Node styleNode, const std::shared_ptr<Scene>& scene);
-    static void loadMaterial(const std::shared_ptr<Platform>& platform, Node matNode, Material& material, const std::shared_ptr<Scene>& scene, Style& style);
-    static void loadShaderConfig(const std::shared_ptr<Platform>& platform, Node shaders, Style& style, const std::shared_ptr<Scene>& scene);
-    static void loadFont(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& font, const std::shared_ptr<Scene>& scene);
+    static void loadStyleProps(Platform& platform, Style& style, Node styleNode, const std::shared_ptr<Scene>& scene);
+    static void loadMaterial(Platform& platform, Node matNode, Material& material, const std::shared_ptr<Scene>& scene, Style& style);
+    static void loadShaderConfig(Platform& platform, Node shaders, Style& style, const std::shared_ptr<Scene>& scene);
+    static void loadFont(Platform& platform, const std::pair<Node, Node>& font, const std::shared_ptr<Scene>& scene);
     static SceneLayer loadSublayer(const Node& layer, const std::string& name, const std::shared_ptr<Scene>& scene);
     static Filter generateFilter(Node filter, Scene& scene);
     static Filter generateAnyFilter(Node filter, Scene& scene);
@@ -69,26 +69,26 @@ struct SceneLoader {
     static Filter generatePredicate(Node filter, std::string _key);
     static bool getFilterRangeValue(const Node& node, double& val, bool& hasPixelArea);
     /* loads a texture with default texture properties */
-    static std::shared_ptr<Texture> getOrLoadTexture(const std::shared_ptr<Platform>& platform, const std::string& url, const std::shared_ptr<Scene>& scene);
-    static std::shared_ptr<Texture> fetchTexture(const std::shared_ptr<Platform>& platform, const std::string& name, const std::string& url,
+    static std::shared_ptr<Texture> getOrLoadTexture(Platform& platform, const std::string& url, const std::shared_ptr<Scene>& scene);
+    static std::shared_ptr<Texture> fetchTexture(Platform& platform, const std::string& name, const std::string& url,
                                                  const TextureOptions& options, const std::shared_ptr<Scene>& scene,
                                                  std::unique_ptr<SpriteAtlas> _atlas = nullptr);
 
     static bool parseTexFiltering(Node& filteringNode, TextureOptions& options);
 
-    static MaterialTexture loadMaterialTexture(const std::shared_ptr<Platform>& platform, Node matCompNode,
+    static MaterialTexture loadMaterialTexture(Platform& platform, Node matCompNode,
                                                const std::shared_ptr<Scene>& scene, Style& style);
 
     static void parseStyleParams(Node params, const std::shared_ptr<Scene>& scene, const std::string& propPrefix,
                                  std::vector<StyleParam>& out);
     static void parseTransition(Node params, const std::shared_ptr<Scene>& scene, std::string _prefix, std::vector<StyleParam>& out);
 
-    static bool parseStyleUniforms(const std::shared_ptr<Platform>& platform, const Node& value,
+    static bool parseStyleUniforms(Platform& platform, const Node& value,
                                    const std::shared_ptr<Scene>& scene, StyleUniform& styleUniform);
 
     static void parseLightPosition(Node positionNode, PointLight& light);
 
-    static bool loadStyle(const std::shared_ptr<Platform>& platform, const std::string& styleName,
+    static bool loadStyle(Platform& platform, const std::string& styleName,
                           Node config, const std::shared_ptr<Scene>& scene);
 
     SceneLoader() = delete;

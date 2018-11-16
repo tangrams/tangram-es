@@ -24,7 +24,7 @@ public:
     Importer(std::shared_ptr<Scene> scene);
 
     // Loads the main scene with deep merging dependent imported scenes.
-    Node applySceneImports(std::shared_ptr<Platform> platform);
+    Node applySceneImports(Platform& platform);
 
     static bool isZipArchiveUrl(const Url& url);
 

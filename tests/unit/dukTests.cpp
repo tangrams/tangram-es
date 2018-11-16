@@ -240,7 +240,8 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::text_source", "[Duktape][evalStyle
 }
 
 TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFilter]") {
-    Scene scene(std::make_shared<MockPlatform>(), Url());
+    MockPlatform platform;
+    Scene scene(platform, Url());
     YAML::Node n0 = YAML::Load(R"(filter: function() { return feature.sort_key === 2; })");
     YAML::Node n1 = YAML::Load(R"(filter: function() { return feature.name === 'test'; })");
 
@@ -282,7 +283,8 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
 }
 
 TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][evalStyle]") {
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>(std::make_shared<MockPlatform>(), Url());
+    MockPlatform platform;
+    std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform, Url());
     YAML::Node n0 = YAML::Load(R"(
             draw:
                 color: function() { return '#ffff00ff'; }
@@ -330,7 +332,8 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
 }
 
 TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>(std::make_shared<MockPlatform>(), Url());
+    MockPlatform platform;
+    std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform, Url());
     YAML::Node n0 = YAML::Load(R"(
             global:
                 width: 2

@@ -33,17 +33,18 @@ std::shared_ptr<Scene> scene;
 std::shared_ptr<TileSource> source;
 std::shared_ptr<TileData> tileData;
 
+std::unique_ptr<MockPlatform> platform = std::make_unique<MockPlatform>();
+
 void globalSetup() {
     static std::atomic<bool> initialized{false};
     if (initialized.exchange(true)) { return; }
 
-    std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
     Url sceneUrl(scene_file);
     platform->putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
-    scene = std::make_shared<Scene>(platform, sceneUrl);
+    scene = std::make_shared<Scene>(*platform, sceneUrl);
     Importer importer(scene);
     try {
-        scene->config() = importer.applySceneImports(platform);
+        scene->config() = importer.applySceneImports(*platform);
     }
     catch (const YAML::ParserException& e) {
         LOGE("Parsing scene config '%s'", e.what());
@@ -53,7 +54,7 @@ void globalSetup() {
         LOGE("Invalid scene file '%s'", scene_file);
         exit(-1);
     }
-    SceneLoader::applyConfig(platform, scene);
+    SceneLoader::applyConfig(*platform, scene);
     scene->fontContext()->loadFonts();
     for (auto& s : scene->tileSources()) {
         source = s;

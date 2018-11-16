@@ -120,8 +120,7 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
 - (void)setup
 {
     __weak TGMapView* weakSelf = self;
-    std::shared_ptr<Tangram::Platform> platform(new Tangram::iOSPlatform(weakSelf));
-    _map = new Tangram::Map(platform);
+    _map = new Tangram::Map(std::make_unique<Tangram::iOSPlatform>(weakSelf));
 
     NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
     [notificationCenter addObserver:self

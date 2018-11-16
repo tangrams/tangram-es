@@ -188,7 +188,7 @@ void MapController(Dispose)(JNIEnv* jniEnv, jobject tangramInstance, jlong mapPt
 
 void MapController(Shutdown)(JNIEnv* jniEnv, jobject tangramInstance, jlong mapPtr) {
     auto_map(mapPtr);
-    map->getPlatform()->shutdown();
+    map->getPlatform().shutdown();
 }
 
 jint MapController(LoadScene)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring path,
@@ -325,8 +325,8 @@ void MapController(OnUrlComplete)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlo
                                   jbyteArray fetchedBytes, jstring errorString) {
     auto_map(mapPtr);
 
-    auto platform = static_cast<AndroidPlatform*>(map->getPlatform().get());
-    platform->onUrlComplete(jniEnv, requestHandle, fetchedBytes, errorString);
+    auto& platform = static_cast<AndroidPlatform&>(map->getPlatform());
+    platform.onUrlComplete(jniEnv, requestHandle, fetchedBytes, errorString);
 }
 
 void MapController(SetPickRadius)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat radius) {
