@@ -19,7 +19,7 @@ add_executable(tangram
   platforms/common/imgui_impl_opengl3.cpp
   platforms/common/glfwApp.cpp
   platforms/common/appleAllowedFonts.mm
-  platforms/common/DuktapeJavaScriptContext.cpp
+  platforms/common/JSCoreJavaScriptContext.cpp
   ${RESOURCES}
 )
 
@@ -34,10 +34,10 @@ target_link_libraries(tangram
   PRIVATE
   tangram-core
   imgui
-  duktape
   glfw
   ${GLFW_LIBRARIES}
   ${OPENGL_LIBRARIES}
+  "-framework JavaScriptCore"
 )
 
 target_compile_options(tangram
