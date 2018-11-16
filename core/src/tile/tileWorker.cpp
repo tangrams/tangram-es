@@ -14,7 +14,7 @@
 
 namespace Tangram {
 
-TileWorker::TileWorker(std::shared_ptr<Platform> _platform, int _numWorker) : m_platform(_platform) {
+TileWorker::TileWorker(Platform& _platform, int _numWorker) : m_platform(_platform) {
     m_running = true;
 
     for (int i = 0; i < _numWorker; i++) {
@@ -95,7 +95,7 @@ void TileWorker::run(Worker* instance) {
         LOG("process %s", task->tileId().toString().c_str());
         task->process(*builder);
 
-        m_platform->requestRender();
+        m_platform.requestRender();
     }
 }
 

@@ -18,9 +18,9 @@ class ClientGeoJsonSource : public TileSource {
 
 public:
 
-    ClientGeoJsonSource(std::shared_ptr<Platform> _platform, const std::string& _name,
-            const std::string& _url, bool generateCentroids = false,
-            TileSource::ZoomOptions _zoomOptions = {});
+    ClientGeoJsonSource(Platform& _platform, const std::string& _name,
+                        const std::string& _url, bool generateCentroids = false,
+                        TileSource::ZoomOptions _zoomOptions = {});
     ~ClientGeoJsonSource();
 
     // http://www.iana.org/assignments/media-types/application/geo+json
@@ -49,7 +49,7 @@ protected:
     bool m_hasPendingData = false;
     bool m_generateCentroids = false;
 
-    std::shared_ptr<Platform> m_platform;
+    Platform& m_platform;
 
 };
 

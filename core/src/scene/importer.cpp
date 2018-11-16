@@ -19,7 +19,7 @@ Importer::Importer(std::shared_ptr<Scene> scene)
     : m_scene(scene) {
 }
 
-Node Importer::applySceneImports(std::shared_ptr<Platform> platform) {
+Node Importer::applySceneImports(Platform& platform) {
 
     Url sceneUrl = m_scene->url();
 
