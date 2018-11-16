@@ -45,6 +45,8 @@ set(TANGRAM_FRAMEWORK_SOURCES
   ${TANGRAM_FRAMEWORK_HEADERS}
   platforms/common/appleAllowedFonts.h
   platforms/common/appleAllowedFonts.mm
+  platforms/common/JSCoreContext.cpp
+  platforms/common/JSCoreContext.h
   platforms/common/platform_gl.cpp
   platforms/ios/framework/src/iosPlatform.h
   platforms/ios/framework/src/iosPlatform.mm
@@ -83,6 +85,7 @@ target_link_libraries(TangramMap PRIVATE
   "-framework CoreLocation"
   "-framework CoreText"
   "-framework GLKit"
+  "-framework JavaScriptCore"
   "-framework OpenGLES"
   "-framework QuartzCore"
   "-framework UIKit"
@@ -142,7 +145,6 @@ target_include_directories(tangram-static PRIVATE
 # delimits with semicolons. Xcode expects a space-delimited list.
 set(TANGRAM_STATIC_DEPENDENCIES "\
   $<TARGET_FILE:tangram-core>
-  $<TARGET_FILE:duktape>
   $<TARGET_FILE:css-color-parser-cpp>
   $<TARGET_FILE:yaml-cpp>
   $<TARGET_FILE:alfons>

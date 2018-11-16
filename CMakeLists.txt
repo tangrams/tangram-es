@@ -66,13 +66,15 @@ include(${TANGRAM_PLATFORM_CONFIG_FILE})
 add_subdirectory(core)
 
 if(TANGRAM_BUILD_BENCHMARKS OR TANGRAM_BUILD_TESTS)
+  add_subdirectory(platforms/common/duktape)
   add_library(platform_mock
     tests/src/mockPlatform.cpp
     tests/src/gl_mock.cpp
+    platforms/common/DuktapeContext.cpp
   )
   target_include_directories(platform_mock PUBLIC tests/src)
   target_compile_definitions(platform_mock PUBLIC -DUNIT_TESTS)
-  target_link_libraries(platform_mock PUBLIC tangram-core)
+  target_link_libraries(platform_mock PUBLIC tangram-core duktape)
 endif()
 
 if(TANGRAM_BUILD_TESTS)
