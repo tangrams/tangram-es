@@ -14,7 +14,6 @@
 
 namespace Tangram {
 
-class TileSource;
 class MapProjection;
 struct Properties;
 class Style;
@@ -41,7 +40,7 @@ class Tile {
 
 public:
 
-    Tile(TileID _id, const TileSource* _source = nullptr);
+    Tile(TileID _id, const int32_t& _sourceId = 0, const int32_t& _sourceGeneration = 0);
 
     virtual ~Tile();
 

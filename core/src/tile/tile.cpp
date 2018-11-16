@@ -1,6 +1,5 @@
 #include "tile/tile.h"
 
-#include "data/tileSource.h"
 #include "labels/labelSet.h"
 #include "style/style.h"
 #include "tile/tileID.h"
@@ -11,10 +10,10 @@
 
 namespace Tangram {
 
-Tile::Tile(TileID _id, const TileSource* _source) :
+Tile::Tile(TileID _id, const int32_t& _sourceId, const int32_t& _sourceGeneration) :
     m_id(_id),
-    m_sourceId(_source ? _source->id() : 0),
-    m_sourceGeneration(_source ? _source->generation() : 0) {
+    m_sourceId(_sourceId),
+    m_sourceGeneration(_sourceGeneration) {
 
     m_scale = MapProjection::metersPerTileAtZoom(_id.z);
     m_tileOrigin = MapProjection::tileSouthWestCorner(_id);
