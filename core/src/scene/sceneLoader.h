@@ -43,7 +43,7 @@ struct SceneLoader {
     static void applyTextures(std::shared_ptr<Scene>& scene);
     static void applyFonts(std::shared_ptr<Scene>& scene);
     static void applyStyles(std::shared_ptr<Scene>& scene);
-    static bool applyUpdates(Scene& scene);
+    static bool applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates);
     static void applyGlobals(Scene& scene);
     static void applyCameras(Scene& scene);
     static void applyLayers(Scene& scene);

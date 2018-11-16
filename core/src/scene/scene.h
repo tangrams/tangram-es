@@ -85,6 +85,7 @@ public:
         yes, no, none
     };
 
+    Scene(Platform& _platform);
     Scene(Platform& _platform, std::unique_ptr<SceneOptions> _sceneOptions,
           std::unique_ptr<View> _view = std::make_unique<View>());
 

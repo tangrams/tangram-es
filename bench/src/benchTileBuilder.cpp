@@ -37,12 +37,12 @@ void globalSetup() {
     static std::atomic<bool> initialized{false};
     if (initialized.exchange(true)) { return; }
 
-    std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
+    MockPlatform platform;
 
     Url sceneUrl(scene_file);
-    platform->putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
+    platform.putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
 
-    scene = std::make_shared<Scene>(platform, sceneUrl);
+    scene = std::make_shared<Scene>(platform, std::make_unique<SceneOptions>(sceneUrl), std::make_unique<View>());
     Importer importer(scene);
     try {
         scene->config() = importer.applySceneImports(platform);
@@ -56,9 +56,16 @@ void globalSetup() {
         exit(-1);
     }
     SceneLoader::applyGlobals(*scene);
-    SceneLoader::applySources(platform, *scene);
-    SceneLoader::applyConfig(platform, scene);
+    SceneLoader::applySources(*scene);
+    SceneLoader::applyCameras(*scene);
+    SceneLoader::applyTextures(scene);
     scene->fontContext()->loadFonts();
+    SceneLoader::applyFonts(scene);
+    SceneLoader::applyStyles(scene);
+    SceneLoader::applyLayers(*scene);
+    for (auto& style : scene->styles()) {
+        style->build(*scene);
+    }
 
     for (auto& s : scene->tileSources()) {
         source = s;
