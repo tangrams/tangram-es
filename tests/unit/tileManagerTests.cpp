@@ -40,7 +40,9 @@ struct TestTileWorker : TileTaskQueue {
                 continue;
             }
 
-            task->setTile(std::make_unique<Tile>(task->tileId(), task->source().get()));
+            task->setTile(std::make_unique<Tile>(task->tileId(),
+                                                 task->source()->id(),
+                                                 task->source()->generation()));
 
             pendingTiles = true;
             processedCount++;
@@ -52,7 +54,9 @@ struct TestTileWorker : TileTaskQueue {
         auto task = tasks[position];
         tasks.erase(tasks.begin() + position);
 
-        task->setTile(std::make_unique<Tile>(task->tileId(), task->source().get()));
+        task->setTile(std::make_unique<Tile>(task->tileId(),
+                                             task->source()->id(),
+                                             task->source()->generation()));
 
         pendingTiles = true;
         processedCount++;
