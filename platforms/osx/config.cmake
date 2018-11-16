@@ -19,7 +19,7 @@ add_executable(tangram
   platforms/common/imgui_impl_opengl3.cpp
   platforms/common/glfwApp.cpp
   platforms/common/appleAllowedFonts.mm
-  platforms/common/JSCoreJavaScriptContext.cpp
+  platforms/common/JavaScriptCoreContext.cpp
   ${RESOURCES}
 )
 

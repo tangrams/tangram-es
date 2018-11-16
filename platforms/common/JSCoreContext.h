@@ -8,13 +8,13 @@
 
 namespace Tangram {
 
-class JSCoreJavaScriptValue : public IJavaScriptValue {
+class JSCoreValue : public IJavaScriptValue {
 
 public:
 
-    JSCoreJavaScriptValue(JSContextRef ctx, JSValueRef value);
+    JSCoreValue(JSContextRef ctx, JSValueRef value);
 
-    ~JSCoreJavaScriptValue() override;
+    ~JSCoreValue() override;
 
     bool isUndefined() override;
     bool isNull() override;
@@ -44,13 +44,13 @@ private:
     JSValueRef _value;
 };
 
-class JSCoreJavaScriptContext : public IJavaScriptContext {
+class JSCoreContext : public IJavaScriptContext {
 
 public:
 
-    JSCoreJavaScriptContext();
+    JSCoreContext();
 
-    ~JSCoreJavaScriptContext() override;
+    ~JSCoreContext() override;
 
     void setGlobalValue(const std::string& name, JSValue value) override;
 
