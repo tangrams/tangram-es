@@ -21,13 +21,13 @@ Importer::Importer(std::shared_ptr<Scene> scene)
 
 Node Importer::applySceneImports(Platform& platform) {
 
-    Url sceneUrl = m_scene->url();
+    Url sceneUrl = m_scene->options().url;
 
     Url nextUrlToImport;
 
-    if (!m_scene->yaml().empty()) {
+    if (!m_scene->options().yaml.empty()) {
         // Load scene from yaml string.
-        addSceneString(sceneUrl, m_scene->yaml());
+        addSceneString(sceneUrl, m_scene->options().yaml);
     } else {
         // Load scene from yaml file.
         m_sceneQueue.push_back(sceneUrl);
@@ -62,7 +62,7 @@ Node Importer::applySceneImports(Platform& platform) {
         }
 
         activeDownloads++;
-        m_scene->startUrlRequest(platform, nextUrlToImport, [&, nextUrlToImport](UrlResponse&& response) {
+        m_scene->startUrlRequest(nextUrlToImport, [&, nextUrlToImport](UrlResponse&& response) {
             std::unique_lock<std::mutex> lock(sceneMutex);
             if (response.error) {
                 LOGE("Unable to retrieve '%s': %s", nextUrlToImport.string().c_str(), response.error);
