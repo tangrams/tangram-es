@@ -21,6 +21,10 @@ if (CMAKE_COMPILER_IS_GNUCC)
   endif()
 endif()
 
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer")
+
 check_unsupported_compiler_version()
 
 add_definitions(-DTANGRAM_LINUX)
