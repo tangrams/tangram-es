@@ -177,7 +177,7 @@ TEST_CASE("Apply and propogate repeated global value updates") {
     REQUIRE(loadConfig(sceneString, scene.config()));
     Node& root = scene.config();
     // Apply initial globals.
-    SceneLoader::applyGlobals(root, scene);
+    SceneLoader::applyGlobals(scene);
     CHECK(root["seq"][1].Scalar() == "global_a_value");
     CHECK(root["map"]["b"].Scalar() == "global_b_value");
     // Add an update.
@@ -186,7 +186,7 @@ TEST_CASE("Apply and propogate repeated global value updates") {
     SceneLoader::applyUpdates(platform_mock, scene, updates);
     CHECK(root["global"]["b"].Scalar() == "new_global_b_value");
     // Apply updated globals.
-    SceneLoader::applyGlobals(root, scene);
+    SceneLoader::applyGlobals(scene);
     CHECK(root["seq"][1].Scalar() == "global_a_value");
     CHECK(root["map"]["b"].Scalar() == "new_global_b_value");
     // Add an update.
@@ -195,7 +195,7 @@ TEST_CASE("Apply and propogate repeated global value updates") {
     SceneLoader::applyUpdates(platform_mock, scene, updates);
     CHECK(root["global"]["b"].Scalar() == "newer_global_b_value");
     // Apply updated globals.
-    SceneLoader::applyGlobals(root, scene);
+    SceneLoader::applyGlobals(scene);
     CHECK(root["seq"][1].Scalar() == "global_a_value");
     CHECK(root["map"]["b"].Scalar() == "newer_global_b_value");
 }

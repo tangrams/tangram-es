@@ -292,7 +292,7 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
 
     std::vector<StyleParam> styles;
 
-    SceneLoader::parseStyleParams(n0["draw"], scene, "", styles);
+    SceneLoader::parseStyleParams(n0["draw"], *scene, "", styles);
 
     REQUIRE(scene->functions().size() == 3);
 
@@ -350,7 +350,7 @@ TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
 
     scene->config() = n0;
 
-    SceneLoader::parseStyleParams(n0["draw"], scene, "", styles);
+    SceneLoader::parseStyleParams(n0["draw"], *scene, "", styles);
 
     REQUIRE(scene->functions().size() == 4);
 

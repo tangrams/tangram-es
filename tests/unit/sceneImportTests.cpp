@@ -93,7 +93,7 @@ std::shared_ptr<MockPlatform> getPlatformWithImportFiles() {
 }
 
 TEST_CASE("Imported scenes are merged with the parent scene", "[import][core]") {
-    std::shared_ptr<Platform> platform = getPlatformWithImportFiles();
+    std::shared_ptr<Tangram::Platform> platform = getPlatformWithImportFiles();
     Importer importer(std::make_shared<Scene>(platform, Url("/root/a.yaml")));
     auto root = importer.applySceneImports(platform);
 
@@ -103,7 +103,7 @@ TEST_CASE("Imported scenes are merged with the parent scene", "[import][core]") 
 }
 
 TEST_CASE("Nested imports are merged recursively", "[import][core]") {
-    std::shared_ptr<Platform> platform = getPlatformWithImportFiles();
+    std::shared_ptr<Tangram::Platform> platform = getPlatformWithImportFiles();
     Importer importer(std::make_shared<Scene>(platform, Url("/root/c.yaml")));
     auto root = importer.applySceneImports(platform);
 
@@ -114,7 +114,7 @@ TEST_CASE("Nested imports are merged recursively", "[import][core]") {
 }
 
 TEST_CASE("Imports that would start a cycle are ignored", "[import][core]") {
-    std::shared_ptr<Platform> platform = getPlatformWithImportFiles();
+    std::shared_ptr<Tangram::Platform> platform = getPlatformWithImportFiles();
     Importer importer(std::make_shared<Scene>(platform, Url("/root/cycle_simple.yaml")));
 
     // If import cycles aren't checked for and stopped, this call won't return.
@@ -125,7 +125,7 @@ TEST_CASE("Imports that would start a cycle are ignored", "[import][core]") {
 }
 
 TEST_CASE("Tricky import cycles are ignored", "[import][core]") {
-    std::shared_ptr<Platform> platform = getPlatformWithImportFiles();
+    std::shared_ptr<Tangram::Platform> platform = getPlatformWithImportFiles();
     Importer importer(std::make_shared<Scene>(platform, Url("/root/cycle_tricky.yaml")));
 
     // The nested import should resolve to the same path as the original file,
@@ -138,7 +138,7 @@ TEST_CASE("Tricky import cycles are ignored", "[import][core]") {
 }
 
 TEST_CASE("Scene URLs are resolved against their parent during import", "[import][core]") {
-    std::shared_ptr<Platform> platform = getPlatformWithImportFiles();
+    std::shared_ptr<Tangram::Platform> platform = getPlatformWithImportFiles();
     Importer importer(std::make_shared<Scene>(platform, Url("/root/urls.yaml")));
     auto root = importer.applySceneImports(platform);
 
@@ -193,7 +193,7 @@ TEST_CASE("Scene URLs are resolved against their parent during import", "[import
 }
 
 TEST_CASE("References to globals are not treated like URLs during importing", "[import][core]") {
-    std::shared_ptr<Platform> platform = getPlatformWithImportFiles();
+    std::shared_ptr<Tangram::Platform> platform = getPlatformWithImportFiles();
     Importer importer(std::make_shared<Scene>(platform, Url("/root/globals.yaml")));
     auto root = importer.applySceneImports(platform);
 
