@@ -53,7 +53,7 @@ ViewState View::state() const {
 
     return {
         m_changed,
-        glm::dvec2(m_pos.x, -m_pos.y),
+        glm::dvec2(m_pos.x, m_pos.y),
         m_zoom,
         powf(2.f, m_zoom),
         m_zoom - std::floor(m_zoom),
