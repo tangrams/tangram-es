@@ -28,6 +28,8 @@ include(cmake/glfw.cmake)
 include(FindPkgConfig)
 pkg_check_modules(FONTCONFIG REQUIRED "fontconfig")
 
+add_subdirectory(platforms/common/duktape)
+
 add_executable(tangram
   platforms/linux/src/linuxPlatform.cpp
   platforms/linux/src/main.cpp
@@ -36,6 +38,7 @@ add_executable(tangram
   platforms/common/imgui_impl_opengl3.cpp
   platforms/common/urlClient.cpp
   platforms/common/linuxSystemFontHelper.cpp
+  platforms/common/DuktapeContext.cpp
   platforms/common/glfwApp.cpp
 )
 
@@ -50,6 +53,7 @@ target_include_directories(tangram
 target_link_libraries(tangram
   PRIVATE
   tangram-core
+  duktape
   glfw
   imgui
   ${GLFW_LIBRARIES}
