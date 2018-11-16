@@ -7,12 +7,10 @@
 
 namespace Tangram {
 
-class Platform;
-
 class InputHandler {
 
 public:
-    InputHandler(std::shared_ptr<Platform> _platform, View& _view);
+    explicit InputHandler(View& _view);
 
     void handleTapGesture(float _posX, float _posY);
     void handleDoubleTapGesture(float _posX, float _posY);
@@ -34,10 +32,6 @@ public:
 private:
 
     void setVelocity(float _zoom, glm::vec2 _pan);
-
-    void onGesture();
-
-    std::shared_ptr<Platform> m_platform;
 
     View& m_view;
 
