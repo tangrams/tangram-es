@@ -104,8 +104,7 @@ void JSCoreValue::setValueForProperty(const std::string& name, JSValue value) {
 }
 
 JSCoreContext::JSCoreContext() {
-    _contextGroup = JSContextGroupCreate();
-    _context = JSGlobalContextCreateInGroup(_contextGroup, nullptr);
+    _context = JSGlobalContextCreate(nullptr);
 
     // Create the global 'feature' object.
     JSClassDefinition jsFeatureClassDefinition = kJSClassDefinitionEmpty;
@@ -116,13 +115,12 @@ JSCoreContext::JSCoreContext() {
     JSClassRelease(jsFeatureClass);
     JSObjectRef jsGlobalObject = JSContextGetGlobalObject(_context);
     JSStringRef jsFeatureName = JSStringCreateWithUTF8CString("feature");
-    JSObjectSetProperty(_context, jsGlobalObject, jsFeatureName, jsFeatureObject, kJSPropertyAttributeReadOnly, nullptr);
+    JSObjectSetProperty(_context, jsGlobalObject, jsFeatureName, jsFeatureObject, kJSPropertyAttributeNone, nullptr);
     JSStringRelease(jsFeatureName);
 }
 
 JSCoreContext::~JSCoreContext() {
     JSGlobalContextRelease(_context);
-    JSContextGroupRelease(_contextGroup);
 }
 
 void JSCoreContext::setGlobalValue(const std::string& name, JSValue value) {

@@ -83,8 +83,8 @@ private:
 
     std::vector<JSObjectRef> _functions;
 
-    JSContextGroupRef _contextGroup;
     JSGlobalContextRef _context;
+
 
     const Feature* _feature;
 };
