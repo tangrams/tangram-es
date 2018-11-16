@@ -58,7 +58,7 @@ constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
 static const std::string GLOBAL_PREFIX = "global.";
 
-bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::shared_ptr<Scene> _scene,
+bool SceneLoader::loadScene(Platform& _platform, std::shared_ptr<Scene> _scene,
                             const std::vector<SceneUpdate>& _updates) {
 
     Importer sceneImporter(_scene);
@@ -105,7 +105,7 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
     return true;
 }
 
-bool SceneLoader::applyUpdates(const std::shared_ptr<Platform>& platform, Scene& scene,
+bool SceneLoader::applyUpdates(Platform& platform, Scene& scene,
                                const std::vector<SceneUpdate>& updates) {
     auto& root = scene.config();
 
@@ -194,7 +194,7 @@ void SceneLoader::applyGlobals(Scene& _scene) {
     }
 }
 
-void SceneLoader::applySources(const std::shared_ptr<Platform>& _platform, Scene& _scene) {
+void SceneLoader::applySources(Platform& _platform, Scene& _scene) {
 
     const Node& config = _scene.config();
 
@@ -285,7 +285,7 @@ void SceneLoader::applyCameras(Scene& _scene) {
     view->update();
 }
 
-void SceneLoader::applyTextures(const std::shared_ptr<Platform>& _platform, const std::shared_ptr<Scene>& _scene) {
+void SceneLoader::applyTextures(Platform& _platform, const std::shared_ptr<Scene>& _scene) {
     const Node& config = _scene->config();
 
     if (const Node& textures = config["textures"]) {
@@ -298,7 +298,7 @@ void SceneLoader::applyTextures(const std::shared_ptr<Platform>& _platform, cons
     }
 }
 
-void SceneLoader::applyFonts(const std::shared_ptr<Platform>& _platform, const std::shared_ptr<Scene>& _scene) {
+void SceneLoader::applyFonts(Platform& _platform, const std::shared_ptr<Scene>& _scene) {
     const Node& config = _scene->config();
 
     if (const Node& fonts = config["fonts"]) {
@@ -313,7 +313,7 @@ void SceneLoader::applyFonts(const std::shared_ptr<Platform>& _platform, const s
     }
 }
 
-void SceneLoader::applyStyles(const std::shared_ptr<Platform>& _platform, const std::shared_ptr<Scene>& _scene) {
+void SceneLoader::applyStyles(Platform& _platform, const std::shared_ptr<Scene>& _scene) {
     const Node& config = _scene->config();
 
     // Instantiate built-in styles
@@ -399,7 +399,7 @@ void SceneLoader::applyLayers(Scene& _scene) {
     }
 }
 
-void SceneLoader::loadShaderConfig(const std::shared_ptr<Platform>& platform, Node shaders, Style& style,
+void SceneLoader::loadShaderConfig(Platform& platform, Node shaders, Style& style,
                                    const std::shared_ptr<Scene>& scene) {
 
     if (!shaders) { return; }
@@ -513,7 +513,7 @@ glm::vec4 parseMaterialVec(const Node& prop) {
     return glm::vec4(0.0);
 }
 
-void SceneLoader::loadMaterial(const std::shared_ptr<Platform>& platform, Node matNode, Material& material,
+void SceneLoader::loadMaterial(Platform& platform, Node matNode, Material& material,
                                const std::shared_ptr<Scene>& scene, Style& style) {
 
     if (!matNode.IsMap()) { return; }
@@ -558,7 +558,7 @@ void SceneLoader::loadMaterial(const std::shared_ptr<Platform>& platform, Node m
     material.setNormal(loadMaterialTexture(platform, matNode["normal"], scene, style));
 }
 
-MaterialTexture SceneLoader::loadMaterialTexture(const std::shared_ptr<Platform>& platform, Node matCompNode,
+MaterialTexture SceneLoader::loadMaterialTexture(Platform& platform, Node matCompNode,
                                                  const std::shared_ptr<Scene>& scene, Style& style) {
 
     if (!matCompNode) { return MaterialTexture{}; }
@@ -644,7 +644,7 @@ bool SceneLoader::parseTexFiltering(Node& filteringNode, TextureOptions& options
 }
 
 
-std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platform>& platform,
+std::shared_ptr<Texture> SceneLoader::fetchTexture(Platform& platform,
                                                    const std::string& name, const std::string& urlString,
                                                    const TextureOptions& options,
                                                    const std::shared_ptr<Scene>& scene,
@@ -695,7 +695,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
                 }
                 scene->pendingTextures--;
                 if (scene->pendingTextures == 0) {
-                    platform->requestRender();
+                    platform.requestRender();
                 }
             });
     }
@@ -703,7 +703,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
     return texture;
 }
 
-std::shared_ptr<Texture> SceneLoader::getOrLoadTexture(const std::shared_ptr<Platform>& platform,
+std::shared_ptr<Texture> SceneLoader::getOrLoadTexture(Platform& platform,
                                                        const std::string& name, const std::shared_ptr<Scene>& scene) {
 
     auto entry = scene->textures().find(name);
@@ -720,7 +720,7 @@ std::shared_ptr<Texture> SceneLoader::getOrLoadTexture(const std::shared_ptr<Pla
     return texture;
 }
 
-void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& node,
+void SceneLoader::loadTexture(Platform& platform, const std::pair<Node, Node>& node,
                               const std::shared_ptr<Scene>& scene) {
 
     const std::string& name = node.first.Scalar();
@@ -778,7 +778,7 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
     scene->textures().emplace(name, texture);
 }
 
-void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& node,
+void loadFontDescription(Platform& platform, const Node& node,
                          const std::string& family, const std::shared_ptr<Scene>& scene) {
     if (!node.IsMap()) {
         LOGW("");
@@ -828,7 +828,7 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
     });
 }
 
-void SceneLoader::loadFont(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& font,
+void SceneLoader::loadFont(Platform& platform, const std::pair<Node, Node>& font,
                            const std::shared_ptr<Scene>& scene) {
     const std::string& family = font.first.Scalar();
 
@@ -841,7 +841,7 @@ void SceneLoader::loadFont(const std::shared_ptr<Platform>& platform, const std:
     }
 }
 
-void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Style& style, Node styleNode,
+void SceneLoader::loadStyleProps(Platform& platform, Style& style, Node styleNode,
                                  const std::shared_ptr<Scene>& scene) {
 
     if (!styleNode) {
@@ -960,7 +960,7 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
 
 }
 
-bool SceneLoader::loadStyle(const std::shared_ptr<Platform>& platform, const std::string& name,
+bool SceneLoader::loadStyle(Platform& platform, const std::string& name,
                             Node config, const std::shared_ptr<Scene>& scene) {
 
     const auto& builtIn = Style::builtInStyleNames();
@@ -1013,7 +1013,7 @@ bool SceneLoader::loadStyle(const std::shared_ptr<Platform>& platform, const std
     return true;
 }
 
-void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const std::string& name,
+void SceneLoader::loadSource(Platform& platform, const std::string& name,
                              const Node& source, const Node& sources, Scene& _scene) {
     if (_scene.getTileSource(name)) {
         LOGW("Duplicate TileSource: %s", name.c_str());
@@ -1178,7 +1178,7 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
 
 }
 
-void SceneLoader::loadSourceRasters(const std::shared_ptr<Platform>& platform, std::shared_ptr<TileSource> &source,
+void SceneLoader::loadSourceRasters(Platform& platform, std::shared_ptr<TileSource> &source,
                                     Node rasterNode, const Node& sources, Scene& scene) {
     if (rasterNode.IsSequence()) {
         for (const auto& raster : rasterNode) {
@@ -1690,7 +1690,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
     }
 }
 
-bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, const Node& value,
+bool SceneLoader::parseStyleUniforms(Platform& platform, const Node& value,
                                      const std::shared_ptr<Scene>& scene, StyleUniform& styleUniform) {
     if (value.IsScalar()) { // float, bool or string (texture)
         double fValue;

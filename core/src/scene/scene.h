@@ -70,9 +70,9 @@ public:
     };
 
     //Scene();
-    Scene(std::shared_ptr<Platform> _platform, const Url& _url,
+    Scene(Platform& _platform, const Url& _url,
           std::unique_ptr<View> _view = std::make_unique<View>());
-    Scene(std::shared_ptr<Platform> _platform, const std::string& _yaml, const Url& _url,
+    Scene(Platform& _platform, const std::string& _yaml, const Url& _url,
           std::unique_ptr<View> _view = std::make_unique<View>());
     Scene(const Scene& _other) = delete;
     Scene(Scene&& _other) = delete;
@@ -129,7 +129,7 @@ public:
     // as expected within zip archives). This function expects that all required
     // zip archives will be added to the scene with addZipArchive before being
     // requested.
-    UrlRequestHandle startUrlRequest(std::shared_ptr<Platform> platform, Url url, UrlCallback callback);
+    UrlRequestHandle startUrlRequest(Platform& platform, Url url, UrlCallback callback);
 
     void addZipArchive(Url url, std::shared_ptr<ZipArchive> zipArchive);
 

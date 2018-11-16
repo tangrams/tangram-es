@@ -21,7 +21,7 @@ class TileWorker : public TileTaskQueue {
 
 public:
 
-    TileWorker(std::shared_ptr<Platform> _platform, int _numWorker);
+    TileWorker(Platform& _platform, int _numWorker);
 
     ~TileWorker();
 
@@ -51,7 +51,7 @@ private:
     std::mutex m_mutex;
     std::vector<std::shared_ptr<TileTask>> m_queue;
 
-    std::shared_ptr<Platform> m_platform;
+    Platform& m_platform;
 };
 
 }

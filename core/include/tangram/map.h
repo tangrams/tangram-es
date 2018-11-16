@@ -142,7 +142,7 @@ class Map {
 public:
 
     // Create an empty map object. To display a map, call either loadScene() or loadSceneAsync().
-    Map(std::shared_ptr<Platform> _platform);
+    explicit Map(std::unique_ptr<Platform> _platform);
     ~Map();
 
     // Load the scene at the given absolute file path asynchronously.
@@ -418,22 +418,22 @@ public:
     // r, g, b must be between 0.0 and 1.0
     void setDefaultBackgroundColor(float r, float g, float b);
 
-    std::shared_ptr<Platform>& getPlatform();
+    Platform& getPlatform();
+
+protected:
+
+    std::unique_ptr<Platform> platform;
+
+    SceneID loadSceneAsync(std::shared_ptr<Scene> _scene,
+                           const std::vector<SceneUpdate>& _sceneUpdates = {});
+
+    SceneID loadScene(std::shared_ptr<Scene> _scene,
+                      const std::vector<SceneUpdate>& _sceneUpdates = {});
 
 private:
 
     class Impl;
     std::unique_ptr<Impl> impl;
-
-protected:
-
-    std::shared_ptr<Platform> platform;
-
-    SceneID loadSceneAsync(std::shared_ptr<Scene> _scene,
-                       const std::vector<SceneUpdate>& _sceneUpdates = {});
-
-    SceneID loadScene(std::shared_ptr<Scene> _scene,
-                  const std::vector<SceneUpdate>& _sceneUpdates = {});
 
 };
 
