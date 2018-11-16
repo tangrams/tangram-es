@@ -70,8 +70,10 @@ public:
     };
 
     //Scene();
-    Scene(std::shared_ptr<Platform> _platform, const Url& _url, std::unique_ptr<View> _view);
-    Scene(std::shared_ptr<Platform> _platform, const std::string& _yaml, const Url& _url, std::unique_ptr<View> _view);
+    Scene(std::shared_ptr<Platform> _platform, const Url& _url,
+          std::unique_ptr<View> _view = std::make_unique<View>());
+    Scene(std::shared_ptr<Platform> _platform, const std::string& _yaml, const Url& _url,
+          std::unique_ptr<View> _view = std::make_unique<View>());
     Scene(const Scene& _other) = delete;
     Scene(Scene&& _other) = delete;
 
