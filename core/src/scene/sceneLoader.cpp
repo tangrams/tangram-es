@@ -704,7 +704,9 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(Platform& platform,
         texture->setSpriteAtlas(std::move(_atlas));
 
         scene->pendingTextures++;
+        LOGTime("Fetch texture");
         scene->startUrlRequest(platform, url, [&, url, scene, texture](UrlResponse&& response) {
+                LOGTime("Got texture data");
                 if (response.error) {
                     LOGE("Error retrieving URL '%s': %s", url.string().c_str(), response.error);
                 } else {
@@ -720,6 +722,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(Platform& platform,
                     }
                 }
                 scene->pendingTextures--;
+                LOGTime("Got texture ready");
                 if (scene->pendingTextures == 0) {
                     platform.requestRender();
                 }

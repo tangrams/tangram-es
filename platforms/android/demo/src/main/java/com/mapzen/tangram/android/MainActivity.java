@@ -133,30 +133,6 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         map.setLabelPickListener(this);
         map.setMarkerPickListener(this);
 
-        map.setMapChangeListener(new MapChangeListener() {
-            @Override
-            public void onViewComplete() {
-                Log.d(TAG, "View complete");
-            }
-
-            @Override
-            public void onRegionWillChange(boolean animated) {
-                Log.d(TAG, "On Region Will Change Animated: " + animated);
-            }
-
-            @Override
-            public void onRegionIsChanging() {
-                Log.d(TAG, "On Region Is Changing");
-            }
-
-            @Override
-            public void onRegionDidChange(boolean animated) {
-                Log.d(TAG, "On Region Did Change Animated: " + animated);
-            }
-        });
-
-
-
         markers = map.addDataLayer("touch");
     }
 
