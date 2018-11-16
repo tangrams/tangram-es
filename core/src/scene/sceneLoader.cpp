@@ -91,6 +91,9 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
     applyGlobals(*_scene);
     LOGTime("applyGlobals");
 
+    applyTextures(_scene);
+    LOGTime("textures");
+
     applySources(*_scene);
     LOGTime("applySources");
 
@@ -100,9 +103,6 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
     _scene->initTileManager();
     _scene->tileManager()->updateTileSets(*_scene->view());
     LOGTime("loadTiles");
-
-    applyTextures(_scene);
-    LOGTime("textures");
 
     _scene->fontContext()->loadFonts();
     LOGTime("initFonts");
