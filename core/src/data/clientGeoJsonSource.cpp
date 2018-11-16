@@ -46,9 +46,8 @@ std::shared_ptr<TileTask> ClientGeoJsonSource::createTask(TileID _tileId) {
 
 
 // TODO: pass scene's resourcePath to constructor to be used with `stringFromFile`
-ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform,
-                                         const std::string& _name, const std::string& _url,
-                                         bool _generateCentroids,
+ClientGeoJsonSource::ClientGeoJsonSource(Platform& _platform, const std::string& _name,
+                                         const std::string& _url, bool _generateCentroids,
                                          TileSource::ZoomOptions _zoomOptions)
 
     : TileSource(_name, nullptr, _zoomOptions),
@@ -67,7 +66,7 @@ ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform,
             }
             m_hasPendingData = false;
         };
-        m_platform->startUrlRequest(_url, std::move(onUrlFinished));
+        m_platform.startUrlRequest(_url, std::move(onUrlFinished));
         m_hasPendingData = true;
     }
 

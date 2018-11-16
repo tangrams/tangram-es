@@ -52,7 +52,7 @@ using CameraAnimator = std::function<uint32_t(float dt)>;
 class Map::Impl {
 
 public:
-    Impl(std::shared_ptr<Platform> _platform) :
+    explicit Impl(Platform& _platform) :
         platform(_platform),
         inputHandler(view),
         scene(std::make_shared<Scene>(_platform, Url())),
@@ -66,12 +66,12 @@ public:
     std::mutex tilesMutex;
     std::mutex sceneMutex;
 
+    Platform& platform;
     RenderState renderState;
     JobQueue jobQueue;
     View view;
     Labels labels;
     std::unique_ptr<AsyncWorker> asyncWorker = std::make_unique<AsyncWorker>();
-    std::shared_ptr<Platform> platform;
     InputHandler inputHandler;
 
     std::unique_ptr<Ease> ease;
@@ -113,8 +113,8 @@ public:
 
 static std::bitset<9> g_flags = 0;
 
-Map::Map(std::shared_ptr<Platform> _platform) : platform(_platform) {
-    impl.reset(new Impl(_platform));
+Map::Map(std::unique_ptr<Platform> _platform) : platform(std::move(_platform)) {
+    impl.reset(new Impl(*platform));
 }
 
 Map::~Map() {
@@ -183,8 +183,8 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
 
     bool animated = scene->animated() == Scene::animate::yes;
 
-    if (animated != platform->isContinuousRendering()) {
-        platform->setContinuousRendering(animated);
+    if (animated != platform.isContinuousRendering()) {
+        platform.setContinuousRendering(animated);
     }
 }
 
@@ -201,7 +201,7 @@ SceneID Map::loadScene(std::shared_ptr<Scene> scene,
         impl->lastValidScene.reset();
     }
 
-    if (SceneLoader::loadScene(platform, scene, _sceneUpdates)) {
+    if (SceneLoader::loadScene(*platform, scene, _sceneUpdates)) {
         impl->setScene(scene);
 
         {
@@ -224,7 +224,7 @@ SceneID Map::loadScene(const std::string& _scenePath, bool _useScenePosition,
                        const std::vector<SceneUpdate>& _sceneUpdates) {
 
     LOG("Loading scene file: %s", _scenePath.c_str());
-    auto scene = std::make_shared<Scene>(platform, _scenePath);
+    auto scene = std::make_shared<Scene>(*platform, _scenePath);
     scene->useScenePosition = _useScenePosition;
     return loadScene(scene, _sceneUpdates);
 }
@@ -233,7 +233,7 @@ SceneID Map::loadSceneYaml(const std::string& _yaml, const std::string& _resourc
                            bool _useScenePosition, const std::vector<SceneUpdate>& _sceneUpdates) {
 
     LOG("Loading scene string");
-    auto scene = std::make_shared<Scene>(platform, _yaml, _resourceRoot);
+    auto scene = std::make_shared<Scene>(*platform, _yaml, _resourceRoot);
     scene->useScenePosition = _useScenePosition;
     return loadScene(scene, _sceneUpdates);
 }
@@ -242,7 +242,7 @@ SceneID Map::loadSceneAsync(const std::string& _scenePath, bool _useScenePositio
                             const std::vector<SceneUpdate>& _sceneUpdates) {
 
     LOG("Loading scene file (async): %s", _scenePath.c_str());
-    auto scene = std::make_shared<Scene>(platform, _scenePath);
+    auto scene = std::make_shared<Scene>(*platform, _scenePath);
     scene->useScenePosition = _useScenePosition;
     return loadSceneAsync(scene, _sceneUpdates);
 }
@@ -251,7 +251,7 @@ SceneID Map::loadSceneYamlAsync(const std::string& _yaml, const std::string& _re
                                 bool _useScenePosition, const std::vector<SceneUpdate>& _sceneUpdates) {
 
     LOG("Loading scene string (async)");
-    auto scene = std::make_shared<Scene>(platform, _yaml, _resourceRoot);
+    auto scene = std::make_shared<Scene>(*platform, _yaml, _resourceRoot);
     scene->useScenePosition = _useScenePosition;
     return loadSceneAsync(scene, _sceneUpdates);
 }
@@ -263,7 +263,7 @@ SceneID Map::loadSceneAsync(std::shared_ptr<Scene> nextScene,
 
     runAsyncTask([nextScene, _sceneUpdates, this](){
 
-            bool newSceneLoaded = SceneLoader::loadScene(platform, nextScene, _sceneUpdates);
+            bool newSceneLoaded = SceneLoader::loadScene(*platform, nextScene, _sceneUpdates);
             if (!newSceneLoaded) {
 
                 if (impl->onSceneReady) {
@@ -305,8 +305,8 @@ void Map::setCameraAnimationListener(CameraAnimationCallback _cb) {
     impl->cameraAnimationListener = _cb;
 }
 
-std::shared_ptr<Platform>& Map::getPlatform() {
-    return platform;
+Platform& Map::getPlatform() {
+    return *platform;
 }
 
 SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
@@ -334,7 +334,7 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
                 nextScene->copyConfig(*impl->lastValidScene);
             }
 
-            if (!SceneLoader::applyUpdates(platform, *nextScene, updates)) {
+            if (!SceneLoader::applyUpdates(*platform, *nextScene, updates)) {
                 LOGW("Scene updates not applied to current scene");
 
                 if (impl->onSceneReady) {
@@ -347,7 +347,7 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
             }
 
 
-            bool configApplied = SceneLoader::applyConfig(platform, nextScene);
+            bool configApplied = SceneLoader::applyConfig(*platform, nextScene);
 
             {
                 std::lock_guard<std::mutex> lock(impl->sceneMutex);
@@ -644,7 +644,7 @@ void Map::setCameraPosition(const CameraPosition& _camera) {
     impl->view.setRoll(_camera.rotation);
     impl->view.setPitch(_camera.tilt);
 
-    impl->platform->requestRender();
+    impl->platform.requestRender();
 }
 
 void Map::setCameraPositionEased(const CameraPosition& _camera, float _duration, EaseType _e) {
@@ -743,7 +743,7 @@ void Map::setPosition(double _lon, double _lat) {
     glm::dvec2 meters = MapProjection::lngLatToProjectedMeters({_lon, _lat});
     impl->view.setPosition(meters.x, meters.y);
     impl->inputHandler.cancelFling();
-    impl->platform->requestRender();
+    impl->platform.requestRender();
 }
 
 void Map::getPosition(double& _lon, double& _lat) {
@@ -757,7 +757,7 @@ void Map::setZoom(float _z) {
 
     impl->view.setZoom(_z);
     impl->inputHandler.cancelFling();
-    impl->platform->requestRender();
+    impl->platform.requestRender();
 }
 
 float Map::getZoom() {
@@ -784,7 +784,7 @@ void Map::setRotation(float _radians) {
     cancelCameraAnimation();
 
     impl->view.setRoll(_radians);
-    impl->platform->requestRender();
+    impl->platform.requestRender();
 }
 
 float Map::getRotation() {
@@ -795,7 +795,7 @@ void Map::setTilt(float _radians) {
     cancelCameraAnimation();
 
     impl->view.setPitch(_radians);
-    impl->platform->requestRender();
+    impl->platform.requestRender();
 }
 
 float Map::getTilt() {
@@ -873,7 +873,7 @@ void Map::flyTo(const CameraPosition& _camera, float _duration, float _speed) {
             impl->view.setZoom(pos.z);
             impl->view.setRoll(ease(rStart, rEnd, t, e));
             impl->view.setPitch(ease(tStart, _camera.tilt, t, e));
-            impl->platform->requestRender();
+            impl->platform.requestRender();
         };
 
     if (_speed <= 0.f) { _speed = 1.f; }
@@ -1040,43 +1040,43 @@ void Map::markerRemoveAll() {
 void Map::handleTapGesture(float _posX, float _posY) {
     cancelCameraAnimation();
     impl->inputHandler.handleTapGesture(_posX, _posY);
-    impl->platform->requestRender();
+    impl->platform.requestRender();
 }
 
 void Map::handleDoubleTapGesture(float _posX, float _posY) {
     cancelCameraAnimation();
     impl->inputHandler.handleDoubleTapGesture(_posX, _posY);
-    impl->platform->requestRender();
+    impl->platform.requestRender();
 }
 
 void Map::handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
     cancelCameraAnimation();
     impl->inputHandler.handlePanGesture(_startX, _startY, _endX, _endY);
-    impl->platform->requestRender();
+    impl->platform.requestRender();
 }
 
 void Map::handleFlingGesture(float _posX, float _posY, float _velocityX, float _velocityY) {
     cancelCameraAnimation();
     impl->inputHandler.handleFlingGesture(_posX, _posY, _velocityX, _velocityY);
-    impl->platform->requestRender();
+    impl->platform.requestRender();
 }
 
 void Map::handlePinchGesture(float _posX, float _posY, float _scale, float _velocity) {
     cancelCameraAnimation();
     impl->inputHandler.handlePinchGesture(_posX, _posY, _scale, _velocity);
-    impl->platform->requestRender();
+    impl->platform.requestRender();
 }
 
 void Map::handleRotateGesture(float _posX, float _posY, float _radians) {
     cancelCameraAnimation();
     impl->inputHandler.handleRotateGesture(_posX, _posY, _radians);
-    impl->platform->requestRender();
+    impl->platform.requestRender();
 }
 
 void Map::handleShoveGesture(float _distance) {
     cancelCameraAnimation();
     impl->inputHandler.handleShoveGesture(_distance);
-    impl->platform->requestRender();
+    impl->platform.requestRender();
 }
 
 void Map::setupGL() {

@@ -17,7 +17,7 @@ namespace Tangram {
 
 const std::vector<float> FontContext::s_fontRasterSizes = { 16, 28, 40 };
 
-FontContext::FontContext(std::shared_ptr<const Platform> _platform) :
+FontContext::FontContext(Platform& _platform) :
     m_sdfRadius(SDF_WIDTH),
     m_atlas(*this, GlyphTexture::size, m_sdfRadius),
     m_batch(m_atlas, m_scratch),
@@ -28,7 +28,8 @@ void FontContext::setPixelScale(float _scale) {
 }
 
 void FontContext::loadFonts() {
-    auto fallbacks = m_platform->systemFontFallbacksHandle();
+    auto fallbacks = m_platform.systemFontFallbacksHandle();
+
     for (size_t i = 0; i < s_fontRasterSizes.size(); i++) {
         m_font[i] = m_alfons.addFont("default", s_fontRasterSizes[i]);
     }
@@ -331,7 +332,7 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
 
     // First, try to load from the system fonts.
     bool useFallbackFont = false;
-    auto systemFontHandle = m_platform->systemFont(_family, _weight, _style);
+    auto systemFontHandle = m_platform.systemFont(_family, _weight, _style);
 
     alfons::InputSource source;
 
