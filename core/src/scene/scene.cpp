@@ -26,6 +26,8 @@ namespace Tangram {
 static std::atomic<int32_t> s_serial;
 
 
+Scene::Scene(Platform& _platform) : id(s_serial++), m_platform(_platform) {}
+
 Scene::Scene(Platform& _platform, std::unique_ptr<SceneOptions> _sceneOptions, std::unique_ptr<View> _view)
     : id(s_serial++),
       m_platform(_platform),

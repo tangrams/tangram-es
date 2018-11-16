@@ -82,10 +82,11 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
         return false;
     }
 
-    if (!applyUpdates(*_scene)) {
+    if (!applyUpdates(*_scene, _scene->options().updates)) {
         LOGW("Scene updates failed when loading scene");
         return false;
     }
+
     LOGTime("applyUpdates");
 
     applyGlobals(*_scene);
@@ -128,10 +129,10 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
     return true;
 }
 
-bool SceneLoader::applyUpdates(Scene& scene) {
+bool SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates) {
     auto& root = scene.config();
 
-    for (const auto& update : scene.options().updates) {
+    for (const auto& update : updates) {
         Node value;
 
         try {

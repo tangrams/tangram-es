@@ -24,7 +24,7 @@ using namespace Tangram;
 
 struct TestContext {
 
-    std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
+    MockPlatform platform;
 
     std::shared_ptr<Scene> scene;
     StyleContext styleContext;
@@ -40,9 +40,9 @@ struct TestContext {
     void loadScene(const char* path) {
 
         Url sceneUrl(path);
-        platform->putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(path));
+        platform.putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(path));
 
-        scene = std::make_shared<Scene>(platform, sceneUrl, std::make_unique<View>());
+        scene = std::make_shared<Scene>(platform, std::make_unique<SceneOptions>(sceneUrl));
         Importer importer(scene);
 
         try {
@@ -53,7 +53,7 @@ struct TestContext {
             return;
         }
         SceneLoader::applyGlobals(*scene);
-        SceneLoader::applySources(platform, *scene);
+        SceneLoader::applySources(*scene);
 
         //SceneLoader::applyConfig(platform, scene);
 
