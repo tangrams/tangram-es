@@ -1,7 +1,7 @@
 //
 // Created by Matt Blair on 11/9/18.
 //
-#include "DuktapeJavaScriptContext.h"
+#include "DuktapeContext.h"
 
 #include "log.h"
 #include "data/tileData.h"
@@ -13,83 +13,83 @@
 namespace Tangram {
 
 JSContext createJavaScriptContext() {
-    return JSContext(new DuktapeJavaScriptContext());
+    return JSContext(new DuktapeContext());
 }
 
-DuktapeJavaScriptValue::DuktapeJavaScriptValue(duk_context* ctx, duk_idx_t index) : _ctx(ctx), _index(index) {}
+DuktapeValue::DuktapeValue(duk_context* ctx, duk_idx_t index) : _ctx(ctx), _index(index) {}
 
-bool DuktapeJavaScriptValue::isUndefined() {
+bool DuktapeValue::isUndefined() {
     return duk_is_undefined(_ctx, _index) != 0;
 }
 
-bool DuktapeJavaScriptValue::isNull() {
+bool DuktapeValue::isNull() {
     return duk_is_null(_ctx, _index) != 0;
 }
 
-bool DuktapeJavaScriptValue::isBoolean() {
+bool DuktapeValue::isBoolean() {
     return duk_is_boolean(_ctx, _index) != 0;
 }
 
-bool DuktapeJavaScriptValue::isNumber() {
+bool DuktapeValue::isNumber() {
     return duk_is_number(_ctx, _index) != 0;
 }
 
-bool DuktapeJavaScriptValue::isString() {
+bool DuktapeValue::isString() {
     return duk_is_string(_ctx, _index) != 0;
 }
 
-bool DuktapeJavaScriptValue::isArray() {
+bool DuktapeValue::isArray() {
     return duk_is_array(_ctx, _index) != 0;
 }
 
-bool DuktapeJavaScriptValue::isObject() {
+bool DuktapeValue::isObject() {
     return duk_is_object(_ctx, _index) != 0;
 }
 
-bool DuktapeJavaScriptValue::toBool() {
+bool DuktapeValue::toBool() {
     return duk_to_boolean(_ctx, _index) != 0;
 }
 
-int DuktapeJavaScriptValue::toInt() {
+int DuktapeValue::toInt() {
     return duk_to_int(_ctx, _index);
 }
 
-double DuktapeJavaScriptValue::toDouble() {
+double DuktapeValue::toDouble() {
     return duk_to_number(_ctx, _index);
 }
 
-std::string DuktapeJavaScriptValue::toString() {
+std::string DuktapeValue::toString() {
     return std::string(duk_to_string(_ctx, _index));
 }
 
-size_t DuktapeJavaScriptValue::getLength() {
+size_t DuktapeValue::getLength() {
     return duk_get_length(_ctx, _index);
 }
 
-JSValue DuktapeJavaScriptValue::getValueAtIndex(size_t index) {
+JSValue DuktapeValue::getValueAtIndex(size_t index) {
     duk_get_prop_index(_ctx, _index, static_cast<duk_uarridx_t>(index));
-    return JSValue(new DuktapeJavaScriptValue(_ctx, duk_normalize_index(_ctx, -1)));
+    return JSValue(new DuktapeValue(_ctx, duk_normalize_index(_ctx, -1)));
 }
 
-JSValue DuktapeJavaScriptValue::getValueForProperty(const std::string& name) {
+JSValue DuktapeValue::getValueForProperty(const std::string& name) {
     duk_get_prop_lstring(_ctx, _index, name.data(), name.length());
-    return JSValue(new DuktapeJavaScriptValue(_ctx, duk_normalize_index(_ctx, -1)));
+    return JSValue(new DuktapeValue(_ctx, duk_normalize_index(_ctx, -1)));
 }
 
-void DuktapeJavaScriptValue::setValueAtIndex(size_t index, JSValue value) {
-    auto dukValue = reinterpret_cast<DuktapeJavaScriptValue*>(value.get());
+void DuktapeValue::setValueAtIndex(size_t index, JSValue value) {
+    auto dukValue = reinterpret_cast<DuktapeValue*>(value.get());
     dukValue->ensureExistsOnStackTop();
     duk_put_prop_index(_ctx, _index, static_cast<duk_uarridx_t>(index));
 }
 
-void DuktapeJavaScriptValue::setValueForProperty(const std::string& name, JSValue value) {
-    auto dukValue = reinterpret_cast<DuktapeJavaScriptValue*>(value.get());
+void DuktapeValue::setValueForProperty(const std::string& name, JSValue value) {
+    auto dukValue = reinterpret_cast<DuktapeValue*>(value.get());
     dukValue->ensureExistsOnStackTop();
     duk_put_prop_lstring(_ctx, _index, name.data(), name.length());
 
 }
 
-void DuktapeJavaScriptValue::ensureExistsOnStackTop() {
+void DuktapeValue::ensureExistsOnStackTop() {
     auto dukTopIndex = duk_get_top_index(_ctx);
     if (_index != dukTopIndex) {
         duk_require_stack_top(_ctx, dukTopIndex + 1);
@@ -100,7 +100,7 @@ void DuktapeJavaScriptValue::ensureExistsOnStackTop() {
 const static char INSTANCE_ID[] = "\xff""\xff""obj";
 const static char FUNC_ID[] = "\xff""\xff""fns";
 
-DuktapeJavaScriptContext::DuktapeJavaScriptContext() {
+DuktapeContext::DuktapeContext() {
     // Create duktape heap with default allocation functions and custom fatal error handler.
     _ctx = duk_create_heap(nullptr, nullptr, nullptr, nullptr, fatalErrorHandler);
 
@@ -155,21 +155,21 @@ DuktapeJavaScriptContext::DuktapeJavaScriptContext() {
     }
 }
 
-DuktapeJavaScriptContext::~DuktapeJavaScriptContext() {
+DuktapeContext::~DuktapeContext() {
     duk_destroy_heap(_ctx);
 }
 
-void DuktapeJavaScriptContext::setGlobalValue(const std::string& name, JSValue value) {
-    auto dukValue = reinterpret_cast<DuktapeJavaScriptValue*>(value.get());
+void DuktapeContext::setGlobalValue(const std::string& name, JSValue value) {
+    auto dukValue = reinterpret_cast<DuktapeValue*>(value.get());
     dukValue->ensureExistsOnStackTop();
     duk_put_global_lstring(_ctx, name.data(), name.length());
 }
 
-void DuktapeJavaScriptContext::setCurrentFeature(const Feature* feature) {
+void DuktapeContext::setCurrentFeature(const Feature* feature) {
     _feature = feature;
 }
 
-uint32_t DuktapeJavaScriptContext::addFunction(const std::string& source, bool& error) {
+uint32_t DuktapeContext::addFunction(const std::string& source, bool& error) {
     // Get all functions (array) in context
     if (!duk_get_global_string(_ctx, FUNC_ID)) {
         LOGE("AddFunction - functions array not initialized");
@@ -199,7 +199,7 @@ uint32_t DuktapeJavaScriptContext::addFunction(const std::string& source, bool& 
     return index;
 }
 
-bool DuktapeJavaScriptContext::evaluateBooleanFunction(uint32_t index) {
+bool DuktapeContext::evaluateBooleanFunction(uint32_t index) {
     if (!evaluateFunction(index)) {
         return false;
     }
@@ -213,44 +213,44 @@ bool DuktapeJavaScriptContext::evaluateBooleanFunction(uint32_t index) {
     return result;
 }
 
-JSValue DuktapeJavaScriptContext::getFunctionResult(uint32_t index) {
+JSValue DuktapeContext::getFunctionResult(uint32_t index) {
     if (!evaluateFunction(index)) {
         return nullptr;
     }
     return getStackTopValue();
 }
 
-JSValue DuktapeJavaScriptContext::newNull() {
+JSValue DuktapeContext::newNull() {
     duk_push_null(_ctx);
     return getStackTopValue();
 }
 
-JSValue DuktapeJavaScriptContext::newBoolean(bool value) {
+JSValue DuktapeContext::newBoolean(bool value) {
     duk_push_boolean(_ctx, static_cast<duk_bool_t>(value));
     return getStackTopValue();
 }
 
-JSValue DuktapeJavaScriptContext::newNumber(double value) {
+JSValue DuktapeContext::newNumber(double value) {
     duk_push_number(_ctx, value);
     return getStackTopValue();
 }
 
-JSValue DuktapeJavaScriptContext::newString(const std::string& value) {
+JSValue DuktapeContext::newString(const std::string& value) {
     duk_push_lstring(_ctx, value.data(), value.length());
     return getStackTopValue();
 }
 
-JSValue DuktapeJavaScriptContext::newArray() {
+JSValue DuktapeContext::newArray() {
     duk_push_array(_ctx);
     return getStackTopValue();
 }
 
-JSValue DuktapeJavaScriptContext::newObject() {
+JSValue DuktapeContext::newObject() {
     duk_push_object(_ctx);
     return getStackTopValue();
 }
 
-JSValue DuktapeJavaScriptContext::newFunction(const std::string& value) {
+JSValue DuktapeContext::newFunction(const std::string& value) {
     if (duk_pcompile_lstring(_ctx, DUK_COMPILE_FUNCTION, value.data(), value.length()) != 0) {
         auto error = duk_safe_to_string(_ctx, -1);
         LOGW("Compile failed in global function: %s\n%s\n---", error, value.c_str());
@@ -260,19 +260,19 @@ JSValue DuktapeJavaScriptContext::newFunction(const std::string& value) {
     return getStackTopValue();
 }
 
-JSScopeMarker DuktapeJavaScriptContext::getScopeMarker() {
+JSScopeMarker DuktapeContext::getScopeMarker() {
     return duk_get_top(_ctx);
 }
 
-void DuktapeJavaScriptContext::resetToScopeMarker(JSScopeMarker marker) {
+void DuktapeContext::resetToScopeMarker(JSScopeMarker marker) {
     duk_set_top(_ctx, marker);
 }
 
 // Implements Proxy handler.has(target_object, key)
-int DuktapeJavaScriptContext::jsHasProperty(duk_context *_ctx) {
+int DuktapeContext::jsHasProperty(duk_context *_ctx) {
 
     duk_get_prop_string(_ctx, 0, INSTANCE_ID);
-    auto context = static_cast<const DuktapeJavaScriptContext*>(duk_to_pointer(_ctx, -1));
+    auto context = static_cast<const DuktapeContext*>(duk_to_pointer(_ctx, -1));
     if (!context || !context->_feature) {
         LOGE("Error: no context set %p %p", context, context ? context->_feature : nullptr);
         duk_pop(_ctx);
@@ -287,11 +287,11 @@ int DuktapeJavaScriptContext::jsHasProperty(duk_context *_ctx) {
 }
 
 // Implements Proxy handler.get(target_object, key)
-int DuktapeJavaScriptContext::jsGetProperty(duk_context *_ctx) {
+int DuktapeContext::jsGetProperty(duk_context *_ctx) {
 
     // Get the JavaScriptContext instance from JS Feature object (first parameter).
     duk_get_prop_string(_ctx, 0, INSTANCE_ID);
-    auto context = static_cast<const DuktapeJavaScriptContext*>(duk_to_pointer(_ctx, -1));
+    auto context = static_cast<const DuktapeContext*>(duk_to_pointer(_ctx, -1));
     if (!context || !context->_feature) {
         LOGE("Error: no context set %p %p",  context, context ? context->_feature : nullptr);
         duk_pop(_ctx);
@@ -314,12 +314,12 @@ int DuktapeJavaScriptContext::jsGetProperty(duk_context *_ctx) {
     return 1;
 }
 
-void DuktapeJavaScriptContext::fatalErrorHandler(void*, const char* message) {
+void DuktapeContext::fatalErrorHandler(void*, const char* message) {
     LOGE("Fatal Error in DuktapeJavaScriptContext: %s", message);
     abort();
 }
 
-bool DuktapeJavaScriptContext::evaluateFunction(uint32_t index) {
+bool DuktapeContext::evaluateFunction(uint32_t index) {
     // Get all functions (array) in context
     if (!duk_get_global_string(_ctx, FUNC_ID)) {
         LOGE("EvalFilterFn - functions array not initialized");
