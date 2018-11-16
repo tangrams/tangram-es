@@ -9,13 +9,13 @@
 
 namespace Tangram {
 
-class DuktapeJavaScriptValue : public IJavaScriptValue {
+class DuktapeValue : public IJavaScriptValue {
 
 public:
 
-    DuktapeJavaScriptValue(duk_context* ctx, duk_idx_t index);
+    DuktapeValue(duk_context* ctx, duk_idx_t index);
 
-    ~DuktapeJavaScriptValue() override = default;
+    ~DuktapeValue() override = default;
 
     bool isUndefined() override;
     bool isNull() override;
@@ -48,13 +48,13 @@ private:
     duk_idx_t _index = 0;
 };
 
-class DuktapeJavaScriptContext : public IJavaScriptContext {
+class DuktapeContext : public IJavaScriptContext {
 
 public:
 
-    DuktapeJavaScriptContext();
+    DuktapeContext();
 
-    ~DuktapeJavaScriptContext() override;
+    ~DuktapeContext() override;
 
     void setGlobalValue(const std::string& name, JSValue value) override;
 
@@ -89,7 +89,7 @@ private:
     bool evaluateFunction(uint32_t index);
 
     JSValue getStackTopValue() {
-        return JSValue(new DuktapeJavaScriptValue(_ctx, duk_normalize_index(_ctx, -1)));
+        return JSValue(new DuktapeValue(_ctx, duk_normalize_index(_ctx, -1)));
     }
 
     duk_context* _ctx = nullptr;
