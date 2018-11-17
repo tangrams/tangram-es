@@ -16,13 +16,9 @@ namespace Tangram {
 class Material;
 class PointLight;
 class SceneLayer;
-class ShaderProgram;
-class SpriteAtlas;
 class Style;
 class Texture;
-class TileManager;
 class TileSource;
-class View;
 struct Filter;
 struct MaterialTexture;
 struct StyleParam;
@@ -53,9 +49,16 @@ struct SceneLoader {
     static void loadLight(const std::pair<Node, Node>& light, Scene& scene);
     static void parseLightPosition(const Node& positionNode, PointLight& light);
 
+    static void applyTextures(Scene& scene);
+    static void loadTexture(const std::pair<Node, Node>& texture, Scene& scene);
+    static bool parseTexFiltering(const Node& filteringNode, TextureOptions& options);
+
+    static void applyFonts(Scene& scene);
+    static void loadFontDescription(const Node& node, const std::string& family, Scene& scene);
+
     static void applySources(Scene& scene);
-    static void loadSource(const std::string& name, const Node& source, const Node& sources, Scene& scene);
-    static void loadSourceRasters(TileSource& source, const Node& rasterNode, const Node& sources, Scene& scene);
+    static void loadSource(const std::string& name, const Node& source, Scene& scene);
+    static void loadSourceRasters(TileSource& source, const Node& rasterNode, Scene& scene);
 
     static void applyStyles(Scene& scene);
     static bool loadStyle(const std::string& styleName, const Node& config, Scene& scene);
@@ -69,24 +72,15 @@ struct SceneLoader {
     static void loadMaterial(const Node& matNode, Material& material, Scene& scene, Style& style);
     static MaterialTexture loadMaterialTexture(const Node& matCompNode, Scene& scene, Style& style);
 
-    static void applyTextures(Scene& scene);
-    static void loadTexture(const std::pair<Node, Node>& texture, Scene& scene);
-
-    static void applyFonts(Scene& scene);
-    static void loadFontDescription(const Node& node, const std::string& family, Scene& scene);
-
     static void applyLayers(Scene& scene);
     static void loadLayer(const std::pair<Node, Node>& layer, Scene& scene);
     static SceneLayer loadSublayer(const Node& layer, const std::string& name, Scene& scene);
-
     static Filter generateFilter(const Node& filter, Scene& scene);
     static Filter generateAnyFilter(const Node& filter, Scene& scene);
     static Filter generateAllFilter(const Node& filter, Scene& scene);
     static Filter generateNoneFilter(const Node& filter, Scene& scene);
     static Filter generatePredicate(const Node& filter, std::string _key);
     static bool getFilterRangeValue(const Node& node, double& val, bool& hasPixelArea);
-
-    static bool parseTexFiltering(const Node& filteringNode, TextureOptions& options);
 
     SceneLoader() = delete;
 
