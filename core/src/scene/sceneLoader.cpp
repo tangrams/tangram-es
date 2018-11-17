@@ -275,12 +275,6 @@ void SceneLoader::applyCameras(Scene& _scene) {
         view->setMaxPitch(camera.maxTilt);
     }
 
-    if (_scene.options().useScenePosition) {
-        auto position = _scene.startPosition;
-        view->setCenterCoordinates({position.x, position.y});
-        view->setZoom(_scene.startZoom);
-    }
-
     LOGE("UPDATE VIEW %fx%f - %f %f %f", view->getWidth(), view->getHeight(), view->getZoom(),
          view->getCenterCoordinates().longitude, view->getCenterCoordinates().latitude);
     view->update();
@@ -376,8 +370,10 @@ void SceneLoader::loadCamera(const Node& _camera, Scene& _scene) {
         }
     }
 
-    _scene.startPosition = glm::dvec2(x, y);
-    _scene.startZoom = z;
+    if (_scene.options().useScenePosition) {
+        _scene.view()->setCenterCoordinates({x, y});
+        _scene.view()->setZoom(z);
+    }
 }
 
 void SceneLoader::applyLights(Scene& _scene) {
