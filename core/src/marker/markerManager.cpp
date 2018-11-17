@@ -379,7 +379,7 @@ bool MarkerManager::buildStyling(Marker& marker) {
     try {
         YAML::Node node = YAML::Load(markerStyling.string);
         // Parse style parameters from the YAML node.
-        SceneLoader::parseStyleParams(node, m_scene, "", params);
+        SceneLoader::parseStyleParams(m_scene, node, "", params);
     } catch (const YAML::Exception& e) {
         LOG("Invalid marker styling '%s', %s", markerStyling.string.c_str(), e.what());
         return false;
