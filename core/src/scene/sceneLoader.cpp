@@ -322,11 +322,13 @@ void SceneLoader::applyStyles(std::shared_ptr<Scene>& _scene) {
     // Instantiate built-in styles
     _scene->styles().emplace_back(new PolygonStyle("polygons"));
     _scene->styles().emplace_back(new PolylineStyle("lines"));
-    _scene->styles().emplace_back(new DebugTextStyle("debugtext", _scene->fontContext(), true));
     _scene->styles().emplace_back(new TextStyle("text", _scene->fontContext(), true));
-    _scene->styles().emplace_back(new DebugStyle("debug"));
     _scene->styles().emplace_back(new PointStyle("points", _scene->fontContext()));
     _scene->styles().emplace_back(new RasterStyle("raster"));
+    if (_scene->options().debugStyles) {
+        _scene->styles().emplace_back(new DebugTextStyle("debugtext", _scene->fontContext(), true));
+        _scene->styles().emplace_back(new DebugStyle("debug"));
+    }
 
     if (const Node& styles = config["styles"]) {
         StyleMixer mixer;
