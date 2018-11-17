@@ -25,8 +25,8 @@ void logMsg(const char* fmt, ...) {
     va_end(args);
 }
 
-LinuxPlatform::LinuxPlatform() :
-    m_urlClient(std::make_unique<UrlClient>(UrlClient::Options{})) {
+LinuxPlatform::LinuxPlatform() {
+    m_urlClient = std::make_unique<UrlClient>(UrlClient::Options{});
     m_fcConfig = FcInitLoadConfigAndFonts();
 }
 
@@ -80,17 +80,35 @@ FontSourceHandle LinuxPlatform::systemFont(const std::string& _name,
 
 UrlRequestHandle LinuxPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
     if (m_shutdown) { return 0; }
-    return m_urlClient->addRequest(_url.string(),
-                                   [this, cb = _callback](UrlResponse&& r) {
-                                       LOG(">>-------------->>");
-                                       cb(std::move(r));
-                                       LOG("<<--------------<<");
-                                       requestRender();
-                                   });
+    if (_url.hasHttpScheme()) {
+        return m_urlClient->addRequest(_url.string(),
+                                       [this, cb = _callback](UrlResponse&& r) {
+                                           LOG(">>-------------->>");
+                                           cb(std::move(r));
+                                           LOG("<<--------------<<");
+                                           requestRender();
+                                       });
+    } else {
+        m_fileWorker.enqueue([path = _url.path(), _callback](){
+             UrlResponse response;
+             auto allocator = [&](size_t size) {
+                 response.content.resize(size);
+                 return response.content.data();
+             };
+
+             Platform::bytesFromFileSystem(path.c_str(), allocator);
+             //LOGE("Ready file task: %s", path.c_str());
+
+             _callback(std::move(response));
+        });
+        return std::numeric_limits<uint64_t>::max();
+    }
 }
 
 void LinuxPlatform::cancelUrlRequest(UrlRequestHandle _request) {
     if (m_shutdown) { return; }
+    if (_request == std::numeric_limits<uint64_t>::max()) { return; }
+
     m_urlClient->cancelRequest(_request);
 }
 
