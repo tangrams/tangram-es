@@ -52,9 +52,6 @@ using YAML::BadConversion;
 
 namespace Tangram {
 
-// TODO: make this configurable: 16MB default in-memory DataSource cache:
-constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
-
 static const std::string GLOBAL_PREFIX = "global.";
 
 bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
@@ -817,22 +814,32 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, Scene&
         YamlUtil::getBool(tmsNode, isTms);
     }
 
-    auto rawSources = std::make_unique<MemoryCacheDataSource>();
-    rawSources->setCacheSize(CACHE_SIZE);
+    std::unique_ptr<TileSource::DataSource> rawSources;
 
     if (isMBTilesFile) {
 #ifdef TANGRAM_MBTILES_DATASOURCE
         // If we have MBTiles, we know the source is tiled.
         tiled = true;
         // Create an MBTiles data source from the file at the url and add it to the source chain.
-        rawSources->setNext(std::make_unique<MBTilesDataSource>(_scene.platform(), name, url, ""));
+        rawSources = std::make_unique<MBTilesDataSource>(_scene.platform(), name, url, "");
 #else
         LOGE("MBTiles support is disabled. This source will be ignored: %s", _name.c_str());
         return;
 #endif
     } else if (tiled) {
-        rawSources->setNext(std::make_unique<NetworkDataSource>(_scene.platform(), url,
-                                                                std::move(subdomains), isTms));
+        auto cacheSize = _scene.options().memoryTileCacheSize;
+        if (cacheSize > 0) {
+            auto cache = std::make_unique<MemoryCacheDataSource>();
+            cache->setCacheSize(cacheSize);
+            rawSources = std::move(cache);
+        }
+
+        auto s = std::make_unique<NetworkDataSource>(_scene.platform(), url, std::move(subdomains), isTms);
+        if (rawSources) {
+            rawSources->next = std::move(s);
+        } else {
+            rawSources = std::move(s);
+        }
     }
 
     std::shared_ptr<TileSource> sourcePtr;
@@ -843,8 +850,8 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, Scene&
         if (auto genLabelCentroidsNode = source["generate_label_centroids"]) {
             generateCentroids = true;
         }
-        sourcePtr = std::make_shared<ClientGeoJsonSource>(_scene.platform(), name, url, generateCentroids,
-                                                          zoomOptions);
+        sourcePtr = std::make_shared<ClientGeoJsonSource>(_scene.platform(), name, url,
+                                                          generateCentroids, zoomOptions);
     } else if (type == "Raster") {
         TextureOptions options;
         if (const Node& filtering = source["filtering"]) {
@@ -852,7 +859,6 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, Scene&
                 LOGW("Invalid texture filtering: %s", Dump(filtering).c_str());
             }
         }
-
         sourcePtr = std::make_shared<RasterSource>(name, std::move(rawSources), options, zoomOptions);
     } else {
         sourcePtr = std::make_shared<TileSource>(name, std::move(rawSources), zoomOptions);
