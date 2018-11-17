@@ -245,8 +245,8 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
     YAML::Node n0 = YAML::Load(R"(filter: function() { return feature.sort_key === 2; })");
     YAML::Node n1 = YAML::Load(R"(filter: function() { return feature.name === 'test'; })");
 
-    Filter filter0 = SceneLoader::generateFilter(n0["filter"], scene);
-    Filter filter1 = SceneLoader::generateFilter(n1["filter"], scene);
+    Filter filter0 = SceneLoader::generateFilter(scene, n0["filter"]);
+    Filter filter1 = SceneLoader::generateFilter(scene, n1["filter"]);
 
     REQUIRE(scene.functions().size() == 2);
 
@@ -295,7 +295,7 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
 
     std::vector<StyleParam> styles;
 
-    SceneLoader::parseStyleParams(n0["draw"], scene, "", styles);
+    SceneLoader::parseStyleParams(scene, n0["draw"], "", styles);
 
     REQUIRE(scene.functions().size() == 3);
 
@@ -354,7 +354,7 @@ TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
 
     scene.config() = n0;
 
-    SceneLoader::parseStyleParams(n0["draw"], scene, "", styles);
+    SceneLoader::parseStyleParams(scene, n0["draw"], "", styles);
 
     REQUIRE(scene.functions().size() == 4);
 
