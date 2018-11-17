@@ -4,6 +4,7 @@
 #include "marker/markerManager.h"
 #include "platform.h"
 #include "stops.h"
+#include "text/fontContext.h" // For FontDescription
 #include "tile/tileManager.h"
 #include "util/color.h"
 #include "util/url.h"
@@ -11,7 +12,7 @@
 #include "view/view.h"
 
 #include <atomic>
-#include <list>
+#include <forward_list>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -170,9 +171,6 @@ public:
     float pixelScale() { return m_pixelScale; }
     void setPixelScale(float _scale);
 
-    std::atomic_ushort pendingTextures{0};
-    std::atomic_ushort pendingFonts{0};
-
     std::vector<SceneError> errors;
 
     bool update(const View& _view, float _dt);
@@ -195,12 +193,24 @@ public:
 
     void initTileManager() {
         m_tileManager->setTileSources(m_tileSources);
+        m_tileManager->updateTileSets(*m_view);
     }
 
-    void startTileWorker() {
+    void initTileWorker() {
         m_tileWorker->setScene(*this);
-        m_markerManager = std::make_unique<MarkerManager>(*this);
     }
+
+    bool complete();
+    bool isReady() const { return m_ready; };
+
+    std::shared_ptr<Texture> fetchTexture(const std::string& name, const Url& url,
+                                          const TextureOptions& options,
+                                          std::unique_ptr<SpriteAtlas> _atlas = nullptr);
+
+    std::shared_ptr<Texture> loadTexture(const std::string& name);
+
+    void loadFont(const std::string& _uri, const std::string& _family,
+                  const std::string& _style, const std::string& _weight);
 
     friend struct SceneLoader;
     friend class Importer;
@@ -212,6 +222,9 @@ private:
     Platform& m_platform;
 
     std::unique_ptr<SceneOptions> m_options;
+
+    bool m_ready = false;
+    bool m_loading = false;
 
     // ---------------------------------------------------------------//
     // Loaded Scene Data
@@ -264,6 +277,25 @@ private:
     std::unique_ptr<MarkerManager> m_markerManager;
     std::unique_ptr<LabelManager> m_labelManager;
     std::unique_ptr<View> m_view;
+
+    struct FontTask {
+        FontTask(FontDescription ft, std::shared_ptr<FontContext> fontContext)
+            : ft(ft), fontContext(fontContext) {}
+        FontDescription ft;
+        std::shared_ptr<FontContext> fontContext;
+        bool done = false;
+    };
+    struct TextureTask {
+        TextureTask(Url url, std::shared_ptr<Texture> texture)
+            : url(url), texture(texture) {}
+        Url url;
+        std::shared_ptr<Texture> texture;
+        bool done = false;
+    };
+
+    std::mutex m_taskMutex;
+    std::forward_list<std::shared_ptr<FontTask>> m_pendingFonts;
+    std::forward_list<std::shared_ptr<TextureTask>> m_pendingTextures;
 };
 
 }
