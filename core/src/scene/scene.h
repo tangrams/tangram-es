@@ -95,7 +95,7 @@ public:
         yes, no, none
     };
 
-    Scene(Platform& _platform);
+    explicit Scene(Platform& _platform);
     Scene(Platform& _platform, std::unique_ptr<SceneOptions> _sceneOptions,
           std::unique_ptr<View> _view = std::make_unique<View>());
 
@@ -105,8 +105,6 @@ public:
     ~Scene();
 
     const int32_t id;
-
-    //void copyConfig(const Scene& _other);
 
     auto& view() { return m_view; }
     auto& camera() { return m_camera; }
@@ -162,9 +160,6 @@ public:
 
     int addJsFunction(const std::string& _function);
 
-    glm::dvec2 startPosition = { 0, 0 };
-    float startZoom = 0;
-
     void animated(bool animated) { m_animated = animated ? yes : no; }
     animate animated() const { return m_animated; }
 
@@ -175,8 +170,6 @@ public:
 
     float pixelScale() { return m_pixelScale; }
     void setPixelScale(float _scale);
-
-    std::vector<SceneError> errors;
 
     bool update(const View& _view, float _dt);
     void renderBeginFrame(RenderState& _rs);
@@ -219,6 +212,9 @@ public:
 
     friend struct SceneLoader;
     friend class Importer;
+
+    std::vector<SceneError> errors;
+
 protected:
     Platform& platform() { return m_platform; }
     const SceneOptions& options() { return *m_options; }
