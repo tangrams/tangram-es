@@ -25,7 +25,7 @@ Filter load(const std::string& filterYaml) {
     MockPlatform platform;
     Scene scene(platform);
     YAML::Node node = YAML::Load(filterYaml);
-    auto filter = SceneLoader::generateFilter(node["filter"], scene);
+    auto filter = SceneLoader::generateFilter(scene, node["filter"]);
     ctx.initFunctions(scene);
     return filter;
 }
