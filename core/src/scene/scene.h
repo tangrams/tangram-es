@@ -59,8 +59,12 @@ public:
     std::string yaml;
     // The URL from which this scene was loaded
     Url url;
+    // SceneUpdates to apply to the scene
     std::vector<SceneUpdate> updates;
+    // Set the view to the position provided by the scene
     bool useScenePosition = true;
+    // Add styles toggled by DebguFlags
+    bool debugStyles = false;
 };
 
 class Scene {
