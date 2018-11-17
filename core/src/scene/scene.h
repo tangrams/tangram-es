@@ -41,10 +41,13 @@ class ZipArchive;
 class FrameBuffer;
 class SelectionQuery;
 
+// 16MB default in-memory DataSource cache
+constexpr size_t CACHE_SIZE = 16 * (1024 * 102);
+
 // Delimiter used in sceneloader for style params and layer-sublayer naming
 const std::string DELIMITER = ":";
 
-/* Singleton container of <Style> information
+/* Container of <Style> information
  *
  * Scene is a singleton containing the styles, lighting, and interactions defining a map scene
  */
@@ -66,6 +69,8 @@ public:
     bool useScenePosition = true;
     // Add styles toggled by DebguFlags
     bool debugStyles = false;
+
+    size_t memoryTileCacheSize = CACHE_SIZE;
 };
 
 class Scene {
