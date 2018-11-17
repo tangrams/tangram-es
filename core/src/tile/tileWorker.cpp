@@ -4,6 +4,7 @@
 #include "log.h"
 #include "map.h"
 #include "platform.h"
+#include "scene/scene.h"
 #include "tile/tileBuilder.h"
 #include "tile/tileID.h"
 #include "tile/tileTask.h"
@@ -42,22 +43,22 @@ void TileWorker::run(Worker* instance) {
         {
             std::unique_lock<std::mutex> lock(m_mutex);
 
-            m_condition.wait(lock, [&, this]{
-                    return !m_running || !m_queue.empty() || !instance->tileBuilder;
-                });
+            m_condition.wait(lock, [&] {
+                return (!m_queue.empty() && m_sceneComplete) || !m_running || instance->tileBuilder;
+            });
 
             if (instance->tileBuilder) {
                 builder = std::move(instance->tileBuilder);
                 builder->init();
                 LOGTO("Passed new TileBuilder to TileWorker");
             }
-
             // Check if thread should stop
             if (!m_running) {
                 break;
             }
 
-            if (!builder) {
+            if (!builder || !builder->scene().isReady()) {
+                if (builder) LOG("Waiting for Scene to become ready");
                 continue;
             }
 
@@ -100,21 +101,32 @@ void TileWorker::run(Worker* instance) {
 }
 
 void TileWorker::setScene(Scene& _scene) {
+    LOG("Set Scene on TileWorker");
+
     for (auto& worker : m_workers) {
         worker->tileBuilder = std::make_unique<TileBuilder>(_scene);
     }
+    m_condition.notify_all();
 }
 
 void TileWorker::enqueue(std::shared_ptr<TileTask> task) {
-    LOG("%d enqueue %s", m_running, task->tileId().toString().c_str());
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        if (!m_running) {
-            return;
-        }
+        if (!m_running) { return; }
+        LOG("%d enqueue %s", m_queue.size()+1, task->tileId().toString().c_str());
         m_queue.push_back(std::move(task));
     }
     m_condition.notify_one();
+}
+
+void TileWorker::poke() {
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        LOG("Poking TileWorker - enqueued %d", m_queue.size());
+
+        if (!m_running || m_queue.empty()) { return; }
+    }
+    m_condition.notify_all();
 }
 
 void TileWorker::stop() {

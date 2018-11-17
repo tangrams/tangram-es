@@ -14,6 +14,7 @@
 #include "style/material.h"
 #include "style/style.h"
 #include "text/fontContext.h"
+#include "util/base64.h"
 #include "util/mapProjection.h"
 #include "util/util.h"
 #include "util/zipArchive.h"
@@ -40,6 +41,7 @@ Scene::Scene(Platform& _platform, std::unique_ptr<SceneOptions> _sceneOptions, s
       m_view(std::move(_view)) {
     m_pixelScale = m_view->pixelScale();
     m_fontContext->setPixelScale(m_pixelScale);
+    m_loading = true;
 }
 
 #if 0
@@ -59,17 +61,13 @@ void Scene::copyConfig(const Scene& _other) {
 }
 #endif
 
-Scene::~Scene() {
-    //m_tileWorker->stop();
-}
+Scene::~Scene() {}
 
 const Style* Scene::findStyle(const std::string& _name) const {
-
     for (auto& style : m_styles) {
         if (style->getName() == _name) { return style.get(); }
     }
     return nullptr;
-
 }
 
 Style* Scene::findStyle(const std::string& _name) {
@@ -193,7 +191,140 @@ void Scene::setPixelScale(float _scale) {
     if (m_markerManager) {
         m_markerManager->rebuildAll();
     }
+}
 
+std::shared_ptr<Texture> Scene::fetchTexture(const std::string& _name, const Url& _url,
+                                             const TextureOptions& _options,
+                                             std::unique_ptr<SpriteAtlas> _atlas) {
+
+    std::shared_ptr<Texture> texture = std::make_shared<Texture>(_options);
+    m_textures.emplace(_name, texture);
+
+    if (_url.hasBase64Data() && _url.mediaType() == "image/png") {
+        auto data = _url.data();
+
+        std::vector<unsigned char> blob;
+
+        try {
+            blob = Base64::decode(data);
+        } catch(const std::runtime_error& e) {
+            LOGE("Can't decode Base64 texture '%s'", e.what());
+        }
+
+        if (blob.empty()) {
+            LOGE("Can't decode Base64 texture");
+
+        } else if (!texture->loadImageFromMemory(blob.data(), blob.size())) {
+            LOGE("Invalid Base64 texture");
+        }
+        return texture;
+    }
+
+    texture->setSpriteAtlas(std::move(_atlas));
+
+    LOG("Fetch texture");
+
+    auto task = std::make_shared<TextureTask>(_url, texture);
+
+    {
+        std::lock_guard<std::mutex> lock(m_taskMutex);
+        m_pendingTextures.push_front(task);
+    }
+    startUrlRequest(_url, [t = std::weak_ptr<TextureTask>(task)] (UrlResponse&& response) {
+        auto task = t.lock();
+        if (!task) { return; }
+
+        LOG("Got texture data %s", task->url.string().c_str());
+
+        if (response.error) {
+            LOGE("Error retrieving URL '%s': %s", task->url.string().c_str(), response.error);
+        } else {
+            auto data = reinterpret_cast<const uint8_t*>(response.content.data());
+            auto length = response.content.size();
+            if (!task->texture->loadImageFromMemory(data, length)) {
+                LOGE("Invalid texture data from URL '%s'", task->url.string().c_str());
+            }
+            if (auto& sprites = task->texture->spriteAtlas()) {
+                sprites->updateSpriteNodes({task->texture->width(),
+                                            task->texture->height()});
+            }
+        }
+        task->done = true;
+    });
+
+    return texture;
+}
+
+std::shared_ptr<Texture> Scene::loadTexture(const std::string& _name) {
+
+    auto entry = m_textures.find(_name);
+    if (entry != m_textures.end()) {
+        return entry->second;
+    }
+
+    // If texture could not be found by name then interpret name as URL
+    TextureOptions options;
+    return fetchTexture(_name, _name, options);
+}
+
+
+void Scene::loadFont(const std::string& _uri, const std::string& _family,
+                     const std::string& _style, const std::string& _weight) {
+
+    std::string familyNormalized, styleNormalized;
+
+    familyNormalized.resize(_family.size());
+    styleNormalized.resize(_style.size());
+
+    std::transform(_family.begin(), _family.end(), familyNormalized.begin(), ::tolower);
+    std::transform(_style.begin(), _style.end(), styleNormalized.begin(), ::tolower);
+
+    auto task = std::make_shared<FontTask>(FontDescription{familyNormalized,styleNormalized,
+                                                           _weight, _uri}, m_fontContext);
+    {
+        std::lock_guard<std::mutex> lock(m_taskMutex);
+        m_pendingFonts.push_front(task);
+    }
+    startUrlRequest(_uri, [t = std::weak_ptr<FontTask>(task)] (UrlResponse&& response) {
+         auto task = t.lock();
+         if (!task) { return; }
+
+         LOG("Got font: %s", task->ft.uri.c_str());
+
+        if (response.error) {
+            LOGE("Error retrieving font '%s' at %s: ", task->ft.alias.c_str(),
+                 task->ft.uri.c_str(), response.error);
+        } else {
+            task->fontContext->addFont(task->ft, alfons::InputSource(std::move(response.content)));
+        }
+        task->done = true;
+    });
+}
+
+bool Scene::complete() {
+    if (m_ready) { return true; }
+    if (!m_loading) { return false; }
+
+    // Wait until font and texture resources are fully loaded
+    {
+        std::lock_guard<std::mutex> lock(m_taskMutex);
+        int t = 0, f = 0;
+        m_pendingTextures.remove_if([&](auto& task) { t++;  return task->done; });
+        m_pendingFonts.remove_if([&](auto& task) { f++; return task->done; });
+
+        if (!m_pendingTextures.empty() || !m_pendingFonts.empty()) {
+            LOG("Waiting... fonts:%d textures:%d", f, t);
+            return false;
+        }
+    }
+
+    m_markerManager = std::make_unique<MarkerManager>(*this);
+    m_tileWorker->poke();
+
+    m_loading = false;
+    m_ready = true;
+
+    return true;
 }
 
 bool Scene::update(const View& _view, float _dt) {
@@ -218,7 +349,8 @@ bool Scene::update(const View& _view, float _dt) {
         for (const auto& tile : tiles) {
             tile->update(_dt, _view);
         }
-        m_labelManager->updateLabelSet(_view.state(), _dt, *this, tiles, markers, *m_tileManager);
+        m_labelManager->updateLabelSet(_view.state(), _dt, *this, tiles, markers,
+                                       *m_tileManager);
     } else {
         m_labelManager->updateLabels(_view.state(), _dt, m_styles, tiles, markers);
     }
