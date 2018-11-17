@@ -33,53 +33,53 @@ struct StyleUniform {
 struct SceneLoader {
     using Node = YAML::Node;
 
-    static bool loadScene(std::shared_ptr<Scene> _scene);
+    static bool loadScene(std::shared_ptr<Scene> scene);
 
     static bool applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates);
     static void applyGlobals(Scene& scene);
 
     static void applyScene(Scene& scene);
-    static void loadBackground(const Node& background, Scene& scene);
+    static void loadBackground(Scene& scene, const Node& background);
 
     static void applyCameras(Scene& scene);
-    static void loadCameras(const Node& cameras, Scene& scene);
-    static void loadCamera(const Node& camera, Scene& scene);
+    static void loadCameras(Scene& scene, const Node& cameras);
+    static void loadCamera(Scene& scene, const Node& camera);
 
     static void applyLights(Scene& scene);
-    static void loadLight(const std::pair<Node, Node>& light, Scene& scene);
+    static void loadLight(Scene& scene, const std::pair<Node, Node>& light);
     static void parseLightPosition(const Node& positionNode, PointLight& light);
 
     static void applyTextures(Scene& scene);
-    static void loadTexture(const std::pair<Node, Node>& texture, Scene& scene);
+    static void loadTexture(Scene& scene, const std::pair<Node, Node>& texture);
     static bool parseTexFiltering(const Node& filteringNode, TextureOptions& options);
 
     static void applyFonts(Scene& scene);
-    static void loadFontDescription(const Node& node, const std::string& family, Scene& scene);
+    static void loadFontDescription(Scene& scene, const Node& node, const std::string& family);
 
     static void applySources(Scene& scene);
-    static void loadSource(const std::string& name, const Node& source, Scene& scene);
-    static void loadSourceRasters(TileSource& source, const Node& rasterNode, Scene& scene);
+    static void loadSource(Scene& scene, const std::string& name, const Node& source);
+    static void loadSourceRasters(Scene& scene, TileSource& source, const Node& rasterNode);
 
     static void applyStyles(Scene& scene);
-    static bool loadStyle(const std::string& styleName, const Node& config, Scene& scene);
-    static void loadStyleProps(Style& style, const Node& styleNode, Scene& scene);
-    static void parseStyleParams(const Node& params, Scene& scene, const std::string& propPrefix,
+    static bool loadStyle(Scene& scene, const std::string& styleName, const Node& config);
+    static void loadStyleProps(Scene& scene, Style& style, const Node& styleNode);
+    static void parseStyleParams(Scene& scene, const Node& params, const std::string& propPrefix,
                                  std::vector<StyleParam>& out);
-    static void parseTransition(const Node& params, Scene& scene, std::string _prefix,
+    static void parseTransition(Scene& scene, const Node& params, std::string prefix,
                                 std::vector<StyleParam>& out);
-    static void loadShaderConfig(const Node& shaders, Style& style, Scene& scene);
-    static bool parseStyleUniforms(const Node& value, Scene& scene, StyleUniform& styleUniform);
-    static void loadMaterial(const Node& matNode, Material& material, Scene& scene, Style& style);
-    static MaterialTexture loadMaterialTexture(const Node& matCompNode, Scene& scene, Style& style);
+    static void loadShaderConfig(Scene& scene, const Node& shaders, Style& style);
+    static bool parseStyleUniforms(Scene& scene, const Node& value, StyleUniform& styleUniform);
+    static void loadMaterial(Scene& scene, const Node& matNode, Material& material, Style& style);
+    static MaterialTexture loadMaterialTexture(Scene& scene, const Node& matCompNode, Style& style);
 
     static void applyLayers(Scene& scene);
-    static void loadLayer(const std::pair<Node, Node>& layer, Scene& scene);
-    static SceneLayer loadSublayer(const Node& layer, const std::string& name, Scene& scene);
-    static Filter generateFilter(const Node& filter, Scene& scene);
-    static Filter generateAnyFilter(const Node& filter, Scene& scene);
-    static Filter generateAllFilter(const Node& filter, Scene& scene);
-    static Filter generateNoneFilter(const Node& filter, Scene& scene);
-    static Filter generatePredicate(const Node& filter, std::string _key);
+    static void loadLayer(Scene& scene, const std::pair<Node, Node>& layer);
+    static SceneLayer loadSublayer(Scene& scene, const Node& layer, const std::string& name);
+    static Filter generateFilter(Scene& scene, const Node& filter);
+    static Filter generateAnyFilter(Scene& scene, const Node& filter);
+    static Filter generateAllFilter(Scene& scene, const Node& filter);
+    static Filter generateNoneFilter(Scene& scene, const Node& filter);
+    static Filter generatePredicate(const Node& filter, std::string key);
     static bool getFilterRangeValue(const Node& node, double& val, bool& hasPixelArea);
 
     SceneLoader() = delete;
