@@ -27,6 +27,9 @@ public:
 
     virtual void enqueue(std::shared_ptr<TileTask> task) override;
 
+    // Trigger when scene is completed and TileBuilder can do its job.
+    void poke();
+
     void stop();
 
     bool isRunning() const { return m_running; }
