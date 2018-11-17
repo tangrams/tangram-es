@@ -92,9 +92,6 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
     applyGlobals(*_scene);
     LOGTime("applyGlobals");
 
-    applyTextures(_scene);
-    LOGTime("textures");
-
     applySources(*_scene);
     LOGTime("applySources");
 
@@ -105,17 +102,26 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
     _scene->tileManager()->updateTileSets(*_scene->view());
     LOGTime("loadTiles");
 
+    applyTextures(_scene);
+    LOGTime("textures");
+
     _scene->fontContext()->loadFonts();
     LOGTime("initFonts");
 
     applyFonts(_scene);
-    LOGTime("fonts");
+    LOGTime("applyFonts");
 
     applyStyles(_scene);
-    LOGTime("styles");
+    LOGTime("applyStyles");
 
     applyLayers(*_scene);
-    LOGTime("layers");
+    LOGTime("applyLayers");
+
+    applyLights(*_scene);
+    LOGTime("applyLights");
+
+    applyScene(*_scene);
+    LOGTime("applyScene");
 
     for (auto& style : _scene->styles()) {
         style->build(*_scene);
@@ -337,7 +343,6 @@ void SceneLoader::applyFonts(std::shared_ptr<Scene>& _scene) {
 }
 
 void SceneLoader::applyStyles(std::shared_ptr<Scene>& _scene) {
-    const Node& config = _scene->config();
 
     // Instantiate built-in styles
     _scene->styles().emplace_back(new PolygonStyle("polygons"));
@@ -350,6 +355,7 @@ void SceneLoader::applyStyles(std::shared_ptr<Scene>& _scene) {
         _scene->styles().emplace_back(new DebugStyle("debug"));
     }
 
+    const Node& config = _scene->config();
     if (const Node& styles = config["styles"]) {
         StyleMixer mixer;
         try {
@@ -396,6 +402,10 @@ void SceneLoader::applyLayers(Scene& _scene) {
             }
         }
     }
+}
+
+void SceneLoader::applyLights(Scene& _scene) {
+    const Node& config = _scene.config();
 
     if (const Node& lights = config["lights"]) {
         for (const auto& light : lights) {
@@ -405,7 +415,6 @@ void SceneLoader::applyLayers(Scene& _scene) {
             }
         }
     }
-
     if (_scene.lights().empty()) {
         // Add an ambient light if nothing else is specified
         std::unique_ptr<AmbientLight> amb(new AmbientLight("defaultLight"));
@@ -414,7 +423,10 @@ void SceneLoader::applyLayers(Scene& _scene) {
     }
 
     _scene.lightBlocks() = Light::assembleLights(_scene.lights());
-    LOGTime("lights");
+}
+
+void SceneLoader::applyScene(Scene& _scene) {
+    const Node& config = _scene.config();
 
     if (const Node& sceneNode = config["scene"]) {
         loadBackground(sceneNode["background"], _scene);
