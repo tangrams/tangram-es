@@ -48,6 +48,8 @@ struct SceneLoader {
     static void applyCameras(Scene& scene);
     static void applyLayers(Scene& scene);
     static void applySources(Scene& scene);
+    static void applyLights(Scene& scene);
+    static void applyScene(Scene& scene);
 
     /*** all public for testing ***/
 
