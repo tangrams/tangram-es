@@ -57,13 +57,14 @@ std::vector<std::string> systemFallbackFonts(FcConfig* fcConfig) {
             }
 
             FcLangSet *r = FcLangSetSubtract(ls, fls);
-            if (FcLangSetEqual(r, empty)) { continue; }
+            if (!FcLangSetEqual(r, empty)) {
+                FcLangSet *u = FcLangSetUnion(r, fls);
+                FcLangSetDestroy(fls);
+                fls = u;
 
-            FcLangSet *u = FcLangSetUnion(ls, fls);
-            FcLangSetDestroy(fls);
-            fls = u;
-
-            fallbackFonts.emplace_back(reinterpret_cast<char*>(file));
+                fallbackFonts.emplace_back(reinterpret_cast<char*>(file));
+            }
+            FcLangSetDestroy(r);
         }
     }
 
