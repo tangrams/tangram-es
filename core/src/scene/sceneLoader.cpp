@@ -76,6 +76,7 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
     LOGTO("applyUpdates");
 
     applyGlobals(*_scene);
+    LOGTO("applyGlobals");
 
     applySources(*_scene);
     LOGTO("applySources");
@@ -90,15 +91,25 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
     applyTextures(_scene);
     LOGTO("textures");
 
+    applyTextures(_scene);
+    LOGTO("textures");
+
     _scene->fontContext()->loadFonts();
 
     applyFonts(_scene);
-    LOGTO("fonts");
+    LOGTO("applyFonts");
 
     applyStyles(_scene);
-    LOGTO("styles");
+    LOGTO("applyStyles");
 
     applyLayers(*_scene);
+    LOGTO("applyLayers");
+
+    applyLights(*_scene);
+    LOGTO("applyLights");
+
+    applyScene(*_scene);
+    LOGTO("applyScene");
 
     for (auto& style : _scene->styles()) {
         style->build(*_scene);
@@ -317,7 +328,6 @@ void SceneLoader::applyFonts(std::shared_ptr<Scene>& _scene) {
 }
 
 void SceneLoader::applyStyles(std::shared_ptr<Scene>& _scene) {
-    const Node& config = _scene->config();
 
     // Instantiate built-in styles
     _scene->styles().emplace_back(new PolygonStyle("polygons"));
@@ -330,6 +340,7 @@ void SceneLoader::applyStyles(std::shared_ptr<Scene>& _scene) {
         _scene->styles().emplace_back(new DebugStyle("debug"));
     }
 
+    const Node& config = _scene->config();
     if (const Node& styles = config["styles"]) {
         StyleMixer mixer;
         try {
@@ -376,6 +387,10 @@ void SceneLoader::applyLayers(Scene& _scene) {
             }
         }
     }
+}
+
+void SceneLoader::applyLights(Scene& _scene) {
+    const Node& config = _scene.config();
 
     if (const Node& lights = config["lights"]) {
         for (const auto& light : lights) {
@@ -385,7 +400,6 @@ void SceneLoader::applyLayers(Scene& _scene) {
             }
         }
     }
-
     if (_scene.lights().empty()) {
         // Add an ambient light if nothing else is specified
         std::unique_ptr<AmbientLight> amb(new AmbientLight("defaultLight"));
@@ -394,6 +408,10 @@ void SceneLoader::applyLayers(Scene& _scene) {
     }
 
     _scene.lightBlocks() = Light::assembleLights(_scene.lights());
+}
+
+void SceneLoader::applyScene(Scene& _scene) {
+    const Node& config = _scene.config();
 
     if (const Node& sceneNode = config["scene"]) {
         loadBackground(sceneNode["background"], _scene);
