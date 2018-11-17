@@ -373,15 +373,7 @@ bool Map::update(float _dt) {
 
     impl->jobQueue.runJobs();
 
-    // Wait until font and texture resources are fully loaded
-    if (!impl->scene->markerManager() ||
-        impl->scene->pendingFonts > 0 ||
-        impl->scene->pendingTextures > 0) {
-        platform->requestRender();
-        LOG("Waiting for scene:%d fonts:%d textures:%d",
-            bool(impl->scene->markerManager()),
-            bool(impl->scene->pendingFonts > 0),
-            bool(impl->scene->pendingTextures > 0));
+    if (!impl->scene->complete()) {
         return false;
     }
 
@@ -409,7 +401,6 @@ bool Map::update(float _dt) {
     bool isFlinging = impl->inputHandler.update(_dt);
     impl->isCameraEasing = (isEasing || isFlinging);
     impl->view.update();
-
 
     bool tilesChanging;
     {
@@ -459,9 +450,8 @@ void Map::pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallb
 bool Map::render() {
 
     // Do not render if any texture resources are in process of being downloaded
-    if (!impl->scene->markerManager() ||
-        impl->scene->pendingTextures > 0) {
-        return impl->isCameraEasing;
+    if (!impl->scene->complete()) {
+        return impl->isCameraEasing; // ?????
     }
 
     bool drawSelectionBuffer = getDebugFlag(DebugFlags::selection_buffer);

@@ -28,7 +28,6 @@
 #include "scene/stops.h"
 #include "scene/styleMixer.h"
 #include "scene/styleParam.h"
-#include "util/base64.h"
 #include "util/floatFormatter.h"
 #include "util/yamlPath.h"
 #include "util/yamlUtil.h"
@@ -99,7 +98,6 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
     LOGTime("applyCameras");
 
     _scene->initTileManager();
-    _scene->tileManager()->updateTileSets(*_scene->view());
     LOGTime("loadTiles");
 
     applyTextures(_scene);
@@ -127,10 +125,11 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
         style->build(*_scene);
     }
 
-    _scene->startTileWorker();
-
-
     LOGTime("built styles");
+
+    // Now only waiting for pending fonts and textures:
+    // Let the TileWorker initialize its TileBuilders
+    _scene->initTileWorker();
 
     return true;
 }
@@ -609,7 +608,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(const Node& matCompNode, std::s
     const std::string& name = textureNode.Scalar();
 
     MaterialTexture matTex;
-    matTex.tex = getOrLoadTexture(name, scene);
+    matTex.tex = scene->loadTexture(name);
 
     if (const Node& mappingNode = matCompNode["mapping"]) {
         const std::string& mapping = mappingNode.Scalar();
@@ -680,81 +679,6 @@ bool SceneLoader::parseTexFiltering(const Node& filteringNode, TextureOptions& o
 }
 
 
-std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, const std::string& urlString,
-                                                   const TextureOptions& options, std::shared_ptr<Scene>& scene,
-                                                   std::unique_ptr<SpriteAtlas> _atlas) {
-    std::shared_ptr<Texture> texture;
-
-    Url url(urlString);
-
-    if (url.hasBase64Data() && url.mediaType() == "image/png") {
-        auto data = url.data();
-
-        std::vector<unsigned char> blob;
-
-        try {
-            blob = Base64::decode(data);
-        } catch(std::runtime_error e) {
-            LOGE("Can't decode Base64 texture '%s'", e.what());
-        }
-
-        if (blob.empty()) {
-            LOGE("Can't decode Base64 texture");
-            return nullptr;
-        }
-        texture = std::make_shared<Texture>(options);
-
-        if (!texture->loadImageFromMemory(blob.data(), blob.size())) {
-            LOGE("Invalid Base64 texture");
-        }
-    } else {
-        texture = std::make_shared<Texture>(options);
-        texture->setSpriteAtlas(std::move(_atlas));
-
-        scene->pendingTextures++;
-        LOGTime("Fetch texture");
-        scene->startUrlRequest(url, [&, url, scene, texture](UrlResponse&& response) {
-                LOGTime("Got texture data");
-                if (response.error) {
-                    LOGE("Error retrieving URL '%s': %s", url.string().c_str(), response.error);
-                } else {
-                    if (texture) {
-                        auto data = reinterpret_cast<const uint8_t*>(response.content.data());
-                        auto length = response.content.size();
-                        if (!texture->loadImageFromMemory(data, length)) {
-                            LOGE("Invalid texture data from URL '%s'", url.string().c_str());
-                        }
-                        if (texture->getSpriteAtlas()) {
-                            texture->getSpriteAtlas()->updateSpriteNodes({texture->getWidth(), texture->getHeight()});
-                        }
-                    }
-                }
-                scene->pendingTextures--;
-                LOGTime("Got texture ready");
-                if (scene->pendingTextures == 0) {
-                    scene->platform().requestRender();
-                }
-            });
-    }
-
-    return texture;
-}
-
-std::shared_ptr<Texture> SceneLoader::getOrLoadTexture(const std::string& name, std::shared_ptr<Scene>& scene) {
-
-    auto entry = scene->textures().find(name);
-    if (entry != scene->textures().end()) {
-        return entry->second;
-    }
-
-    // If texture could not be found by name then interpret name as URL
-    TextureOptions options;
-    auto texture = fetchTexture(name, name, options, scene);
-
-    scene->textures().emplace(name, texture);
-
-    return texture;
-}
 
 void SceneLoader::loadTexture( const std::pair<Node, Node>& node, std::shared_ptr<Scene>& scene) {
 
@@ -808,9 +732,7 @@ void SceneLoader::loadTexture( const std::pair<Node, Node>& node, std::shared_pt
             }
         }
     }
-    auto texture = fetchTexture(name, url, options, scene, std::move(atlas));
-
-    scene->textures().emplace(name, texture);
+    auto texture = scene->fetchTexture(name, Url(url), options, std::move(atlas));
 }
 
 void SceneLoader::loadFontDescription(const Node& node, const std::string& family,
@@ -839,28 +761,7 @@ void SceneLoader::loadFontDescription(const Node& node, const std::string& famil
         return;
     }
 
-    std::string familyNormalized, styleNormalized;
-
-    familyNormalized.resize(family.size());
-    styleNormalized.resize(style.size());
-
-    std::transform(family.begin(), family.end(), familyNormalized.begin(), ::tolower);
-    std::transform(style.begin(), style.end(), styleNormalized.begin(), ::tolower);
-
-    FontDescription _ft(familyNormalized, styleNormalized, weight, uri);
-
-    Url url(uri);
-
-    // Load font file.
-    scene->pendingFonts++;
-    scene->startUrlRequest(url, [_ft, scene](UrlResponse&& response) {
-        if (response.error) {
-            LOGE("Error retrieving font '%s' at %s: ", _ft.alias.c_str(), _ft.uri.c_str(), response.error);
-        } else {
-            scene->fontContext()->addFont(_ft, alfons::InputSource(std::move(response.content)));
-        }
-        scene->pendingFonts--;
-    });
+    scene->loadFont(uri, family, style, weight);
 }
 
 void SceneLoader::loadFont(const std::pair<Node, Node>& font, std::shared_ptr<Scene>& scene) {
@@ -1734,7 +1635,7 @@ bool SceneLoader::parseStyleUniforms(const Node& value, std::shared_ptr<Scene>& 
             styleUniform.type = "sampler2D";
             styleUniform.value = strVal;
 
-            getOrLoadTexture(strVal, scene);
+            scene->loadTexture(strVal);
         }
     } else if (value.IsSequence()) {
         size_t size = value.size();
@@ -1794,7 +1695,7 @@ bool SceneLoader::parseStyleUniforms(const Node& value, std::shared_ptr<Scene>& 
                 const std::string& textureName = strVal.Scalar();
                 textureArrayUniform.names.push_back(textureName);
 
-                getOrLoadTexture(textureName, scene);
+                scene->loadTexture(textureName);
             }
 
             styleUniform.value = std::move(textureArrayUniform);
