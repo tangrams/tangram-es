@@ -1,9 +1,11 @@
 #pragma once
 
 #include <fontconfig/fontconfig.h>
+#include <atomic>
 
 #include "platform.h"
 #include "urlClient.h"
+#include "util/asyncWorker.h"
 
 namespace Tangram {
 
@@ -23,7 +25,8 @@ public:
 protected:
     FcConfig* m_fcConfig = nullptr;
     std::unique_ptr<UrlClient> m_urlClient;
-    bool m_shutdown = false;
+    AsyncWorker m_fileWorker;
+    std::atomic<bool> m_shutdown{false};
 };
 
 } // namespace Tangram
