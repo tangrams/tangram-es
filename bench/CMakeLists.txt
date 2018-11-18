@@ -7,6 +7,7 @@ target_compile_options(benchmark PRIVATE -O3 -DNDEBUG)
 set(BENCH_SOURCES
   src/builders.cpp
   src/tileLoading.cpp
+  src/benchStyleContext.cpp
 )
 
 # create an executable per bench
