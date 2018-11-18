@@ -284,7 +284,25 @@ StyleParam::Value StyleParam::parseNode(StyleParamKey key, const YAML::Node& nod
         LOGW("text:order parameter is ignored.");
         break;
     case StyleParamKey::order:
-    case StyleParamKey::outline_order:
+    case StyleParamKey::outline_order: {
+        int result = -1;
+        if (YamlUtil::getInt(node, result)) {
+            if (result >= 0) {
+                return static_cast<uint32_t>(result);
+            }
+        } else if (node.IsSequence()) {
+            LOGW("NumberProperty '%s' value '%s'", keyName(key).c_str(), Dump(node).c_str());
+            if (node.size() == 1 && node[0].IsScalar()) {
+                return NumberProperty{node[0].Scalar(),0};
+            }
+            if (node.size() == 2 && node[0].IsScalar() &&
+                YamlUtil::getInt(node[1], result)) {
+                return NumberProperty{node[0].Scalar(), result};
+            }
+        }
+        LOGW("Invalid '%s' value '%s'", keyName(key).c_str(), Dump(node).c_str());
+        break;
+    }
     case StyleParamKey::priority:
     case StyleParamKey::text_max_lines:
     case StyleParamKey::text_priority: {

@@ -189,6 +189,21 @@ struct StyleParam {
         }
     };
 
+    struct NumberProperty {
+        std::string key;
+        int offset;
+        bool operator==(const NumberProperty& _other) const {
+            return key == _other.key && offset == _other.offset;
+        }
+    };
+
+    struct StringProperty {
+        std::string key;
+        bool operator==(const StringProperty& _other) const {
+            return key == _other.key;
+        }
+    };
+
     struct SizeValue {
         ValueUnitPair x = { NAN, Unit::pixel };
         ValueUnitPair y = { NAN, Unit::pixel };
@@ -227,8 +242,10 @@ struct StyleParam {
         }
     };
 
-    using Value = variant<none_type, Undefined, bool, float, uint32_t, std::string, glm::vec2, SizeValue, Width,
-                          LabelProperty::Placement, LabelProperty::Anchors, TextSource>;
+    using Value = variant<none_type, Undefined, bool, float, uint32_t,
+                          std::string, glm::vec2, SizeValue, Width,
+                          LabelProperty::Placement, LabelProperty::Anchors,
+                          TextSource, NumberProperty, StringProperty>;
 
     StyleParam() :
         key(StyleParamKey::none),

@@ -556,16 +556,15 @@ void Style::applyDefaultDrawRules(DrawRule& _rule) const {
 
 bool StyleBuilder::checkRule(const DrawRule& _rule) const {
 
-    uint32_t checkColor;
-    uint32_t checkOrder;
-
-    if (!_rule.get(StyleParamKey::color, checkColor)) {
-        if (!style().hasColorShaderBlock()) {
-            return false;
-        }
+    auto& color = _rule.findParameter(StyleParamKey::color);
+    if (!color.value.is<uint32_t>() &&
+        !style().hasColorShaderBlock()) {
+        return false;
     }
 
-    if (!_rule.get(StyleParamKey::order, checkOrder)) {
+    auto& order = _rule.findParameter(StyleParamKey::order);
+    if (!order.value.is<uint32_t>() &&
+        !order.value.is<StyleParam::NumberProperty>()) {
         return false;
     }
 
