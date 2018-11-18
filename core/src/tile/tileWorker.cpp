@@ -15,7 +15,7 @@
 
 namespace Tangram {
 
-TileWorker::TileWorker(Platform& _platform, int _numWorker) : m_platform(_platform) {
+TileWorker::TileWorker(int _numWorker) {
     m_running = true;
 
     for (int i = 0; i < _numWorker; i++) {
@@ -37,7 +37,7 @@ void TileWorker::run(Worker* instance) {
 
     std::unique_ptr<TileBuilder> builder;
 
-    while (true) {
+    while (m_running) {
 
         std::shared_ptr<TileTask> task;
         {
@@ -95,16 +95,11 @@ void TileWorker::run(Worker* instance) {
             continue;
         }
 
-        LOG("process %s", task->tileId().toString().c_str());
         task->process(*builder);
-
-        m_platform.requestRender();
     }
 }
 
 void TileWorker::setScene(Scene& _scene) {
-    LOG("Set Scene on TileWorker");
-
     for (auto& worker : m_workers) {
         worker->tileBuilder = std::make_unique<TileBuilder>(_scene);
     }
@@ -124,8 +119,6 @@ void TileWorker::enqueue(std::shared_ptr<TileTask> task) {
 void TileWorker::poke() {
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        LOG("Poking TileWorker - enqueued %d", m_queue.size());
-
         if (!m_running || m_queue.empty()) { return; }
     }
     m_condition.notify_all();

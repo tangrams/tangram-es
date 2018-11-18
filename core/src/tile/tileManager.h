@@ -14,10 +14,9 @@
 #include <set>
 #include <vector>
 
-class Platform;
-
 namespace Tangram {
 
+class Scene;
 class TileSource;
 class TileCache;
 class View;
@@ -34,7 +33,7 @@ class TileManager {
 
 public:
 
-    TileManager(Platform& platform, TileTaskQueue& _tileWorker);
+    explicit TileManager(Scene& _scene);
 
     virtual ~TileManager();
 
@@ -57,7 +56,7 @@ public:
         return m_tilesInProgress > 0;
     }
 
-    std::shared_ptr<TileSource> getClientTileSource(int32_t sourceID);
+    TileSource* getClientTileSource(int32_t sourceID);
 
     void addClientTileSource(std::shared_ptr<TileSource> _source);
 
@@ -118,6 +117,8 @@ protected:
      */
     void clearProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile, std::vector<TileID>& _removes);
 
+    Scene& m_scene;
+
     int32_t m_tilesInProgress = 0;
 
     std::vector<TileSet> m_tileSets;
@@ -126,8 +127,6 @@ protected:
     std::vector<std::shared_ptr<Tile>> m_tiles;
 
     std::unique_ptr<TileCache> m_tileCache;
-
-    TileTaskQueue& m_workers;
 
     bool m_tileSetChanged = false;
 

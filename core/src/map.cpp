@@ -117,7 +117,9 @@ Map::Map(std::unique_ptr<Platform> _platform) : platform(std::move(_platform)) {
 
 Map::~Map() {
     // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
-    //impl->tileWorker.stop();
+
+    //
+    impl->scene->stopTileWorker();
     impl->scene.reset();
 
     impl->asyncWorker.reset();
@@ -132,16 +134,20 @@ Map::~Map() {
 
 void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
 
+    // Stop previous TileWorker
+    scene->stopTileWorker();
+
     scene = _scene;
+
     scene->setPixelScale(view.pixelScale());
     scene->view()->setSize(view.getWidth(), view.getHeight());
 
+    // Now only waiting for pending fonts and textures:
+    // Let the TileWorker initialize its TileBuilders
+    scene->startTileWorker();
     view = *_scene->view();
 
-    /// FIXME TODO scene->setPixelScale(view.pixelScale());
-
     bool animated = scene->animated() == Scene::animate::yes;
-
     if (animated != platform.isContinuousRendering()) {
         platform.setContinuousRendering(animated);
     }

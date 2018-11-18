@@ -10,6 +10,7 @@
 
 namespace Tangram {
 
+class Scene;
 class TileManager;
 class TileBuilder;
 class TileSource;
@@ -22,7 +23,7 @@ class TileTask {
 
 public:
 
-    TileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _subTask);
+    TileTask(TileID& _tileId, Scene& _scene, TileSource& _source, int _subTask);
 
     // No copies
     TileTask(const TileTask& _other) = delete;
@@ -43,7 +44,8 @@ public:
     std::unique_ptr<Tile> getTile();
     void setTile(std::unique_ptr<Tile>&& _tile);
 
-    std::shared_ptr<TileSource> source() { return m_source.lock(); }
+    std::shared_ptr<Scene> scene() { return m_scene.lock(); }
+    TileSource& source();
     int64_t sourceId() { return m_sourceId; }
     int64_t sourceGeneration() const { return m_sourceGeneration; }
 
@@ -93,8 +95,8 @@ protected:
 
     const int m_subTaskId;
 
-    // Save shared reference to Datasource while building tile
-    std::weak_ptr<TileSource> m_source;
+    // Save shared reference to Scene while building tile
+    std::weak_ptr<Scene> m_scene;
 
     // Vector of tasks to download raster samplers
     std::vector<std::shared_ptr<TileTask>> m_subTasks;
@@ -115,8 +117,8 @@ protected:
 
 class BinaryTileTask : public TileTask {
 public:
-    BinaryTileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _subTask)
-        : TileTask(_tileId, _source, _subTask) {}
+    BinaryTileTask(TileID& _tileId, Scene& _scene, TileSource& _source, int _subTask)
+        : TileTask(_tileId, _scene, _source, _subTask) {}
 
     virtual bool hasData() const override {
         return rawTileData && !rawTileData->empty();

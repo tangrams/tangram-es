@@ -35,8 +35,8 @@ Scene::Scene(Platform& _platform, std::unique_ptr<SceneOptions> _sceneOptions, s
       m_options(std::move(_sceneOptions)),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()),
-      m_tileWorker(std::make_unique<TileWorker>(_platform, 2)),
-      m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)),
+      m_tileWorker(std::make_unique<TileWorker>(2)), // TODO SceneOptions
+      m_tileManager(std::make_unique<TileManager>(*this)),
       m_labelManager(std::make_unique<LabelManager>()),
       m_view(std::move(_view)) {
     m_pixelScale = m_view->pixelScale();
@@ -104,6 +104,7 @@ int Scene::addJsFunction(const std::string& _function) {
     for (size_t i = 0; i < m_jsFunctions.size(); i++) {
         if (m_jsFunctions[i] == _function) { return i; }
     }
+    //LOG("add function: %d\n%s", m_jsFunctions.size(), _function.c_str());
     m_jsFunctions.push_back(_function);
     return m_jsFunctions.size()-1;
 }
@@ -123,22 +124,15 @@ std::shared_ptr<Texture> Scene::getTexture(const std::string& textureName) const
     return texIt->second;
 }
 
-std::shared_ptr<TileSource> Scene::getTileSource(int32_t id) {
+TileSource* Scene::getTileSource(int32_t id) {
     auto it = std::find_if(m_tileSources.begin(), m_tileSources.end(),
                            [&](auto& s){ return s->id() == id; });
-    if (it != m_tileSources.end()) {
-        return *it;
-    }
-    return nullptr;
-}
 
-std::shared_ptr<TileSource> Scene::getTileSource(const std::string& name) {
-    auto it = std::find_if(m_tileSources.begin(), m_tileSources.end(),
-                           [&](auto& s){ return s->name() == name; });
-    if (it != m_tileSources.end()) {
-        return *it;
-    }
-    return nullptr;
+    if (it != m_tileSources.end()) { return it->get(); }
+
+
+    // FIXME map tilesMutex
+    return m_tileManager->getClientTileSource(id);
 }
 
 void Scene::setPixelScale(float _scale) {

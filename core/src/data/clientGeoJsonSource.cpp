@@ -40,8 +40,8 @@ struct ClientGeoJsonData {
     std::vector<Properties> properties;
 };
 
-std::shared_ptr<TileTask> ClientGeoJsonSource::createTask(TileID _tileId, int _subTask) {
-    return std::make_shared<TileTask>(_tileId, shared_from_this(), _subTask);
+std::shared_ptr<TileTask> ClientGeoJsonSource::createTask(Scene& _scene, TileID _tileId, int _subTask) {
+    return std::make_shared<TileTask>(_tileId, _scene, *this, _subTask);
 }
 
 

@@ -122,10 +122,6 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
     }
     LOGTime("built styles");
 
-    // Now only waiting for pending fonts and textures:
-    // Let the TileWorker initialize its TileBuilders
-    _scene->initTileWorker();
-
     return true;
 }
 
@@ -682,6 +678,15 @@ void SceneLoader::loadFontDescription(Scene& _scene, const Node& _node, const st
     _scene.loadFont(uri, _family, style, weight);
 }
 
+TileSource* getTileSource(Scene& _scene, const std::string& _name) {
+    auto it = std::find_if(_scene.tileSources().begin(), _scene.tileSources().end(),
+                           [&](auto& s){ return s->name() == _name; });
+
+    if (it != _scene.tileSources().end()) { return it->get(); }
+
+    return nullptr;
+}
+
 void SceneLoader::applySources(Scene& _scene) {
     const Node& config = _scene.config();
     const Node& sources = config["sources"];
@@ -703,7 +708,7 @@ void SceneLoader::applySources(Scene& _scene) {
                 if (const Node& data_source = data["source"]) {
                     if (data_source.IsScalar()) {
                         auto source = data_source.Scalar();
-                        auto dataSource = _scene.getTileSource(source);
+                        auto dataSource = getTileSource(_scene, source);
                         if (dataSource) {
                             dataSource->generateGeometry(true);
                         } else {
@@ -718,7 +723,7 @@ void SceneLoader::applySources(Scene& _scene) {
 }
 
 void SceneLoader::loadSource(Scene& _scene, const std::string& _name, const Node& _source) {
-    if (_scene.getTileSource(_name)) {
+    if (getTileSource(_scene, _name)) {
         LOGW("Duplicate TileSource: %s", _name.c_str());
         return;
     }
@@ -901,7 +906,7 @@ void SceneLoader::loadSourceRasters(Scene& _scene, TileSource& _source, const No
             LOGNode("Error parsing sources: '%s'", sources[srcName], e.what());
             return;
         }
-        _source.addRasterSource(_scene.getTileSource(srcName));
+        _source.addRasterSource(getTileSource(_scene, srcName));
     }
 }
 

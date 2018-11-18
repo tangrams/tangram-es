@@ -17,7 +17,7 @@ class TileManager;
 struct RawCache;
 class Texture;
 
-class TileSource : public std::enable_shared_from_this<TileSource> {
+class TileSource {
 
 public:
 
@@ -113,7 +113,7 @@ public:
     virtual void clearRasters();
     virtual void clearRaster(const TileID& id);
 
-    virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask = -1);
+    virtual std::shared_ptr<TileTask> createTask(Scene& _scene, TileID _tile, int _subTask = -1);
 
     /* ID of this TileSource instance */
     int32_t id() const { return m_id; }
@@ -133,7 +133,7 @@ public:
     }
 
     /* assign/get raster datasources to this datasource */
-    void addRasterSource(std::shared_ptr<TileSource> _dataSource);
+    void addRasterSource(TileSource* _dataSource);
     auto& rasterSources() { return m_rasterSources; }
     const auto& rasterSources() const { return m_rasterSources; }
 
@@ -147,7 +147,7 @@ public:
 
 protected:
 
-    void createSubTasks(std::shared_ptr<TileTask> _task);
+    void createSubTasks(Scene& _scene, TileTask& _task);
 
     // This datasource is used to generate actual tile geometry
     bool m_generateGeometry = false;
@@ -167,7 +167,7 @@ protected:
     Format m_format = Format::GeoJson;
 
     /* vector of raster sources (as raster samplers) referenced by this datasource */
-    std::vector<std::shared_ptr<TileSource>> m_rasterSources;
+    std::vector<TileSource*> m_rasterSources;
 
     std::unique_ptr<DataSource> m_sources;
 };

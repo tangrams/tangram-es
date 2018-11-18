@@ -1,6 +1,7 @@
 #include "data/rasterSource.h"
 #include "data/propertyItem.h"
 #include "data/tileData.h"
+#include "scene/scene.h"
 #include "tile/tile.h"
 #include "tile/tileTask.h"
 #include "util/mapProjection.h"
@@ -10,13 +11,15 @@ namespace Tangram {
 
 class RasterTileTask : public BinaryTileTask {
 public:
-    RasterTileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _subTask)
-        : BinaryTileTask(_tileId, _source, _subTask) {}
+    RasterTileTask(TileID& _tileId, Scene& _scene, TileSource& _source, int _subTask)
+        : BinaryTileTask(_tileId, _scene, _source, _subTask) {}
 
     std::shared_ptr<Texture> m_texture;
 
-    std::shared_ptr<RasterSource> rasterSource() {
-        return reinterpret_cast<std::weak_ptr<RasterSource>*>(&m_source)->lock();
+    RasterSource* rasterSource() {
+        auto scene = m_scene.lock();
+        assert(scene);
+        return reinterpret_cast<RasterSource*>(scene->getTileSource(m_sourceId));
     }
 
     bool hasData() const override {
@@ -48,8 +51,6 @@ public:
 
     void complete() override {
         auto source = rasterSource();
-        if (!source) { return; }
-
         auto raster = source->getRaster(*this);
         assert(raster.isValid());
 
@@ -63,8 +64,6 @@ public:
 
     void complete(TileTask& _mainTask) override {
         auto source = rasterSource();
-        if (!source) { return; }
-
         auto raster = source->getRaster(*this);
         assert(raster.isValid());
 
@@ -129,10 +128,10 @@ std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task) const {
 
 }
 
-std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask) {
-    auto task = std::make_shared<RasterTileTask>(_tileId, shared_from_this(), _subTask);
+std::shared_ptr<TileTask> RasterSource::createTask(Scene& _scene, TileID _tileId, int _subTask) {
+    auto task = std::make_shared<RasterTileTask>(_tileId, _scene, *this, _subTask);
 
-    createSubTasks(task);
+    createSubTasks(_scene, *task);
 
     // First try existing textures cache
     {

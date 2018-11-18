@@ -2,7 +2,7 @@
 
 #include "data/tileSource.h"
 #include "map.h"
-#include "platform.h"
+#include "scene/scene.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
 #include "util/mapProjection.h"
@@ -134,20 +134,21 @@ TileManager::TileSet::TileSet(std::shared_ptr<TileSource> _source, bool _clientS
     source(_source), clientTileSource(_clientSource) {}
 
 
-TileManager::TileManager(Platform& platform, TileTaskQueue& _tileWorker) :
-    m_workers(_tileWorker) {
+TileManager::TileManager(Scene& _scene) :
+    m_scene(_scene) {
 
+    // TODO configurable
     m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
 
     // Callback to pass task from Download-Thread to Worker-Queue
-    m_dataCallback = TileTaskCb{[&](std::shared_ptr<TileTask> task) {
+    m_dataCallback = TileTaskCb{[](std::shared_ptr<TileTask> task) {
+        auto scene = task->scene();
+        if (!scene) { return; }
 
         if (task->isReady()) {
-             platform.requestRender();
-
+            scene->platform().requestRender();
         } else if (task->hasData()) {
-            m_workers.enqueue(task);
-
+            scene->tileWorker()->enqueue(task);
         } else {
             task->cancel();
         }
@@ -197,10 +198,10 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
     }
 }
 
-std::shared_ptr<TileSource> TileManager::getClientTileSource(int32_t sourceID) {
+TileSource* TileManager::getClientTileSource(int32_t sourceID) {
     for (const auto& tileSet : m_tileSets) {
         if (tileSet.clientTileSource && tileSet.source->id() == sourceID) {
-            return tileSet.source;
+            return tileSet.source.get();
         }
     }
     return nullptr;
@@ -351,7 +352,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
             } else if (entry.needsLoading()) {
                 // Not yet available - enqueue for loading
                 if (!entry.task) {
-                    entry.task = _tileSet.source->createTask(visTileId);
+                    entry.task = _tileSet.source->createTask(m_scene, visTileId);
                 }
                 enqueueTask(_tileSet, visTileId, _view);
             }
@@ -362,14 +363,14 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
                 auto sourceGeneration = entry.tile->sourceGeneration();
                 if ((sourceGeneration < generation) && !entry.isInProgress()) {
                     // Tile needs update - enqueue for loading
-                    entry.task = _tileSet.source->createTask(visTileId);
+                    entry.task = _tileSet.source->createTask(m_scene, visTileId);
                     enqueueTask(_tileSet, visTileId, _view);
                 }
             } else if (entry.isCanceled()) {
                 auto sourceGeneration = entry.task->sourceGeneration();
                 if (sourceGeneration < generation) {
                     // Tile needs update - enqueue for loading
-                    entry.task = _tileSet.source->createTask(visTileId);
+                    entry.task = _tileSet.source->createTask(m_scene, visTileId);
                     enqueueTask(_tileSet, visTileId, _view);
                 }
             }
@@ -541,7 +542,7 @@ bool TileManager::addTile(TileSet& _tileSet, const TileID& _tileID) {
         // Add Proxy if corresponding proxy MapTile ready
         updateProxyTiles(_tileSet, _tileID, entry.first->second);
 
-        entry.first->second.task = _tileSet.source->createTask(_tileID);
+        entry.first->second.task = _tileSet.source->createTask(m_scene, _tileID);
     }
     entry.first->second.setVisible(true);
 

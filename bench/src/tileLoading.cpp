@@ -75,7 +75,7 @@ struct TestContext {
     void parseTile() {
         Tile tile({0,0,10,10});
         source = *scene->tileSources().begin();
-        auto task = source->createTask(tile.getID());
+        auto task = source->createTask(*scene, tile.getID());
         auto& t = dynamic_cast<BinaryTileTask&>(*task);
         t.rawTileData = std::make_shared<std::vector<char>>(rawTileData);
 

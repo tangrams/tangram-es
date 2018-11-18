@@ -221,12 +221,7 @@ void LabelManager::skipTransitions(Scene& _scene, const std::vector<std::shared_
         std::shared_ptr<Tile> proxy;
 
         auto source = _scene.getTileSource(tile->sourceID());
-        if (!source) {
-            source = _tileManager.getClientTileSource(tile->sourceID());
-            // If tiles for this source exist, this source must exist (either tile or client source)
-            assert(source);
-            continue;
-        }
+        if (!source) { continue; }
 
         if (m_lastZoom < _currentZoom) {
             // zooming in, add the one cached parent tile

@@ -2,6 +2,7 @@
 
 #include "data/tileSource.h"
 #include "mockPlatform.h"
+#include "scene/scene.h"
 #include "tile/tileManager.h"
 #include "tile/tileWorker.h"
 #include "util/mapProjection.h"
@@ -41,8 +42,8 @@ struct TestTileWorker : TileTaskQueue {
             }
 
             task->setTile(std::make_unique<Tile>(task->tileId(),
-                                                 task->source()->id(),
-                                                 task->source()->generation()));
+                                                 task->source().id(),
+                                                 task->source().generation()));
 
             pendingTiles = true;
             processedCount++;
@@ -55,8 +56,8 @@ struct TestTileWorker : TileTaskQueue {
         tasks.erase(tasks.begin() + position);
 
         task->setTile(std::make_unique<Tile>(task->tileId(),
-                                             task->source()->id(),
-                                             task->source()->generation()));
+                                             task->source().id(),
+                                             task->source().generation()));
 
         pendingTiles = true;
         processedCount++;
@@ -76,8 +77,8 @@ struct TestTileSource : TileSource {
     public:
         bool gotData = false;
 
-        Task(TileID& _tileId, std::shared_ptr<TileSource> _source, bool _subTask)
-            : TileTask(_tileId, _source, _subTask) {}
+        Task(TileID& _tileId, Scene& _scene, TileSource& _source, bool _subTask)
+            : TileTask(_tileId, _scene, _source, _subTask) {}
 
         bool hasData() const override { return gotData; }
     };
@@ -103,8 +104,8 @@ struct TestTileSource : TileSource {
 
     void clearData() override {}
 
-    std::shared_ptr<TileTask> createTask(TileID _tileId, int _subTask) override {
-        return std::make_shared<Task>(_tileId, shared_from_this(), _subTask);
+    std::shared_ptr<TileTask> createTask(Scene& _scene, TileID _tileId, int _subTask) override {
+        return std::make_shared<Task>(_tileId, _scene, *this, _subTask);
     }
 };
 
@@ -141,7 +142,8 @@ public:
 TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
     MockPlatform platform;
-    TestTileManager tileManager(platform, worker);
+    Scene scene{platform};
+    TestTileManager tileManager{scene};
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
@@ -188,19 +190,22 @@ TEST_CASE( "Mock TileWorker Initialization", "[TileManager][Constructor]" ) {
 
     TestTileWorker worker;
     MockPlatform platform;
-    TileManager tileManager(platform, worker);
+    Scene scene{platform};
+    TileManager tileManager(scene);
 }
 
 TEST_CASE( "Real TileWorker Initialization", "[TileManager][Constructor]" ) {
     MockPlatform platform;
-    TileWorker worker(platform, 1);
-    TileManager tileManager(platform, worker);
+    TileWorker worker(1);
+    Scene scene{platform};
+    TileManager tileManager(scene);
 }
 
 TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
     MockPlatform platform;
-    TestTileManager tileManager(platform, worker);
+    Scene scene{platform};
+    TestTileManager tileManager{scene};
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
@@ -226,7 +231,8 @@ TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
 TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
     MockPlatform platform;
-    TestTileManager tileManager(platform, worker);
+    Scene scene{platform};
+    TestTileManager tileManager{scene};
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
@@ -265,7 +271,8 @@ TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
 TEST_CASE( "Use proxy Tile - circular proxies", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
     MockPlatform platform;
-    TestTileManager tileManager(platform, worker);
+    Scene scene{platform};
+    TestTileManager tileManager{scene};
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };

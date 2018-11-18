@@ -55,26 +55,26 @@ const char* TileSource::mimeType() const {
     return "";
 }
 
-std::shared_ptr<TileTask> TileSource::createTask(TileID _tileId, int _subTask) {
-    auto task = std::make_shared<BinaryTileTask>(_tileId, shared_from_this(), _subTask);
+std::shared_ptr<TileTask> TileSource::createTask(Scene& _scene, TileID _tileId, int _subTask) {
+    auto task = std::make_shared<BinaryTileTask>(_tileId, _scene, *this, _subTask);
 
-    createSubTasks(task);
+    createSubTasks(_scene, *task);
 
     return task;
 }
 
-void TileSource::createSubTasks(std::shared_ptr<TileTask> _task) {
+void TileSource::createSubTasks(Scene& _scene, TileTask& _task) {
     size_t index = 0;
 
     for (auto& subSource : m_rasterSources) {
-        TileID subTileID = _task->tileId();
+        TileID subTileID = _task.tileId();
 
         // get tile for lower zoom if we are past max zoom
         if (subTileID.z > subSource->maxZoom()) {
             subTileID = subTileID.withMaxSourceZoom(subSource->maxZoom());
         }
 
-        _task->subTasks().push_back(subSource->createTask(subTileID, index++));
+        _task.subTasks().push_back(subSource->createTask(_scene, subTileID, index++));
     }
 }
 
@@ -98,7 +98,7 @@ void TileSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
     }
 
     for (auto& subTask : _task->subTasks()) {
-        subTask->source()->loadTileData(subTask, _cb);
+        subTask->source().loadTileData(subTask, _cb);
     }
 }
 
@@ -117,7 +117,7 @@ void TileSource::cancelLoadingTile(TileTask& _task) {
     if (m_sources) { m_sources->cancelLoadingTile(_task); }
 
     for (auto& subTask : _task.subTasks()) {
-        subTask->source()->cancelLoadingTile(*subTask);
+        subTask->source().cancelLoadingTile(*subTask);
     }
 }
 
@@ -134,7 +134,7 @@ void TileSource::clearRaster(const TileID& id) {
     }
 }
 
-void TileSource::addRasterSource(std::shared_ptr<TileSource> _rasterSource) {
+void TileSource::addRasterSource(TileSource* _rasterSource) {
     /*
      * We limit the parent source by any attached raster source's min/max.
      */

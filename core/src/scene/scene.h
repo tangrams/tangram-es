@@ -65,7 +65,7 @@ public:
     Url url;
     // SceneUpdates to apply to the scene
     std::vector<SceneUpdate> updates;
-    // Set the view to the position provided by the scene
+    // Set the view to the position provided bωy the scene
     bool useScenePosition = true;
     // Add styles toggled by DebguFlags
     bool debugStyles = false;
@@ -73,7 +73,7 @@ public:
     size_t memoryTileCacheSize = CACHE_SIZE;
 };
 
-class Scene {
+class Scene : public std::enable_shared_from_this<Scene> {
 public:
 
     struct Camera {
@@ -103,6 +103,13 @@ public:
     Scene(Scene&& _other) = delete;
 
     ~Scene();
+
+    std::shared_ptr<Scene> shared_ptr() {
+        return shared_from_this();
+    }
+    std::weak_ptr<Scene> weak_ptr() {
+        return shared_from_this();
+    }
 
     const int32_t id;
 
@@ -163,8 +170,7 @@ public:
     void animated(bool animated) { m_animated = animated ? yes : no; }
     animate animated() const { return m_animated; }
 
-    std::shared_ptr<TileSource> getTileSource(int32_t id);
-    std::shared_ptr<TileSource> getTileSource(const std::string& name);
+    TileSource* getTileSource(int32_t id);
 
     std::shared_ptr<Texture> getTexture(const std::string& name) const;
 
@@ -186,6 +192,7 @@ public:
     }
 
     TileManager* tileManager() { return m_tileManager.get(); }
+    TileWorker* tileWorker() { return m_tileWorker.get(); }
     MarkerManager* markerManager() { return m_markerManager.get(); }
     LabelManager* labelManager() { return m_labelManager.get(); }
 
@@ -194,12 +201,21 @@ public:
         m_tileManager->updateTileSets(*m_view);
     }
 
-    void initTileWorker() {
+    void startTileWorker() {
         m_tileWorker->setScene(*this);
     }
-
+    void stopTileWorker() {
+        m_ready = false;
+        m_tileWorker.reset();
+    }
+    // Check if the Scene is ready or can be completed (I.e all resources haven been loaded)
     bool complete();
+
     bool isReady() const { return m_ready; };
+
+    void requestRender() {
+        m_platform.requestRender();
+    }
 
     std::shared_ptr<Texture> fetchTexture(const std::string& name, const Url& url,
                                           const TextureOptions& options,
@@ -212,6 +228,7 @@ public:
 
     friend struct SceneLoader;
     friend class Importer;
+    friend class TileManager;
 
     std::vector<SceneError> errors;
 

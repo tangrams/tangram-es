@@ -8,12 +8,12 @@
 
 namespace Tangram {
 
-TileTask::TileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _subTask) :
+TileTask::TileTask(TileID& _tileId, Scene& _scene, TileSource& _source, int _subTask) :
     m_tileId(_tileId),
     m_subTaskId(_subTask),
-    m_source(_source),
-    m_sourceId(_source->id()),
-    m_sourceGeneration(_source->generation()),
+    m_scene(_scene.weak_ptr()),
+    m_sourceId(_source.id()),
+    m_sourceGeneration(_source.generation()),
     m_ready(false),
     m_canceled(false),
     m_needsLoading(true),
@@ -21,6 +21,12 @@ TileTask::TileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _su
     m_proxyState(false) {}
 
 TileTask::~TileTask() {}
+
+TileSource& TileTask::source() {
+    auto scene = m_scene.lock();
+    assert(scene);
+    return  *scene->getTileSource(m_sourceId);
+}
 
 std::unique_ptr<Tile> TileTask::getTile() {
     return std::move(m_tile);
@@ -32,18 +38,22 @@ void TileTask::setTile(std::unique_ptr<Tile>&& _tile) {
 }
 
 void TileTask::process(TileBuilder& _tileBuilder) {
+    auto scene = m_scene.lock();
+    if (!scene) { return; }
 
-    auto source = m_source.lock();
+    auto source = scene->getTileSource(m_sourceId);
     if (!source) { return; }
 
     auto tileData = source->parse(*this);
-
-    if (tileData) {
-        m_tile = _tileBuilder.build(m_tileId, *tileData, *source);
-        m_ready = true;
-    } else {
+    if (!tileData) {
         cancel();
+        return;
     }
+
+    m_tile = _tileBuilder.build(m_tileId, *tileData, *source);
+    m_ready = true;
+
+    scene->requestRender();
 }
 
 void TileTask::complete() {

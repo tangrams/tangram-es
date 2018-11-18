@@ -34,7 +34,7 @@ public:
 
     void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
 
-    virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask) override;
+    virtual std::shared_ptr<TileTask> createTask(Scene& _scene, TileID _tile, int _subTask) override;
 
     virtual void clearRasters() override;
     virtual void clearRaster(const TileID& id) override;
