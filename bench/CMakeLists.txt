@@ -5,8 +5,10 @@ add_subdirectory(benchmark)
 target_compile_options(benchmark PRIVATE -O3 -DNDEBUG)
 
 set(BENCH_SOURCES
-  src/builders.cpp
-  src/tileLoading.cpp
+  src/benchGeometryBuilder.cpp
+  src/benchStyleContext.cpp
+  src/benchTileBuilder.cpp
+  src/benchTileSource.cpp
 )
 
 # create an executable per bench

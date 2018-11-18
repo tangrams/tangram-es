@@ -1,12 +1,11 @@
+#include "benchmark/benchmark.h"
+
 #include "gl.h"
 #include "map.h"
 
 #include "util/builders.h"
 #include "glm/glm.hpp"
 #include <vector>
-
-#include "benchmark/benchmark_api.h"
-#include "benchmark/benchmark.h"
 
 using namespace Tangram;
 
