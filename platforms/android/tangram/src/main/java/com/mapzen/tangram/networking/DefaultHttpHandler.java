@@ -90,7 +90,9 @@ public class DefaultHttpHandler implements HttpHandler {
             public void onResponse(final Call call, final Response response) {
                 byte[] data = null;
                 final ResponseBody body = response.body();
+
                 if (body != null) {
+                    Log.e("Tangram", "body size:" + body.contentLength());
                     try {
                         data = body.bytes();
                         cb.onResponse(response.code(), data);
@@ -105,6 +107,7 @@ public class DefaultHttpHandler implements HttpHandler {
         };
         final Request.Builder builder = new Request.Builder().url(httpUrl);
         configureRequest(httpUrl, builder);
+        //builder.addHeader("Accept-Encoding", "gzip");
         final Request request = builder.build();
         Call call = okClient.newCall(request);
         call.enqueue(callback);

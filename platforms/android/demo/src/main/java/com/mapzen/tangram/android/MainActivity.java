@@ -53,7 +53,9 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     private static final String TAG = "TangramDemo";
 
     private static final String[] SCENE_PRESETS = {
+            "asset:///snap.yaml",
             "asset:///scene.yaml",
+            "asset:///snapzen/scene.yaml",
             "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip",
             "https://www.nextzen.org/carto/refill-style/11/refill-style.zip",
             "https://www.nextzen.org/carto/walkabout-style/7/walkabout-style.zip",
