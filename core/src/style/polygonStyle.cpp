@@ -152,7 +152,19 @@ auto PolygonStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties& 
     Parameters p;
     _rule.get(StyleParamKey::color, p.color);
     _rule.get(StyleParamKey::extrude, p.extrude);
-    _rule.get(StyleParamKey::order, p.order);
+
+    //_rule.get(StyleParamKey::order, p.order);
+    auto& order = _rule.findParameter(StyleParamKey::order);
+    if (order.value.is<uint32_t>()) {
+        p.order = order.value.get<uint32_t>();
+    } else if (order.value.is<StyleParam::NumberProperty>()) {
+        double v;
+        auto& np = order.value.get<StyleParam::NumberProperty>();
+        if (_props.getNumber(np.key, v)) {
+            p.order = int(v) + np.offset;
+        }
+    }
+
     _rule.get(StyleParamKey::tile_edges, p.keepTileEdges);
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {

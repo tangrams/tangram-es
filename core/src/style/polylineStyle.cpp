@@ -294,7 +294,32 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
     _rule.get(StyleParamKey::color, p.fill.color);
     _rule.get(StyleParamKey::cap, cap);
     _rule.get(StyleParamKey::join, join);
-    _rule.get(StyleParamKey::order, fill.order);
+
+    auto& order = _rule.findParameter(StyleParamKey::order);
+    if (order.value.is<uint32_t>()) {
+        fill.order = order.value.get<uint32_t>();
+
+    } else if (order.value.is<StyleParam::NumberProperty>()) {
+        double v;
+        auto& np = order.value.get<StyleParam::NumberProperty>();
+        if (_props.getNumber(np.key, v)) {
+            fill.order = int(v) + np.offset;
+        }
+    }
+    stroke.order = fill.order;
+
+    auto& strokeOrder = _rule.findParameter(StyleParamKey::outline_order);
+    if (strokeOrder.value.is<uint32_t>()) {
+        stroke.order = strokeOrder.value.get<uint32_t>();
+
+    } else if (strokeOrder.value.is<StyleParam::NumberProperty>()) {
+        double v;
+        auto& np = strokeOrder.value.get<StyleParam::NumberProperty>();
+        if (_props.getNumber(np.key, v)) {
+            stroke.order = int(v) + np.offset;
+        }
+    }
+
     _rule.get(StyleParamKey::tile_edges, p.keepTileEdges);
     _rule.get(StyleParamKey::miter_limit, p.fill.miterLimit);
 
@@ -310,7 +335,6 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
     p.fill.set(fill.width, fill.slope, height, fill.order);
     p.lineOn = !_rule.isOutlineOnly;
 
-    stroke.order = fill.order;
     p.stroke.cap = p.fill.cap;
     p.stroke.join = p.fill.join;
     p.stroke.miterLimit = p.fill.miterLimit;
@@ -319,8 +343,7 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
     bool outlineVisible = true;
     _rule.get(StyleParamKey::outline_visible, outlineVisible);
     if ( outlineVisible && (!p.lineOn || !_rule.findParameter(StyleParamKey::outline_style)) ) {
-        if (strokeWidth |
-            _rule.get(StyleParamKey::outline_order, stroke.order) |
+        if (strokeWidth | strokeOrder |
             _rule.get(StyleParamKey::outline_cap, cap) |
             _rule.get(StyleParamKey::outline_join, join) |
             _rule.get(StyleParamKey::outline_miter_limit, p.stroke.miterLimit)) {
