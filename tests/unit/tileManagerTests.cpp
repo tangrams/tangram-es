@@ -89,14 +89,15 @@ struct TestTileSource : TileSource {
         m_generateGeometry = true;
     }
 
-    void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override {
+    void loadTileTask(std::shared_ptr<TileTask> _task) override {
         tileTaskCount++;
         static_cast<Task*>(_task.get())->gotData = true;
         _task->startedLoading();
-        _cb.func(std::move(_task));
+        //FIXME
+        //_cb.func(std::move(_task));
     }
 
-    void cancelLoadingTile(TileTask& _tile) override {}
+    void cancelTileTask(TileTask& _tile) override {}
 
     std::shared_ptr<TileData> parse(const TileTask& _task) const override {
         return nullptr;

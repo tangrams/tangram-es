@@ -392,6 +392,10 @@ void Scene::renderSelection(RenderState& _rs, View& _view, FrameBuffer& _selecti
                                *m_markerManager, *m_tileManager,
                                *m_labelManager, colorCache);
     }
-
 }
+
+void Scene::requestRender() {
+    if (m_ready) { m_platform.requestRender(); }
+}
+
 }

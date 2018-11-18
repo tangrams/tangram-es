@@ -5,6 +5,7 @@
 #include "data/formats/topoJson.h"
 #include "data/tileData.h"
 #include "platform.h"
+#include "scene/scene.h"
 #include "tile/tileID.h"
 #include "tile/tile.h"
 #include "tile/tileTask.h"
@@ -58,6 +59,19 @@ const char* TileSource::mimeType() const {
 std::shared_ptr<TileTask> TileSource::createTask(Scene& _scene, TileID _tileId, int _subTask) {
     auto task = std::make_shared<BinaryTileTask>(_tileId, _scene, *this, _subTask);
 
+    task->cb = [](std::shared_ptr<TileTask> task) {
+        auto scene = task->scene();
+        if (!scene) { return; }
+        if (task->isReady()) {
+            scene->requestRender();
+        } else if (task->hasData()) {
+            scene->tileWorker()->enqueue(task);
+        } else {
+            task->cancel();
+        }
+        LOGD("DONE %p", task.get());
+    };
+
     createSubTasks(_scene, *task);
 
     return task;
@@ -85,20 +99,21 @@ void TileSource::clearData() {
     m_generation++;
 }
 
-void TileSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
+void TileSource::loadTileTask(std::shared_ptr<TileTask> _task) {
+    // Callback to pass task from Download-Thread to Worker-Queue
 
     if (m_sources) {
         if (_task->needsLoading()) {
-            if (m_sources->loadTileData(_task, _cb)) {
+            if (m_sources->loadTileData(_task)) {
                 _task->startedLoading();
             }
         } else if(_task->hasData()) {
-            _cb.func(_task);
+            _task->done();
         }
     }
 
     for (auto& subTask : _task->subTasks()) {
-        subTask->source().loadTileData(subTask, _cb);
+        subTask->source().loadTileTask(subTask);
     }
 }
 
@@ -112,12 +127,12 @@ std::shared_ptr<TileData> TileSource::parse(const TileTask& _task) const {
     return nullptr;
 }
 
-void TileSource::cancelLoadingTile(TileTask& _task) {
+void TileSource::cancelTileTask(TileTask& _task) {
 
     if (m_sources) { m_sources->cancelLoadingTile(_task); }
 
     for (auto& subTask : _task.subTasks()) {
-        subTask->source().cancelLoadingTile(*subTask);
+        subTask->source().cancelTileTask(*subTask);
     }
 }
 

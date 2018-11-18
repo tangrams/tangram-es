@@ -183,20 +183,21 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
     m_generation++;
 }
 
-void ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
+void ClientGeoJsonSource::loadTileTask(std::shared_ptr<TileTask> _task) {
 
     if (m_hasPendingData) {
         return;
     }
 
     if (_task->needsLoading()) {
+        // Pass directly to TileWorker
         _task->startedLoading();
 
-        _cb.func(_task);
+        _task->done();
     }
 
     // Load subsources
-    TileSource::loadTileData(_task, _cb);
+    TileSource::loadTileTask(_task);
 }
 
 void ClientGeoJsonSource::clearData() {

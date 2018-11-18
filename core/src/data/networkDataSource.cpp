@@ -43,7 +43,7 @@ std::string NetworkDataSource::buildUrlForTile(const TileID& tile, size_t subdom
     return url;
 }
 
-bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb callback) {
+bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task) {
 
     if (task->rawSource != this->level) {
         LOGE("NetworkDataSource must be last!");
@@ -58,7 +58,7 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
         m_urlSubdomainIndex = (m_urlSubdomainIndex + 1) % m_urlSubdomains.size();
     }
 
-    UrlCallback onRequestFinish = [callback, task, url](UrlResponse&& response) {
+    UrlCallback onRequestFinish = [task, url](UrlResponse&& response) {
 
         auto scene = task->scene();
         if (!scene) {
@@ -77,7 +77,8 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
             auto& dlTask = static_cast<BinaryTileTask&>(*task);
             dlTask.rawTileData = std::make_shared<std::vector<char>>(std::move(response.content));
         }
-        callback.func(task);
+        LOGD("DONE %p", task.get());
+        task->done();
     };
 
     auto& dlTask = static_cast<BinaryTileTask&>(*task);

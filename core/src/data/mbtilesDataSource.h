@@ -22,14 +22,14 @@ public:
 
     ~MBTilesDataSource();
 
-    bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
+    bool loadTileData(std::shared_ptr<TileTask> _task) override;
 
     void clear() override {}
 
 private:
     bool getTileData(const TileID& _tileId, std::vector<char>& _data);
     void storeTileData(const TileID& _tileId, const std::vector<char>& _data);
-    bool loadNextSource(std::shared_ptr<TileTask> _task, TileTaskCb _cb);
+    bool loadNextSource(std::shared_ptr<TileTask> _task);
 
     void openMBTiles();
     bool testSchema(SQLite::Database& db);

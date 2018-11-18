@@ -130,11 +130,6 @@ protected:
 
     bool m_tileSetChanged = false;
 
-    /* Callback for TileSource:
-     * Passes TileTask back with data for further processing by <TileWorker>s
-     */
-    TileTaskCb m_dataCallback;
-
     /* Temporary list of tiles that need to be loaded */
     std::vector<std::tuple<double, TileSet*, TileID>> m_loadTasks;
 

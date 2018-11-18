@@ -12,7 +12,7 @@
 
 #include <algorithm>
 
-#define DBG(...) LOG(__VA_ARGS__)
+#define DBG(...) //LOG(__VA_ARGS__)
 
 namespace Tangram {
 
@@ -139,20 +139,6 @@ TileManager::TileManager(Scene& _scene) :
 
     // TODO configurable
     m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
-
-    // Callback to pass task from Download-Thread to Worker-Queue
-    m_dataCallback = TileTaskCb{[](std::shared_ptr<TileTask> task) {
-        auto scene = task->scene();
-        if (!scene) { return; }
-
-        if (task->isReady()) {
-            scene->platform().requestRender();
-        } else if (task->hasData()) {
-            scene->tileWorker()->enqueue(task);
-        } else {
-            task->cancel();
-        }
-    }};
 }
 
 TileManager::~TileManager() {
@@ -415,7 +401,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
                     if (curTileId.z >= maxZoom || curTileId.z <= minZoom) {
                         // Cancel tile loading but keep tile entry for referencing
                         // this tiles proxy tiles.
-                        _tileSet.source->cancelLoadingTile(*entry.task);
+                        _tileSet.source->cancelTileTask(*entry.task);
                         entry.clearTask();
                     }
                 }
@@ -506,7 +492,7 @@ void TileManager::loadTiles() {
         auto tileIt = tileSet.tiles.find(tileId);
         auto& entry = tileIt->second;
 
-        tileSet.source->loadTileData(entry.task, m_dataCallback);
+        tileSet.source->loadTileTask(entry.task);
 
         DBG("> load %s", tileId.toString().c_str());
 
@@ -558,7 +544,7 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
     if (entry.isInProgress()) {
         // 1. Remove from Datasource. Make sure to cancel
         //  the network request associated with this tile.
-        _tileSet.source->cancelLoadingTile(*entry.task);
+        _tileSet.source->cancelTileTask(*entry.task);
 
         entry.clearTask();
 

@@ -25,7 +25,7 @@ TileTask::~TileTask() {}
 TileSource& TileTask::source() {
     auto scene = m_scene.lock();
     assert(scene);
-    return  *scene->getTileSource(m_sourceId);
+    return *scene->getTileSource(m_sourceId);
 }
 
 std::unique_ptr<Tile> TileTask::getTile() {

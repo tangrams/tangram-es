@@ -33,10 +33,10 @@ public:
     void addPoly(const Properties& _tags, const std::vector<Coordinates>& _poly);
     void generateLabelCentroidFeature();
 
-    virtual void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
+    virtual void loadTileTask(std::shared_ptr<TileTask> _task) override;
     std::shared_ptr<TileTask> createTask(Scene& _scene, TileID _tileId, int _subTask) override;
 
-    virtual void cancelLoadingTile(TileTask& _task) override {};
+    virtual void cancelTileTask(TileTask& _task) override {};
     virtual void clearData() override;
 
 protected:

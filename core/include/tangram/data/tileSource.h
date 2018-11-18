@@ -53,7 +53,7 @@ public:
     struct DataSource {
         virtual ~DataSource() {}
 
-        virtual bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) = 0;
+        virtual bool loadTileData(std::shared_ptr<TileTask> _task) = 0;
 
         /* Stops any running I/O tasks pertaining to @_tile */
         virtual void cancelLoadingTile(TileTask& _task) {
@@ -97,10 +97,10 @@ public:
      * the I/O task is complete, the tile data is added to a queue in @_tileManager for
      * further processing before it is renderable.
      */
-    virtual void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb);
+    virtual void loadTileTask(std::shared_ptr<TileTask> _task);
 
     /* Stops any running I/O tasks pertaining to @_task */
-    virtual void cancelLoadingTile(TileTask& _task);
+    virtual void cancelTileTask(TileTask& _task);
 
     /* Parse a <TileTask> with data into a <TileData>, returning an empty TileData on failure */
     virtual std::shared_ptr<TileData> parse(const TileTask& _task) const;

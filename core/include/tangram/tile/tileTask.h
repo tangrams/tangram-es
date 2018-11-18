@@ -17,9 +17,11 @@ class TileSource;
 class Tile;
 class MapProjection;
 struct TileData;
+class TileTask;
 
+using TileTaskCb = std::function<void(std::shared_ptr<TileTask>)>;
 
-class TileTask {
+class TileTask : public std::enable_shared_from_this<TileTask> {
 
 public:
 
@@ -89,6 +91,10 @@ public:
 
     void startedLoading() { m_needsLoading = false; }
 
+    TileTaskCb cb;
+
+    void done() { cb(shared_from_this()); }
+
 protected:
 
     const TileID m_tileId;
@@ -113,6 +119,7 @@ protected:
 
     std::atomic<float> m_priority;
     std::atomic<bool> m_proxyState;
+
 };
 
 class BinaryTileTask : public TileTask {
@@ -136,8 +143,5 @@ struct TileTaskQueue {
     virtual void enqueue(std::shared_ptr<TileTask> task) = 0;
 };
 
-struct TileTaskCb {
-    std::function<void(std::shared_ptr<TileTask>)> func;
-};
 
 }

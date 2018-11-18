@@ -10,7 +10,7 @@ public:
     MemoryCacheDataSource();
     ~MemoryCacheDataSource();
 
-    bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
+    bool loadTileData(std::shared_ptr<TileTask> _task) override;
 
     void clear() override;
 

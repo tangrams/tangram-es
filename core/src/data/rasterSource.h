@@ -32,8 +32,6 @@ public:
     // TODO Is this always PNG or can it also be JPEG?
     virtual const char* mimeType() const override { return "image/png"; };
 
-    void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
-
     virtual std::shared_ptr<TileTask> createTask(Scene& _scene, TileID _tile, int _subTask) override;
 
     virtual void clearRasters() override;

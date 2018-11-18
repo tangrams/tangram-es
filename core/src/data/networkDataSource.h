@@ -15,7 +15,7 @@ public:
     NetworkDataSource(Platform& _platform, const std::string& _urlTemplate,
                       std::vector<std::string>&& _urlSubdomains, bool _isTms);
 
-    bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
+    bool loadTileData(std::shared_ptr<TileTask> _task) override;
 
     void cancelLoadingTile(TileTask& _task) override;
 

@@ -101,7 +101,7 @@ void MemoryCacheDataSource::cachePut(const TileID& _tileID, std::shared_ptr<std:
     m_cache->put(_tileID, _rawDataRef);
 }
 
-bool MemoryCacheDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
+bool MemoryCacheDataSource::loadTileData(std::shared_ptr<TileTask> _task) {
 
     auto& task = static_cast<BinaryTileTask&>(*_task);
 
@@ -110,7 +110,7 @@ bool MemoryCacheDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTa
         cacheGet(task);
 
         if (task.hasData()) {
-            _cb.func(_task);
+            _task->done();
             return true;
         }
 
@@ -119,15 +119,16 @@ bool MemoryCacheDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTa
     }
 
     if (next) {
-
-        return next->loadTileData(_task, {[this, _cb](std::shared_ptr<TileTask> _task) {
-
+        _task->cb = [this, cb = _task->cb](std::shared_ptr<TileTask> _task) {
             auto& task = static_cast<BinaryTileTask&>(*_task);
 
-            if (task.hasData()) { cachePut(task.tileId(), task.rawTileData); }
-
-            _cb.func(_task);
-        }});
+            if (task.hasData()) {
+                cachePut(task.tileId(), task.rawTileData);
+            }
+            LOGD("DONE %p", _task.get());
+            cb(_task);
+        };
+        return next->loadTileData(_task);
     }
 
     return false;

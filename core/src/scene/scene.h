@@ -232,6 +232,10 @@ public:
 
     std::vector<SceneError> errors;
 
+    void requestRender();
+
+    std::shared_ptr<Texture> emptyTexture() { return nullptr; }
+
 protected:
     Platform& platform() { return m_platform; }
     const SceneOptions& options() { return *m_options; }

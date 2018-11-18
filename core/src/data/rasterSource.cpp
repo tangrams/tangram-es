@@ -11,8 +11,11 @@ namespace Tangram {
 
 class RasterTileTask : public BinaryTileTask {
 public:
+
+
     RasterTileTask(TileID& _tileId, Scene& _scene, TileSource& _source, int _subTask)
-        : BinaryTileTask(_tileId, _scene, _source, _subTask) {}
+        : BinaryTileTask(_tileId, _scene, _source, _subTask) {
+    }
 
     std::shared_ptr<Texture> m_texture;
 
@@ -69,6 +72,8 @@ public:
 
         _mainTask.tile()->rasters().push_back(std::move(raster));
     }
+
+
 };
 
 
@@ -90,21 +95,6 @@ std::shared_ptr<Texture> RasterSource::createTexture(const std::vector<char>& _r
     auto texture = std::make_shared<Texture>(data, length, m_texOptions);
 
     return texture;
-}
-
-void RasterSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
-    // TODO, remove this
-    // Overwrite cb to set empty texture on failure
-    TileTaskCb cb{[this, _cb](std::shared_ptr<TileTask> _task) {
-
-            if (!_task->hasData()) {
-                auto& task = static_cast<RasterTileTask&>(*_task);
-                task.m_texture = m_emptyTexture;
-            }
-            _cb.func(_task);
-        }};
-
-    TileSource::loadTileData(_task, cb);
 }
 
 std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task) const {
@@ -130,6 +120,24 @@ std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task) const {
 
 std::shared_ptr<TileTask> RasterSource::createTask(Scene& _scene, TileID _tileId, int _subTask) {
     auto task = std::make_shared<RasterTileTask>(_tileId, _scene, *this, _subTask);
+
+    task->cb = [](std::shared_ptr<TileTask> task) {
+        auto scene = task->scene();
+        if (!scene) { return; }
+
+        if (task->isSubTask() && !task->hasData()) {
+            auto& t = static_cast<RasterTileTask&>(*task);
+            t.m_texture = scene->emptyTexture();
+        } else if (task->hasData()) {
+            scene->tileWorker()->enqueue(task);
+        }
+
+        if (task->isReady()) {
+            scene->requestRender();
+        } else {
+            task->cancel();
+        }
+    };
 
     createSubTasks(_scene, *task);
 
