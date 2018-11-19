@@ -1,4 +1,8 @@
 #include "glfwApp.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#define GLFW_INCLUDE_GLEXT
 #include <GLFW/glfw3.h>
 #include <cstdlib>
 #include <atomic>
@@ -19,6 +23,11 @@ void scrollCallback(GLFWwindow* window, double scrollx, double scrolly);
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void dropCallback(GLFWwindow* window, int count, const char** paths);
 void framebufferResizeCallback(GLFWwindow* window, int fWidth, int fHeight);
+
+// Forward-declare GUI functions.
+void showDebugFlagsGUI();
+void showViewportGUI();
+void showSceneGUI();
 
 constexpr double double_tap_time = 0.5; // seconds
 constexpr double scroll_span_multiplier = 0.05; // scaling for zoom and rotation
@@ -52,7 +61,8 @@ double last_y_down = 0.0;
 double last_x_velocity = 0.0;
 double last_y_velocity = 0.0;
 
-std::atomic<bool> wireframe_mode;
+bool wireframe_mode = false;
+bool show_gui = true;
 
 Tangram::MarkerID marker = 0;
 Tangram::MarkerID poiMarker = 0;
@@ -97,10 +107,6 @@ void parseArgs(int argc, char* argv[]) {
     }
 }
 
-void setWireframeMode(bool state) {
-    wireframe_mode = state;
-}
-
 void setScene(const std::string& _path, const std::string& _yaml) {
     sceneFile = _path;
     sceneYaml = _yaml;
@@ -138,6 +144,8 @@ void create(std::shared_ptr<Platform> p, int w, int h) {
     std::snprintf(versionString, sizeof(versionString), "Tangram ES %d.%d.%d " BUILD_NUM_STRING,
         TANGRAM_VERSION_MAJOR, TANGRAM_VERSION_MINOR, TANGRAM_VERSION_PATCH);
 
+    const char* glsl_version = "#version 120";
+
     // Create a windowed mode window and its OpenGL context
     glfwWindowHint(GLFW_SAMPLES, 2);
     glfwWindowHint(GLFW_STENCIL_BITS, 8);
@@ -150,6 +158,7 @@ void create(std::shared_ptr<Platform> p, int w, int h) {
 
     // Make the main_window's context current
     glfwMakeContextCurrent(main_window);
+    glfwSwapInterval(1); // Enable vsync
 
     // Set input callbacks
     glfwSetFramebufferSizeCallback(main_window, framebufferResizeCallback);
@@ -159,11 +168,25 @@ void create(std::shared_ptr<Platform> p, int w, int h) {
     glfwSetKeyCallback(main_window, keyCallback);
     glfwSetDropCallback(main_window, dropCallback);
 
+    glfwSetCharCallback(main_window, ImGui_ImplGlfw_CharCallback);
+
     // Setup graphics
     map->setupGL();
     int fWidth = 0, fHeight = 0;
     glfwGetFramebufferSize(main_window, &fWidth, &fHeight);
     framebufferResizeCallback(main_window, fWidth, fHeight);
+
+    // Setup ImGui binding
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+    ImGui_ImplGlfw_InitForOpenGL(main_window, false);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+    // Setup style
+    ImGui::StyleColorsDark();
 
 }
 
@@ -176,6 +199,17 @@ void run() {
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(main_window)) {
 
+        if(show_gui) {
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            // Create ImGui interface.
+            // ImGui::ShowDemoWindow();
+            showSceneGUI();
+            showViewportGUI();
+            showDebugFlagsGUI();
+        }
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
         lastTime = currentTime;
@@ -192,6 +226,13 @@ void run() {
             glPolygonMode(GL_FRONT, GL_FILL);
             glPolygonMode(GL_BACK, GL_FILL);
         }
+
+        if (show_gui) {
+            // Render ImGui interface.
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        }
+
         // Swap front and back buffers
         glfwSwapBuffers(main_window);
 
@@ -220,6 +261,8 @@ void destroy() {
         delete map;
         map = nullptr;
     }
+    ImGui_ImplGlfw_Shutdown();
+    ImGui_ImplOpenGL3_Shutdown();
     if (main_window) {
         glfwDestroyWindow(main_window);
         main_window = nullptr;
@@ -233,6 +276,11 @@ static constexpr T clamp(T val, T min, T max) {
 }
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+
+    ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+    if (ImGui::GetIO().WantCaptureMouse) {
+        return; // Imgui is handling this event.
+    }
 
     if (button != GLFW_MOUSE_BUTTON_1) {
         return; // This event is for a mouse button that we don't care about
@@ -293,6 +341,10 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 
 void cursorMoveCallback(GLFWwindow* window, double x, double y) {
 
+    if (ImGui::GetIO().WantCaptureMouse) {
+        return; // Imgui is handling this event.
+    }
+
     x *= density;
     y *= density;
 
@@ -319,6 +371,11 @@ void cursorMoveCallback(GLFWwindow* window, double x, double y) {
 
 void scrollCallback(GLFWwindow* window, double scrollx, double scrolly) {
 
+    ImGui_ImplGlfw_ScrollCallback(window, scrollx, scrolly);
+    if (ImGui::GetIO().WantCaptureMouse) {
+        return; // Imgui is handling this event.
+    }
+
     double x, y;
     glfwGetCursorPos(window, &x, &y);
     x *= density;
@@ -339,36 +396,17 @@ void scrollCallback(GLFWwindow* window, double scrollx, double scrolly) {
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
+    ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+    if (ImGui::GetIO().WantCaptureKeyboard) {
+        return; // Imgui is handling this event.
+    }
+
     CameraPosition camera = map->getCameraPosition();
 
     if (action == GLFW_PRESS) {
         switch (key) {
-            case GLFW_KEY_1:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::freeze_tiles);
-                break;
-            case GLFW_KEY_2:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::proxy_colors);
-                break;
-            case GLFW_KEY_3:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::tile_bounds);
-                break;
-            case GLFW_KEY_4:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::tile_infos);
-                break;
-            case GLFW_KEY_5:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::labels);
-                break;
-            case GLFW_KEY_6:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::draw_all_labels);
-                break;
-            case GLFW_KEY_7:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_infos);
-                break;
-            case GLFW_KEY_8:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_stats);
-                break;
-            case GLFW_KEY_9:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::selection_buffer);
+            case GLFW_KEY_D:
+                show_gui = !show_gui;
                 break;
             case GLFW_KEY_BACKSPACE:
                 recreate_context = true;
@@ -491,6 +529,87 @@ void framebufferResizeCallback(GLFWwindow* window, int fWidth, int fHeight) {
     }
     map->setPixelScale(density);
     map->resize(fWidth, fHeight);
+}
+
+void showSceneGUI() {
+    if (ImGui::CollapsingHeader("Scene")) {
+        char buffer[256];
+        std::strncpy(buffer, sceneFile.data(), sizeof(buffer));
+        if (ImGui::InputText("Scene URL", buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
+            sceneFile.assign(buffer);
+            loadSceneFile();
+        }
+        std::strncpy(buffer, apiKey.data(), sizeof(buffer));
+        if (ImGui::InputText("API key", buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
+            apiKey.assign(buffer);
+            loadSceneFile();
+        }
+        if (ImGui::Button("Reload Scene")) {
+            loadSceneFile();
+        }
+    }
+}
+
+void showViewportGUI() {
+    if (ImGui::CollapsingHeader("Viewport")) {
+        CameraPosition camera = map->getCameraPosition();
+        float lngLatZoom[3] = {static_cast<float>(camera.longitude), static_cast<float>(camera.latitude), camera.zoom};
+        if (ImGui::InputFloat3("Lng/Lat/Zoom", lngLatZoom, "%.5f", ImGuiInputTextFlags_EnterReturnsTrue)) {
+            camera.longitude = lngLatZoom[0];
+            camera.latitude = lngLatZoom[1];
+            camera.zoom = lngLatZoom[2];
+            map->setCameraPosition(camera);
+        }
+        if (ImGui::SliderAngle("Tilt", &camera.tilt, 0.f, 90.f)) {
+            map->setCameraPosition(camera);
+        }
+        if (ImGui::SliderAngle("Rotation", &camera.rotation, 0.f, 360.f)) {
+            map->setCameraPosition(camera);
+        }
+    }
+}
+
+void showDebugFlagsGUI() {
+    if (ImGui::CollapsingHeader("Debug Flags")) {
+        bool flag;
+        flag = getDebugFlag(DebugFlags::freeze_tiles);
+        if (ImGui::Checkbox("Freeze Tiles", &flag)) {
+            setDebugFlag(DebugFlags::freeze_tiles, flag);
+        }
+        flag = getDebugFlag(DebugFlags::proxy_colors);
+        if (ImGui::Checkbox("Recolor Proxy Tiles", &flag)) {
+            setDebugFlag(DebugFlags::proxy_colors, flag);
+        }
+        flag = getDebugFlag(DebugFlags::tile_bounds);
+        if (ImGui::Checkbox("Show Tile Bounds", &flag)) {
+            setDebugFlag(DebugFlags::tile_bounds, flag);
+        }
+        flag = getDebugFlag(DebugFlags::tile_infos);
+        if (ImGui::Checkbox("Show Tile Info", &flag)) {
+            setDebugFlag(DebugFlags::tile_infos, flag);
+        }
+        flag = getDebugFlag(DebugFlags::labels);
+        if (ImGui::Checkbox("Show Label Debug Info", &flag)) {
+            setDebugFlag(DebugFlags::labels, flag);
+        }
+        flag = getDebugFlag(DebugFlags::tangram_infos);
+        if (ImGui::Checkbox("Show Map Info", &flag)) {
+            setDebugFlag(DebugFlags::tangram_infos, flag);
+        }
+        flag = getDebugFlag(DebugFlags::draw_all_labels);
+        if (ImGui::Checkbox("Show All Labels", &flag)) {
+            setDebugFlag(DebugFlags::draw_all_labels, flag);
+        }
+        flag = getDebugFlag(DebugFlags::tangram_stats);
+        if (ImGui::Checkbox("Show Frame Stats", &flag)) {
+            setDebugFlag(DebugFlags::tangram_stats, flag);
+        }
+        flag = getDebugFlag(DebugFlags::selection_buffer);
+        if (ImGui::Checkbox("Show Selection Buffer", &flag)) {
+            setDebugFlag(DebugFlags::selection_buffer, flag);
+        }
+        ImGui::Checkbox("Wireframe Mode", &wireframe_mode);
+    }
 }
 
 } // namespace GlfwApp

@@ -40,10 +40,14 @@ add_executable(tangram
   platforms/linux/src/linuxPlatform.cpp
   platforms/linux/src/main.cpp
   platforms/common/platform_gl.cpp
+  platforms/common/imgui_impl_glfw.cpp
+  platforms/common/imgui_impl_opengl3.cpp
   platforms/common/urlClient.cpp
   platforms/common/linuxSystemFontHelper.cpp
   platforms/common/glfwApp.cpp
 )
+
+add_subdirectory(platforms/common/imgui)
 
 target_include_directories(tangram
   PRIVATE
@@ -55,6 +59,7 @@ target_link_libraries(tangram
   PRIVATE
   tangram-core
   glfw
+  imgui
   ${GLFW_LIBRARIES}
   ${OPENGL_LIBRARIES}
   ${FONTCONFIG_LDFLAGS}
