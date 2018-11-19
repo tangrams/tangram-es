@@ -43,3 +43,19 @@ set_target_properties(myIosTarget PROPERTIES XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT
 ```
 
 Some build configurations are more easily applied through Xcode settings, and some are only relevant when Xcode is the target IDE.
+
+## Fix missing symbols when profiling in Instruments ##
+
+After running the Time Profiler in Xcode's Instruments you might see traces with memory addresses instead of function names, like in the image below:
+
+![Instruments trace with missing symbols](/images/instruments-missing-symbols.png)
+
+For each Instruments run where function names are missing use the following steps to locate the symbols that Instruments needs to show the names correctly.
+
+After collecting data from a run and stopping the Time Profiler, go to `File` > `Symbols...`
+
+In the symbols pane that appears, select `TangramMap` in the menu on the left and then press the folder icon next to the binary path to choose the correct binary file.
+
+![Instruments symbols pane](/images/instruments-locate-binary.png)
+
+The correct binary file is the file named `TangramMap` in the directory shown in the file chooser that appears. After choosing the binary file, press `Done` to close the symbols pane and the function names will appear correctly in your Time Profiler trace.
