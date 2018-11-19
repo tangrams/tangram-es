@@ -97,8 +97,6 @@ public:
 
     size_t getBufferSize() const;
 
-    static void flipImageData(GLuint* result, int width, int height);
-
 protected:
 
     struct DirtyRowRange {
