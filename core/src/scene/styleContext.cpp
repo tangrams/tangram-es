@@ -58,10 +58,8 @@ JSValue StyleContext::parseSceneGlobals(JavaScriptScope& jsScope, const YAML::No
         auto& scalar = node.Scalar();
         if (scalar.compare(0, 8, "function") == 0) {
             return pushYamlScalarAsJsFunctionOrString(jsScope, node);
-        } else {
-            return pushYamlScalarAsJsPrimitive(jsScope, node);
         }
-        break;
+        return pushYamlScalarAsJsPrimitive(jsScope, node);
     }
     case YAML::NodeType::Sequence: {
         auto jsArray = jsScope.newArray();
@@ -69,7 +67,6 @@ JSValue StyleContext::parseSceneGlobals(JavaScriptScope& jsScope, const YAML::No
             jsArray->setValueAtIndex(i, parseSceneGlobals(jsScope, node[i]));
         }
         return jsArray;
-        break;
     }
     case YAML::NodeType::Map: {
         auto jsObject = jsScope.newObject();
@@ -80,11 +77,9 @@ JSValue StyleContext::parseSceneGlobals(JavaScriptScope& jsScope, const YAML::No
             jsObject->setValueForProperty(entry.first.Scalar(), parseSceneGlobals(jsScope, entry.second));
         }
         return jsObject;
-        break;
     }
     default:
         return jsScope.newNull();
-        break;
     }
 }
 
