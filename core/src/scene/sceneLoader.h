@@ -55,24 +55,25 @@ struct SceneLoader {
 
     static void applySources(Scene& scene);
     static void loadSource(const std::string& name, const Node& source, const Node& sources, Scene& scene);
-    static void loadSourceRasters(std::shared_ptr<TileSource>& source, const Node& rasterNode, const Node& sources, Scene& scene);
+    static void loadSourceRasters(TileSource& source, const Node& rasterNode, const Node& sources, Scene& scene);
 
-    static void applyStyles(std::shared_ptr<Scene>& scene);
-    static bool loadStyle(const std::string& styleName, const Node& config, std::shared_ptr<Scene>& scene);
-    static void loadStyleProps(Style& style, const Node& styleNode, std::shared_ptr<Scene>& scene);
-    static void parseStyleParams(const Node& params, Scene& scene, const std::string& propPrefix, std::vector<StyleParam>& out);
-    static void parseTransition(const Node& params, Scene& scene, std::string _prefix, std::vector<StyleParam>& out);
-    static void loadMaterial(const Node& matNode, Material& material, std::shared_ptr<Scene>& scene, Style& style);
-    static void loadShaderConfig(const Node& shaders, Style& style, std::shared_ptr<Scene>& scene);
-    static bool parseStyleUniforms(const Node& value, std::shared_ptr<Scene>& scene, StyleUniform& styleUniform);
-    static MaterialTexture loadMaterialTexture(const Node& matCompNode, std::shared_ptr<Scene>& scene, Style& style);
+    static void applyStyles(Scene& scene);
+    static bool loadStyle(const std::string& styleName, const Node& config, Scene& scene);
+    static void loadStyleProps(Style& style, const Node& styleNode, Scene& scene);
+    static void parseStyleParams(const Node& params, Scene& scene, const std::string& propPrefix,
+                                 std::vector<StyleParam>& out);
+    static void parseTransition(const Node& params, Scene& scene, std::string _prefix,
+                                std::vector<StyleParam>& out);
+    static void loadShaderConfig(const Node& shaders, Style& style, Scene& scene);
+    static bool parseStyleUniforms(const Node& value, Scene& scene, StyleUniform& styleUniform);
+    static void loadMaterial(const Node& matNode, Material& material, Scene& scene, Style& style);
+    static MaterialTexture loadMaterialTexture(const Node& matCompNode, Scene& scene, Style& style);
 
-    static void applyTextures(std::shared_ptr<Scene>& scene);
-    static void loadTexture(const std::pair<Node, Node>& texture, std::shared_ptr<Scene>& scene);
+    static void applyTextures(Scene& scene);
+    static void loadTexture(const std::pair<Node, Node>& texture, Scene& scene);
 
-    static void applyFonts(std::shared_ptr<Scene>& scene);
-    static void loadFont(const std::pair<Node, Node>& font, std::shared_ptr<Scene>& scene);
-    static void loadFontDescription(const Node& node, const std::string& family, std::shared_ptr<Scene>& scene);
+    static void applyFonts(Scene& scene);
+    static void loadFontDescription(const Node& node, const std::string& family, Scene& scene);
 
     static void applyLayers(Scene& scene);
     static void loadLayer(const std::pair<Node, Node>& layer, Scene& scene);
