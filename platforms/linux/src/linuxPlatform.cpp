@@ -41,10 +41,12 @@ LinuxPlatform::~LinuxPlatform() {
 
 void LinuxPlatform::shutdown() {
     // Stop all UrlWorker threads
+    m_shutdown = true;
     m_urlClient.reset();
 }
 
 void LinuxPlatform::requestRender() const {
+    if (m_shutdown) { return; }
     glfwPostEmptyEvent();
 }
 
@@ -77,12 +79,18 @@ FontSourceHandle LinuxPlatform::systemFont(const std::string& _name,
 }
 
 UrlRequestHandle LinuxPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
-    if (!m_urlClient) { return 0; }
-    return m_urlClient->addRequest(_url.string(), _callback);
+    if (m_shutdown) { return 0; }
+    return m_urlClient->addRequest(_url.string(),
+                                   [this, cb = _callback](UrlResponse&& r) {
+                                       LOG(">>-------------->>");
+                                       cb(std::move(r));
+                                       LOG("<<--------------<<");
+                                       requestRender();
+                                   });
 }
 
 void LinuxPlatform::cancelUrlRequest(UrlRequestHandle _request) {
-    if (!m_urlClient) { return; }
+    if (m_shutdown) { return; }
     m_urlClient->cancelRequest(_request);
 }
 
