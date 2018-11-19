@@ -143,6 +143,15 @@ target_link_libraries(tangram-core
   z
 )
 
+# Choose JavaScript implementation.
+if(TANGRAM_USE_JAVASCRIPTCORE)
+  target_sources(tangram-core PRIVATE src/js/JSCoreContext.cpp)
+  target_link_libraries(tangram-core PRIVATE "-framework JavaScriptCore")
+else()
+  target_sources(tangram-core PRIVATE src/js/DuktapeContext.cpp)
+  target_link_libraries(tangram-core PRIVATE duktape)
+endif()
+
 if(UNIX AND NOT APPLE)
   # SQLite needs dl dynamic library loader when Linux
   target_link_libraries(tangram-core PRIVATE dl)

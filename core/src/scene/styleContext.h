@@ -1,8 +1,8 @@
 #pragma once
 
+#include "js/IJavaScriptContext.h"
 #include "scene/styleParam.h"
 #include "util/fastmap.h"
-#include "util/IJavaScriptContext.h"
 
 #include <array>
 #include <functional>

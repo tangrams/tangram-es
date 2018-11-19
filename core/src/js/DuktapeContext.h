@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "util/IJavaScriptContext.h"
+#include "IJavaScriptContext.h"
 #include "duktape/duktape.h"
 
 namespace Tangram {

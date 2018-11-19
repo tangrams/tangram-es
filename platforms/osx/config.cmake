@@ -6,6 +6,9 @@ find_package(OpenGL REQUIRED)
 
 include(cmake/glfw.cmake)
 
+# Set flag for core library to use JavaScriptCore.
+set(TANGRAM_USE_JAVASCRIPTCORE 1)
+
 add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes" "Resources")
 
 add_executable(tangram
@@ -17,7 +20,6 @@ add_executable(tangram
   platforms/common/imgui_impl_opengl3.cpp
   platforms/common/glfwApp.cpp
   platforms/common/appleAllowedFonts.mm
-  platforms/common/JSCoreContext.cpp
   ${RESOURCES}
 )
 
@@ -35,7 +37,6 @@ target_link_libraries(tangram
   glfw
   ${GLFW_LIBRARIES}
   ${OPENGL_LIBRARIES}
-  "-framework JavaScriptCore"
 )
 
 target_compile_options(tangram
