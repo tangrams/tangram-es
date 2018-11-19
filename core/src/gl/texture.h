@@ -56,16 +56,18 @@ public:
 
     Texture(const uint8_t* data, size_t length, TextureOptions _options);
 
-    Texture(Texture&& _other) noexcept;
-    Texture& operator=(Texture&& _other) noexcept;
+    Texture(const Texture& _other) = delete;
+    Texture& operator=(const Texture& _other) = delete;
+    Texture(Texture&& _other) = delete;
+    Texture& operator=(Texture&& _other) = delete;
 
     virtual ~Texture();
 
     bool loadImageFromMemory(const uint8_t* data, size_t length);
 
     /* Sets texture pixel data */
-    void movePixelData(size_t _width, size_t _height, size_t _bytesPerPixel, GLubyte* _data, size_t _length);
-    void setPixelData(size_t _width, size_t _height, size_t _bytesPerPixel, const GLubyte* _data, size_t _length);
+    bool movePixelData(int _width, int _height, int _bytesPerPixel, GLubyte* _data, size_t _length);
+    bool setPixelData(int _width, int _height, int _bytesPerPixel, const GLubyte* _data, size_t _length);
 
     void setRowsDirty(int start, int count);
 
@@ -73,7 +75,6 @@ public:
 
     /* Perform texture updates, should be called at least once and after adding data or resizing */
     virtual void update(RenderState& rs, GLuint _textureSlot);
-    virtual void update(RenderState& rs, GLuint _textureSlot, const GLubyte* data);
 
     /* Resize the texture */
     void resize(int width, int height);
@@ -119,6 +120,8 @@ protected:
     GLuint m_glHandle = 0;
 
     bool m_shouldResize = false;
+    // Dipose buffer after texture upload
+    bool m_disposeBuffer = true;
 
     int m_width = 0;
     int m_height = 0;
