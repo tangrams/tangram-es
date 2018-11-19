@@ -1,5 +1,6 @@
 global:
-    feature_order: function () { return feature.sort_rank; }
+    #feature_order: function () { return feature.sort_rank; }
+    feature_order: [ sort_rank ]
     sdk_api_key: ''
 
 fonts:
