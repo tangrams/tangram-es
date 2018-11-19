@@ -23,6 +23,10 @@ set_target_properties(css-color-parser-cpp PROPERTIES CXX_STANDARD 14 CXX_STANDA
 
 target_include_directories(css-color-parser-cpp PUBLIC css-color-parser-cpp)
 
+## duktape ##
+#############
+add_subdirectory(duktape)
+
 ## miniz ##
 ###########
 add_library(miniz
