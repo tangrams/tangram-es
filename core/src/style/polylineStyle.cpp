@@ -88,13 +88,12 @@ void PolylineStyle::constructVertexLayout() {
             {"a_selection_color", 4, GL_UNSIGNED_BYTE, true, 0},
         }));
     }
-
 }
 
 void PolylineStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
     Style::onBeginDrawFrame(rs, _view, _scene);
 
-    if (m_texture) {
+    if (m_texture && m_texture->getWidth() > 0) {
         GLuint textureUnit = rs.nextAvailableTextureUnit();
 
         m_texture->update(rs, textureUnit);
@@ -122,8 +121,9 @@ void PolylineStyle::constructShaderProgram() {
         auto pixels = DashArray::render(m_dashArray, dash_scale);
 
         m_texture = std::make_shared<Texture>(options);
-        m_texture->resize(1, pixels.size());
-        m_texture->setPixelData(pixels.data(), pixels.size());
+        m_texture->setPixelData(pixels.size(), 1, sizeof(GLuint),
+                                reinterpret_cast<GLubyte*>(pixels.data()),
+                                pixels.size() * sizeof(GLuint));
 
         if (m_dashBackground) {
             m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LINE_BACKGROUND_COLOR vec3(" +

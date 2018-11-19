@@ -43,27 +43,26 @@ bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
     // begins at the bottom-left corner, as required for our OpenGL texture coordinates.
     stbi_set_flip_vertically_on_load(true);
 
-    int width = 0, height = 0, comp = 0;
+    int width = 0, height = 0;
+    int channelsInFile = 0;
+    int channelsRequested = getBytesPerPixel();
+
     unsigned char* pixels = stbi_load_from_memory(data, static_cast<int>(length),
-                                                  &width, &height, &comp, STBI_rgb_alpha);
+                                                  &width, &height, &channelsInFile,
+                                                  channelsRequested);
 
     if (pixels) {
-        auto* rgbaPixels = reinterpret_cast<GLuint*>(pixels);
-
-        resize(width, height);
-
-        setPixelData(rgbaPixels, width * height);
-
-        stbi_image_free(pixels);
+        movePixelData(width, height, channelsRequested, pixels,
+                      width * height * channelsRequested);
 
         return true;
     }
     // Default inconsistent texture data is set to a 1*1 pixel texture
     // This reduces inconsistent behavior when texture failed loading
     // texture data but a Tangram style shader requires a shader sampler
-    GLuint blackPixel = 0x0000ff;
+    GLuint blackPixel = 0x00000ff;
 
-    setPixelData(&blackPixel, 1);
+    setPixelData(1, 1, sizeof(blackPixel), reinterpret_cast<GLubyte*>(&blackPixel), sizeof(blackPixel));
 
     return false;
 }
@@ -86,16 +85,6 @@ Texture& Texture::operator=(Texture&& _other) noexcept {
 
     return *this;
 }
-
-void Texture::setPixelData(const GLuint* data, size_t length) {
-
-    m_data.clear();
-
-    m_data.insert(m_data.begin(), data, data + length);
-
-    setRowsDirty(0, m_height);
-}
-
 void Texture::setRowsDirty(int start, int count) {
     // FIXME: check that dirty range is valid for texture size!
     int max = start + count;
@@ -162,42 +151,36 @@ void Texture::generate(RenderState& rs, GLuint _textureUnit) {
 }
 
 bool Texture::isValid() const {
-    return m_glHandle != 0;
+    return (m_glHandle != 0) || bool(m_buffer);
 }
 
-void Texture::update(RenderState& rs, GLuint _textureUnit) {
+void Texture::update(RenderState& _rs, GLuint _textureUnit) {
 
-    if (!m_shouldResize && m_dirtyRows.empty()) {
-        return;
-    }
+    if (!m_shouldResize && m_dirtyRows.empty()) { return; }
 
-    if (m_glHandle == 0) {
-        if (m_data.empty()) {
-            size_t divisor = sizeof(GLuint) / getBytesPerPixel();
-            m_data.resize((m_width * m_height) / divisor, 0);
+    if (m_glHandle == 0 && !m_buffer) {
+        auto buffer = reinterpret_cast<GLubyte*>(std::malloc(m_width * m_height * getBytesPerPixel()));
+        if (!buffer) {
+            LOGE("Could not allocate texture: Out of memory!");
+            return;
         }
+        m_buffer.reset(buffer);
     }
 
-    GLuint* data = m_data.empty() ? nullptr : m_data.data();
+    update(_rs, _textureUnit, m_buffer.get());
 
-    update(rs, _textureUnit, data);
-
-    m_data.clear();
-    // Free the allocated buffer by swapping with an empty vector.
-    std::vector<GLuint>().swap(m_data);
+    m_buffer.reset();
 }
 
-void Texture::update(RenderState& rs, GLuint _textureUnit, const GLuint* data) {
+void Texture::update(RenderState& _rs, GLuint _textureUnit, const GLubyte* _buffer) {
 
-    if (!m_shouldResize && m_dirtyRows.empty()) {
-        return;
-    }
+    if (!m_shouldResize && m_dirtyRows.empty()) { return; }
 
     if (m_glHandle == 0) {
         // texture hasn't been initialized yet, generate it
-        generate(rs, _textureUnit);
+        generate(_rs, _textureUnit);
     } else {
-        bind(rs, _textureUnit);
+        bind(_rs, _textureUnit);
     }
 
     auto format = static_cast<GLenum>(m_options.pixelFormat);
@@ -208,29 +191,28 @@ void Texture::update(RenderState& rs, GLuint _textureUnit, const GLuint* data) {
             LOGW("The hardware maximum texture size is currently reached");
         }
 
+        GL::texImage2D(TEXTURE_TARGET, 0, format, m_width, m_height, 0, format,
+                       GL_UNSIGNED_BYTE, _buffer);
 
-        GL::texImage2D(TEXTURE_TARGET, 0, format, m_width, m_height, 0, format, GL_UNSIGNED_BYTE, data);
-
-        if (data && m_options.generateMipmaps) {
+        if (m_buffer && m_options.generateMipmaps) {
             // generate the mipmaps for this texture
             GL::generateMipmap(TEXTURE_TARGET);
         }
         m_shouldResize = false;
-        m_dirtyRows.clear();
-        return;
-    }
-    size_t bpp = getBytesPerPixel();
-    size_t divisor = sizeof(GLuint) / bpp;
+    } else {
+        for (auto& range : m_dirtyRows) {
+            const GLubyte* offset = _buffer + (range.min * m_width * m_bytesPerPixel);
 
-    for (auto& range : m_dirtyRows) {
-        size_t offset =  (range.min * m_width) / divisor;
-        GL::texSubImage2D(TEXTURE_TARGET, 0, 0, range.min, m_width, range.max - range.min,
-                          format, GL_UNSIGNED_BYTE, data + offset);
+            GL::texSubImage2D(TEXTURE_TARGET, 0, 0, range.min, m_width, range.max - range.min,
+                              format, GL_UNSIGNED_BYTE, offset);
+        }
     }
+
     m_dirtyRows.clear();
 }
 
 void Texture::resize(int width, int height) {
+
     assert(width >= 0);
     assert(height >= 0);
     m_width = width;
@@ -250,22 +232,83 @@ void Texture::resize(int width, int height) {
     m_dirtyRows.clear();
 }
 
-size_t Texture::getBufferSize() const {
-    return m_width * m_height * getBytesPerPixel();
-}
-
 size_t Texture::getBytesPerPixel() const {
     switch (m_options.pixelFormat) {
-        case PixelFormat::ALPHA:
-        case PixelFormat::LUMINANCE:
-            return 1;
-        case PixelFormat::LUMINANCE_ALPHA:
-            return 2;
-        case PixelFormat::RGB:
-            return 3;
-        default:
-            return 4;
+    case PixelFormat::ALPHA:
+    case PixelFormat::LUMINANCE:
+        return 1;
+    case PixelFormat::LUMINANCE_ALPHA:
+        return 2;
+    case PixelFormat::RGB:
+        return 3;
+    default:
+        return 4;
     }
+}
+
+bool Texture::sanityCheck(size_t _width, size_t _height, size_t _bytesPerPixel, size_t _length) const {
+    size_t dim = m_width * m_height;
+    if (_length != dim * getBytesPerPixel()) {
+        LOGE("Invalid data size for Texture dimension! %dx%d bpp:%d bytes:%d",
+             _width, _height, _bytesPerPixel, _length);
+        return false;
+    }
+    if (getBytesPerPixel() != _bytesPerPixel) {
+        LOGE("PixelFormat and bytesPerPixel do not match! %d:%d",
+             getBytesPerPixel(), _bytesPerPixel);
+        return false;
+    }
+    return true;
+}
+
+void Texture::movePixelData(size_t _width, size_t _height, size_t _bytesPerPixel,
+                            GLubyte* _data, size_t _length) {
+    if (m_glHandle != 0) {
+        free(_data);
+        LOGE("Texture data has already been set!");
+        return;
+    }
+
+    if (sanityCheck(_width, _height, _bytesPerPixel, _length)) {
+        free(_data);
+        return;
+    }
+
+    m_buffer.reset(_data);
+    m_bufferSize = _length;
+    m_bytesPerPixel = _bytesPerPixel;
+
+    resize(_width, _height);
+    setRowsDirty(0, m_height);
+}
+
+void Texture::setPixelData(size_t _width, size_t _height, size_t _bytesPerPixel,
+                           const GLubyte* _data, size_t _length) {
+
+    if (m_glHandle != 0) {
+        LOGE("Texture data has already been set!");
+        return;
+    }
+    if (sanityCheck(_width, _height, _bytesPerPixel, _length)) {
+        return;
+    }
+
+    m_buffer.reset();
+    m_bufferSize = 0;
+
+    auto buffer = reinterpret_cast<GLubyte*>(std::malloc(_length));
+    if (!buffer) {
+        LOGE("Could not allocate texture: Out of memory!");
+        return;
+    }
+    std::memcpy(buffer, _data, _length);
+
+    m_buffer.reset(buffer);
+    m_bufferSize = _length;
+    m_bytesPerPixel = _bytesPerPixel;
+
+    resize(_width, _height);
+    setRowsDirty(0, m_height);
 }
 
 }
