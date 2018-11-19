@@ -181,7 +181,7 @@ std::string AndroidPlatform::fontPath(const std::string& _family, const std::str
 AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance)
     : m_jniWorker(jvm) {
 
-    m_tangramInstance = _jniEnv->NewGlobalRef(_tangramInstance);
+    m_tangramInstance = _jniEnv->NewWeakGlobalRef(_tangramInstance);
 
     m_assetManager = AAssetManager_fromJava(_jniEnv, _assetManager);
 
@@ -191,10 +191,6 @@ AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject
     }
 
     sqlite3_ndk_init(m_assetManager);
-}
-
-void AndroidPlatform::dispose(JNIEnv* _jniEnv) {
-    _jniEnv->DeleteGlobalRef(m_tangramInstance);
 }
 
 void AndroidPlatform::requestRender() const {

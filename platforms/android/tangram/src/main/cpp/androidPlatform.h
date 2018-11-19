@@ -31,7 +31,6 @@ class AndroidPlatform : public Platform {
 public:
 
     AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance);
-    void dispose(JNIEnv* _jniEnv);
     void shutdown() override {}
     void requestRender() const override;
     void setContinuousRendering(bool _isContinuous) override;
