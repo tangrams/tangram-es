@@ -8,11 +8,9 @@
 namespace Tangram {
 
 class LinuxPlatform : public Platform {
-
 public:
-
     LinuxPlatform();
-    LinuxPlatform(UrlClient::Options urlClientOptions);
+    explicit LinuxPlatform(UrlClient::Options urlClientOptions);
     ~LinuxPlatform() override;
     void shutdown() override;
     void requestRender() const override;
@@ -23,11 +21,9 @@ public:
     void cancelUrlRequest(UrlRequestHandle _request) override;
 
 protected:
-
-
     FcConfig* m_fcConfig = nullptr;
     std::unique_ptr<UrlClient> m_urlClient;
-
+    bool m_shutdown = false;
 };
 
 } // namespace Tangram
