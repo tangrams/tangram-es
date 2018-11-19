@@ -22,7 +22,6 @@ add_executable(tangram
   platforms/common/urlClient.cpp
   platforms/common/linuxSystemFontHelper.cpp
   platforms/common/platform_gl.cpp
-  platforms/common/DuktapeContext.cpp
 )
 
 target_include_directories(tangram
@@ -38,7 +37,6 @@ target_include_directories(tangram
 target_link_libraries(tangram
   PRIVATE
   tangram-core
-  duktape
   ${FONTCONFIG_LDFLAGS}
   curl
   EGL

@@ -2,7 +2,7 @@
 // Created by Matt Blair on 11/15/18.
 //
 #pragma once
-#include "util/IJavaScriptContext.h"
+#include "IJavaScriptContext.h"
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <vector>
 
