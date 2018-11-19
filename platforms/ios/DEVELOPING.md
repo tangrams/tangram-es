@@ -58,4 +58,4 @@ In the symbols pane that appears, select `TangramMap` in the menu on the left an
 
 ![Instruments symbols pane](/images/instruments-locate-binary.png)
 
-The correct binary file is the file named `TangramMap` in the directory shown in the file chooser that appears. After choosing the binary file, press `Done` to close the symbols pane and the function names will appear correctly in your Time Profiler trace.
+The correct binary file is the file named `TangramMap` in the directory shown in the file chooser that appears (located within the tangram-es repository at `build/ios/Release-iphoneos/TangramMap.framework/TangramMap`).  After choosing the binary file, press `Done` to close the symbols pane and the function names will appear correctly in your Time Profiler trace.
