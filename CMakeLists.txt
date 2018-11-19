@@ -70,11 +70,10 @@ if(TANGRAM_BUILD_BENCHMARKS OR TANGRAM_BUILD_TESTS)
   add_library(platform_mock
     tests/src/mockPlatform.cpp
     tests/src/gl_mock.cpp
-    platforms/common/DuktapeContext.cpp
   )
   target_include_directories(platform_mock PUBLIC tests/src)
   target_compile_definitions(platform_mock PUBLIC -DUNIT_TESTS)
-  target_link_libraries(platform_mock PUBLIC tangram-core duktape)
+  target_link_libraries(platform_mock PUBLIC tangram-core)
 endif()
 
 if(TANGRAM_BUILD_TESTS)

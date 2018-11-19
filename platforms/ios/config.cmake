@@ -20,6 +20,9 @@ if (IOS_SDK_VERSION VERSION_LESS 11.0)
 endif()
 set(SQLITECPP_INTERNAL_SQLITE OFF CACHE BOOL "")
 
+# Set flag for core library to use JavaScriptCore.
+set(TANGRAM_USE_JAVASCRIPTCORE 1)
+
 # Headers must be absolute paths for the copy_if_different command on the
 # static library target, relative paths cause it to fail with an error.
 set(TANGRAM_FRAMEWORK_HEADERS
@@ -45,8 +48,6 @@ set(TANGRAM_FRAMEWORK_SOURCES
   ${TANGRAM_FRAMEWORK_HEADERS}
   platforms/common/appleAllowedFonts.h
   platforms/common/appleAllowedFonts.mm
-  platforms/common/JSCoreContext.cpp
-  platforms/common/JSCoreContext.h
   platforms/common/platform_gl.cpp
   platforms/ios/framework/src/iosPlatform.h
   platforms/ios/framework/src/iosPlatform.mm
@@ -85,7 +86,6 @@ target_link_libraries(TangramMap PRIVATE
   "-framework CoreLocation"
   "-framework CoreText"
   "-framework GLKit"
-  "-framework JavaScriptCore"
   "-framework OpenGLES"
   "-framework QuartzCore"
   "-framework UIKit"

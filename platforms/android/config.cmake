@@ -9,11 +9,8 @@ if ($ENV{CIRCLECI})
   set(CMAKE_JOB_POOL_LINK link_pool)
 endif()
 
-add_subdirectory(platforms/common/duktape)
-
 add_library(tangram SHARED
   platforms/common/platform_gl.cpp
-  platforms/common/DuktapeContext.cpp
   platforms/android/tangram/src/main/cpp/jniExports.cpp
   platforms/android/tangram/src/main/cpp/androidPlatform.cpp
   platforms/android/tangram/src/main/cpp/sqlite3ndk.cpp
@@ -27,7 +24,6 @@ target_include_directories(tangram
 target_link_libraries(tangram
   PRIVATE
   tangram-core
-  duktape
   # android libraries
   android
   atomic
