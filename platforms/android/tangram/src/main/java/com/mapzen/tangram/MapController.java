@@ -185,7 +185,7 @@ public class MapController implements Renderer {
         fontFileParser = new FontFileParser();
         fontFileParser.parse();
 
-        mapPointer = nativeInit(this, assetManager);
+        mapPointer = nativeInit(assetManager);
         if (mapPointer <= 0) {
             throw new RuntimeException("Unable to create a native Map object! There may be insufficient memory available.");
         }
@@ -1257,7 +1257,7 @@ public class MapController implements Renderer {
     // ==============
 
     private synchronized native void nativeOnLowMemory(long mapPtr);
-    private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
+    private synchronized native long nativeInit(AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
     private synchronized native int nativeLoadScene(long mapPtr, String path, String[] updateStrings);
     private synchronized native int nativeLoadSceneAsync(long mapPtr, String path, String[] updateStrings);
