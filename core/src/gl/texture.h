@@ -64,7 +64,8 @@ public:
     bool loadImageFromMemory(const uint8_t* data, size_t length);
 
     /* Sets texture pixel data */
-    void setPixelData(const GLuint* data, size_t length);
+    void movePixelData(size_t _width, size_t _height, size_t _bytesPerPixel, GLubyte* _data, size_t _length);
+    void setPixelData(size_t _width, size_t _height, size_t _bytesPerPixel, const GLubyte* _data, size_t _length);
 
     void setRowsDirty(int start, int count);
 
@@ -72,8 +73,7 @@ public:
 
     /* Perform texture updates, should be called at least once and after adding data or resizing */
     virtual void update(RenderState& rs, GLuint _textureSlot);
-
-    virtual void update(RenderState& rs, GLuint _textureSlot, const GLuint* data);
+    virtual void update(RenderState& rs, GLuint _textureSlot, const GLubyte* data);
 
     /* Resize the texture */
     void resize(int width, int height);
@@ -93,9 +93,9 @@ public:
     /* Checks whether the texture has valid data and has been successfully uploaded to GPU */
     bool isValid() const;
 
-    size_t getBytesPerPixel() const;
+    size_t getBufferSize() const { return m_bufferSize; }
 
-    size_t getBufferSize() const;
+    size_t getBytesPerPixel() const;
 
 protected:
 
@@ -106,9 +106,13 @@ protected:
 
     void generate(RenderState& rs, GLuint _textureUnit);
 
+    bool sanityCheck(size_t _width, size_t _height, size_t _bytesPerPixel, size_t _length) const;
+
     TextureOptions m_options;
 
-    std::vector<GLuint> m_data;
+    std::unique_ptr<GLubyte> m_buffer;
+    size_t m_bufferSize;
+    size_t m_bytesPerPixel;
 
     std::vector<DirtyRowRange> m_dirtyRows;
 
