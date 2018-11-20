@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		D20C4A55212B6D94005BDB9A /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D20C4A54212B6D93005BDB9A /* GLKit.framework */; };
-		D222B92521642BCA007E6FD6 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = D222B92321642BCA007E6FD6 /* Info.plist */; };
 		D298723520D05F6F009A0AB8 /* MapViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723120D05F6E009A0AB8 /* MapViewController.m */; };
 		D298723620D05F6F009A0AB8 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723220D05F6E009A0AB8 /* main.m */; };
 		D298723720D05F6F009A0AB8 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723320D05F6E009A0AB8 /* AppDelegate.m */; };
@@ -234,7 +233,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D222B92521642BCA007E6FD6 /* Info.plist in Resources */,
 				D2F0604320EA9AD000CB442F /* LaunchScreen.xib in Resources */,
 				D2F0604420EA9AD000CB442F /* Main_iPhone.storyboard in Resources */,
 				D2F0604520EA9AD000CB442F /* Main_iPad.storyboard in Resources */,
