@@ -194,8 +194,13 @@ public:
         m_tileManager->updateTileSets(*m_view);
     }
 
-    void initTileWorker() {
-        m_tileWorker->setScene(*this);
+    void startTileWorker() {
+         m_tileWorker->setScene(*this);
+     }
+
+    void stopTileWorker() {
+        m_ready = false;
+        m_tileWorker.reset();
     }
 
     bool complete();

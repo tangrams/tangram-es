@@ -48,9 +48,10 @@ void TileWorker::run(Worker* instance) {
             });
 
             if (instance->tileBuilder) {
+                LOGTInit();
                 builder = std::move(instance->tileBuilder);
                 builder->init();
-                LOGTO("Passed new TileBuilder to TileWorker");
+                LOGT("Took init of TileBuilder");
             }
             // Check if thread should stop
             if (!m_running) {
@@ -58,7 +59,7 @@ void TileWorker::run(Worker* instance) {
             }
 
             if (!builder || !builder->scene().isReady()) {
-                if (builder) LOG("Waiting for Scene to become ready");
+                if (builder) LOGTO("Waiting for Scene to become ready");
                 continue;
             }
 
@@ -101,7 +102,7 @@ void TileWorker::run(Worker* instance) {
 }
 
 void TileWorker::setScene(Scene& _scene) {
-    LOG("Set Scene on TileWorker");
+    LOGTO("Set Scene >>>>>>>>>>>>>>>>>>>>");
 
     for (auto& worker : m_workers) {
         worker->tileBuilder = std::make_unique<TileBuilder>(_scene);
@@ -113,7 +114,7 @@ void TileWorker::enqueue(std::shared_ptr<TileTask> task) {
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         if (!m_running) { return; }
-        LOG("%d enqueue %s", m_queue.size()+1, task->tileId().toString().c_str());
+        LOGTO("%d enqueue %s", m_queue.size()+1, task->tileId().toString().c_str());
         m_queue.push_back(std::move(task));
     }
     m_condition.notify_one();
@@ -122,7 +123,7 @@ void TileWorker::enqueue(std::shared_ptr<TileTask> task) {
 void TileWorker::poke() {
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        LOG("Poking TileWorker - enqueued %d", m_queue.size());
+        LOGTO("Poking TileWorker - enqueued %d", m_queue.size());
 
         if (!m_running || m_queue.empty()) { return; }
     }

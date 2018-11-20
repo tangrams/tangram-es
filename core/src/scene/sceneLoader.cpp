@@ -55,11 +55,13 @@ namespace Tangram {
 static const std::string GLOBAL_PREFIX = "global.";
 
 bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
+    LOGTO(">>> loadScene >>>");
 
+    _scene->m_loading = true;
     Importer sceneImporter(_scene);
 
     _scene->config() = sceneImporter.applySceneImports(_scene->platform());
-    LOGTO("applyImports");
+    LOGTO("<<< applyImports AKA load files, parse YAMLS, allocate Document and merge stuff");
 
     if (!_scene->config()) {
         return false;
@@ -69,48 +71,50 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
         LOGW("Scene updates failed when loading scene");
         return false;
     }
-    LOGTO("applyUpdates");
+    LOGTO("<<< applyUpdates");
 
     applyGlobals(*_scene);
-    LOGTO("applyGlobals");
+    LOGTO("<<< applyGlobals");
 
     applySources(*_scene);
-    LOGTO("applySources");
+    LOGTO("<<< applySources");
 
     applyCameras(*_scene);
-    LOGTO("applyCameras");
+    LOGTO("<<< applyCameras");
 
     _scene->initTileManager();
-    LOGTO("loadTiles");
+    LOGTO("<<< loadTiles");
 
     applyTextures(*_scene);
-    LOGTO("textures");
+    LOGTO("<<< textures");
 
     _scene->fontContext()->loadFonts();
+    LOGTO("<<< initFonts");
 
     applyFonts(*_scene);
-    LOGTO("applyFonts");
+    LOGTO("<<< applyFonts");
 
     applyStyles(*_scene);
-    LOGTO("applyStyles");
+    LOGTO("<<< applyStyles");
 
     applyLayers(*_scene);
-    LOGTO("applyLayers");
+    LOGTO("<<< applyLayers");
 
     applyLights(*_scene);
-    LOGTO("applyLights");
+    LOGTO("<<< applyLights");
 
     applyScene(*_scene);
-    LOGTO("applyScene");
+    LOGTO("<<< applyScene");
 
     for (auto& style : _scene->styles()) {
         style->build(*_scene);
     }
-    LOGTO("built styles");
+
+    LOGTO("<<< loadScene <<<");
 
     // Now only waiting for pending fonts and textures:
     // Let the TileWorker initialize its TileBuilders
-    _scene->initTileWorker();
+    _scene->startTileWorker();
 
     return true;
 }
