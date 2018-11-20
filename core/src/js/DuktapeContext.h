@@ -60,7 +60,7 @@ public:
 
     void setCurrentFeature(const Feature* feature) override;
 
-    JSFunctionIndex addFunction(const std::string& source, bool& error) override;
+    bool setFunction(JSFunctionIndex index, const std::string& source) override;
 
     bool evaluateBooleanFunction(JSFunctionIndex index) override;
 

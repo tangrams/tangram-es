@@ -57,9 +57,9 @@ public:
 
     virtual void setCurrentFeature(const Feature* feature) = 0;
 
-    // Compiles the given JavaScript string into a function, adds it to the function list, and returns its index in the
-    // list. If the string could not be compiled, sets error to true.
-    virtual JSFunctionIndex addFunction(const std::string& source, bool& error) = 0;
+    // Compiles the given JavaScript string into a function and adds it to the function list at the given index.
+    // Returns false if the source cannot be compiled, otherwise returns true.
+    virtual bool setFunction(JSFunctionIndex index, const std::string& source) = 0;
 
     virtual bool evaluateBooleanFunction(JSFunctionIndex index) = 0;
 
