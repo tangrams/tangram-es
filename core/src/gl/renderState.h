@@ -88,9 +88,7 @@ public:
 
     bool shaderProgram(GLuint program);
 
-    bool texture(GLenum target, GLuint handle);
-
-    bool textureUnit(GLuint unit);
+    void texture(GLuint handle, GLuint unit, GLenum target);
 
     bool vertexBuffer(GLuint handle);
 
