@@ -205,6 +205,9 @@ JSValue JSCoreContext::newObject() {
 
 JSValue JSCoreContext::newFunction(const std::string& value) {
     JSObjectRef jsFunctionObject = compileFunction(value);
+    if (jsFunctionObject == nullptr) {
+        return nullptr;
+    }
     return JSValue(new JSCoreValue(_context, jsFunctionObject));
 }
 
