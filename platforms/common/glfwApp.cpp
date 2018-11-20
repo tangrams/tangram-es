@@ -534,12 +534,12 @@ void framebufferResizeCallback(GLFWwindow* window, int fWidth, int fHeight) {
 void showSceneGUI() {
     if (ImGui::CollapsingHeader("Scene")) {
         char buffer[256];
-        std::strncpy(buffer, sceneFile.data(), sizeof(buffer));
+        std::memcpy(buffer, sceneFile.data(), std::min(sceneFile.size(), sizeof(buffer)));
         if (ImGui::InputText("Scene URL", buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
             sceneFile.assign(buffer);
             loadSceneFile();
         }
-        std::strncpy(buffer, apiKey.data(), sizeof(buffer));
+        std::memcpy(buffer, apiKey.data(), std::min(apiKey.size(), sizeof(buffer)));
         if (ImGui::InputText("API key", buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
             apiKey.assign(buffer);
             loadSceneFile();
