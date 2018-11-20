@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     MapController map;
     MapView view;
     LngLat lastTappedPoint;
-    MapData markers;
+    //MapData markers;
 
     PresetSelectionTextView sceneSelector;
 
@@ -233,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
             List<LngLat> line = new ArrayList<>();
             line.add(lastTappedPoint);
             line.add(tappedPoint);
-            markers.addPolyline(line, props);
+          //  markers.addPolyline(line, props);
 
             Marker p = map.addMarker();
             p.setStylingFromPath(pointStylingPath);
@@ -280,7 +280,10 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     public void onLongPress(float x, float y) {
         map.removeAllMarkers();
         pointMarkers.clear();
-        markers.clear();
+       //
+        //
+        //
+        // markers.clear();
         showTileInfo = !showTileInfo;
         map.setDebugFlag(MapController.DebugFlag.TILE_INFOS, showTileInfo);
     }

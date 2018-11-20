@@ -457,7 +457,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
     for (auto& it : tiles) {
         auto& entry = it.second;
 
-#if LOG_LEVEL >= 3
+#if 0 && LOG_LEVEL >= 3
         size_t rasterLoading = 0;
         size_t rasterDone = 0;
         if (entry.task) {
@@ -524,13 +524,13 @@ void TileManager::loadTiles() {
 
         tileSet.source->loadTileData(entry.task, m_dataCallback);
 
-        DBG("> load %s", tileId.toString().c_str());
+        LOGTO("Load Tile: %s", tileId.toString().c_str());
 
     }
 
-    DBG("loading:%d cache: %fMB",
-        m_loadTasks.size(),
-        (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
+    // DBG("loading:%d cache: %fMB",
+    //     m_loadTasks.size(),
+    //     (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
 
     m_loadTasks.clear();
 }
