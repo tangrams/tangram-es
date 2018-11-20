@@ -6,7 +6,7 @@
 #include "tile/tileHash.h"
 
 #include <functional>
-#include <unordered_map>
+#include <map>
 #include <mutex>
 
 namespace Tangram {
@@ -15,8 +15,10 @@ class RasterTileTask;
 
 class RasterSource : public TileSource {
 
+    using Cache = std::map<TileID, std::weak_ptr<Texture>>;
+    std::shared_ptr<Cache> m_textures;
+
     TextureOptions m_texOptions;
-    std::unordered_map<TileID, std::shared_ptr<Texture>> m_textures;
 
     std::shared_ptr<Texture> m_emptyTexture;
 
@@ -36,11 +38,9 @@ public:
 
     virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask) override;
 
-    virtual void clearRasters() override;
-    virtual void clearRaster(const TileID& id) override;
     virtual bool isRaster() const override { return true; }
 
-    std::shared_ptr<Texture> createTexture(const std::vector<char>& _rawTileData);
+    std::shared_ptr<Texture> createTexture(TileID _tile, const std::vector<char>& _rawTileData);
 
     Raster getRaster(const TileTask& _task);
 

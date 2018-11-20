@@ -43,14 +43,14 @@ public:
         m_cacheUsage(0),
         m_cacheMaxUsage(_cacheSizeMB) {}
 
-    std::vector<TileID> put(int32_t _sourceId, std::shared_ptr<Tile> _tile) {
+    void put(int32_t _sourceId, std::shared_ptr<Tile> _tile) {
         TileCacheKey k(_sourceId, _tile->getID());
 
         m_cacheList.push_front({k, _tile});
         m_cacheMap[k] = m_cacheList.begin();
         m_cacheUsage += _tile->getMemoryUsage();
 
-        return limitCacheSize(m_cacheMaxUsage);
+        limitCacheSize(m_cacheMaxUsage);
     }
 
     std::shared_ptr<Tile> get(int32_t _sourceId, TileID _tileId) {
@@ -78,8 +78,7 @@ public:
         return nullptr;
     }
 
-    std::vector<TileID> limitCacheSize(size_t _cacheSizeBytes) {
-        std::vector<TileID> poppedTileIDs;
+    void limitCacheSize(size_t _cacheSizeBytes) {
         m_cacheMaxUsage = _cacheSizeBytes;
 
         while (m_cacheUsage > m_cacheMaxUsage) {
@@ -89,12 +88,10 @@ public:
                 break;
             }
             auto& tile = m_cacheList.back().tile;
-            poppedTileIDs.push_back(tile->getID());
             m_cacheUsage -= tile->getMemoryUsage();
             m_cacheMap.erase(m_cacheList.back().key);
             m_cacheList.pop_back();
         }
-        return poppedTileIDs;
     }
 
     size_t getMemoryUsage() const {

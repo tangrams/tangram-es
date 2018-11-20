@@ -213,8 +213,6 @@ bool TileManager::removeClientTileSource(TileSource& _tileSource) {
     bool removed = false;
     for (auto it = m_tileSets.begin(); it != m_tileSets.end();) {
         if (it->source.get() == &_tileSource) {
-            // Remove the textures for this tile source
-            it->source->clearRasters();
             // Remove the tile set associated with this tile source
             it = m_tileSets.erase(it);
             removed = true;
@@ -547,9 +545,7 @@ bool TileManager::addTile(TileSet& _tileSet, const TileID& _tileID) {
 
 void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::iterator& _tileIt) {
 
-    auto& id = _tileIt->first;
     auto& entry = _tileIt->second;
-
 
     if (entry.isInProgress()) {
         // 1. Remove from Datasource. Make sure to cancel
@@ -560,14 +556,8 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
 
     } else if (entry.tile) {
         // Add to cache
-        auto poppedTiles = m_tileCache->put(_tileSet.source->id(), entry.tile);
-        for (auto& tileID : poppedTiles) {
-            _tileSet.source->clearRaster(tileID);
-        }
+        m_tileCache->put(_tileSet.source->id(), entry.tile);
     }
-
-    // Remove rasters from this TileSource
-    _tileSet.source->clearRaster(id);
 
     // Remove tile from set
     _tileIt = _tileSet.tiles.erase(_tileIt);

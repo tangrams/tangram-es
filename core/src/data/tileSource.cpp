@@ -121,19 +121,6 @@ void TileSource::cancelLoadingTile(TileTask& _task) {
     }
 }
 
-void TileSource::clearRasters() {
-    for (auto& raster : m_rasterSources) {
-        raster->clearRasters();
-    }
-}
-
-void TileSource::clearRaster(const TileID& id) {
-    for (auto& raster : m_rasterSources) {
-        TileID rasterID = id.withMaxSourceZoom(raster->maxZoom());
-        raster->clearRaster(rasterID);
-    }
-}
-
 void TileSource::addRasterSource(std::shared_ptr<TileSource> _rasterSource) {
     /*
      * We limit the parent source by any attached raster source's min/max.
