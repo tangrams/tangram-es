@@ -214,8 +214,15 @@ bool Texture::bind(RenderState& _rs, GLuint _textureUnit) {
         }
 
         if (m_disposeBuffer) { m_buffer.reset(); }
-
         return true;
+    }
+
+    if (m_glHandle == 0) {
+        LOGW("Texture is not ready!");
+        return false;
+    } else if (!m_buffer) {
+        LOGE("No data to update Texture!");
+        return false;
     }
 
     _rs.texture(m_glHandle, _textureUnit, TEXTURE_TARGET);
