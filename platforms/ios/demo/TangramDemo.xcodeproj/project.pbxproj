@@ -14,6 +14,7 @@
 		D298723C20D05F7A009A0AB8 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = D298723920D05F7A009A0AB8 /* LaunchScreen.xib */; };
 		D298723D20D05F7A009A0AB8 /* Main_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D298723A20D05F7A009A0AB8 /* Main_iPhone.storyboard */; };
 		D298723E20D05F7A009A0AB8 /* Main_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D298723B20D05F7A009A0AB8 /* Main_iPad.storyboard */; };
+		D2BF610921A4B9E60006A16D /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2BF610821A4B9E60006A16D /* JavaScriptCore.framework */; };
 		D2DB6A9420DAE14A0043E74F /* TangramMap.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2DB6A9320DAE14A0043E74F /* TangramMap.framework */; };
 		D2DB6A9520DAE1500043E74F /* TangramMap.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D2DB6A9320DAE14A0043E74F /* TangramMap.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D2F0603520E6E01700CB442F /* AppDelegate.h in Sources */ = {isa = PBXBuildFile; fileRef = D298723020D05F6E009A0AB8 /* AppDelegate.h */; };
@@ -55,6 +56,7 @@
 		D298723920D05F7A009A0AB8 /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
 		D298723A20D05F7A009A0AB8 /* Main_iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main_iPhone.storyboard; sourceTree = "<group>"; };
 		D298723B20D05F7A009A0AB8 /* Main_iPad.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main_iPad.storyboard; sourceTree = "<group>"; };
+		D2BF610821A4B9E60006A16D /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		D2DB6A9320DAE14A0043E74F /* TangramMap.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TangramMap.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2F0601F20E6DFAF00CB442F /* TangramDemo-static.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TangramDemo-static.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2F0603A20E6E31200CB442F /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
@@ -76,6 +78,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D2BF610921A4B9E60006A16D /* JavaScriptCore.framework in Frameworks */,
 				D20C4A55212B6D94005BDB9A /* GLKit.framework in Frameworks */,
 				D2F0604720EACEB700CB442F /* libtangram-static.a in Frameworks */,
 				D2F0603F20E6E33300CB442F /* libc++.tbd in Frameworks */,
@@ -90,6 +93,7 @@
 		D235656F20D9BA77006E3D13 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D2BF610821A4B9E60006A16D /* JavaScriptCore.framework */,
 				D20C4A54212B6D93005BDB9A /* GLKit.framework */,
 				D2F0604620EACEB700CB442F /* libtangram-static.a */,
 				D2F0603E20E6E33300CB442F /* libc++.tbd */,
