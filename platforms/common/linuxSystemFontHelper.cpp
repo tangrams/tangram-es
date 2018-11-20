@@ -23,7 +23,7 @@ std::vector<std::string> systemFallbackFonts(FcConfig* fcConfig) {
     FcDefaultSubstitute(pat);
 
     FcResult result;
-    FcFontSet *fs = FcFontSort(fcConfig, pat, FcTrue, NULL, &result);
+    FcFontSet *fs = FcFontSort(fcConfig, pat, FcTrue, nullptr, &result);
     FcPatternDestroy(pat);
 
     if (!fs || (result != FcResultMatch)) {
@@ -49,9 +49,9 @@ std::vector<std::string> systemFallbackFonts(FcConfig* fcConfig) {
         if (FcPatternGetBool(font, FC_SCALABLE, 0, &w) != FcResultMatch ||
             (w != FcTrue)) { continue; }
 
-        FcChar8 *file;
+        FcChar8 *file = nullptr;
         if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
-            FcLangSet *ls = NULL;
+            FcLangSet *ls = nullptr;
             if (FcPatternGetLangSet(font, FC_LANG, 0, &ls) != FcResultMatch) {
                 continue;
             }

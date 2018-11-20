@@ -60,7 +60,7 @@ private:
     std::unique_ptr<ShaderProgram> m_shader;
     std::string m_log[LOG_CAPACITY];
     std::mutex m_mutex;
-    char* m_vertexBuffer;
+    char* m_vertexBuffer = nullptr;
 
     UniformLocation m_uOrthoProj{"u_orthoProj"};
     UniformLocation m_uColor{"u_color"};
