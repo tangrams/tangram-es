@@ -96,7 +96,6 @@ void PolylineStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& 
     if (m_texture && m_texture->getWidth() > 0) {
         GLuint textureUnit = rs.nextAvailableTextureUnit();
 
-        m_texture->update(rs, textureUnit);
         m_texture->bind(rs, textureUnit);
 
         m_shaderProgram->setUniformi(rs, m_uTexture, textureUnit);
