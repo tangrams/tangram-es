@@ -162,11 +162,10 @@ void Texture::setSpriteAtlas(std::unique_ptr<Tangram::SpriteAtlas> sprites) {
     m_spriteAtlas = std::move(sprites);
 }
 
-void Texture::generate(RenderState& rs, GLuint _textureUnit) {
+void Texture::generate(RenderState& _rs, GLuint _textureUnit) {
     GL::genTextures(1, &m_glHandle);
 
-    rs.textureUnit(_textureUnit);
-    rs.texture(TEXTURE_TARGET, m_glHandle);
+    _rs.texture(m_glHandle, _textureUnit, TEXTURE_TARGET);
 
     GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_MIN_FILTER, static_cast<GLint>(m_options.minFilter));
     GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_MAG_FILTER, static_cast<GLint>(m_options.magFilter));
@@ -174,7 +173,7 @@ void Texture::generate(RenderState& rs, GLuint _textureUnit) {
     GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_S, static_cast<GLint>(m_options.wrapS));
     GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_T, static_cast<GLint>(m_options.wrapT));
 
-    m_rs = &rs;
+    m_rs = &_rs;
 }
 
 bool Texture::isValid() const {
@@ -186,8 +185,7 @@ bool Texture::bind(RenderState& _rs, GLuint _textureUnit) {
     if (!m_shouldResize && m_dirtyRows.empty()) {
         if (m_glHandle == 0) { return false; }
 
-        _rs.textureUnit(_textureUnit);
-        _rs.texture(TEXTURE_TARGET, m_glHandle);
+        _rs.texture(m_glHandle, _textureUnit, TEXTURE_TARGET);
         return true;
     }
 
@@ -204,8 +202,7 @@ bool Texture::bind(RenderState& _rs, GLuint _textureUnit) {
         if (m_glHandle == 0) {
             generate(_rs, _textureUnit);
         } else {
-            _rs.textureUnit(_textureUnit);
-            _rs.texture(TEXTURE_TARGET, m_glHandle);
+            _rs.texture(m_glHandle, _textureUnit, TEXTURE_TARGET);
         }
 
         auto format = static_cast<GLenum>(m_options.pixelFormat);
@@ -216,20 +213,21 @@ bool Texture::bind(RenderState& _rs, GLuint _textureUnit) {
             GL::generateMipmap(TEXTURE_TARGET);
         }
 
-    } else if (!m_dirtyRows.empty()) {
-        _rs.textureUnit(_textureUnit);
-        _rs.texture(TEXTURE_TARGET, m_glHandle);
+        if (m_disposeBuffer) { m_buffer.reset(); }
 
-        auto format = static_cast<GLenum>(m_options.pixelFormat);
-        for (auto& range : m_dirtyRows) {
-            auto rows = range.max - range.min;
-            auto offset = m_buffer.get() + (range.min * m_width * m_bytesPerPixel);
-            GL::texSubImage2D(TEXTURE_TARGET, 0, 0, range.min, m_width, rows, format,
-                              GL_UNSIGNED_BYTE, offset);
-        }
-        m_dirtyRows.clear();
+        return true;
     }
-    if (m_disposeBuffer) { m_buffer.reset(); }
+
+    _rs.texture(m_glHandle, _textureUnit, TEXTURE_TARGET);
+
+    auto format = static_cast<GLenum>(m_options.pixelFormat);
+    for (auto& range : m_dirtyRows) {
+        auto rows = range.max - range.min;
+        auto offset = m_buffer.get() + (range.min * m_width * m_bytesPerPixel);
+        GL::texSubImage2D(TEXTURE_TARGET, 0, 0, range.min, m_width, rows, format,
+                          GL_UNSIGNED_BYTE, offset);
+    }
+    m_dirtyRows.clear();
 
     return true;
 }
