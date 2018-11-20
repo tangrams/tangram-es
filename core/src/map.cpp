@@ -104,13 +104,15 @@ public:
 
         sceneLoadCondition.notify_one();
     }
-
+    bool sceneGotReady = false;
+    int framesRendered = false;
 };
 
 
 static std::bitset<9> g_flags = 0;
 
 Map::Map(std::unique_ptr<Platform> _platform) : platform(std::move(_platform)) {
+    LOGTOInit();
     impl.reset(new Impl(*platform));
 }
 
@@ -127,7 +129,6 @@ Map::~Map() {
     impl->scene.reset();
 
     impl->asyncWorker.reset();
-
     // Make sure other threads are stopped before calling stop()!
     // All jobs will be executed immediately on add() afterwards.
     impl->jobQueue.stop();
@@ -137,6 +138,10 @@ Map::~Map() {
 }
 
 void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
+    LOGTO(">>> setScene >>>");
+
+    // Stop previous TileWorker
+    //scene->stopTileWorker();
 
     scene = _scene;
     scene->setPixelScale(view.pixelScale());
@@ -158,6 +163,7 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
             scene->tileManager()->addClientTileSource(source);
         }
     }
+    LOGTO("<<< setScene <<<");
 }
 
 SceneID Map::loadScene(const std::string& _scenePath, bool _useScenePosition,
@@ -243,6 +249,9 @@ SceneID Map::loadScene(std::unique_ptr<SceneOptions> _sceneOptions) {
 
 SceneID Map::loadSceneAsync(std::unique_ptr<SceneOptions> _sceneOptions) {
     LOGTOInit();
+    LOGTO("loadSceneAsync >>>>>>>>>>>>>>> RESET TIME >>>>>>>>>>>>>>>");
+    impl->framesRendered = 0;
+
     auto newScene = std::make_shared<Scene>(*platform, std::move(_sceneOptions),
                                              std::make_unique<View>(impl->view));
     impl->sceneLoadBegin();
@@ -382,8 +391,15 @@ bool Map::update(float _dt) {
 
     impl->jobQueue.runJobs();
 
-    if (!impl->scene->complete()) { return false; }
-
+    auto ready = impl->scene->isReady();
+    if (!impl->scene->complete()) {
+        return false;
+    }
+    LOGTInit();
+    if (!ready && impl->scene->isReady()) {
+        impl->sceneGotReady = true;
+        LOGTO("update >>>");
+    }
     FrameInfo::beginUpdate();
 
     bool viewComplete = true;
@@ -413,6 +429,12 @@ bool Map::update(float _dt) {
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
         tilesLoading = impl->scene->update(impl->view, _dt);
+
+        if (impl->framesRendered == 0) {
+            if (impl->scene->tileManager()->getVisibleTiles().size() > 0) {
+                impl->framesRendered = 1;
+            }
+        }
     }
 
     FrameInfo::endUpdate();
@@ -432,6 +454,10 @@ bool Map::update(float _dt) {
     LOGTO("View complete:%d vc:%d tl:%d easing:%d label:%d maker:%d ",
           viewComplete, viewChanged, tilesLoading,
           impl->isCameraEasing, labelsNeedUpdate, markersNeedUpdate);
+
+    if (impl->sceneGotReady) {
+        LOGTO("update <<<");
+    }
 
     return viewComplete;
 }
@@ -463,6 +489,14 @@ bool Map::render() {
     // Do not render if any texture resources are in process of being downloaded
     if (!impl->scene->complete()) {
         return impl->isCameraEasing; // ?????
+    }
+
+    LOGTInit();
+    if (impl->sceneGotReady) {
+        LOGTO("Render: Scene ready >>>");
+    }
+    if (impl->framesRendered && impl->framesRendered < 100) {
+        LOGTO("Render: Tiles ready >>> %d", impl->framesRendered);
     }
 
     bool drawSelectionBuffer = getDebugFlag(DebugFlags::selection_buffer);
@@ -525,6 +559,16 @@ bool Map::render() {
 
 
     FrameInfo::draw(impl->renderState, impl->view, *impl->scene->tileManager());
+
+    if (impl->sceneGotReady) {
+        impl->sceneGotReady = false;
+        LOGTO("Render: Scene ready <<<");
+    }
+    if (impl->framesRendered && impl->framesRendered++ < 100) {
+        LOGT("Render: Tiles ready <<< %d", impl->framesRendered);
+    } else {
+        impl->framesRendered = 0;
+    }
 
     return impl->isCameraEasing;
 }

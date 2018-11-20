@@ -35,13 +35,12 @@ Scene::Scene(Platform& _platform, std::unique_ptr<SceneOptions> _sceneOptions, s
       m_options(std::move(_sceneOptions)),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()),
-      m_tileWorker(std::make_unique<TileWorker>(_platform, 2)),
+      m_tileWorker(std::make_unique<TileWorker>(_platform, 4)),
       m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)),
       m_labelManager(std::make_unique<LabelManager>()),
       m_view(std::move(_view)) {
     m_pixelScale = m_view->pixelScale();
     m_fontContext->setPixelScale(m_pixelScale);
-    m_loading = true;
 }
 
 #if 0
@@ -61,7 +60,9 @@ void Scene::copyConfig(const Scene& _other) {
 }
 #endif
 
-Scene::~Scene() {}
+Scene::~Scene() {
+    m_tileWorker.reset();
+}
 
 const Style* Scene::findStyle(const std::string& _name) const {
     for (auto& style : m_styles) {
@@ -222,19 +223,18 @@ std::shared_ptr<Texture> Scene::fetchTexture(const std::string& _name, const Url
 
     texture->setSpriteAtlas(std::move(_atlas));
 
-    LOG("Fetch texture");
-
     auto task = std::make_shared<TextureTask>(_url, texture);
-
+    LOGTInit();
+    LOGT("Fetch    texture %s", task->url.string().c_str());
     {
         std::lock_guard<std::mutex> lock(m_taskMutex);
         m_pendingTextures.push_front(task);
     }
-    startUrlRequest(_url, [t = std::weak_ptr<TextureTask>(task)] (UrlResponse&& response) {
+    startUrlRequest(_url, [=, t = std::weak_ptr<TextureTask>(task)] (UrlResponse&& response) mutable {
         auto task = t.lock();
         if (!task) { return; }
 
-        LOG("Got texture data %s", task->url.string().c_str());
+        LOGT("Received texture %s", task->url.string().c_str());
 
         if (response.error) {
             LOGE("Error retrieving URL '%s': %s", task->url.string().c_str(), response.error);
@@ -281,15 +281,17 @@ void Scene::loadFont(const std::string& _uri, const std::string& _family,
 
     auto task = std::make_shared<FontTask>(FontDescription{familyNormalized,styleNormalized,
                                                            _weight, _uri}, m_fontContext);
+    LOGTInit();
+    LOGT("Fetch    font %s", task->ft.uri.c_str());
     {
         std::lock_guard<std::mutex> lock(m_taskMutex);
         m_pendingFonts.push_front(task);
     }
-    startUrlRequest(_uri, [t = std::weak_ptr<FontTask>(task)] (UrlResponse&& response) {
+    startUrlRequest(_uri, [=,t = std::weak_ptr<FontTask>(task)] (UrlResponse&& response) mutable {
          auto task = t.lock();
          if (!task) { return; }
 
-         LOG("Got font: %s", task->ft.uri.c_str());
+         LOGT("Received font: %s", task->ft.uri.c_str());
 
         if (response.error) {
             LOGE("Error retrieving font '%s' at %s: ", task->ft.alias.c_str(),
@@ -313,7 +315,7 @@ bool Scene::complete() {
         m_pendingFonts.remove_if([&](auto& task) { f++; return task->done; });
 
         if (!m_pendingTextures.empty() || !m_pendingFonts.empty()) {
-            LOG("Waiting... fonts:%d textures:%d", f, t);
+            LOGTO("Waiting... fonts:%d textures:%d", f, t);
             return false;
         }
     }
