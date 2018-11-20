@@ -6,6 +6,7 @@
 #include "log.h"
 #include "data/tileData.h"
 #include "util/variant.h"
+#include <array>
 
 namespace Tangram {
 
@@ -117,6 +118,17 @@ JSCoreContext::JSCoreContext() {
     JSStringRef jsFeatureName = JSStringCreateWithUTF8CString("feature");
     JSObjectSetProperty(_context, jsGlobalObject, jsFeatureName, jsFeatureObject, kJSPropertyAttributeNone, nullptr);
     JSStringRelease(jsFeatureName);
+
+    // Create geometry constants.
+    std::array<std::pair<const char*, int>, 3> geometryConstants{
+        {{"point", GeometryType::points}, {"line", GeometryType::lines}, {"polygon", GeometryType::polygons}}
+    };
+    for (const auto& pair : geometryConstants) {
+        JSStringRef jsPropertyName = JSStringCreateWithUTF8CString(pair.first);
+        JSValueRef jsPropertyValue = JSValueMakeNumber(_context, pair.second);
+        JSObjectSetProperty(_context, jsGlobalObject, jsPropertyName, jsPropertyValue, kJSPropertyAttributeReadOnly, nullptr);
+        JSStringRelease(jsPropertyName);
+    }
 }
 
 JSCoreContext::~JSCoreContext() {
