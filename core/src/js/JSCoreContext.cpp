@@ -239,13 +239,10 @@ void JSCoreContext::resetToScopeMarker(JSScopeMarker) {
 }
 
 JSObjectRef JSCoreContext::compileFunction(const std::string& source) {
-    // Get the function body within the enclosing {}'s.
-    auto bodyStart = source.find('{') + 1;
-    auto bodyEnd = source.rfind('}') - 1;
-    auto body = source.substr(bodyStart, bodyEnd - bodyStart);
-    JSStringRef jsFunctionSource = JSStringCreateWithUTF8CString(body.c_str());
+    std::string expression("(" + source + ")");
+    JSStringRef jsFunctionSource = JSStringCreateWithUTF8CString(expression.c_str());
     JSValueRef jsException = nullptr;
-    JSObjectRef jsObject = JSObjectMakeFunction(_context, nullptr, 0, nullptr, jsFunctionSource, nullptr, 0, &jsException);
+    JSValueRef jsFunction = JSEvaluateScript(_context, jsFunctionSource, nullptr, nullptr, 0, &jsException);
     JSStringRelease(jsFunctionSource);
     if (jsException) {
         char buffer[128];
@@ -254,7 +251,7 @@ JSObjectRef JSCoreContext::compileFunction(const std::string& source) {
         LOGE("Error compiling JavaScript function - %s", buffer);
         JSStringRelease(jsExceptionString);
     }
-    return jsObject;
+    return JSValueToObject(_context, jsFunction, nullptr);
 }
 
 bool JSCoreContext::jsHasPropertyCallback(JSContextRef, JSObjectRef object, JSStringRef property) {
