@@ -9,6 +9,7 @@ set(BENCH_SOURCES
   src/benchStyleContext.cpp
   src/benchTileBuilder.cpp
   src/benchTileSource.cpp
+  src/template.cpp
 )
 
 # create an executable per bench
