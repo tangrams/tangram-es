@@ -135,17 +135,21 @@ void JSCoreContext::setCurrentFeature(const Feature* feature) {
     _feature = feature;
 }
 
-JSFunctionIndex JSCoreContext::addFunction(const std::string& source, bool& error) {
-    auto newFunctionIndex = static_cast<JSFunctionIndex>(_functions.size());
+bool JSCoreContext::setFunction(JSFunctionIndex index, const std::string& source) {
     JSObjectRef jsFunctionObject = compileFunction(source);
     if (!jsFunctionObject) {
-        error = true;
+        return false;
     }
-    // Function objects will live for the entire duration of the context, so we can retain them once and never release
-    // them. They will be released when the context is released.
+    if (index >= _functions.size()) {
+        _functions.resize(index + 1);
+    }
+    auto& functionEntry = _functions[index];
+    if (functionEntry != nullptr) {
+        JSValueUnprotect(_context, functionEntry);
+    }
     JSValueProtect(_context, jsFunctionObject);
-    _functions.push_back(jsFunctionObject);
-    return newFunctionIndex;
+    functionEntry = jsFunctionObject;
+    return true;
 }
 
 bool JSCoreContext::evaluateBooleanFunction(JSFunctionIndex index) {

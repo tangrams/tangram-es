@@ -107,22 +107,20 @@ void StyleContext::initFunctions(const Scene& _scene) {
 
 bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {
     uint32_t id = 0;
-    bool error = false;
+    bool success = true;
     for (auto& function : _functions) {
-        id = m_jsContext->addFunction(function, error);
+        success &= m_jsContext->setFunction(id++, function);
     }
 
     m_functionCount = id;
 
     DUMP("setFunctions\n");
-    return !error;
+    return success;
 }
 
 bool StyleContext::addFunction(const std::string& _function) {
-    bool error = false;
-    m_jsContext->addFunction(_function, error);
-    m_functionCount++;
-    return !error;
+    bool success = m_jsContext->setFunction(m_functionCount++, _function);
+    return success;
 }
 
 void StyleContext::setFeature(const Feature& _feature) {
