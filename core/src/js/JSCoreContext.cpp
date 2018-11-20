@@ -201,7 +201,16 @@ JSValue JSCoreContext::getFunctionResult(JSFunctionIndex index) {
         return nullptr;
     }
     JSObjectRef jsFunctionObject = _functions[index];
-    JSValueRef jsResultValue = JSObjectCallAsFunction(_context, jsFunctionObject, nullptr, 0, nullptr, nullptr);
+    JSValueRef jsException = nullptr;
+    JSValueRef jsResultValue = JSObjectCallAsFunction(_context, jsFunctionObject, nullptr, 0, nullptr, &jsException);
+    if (jsException != nullptr) {
+        char buffer[128];
+        JSStringRef jsExceptionString = JSValueToStringCopy(_context, jsException, nullptr);
+        JSStringGetUTF8CString(jsExceptionString, buffer, sizeof(buffer));
+        LOGE("Error evaluating JavaScript function - %s", buffer);
+        JSStringRelease(jsExceptionString);
+        return nullptr;
+    }
     return JSValue(new JSCoreValue(_context, jsResultValue));
 }
 
