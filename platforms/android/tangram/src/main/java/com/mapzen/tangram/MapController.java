@@ -1494,9 +1494,12 @@ public class MapController implements Renderer {
                 }
                 String msg = (e == null) ? "" : e.getMessage();
                 nativeOnUrlComplete(mapPointer, requestHandle, null, msg);
+                // Poke JobQueue, Scene::complete()....
+                requestRender();
                 synchronized(httpRequestHandles) {
                     httpRequestHandles.remove(requestHandle);
                 }
+
             }
 
             @Override
@@ -1511,6 +1514,8 @@ public class MapController implements Renderer {
                     nativeOnUrlComplete(mapPointer, requestHandle, null,
                             "Unexpected response code: " + code + " for URL: " + url);
                 }
+                // Poke JobQueue, Scene::complete()....
+                requestRender();
                 synchronized(httpRequestHandles) {
                     httpRequestHandles.remove(requestHandle);
                 }
@@ -1523,6 +1528,8 @@ public class MapController implements Renderer {
                     return;
                 }
                 nativeOnUrlComplete(mapPointer, requestHandle, null, null);
+                // Poke JobQueue, Scene::complete()....
+                requestRender();
                 synchronized(httpRequestHandles) {
                     httpRequestHandles.remove(requestHandle);
                 }

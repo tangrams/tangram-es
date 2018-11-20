@@ -302,15 +302,12 @@ UrlRequestHandle AndroidPlatform::startUrlRequest(Url _url, UrlCallback _callbac
 
     // If the requested URL does not use HTTP or HTTPS, retrieve it synchronously.
     if (!_url.hasHttpScheme()) {
-        LOGE("Enqueue file task");
-
         m_fileWorker.enqueue([=](){
-
              UrlResponse response;
              response.content = bytesFromFile(_url);
-             LOGE("Ready file task");
-
              _callback(std::move(response));
+
+             requestRender();
         });
         return requestHandle;
     }

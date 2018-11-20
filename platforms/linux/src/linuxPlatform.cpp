@@ -80,14 +80,16 @@ FontSourceHandle LinuxPlatform::systemFont(const std::string& _name,
 
 UrlRequestHandle LinuxPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
     if (m_shutdown) { return 0; }
+    LOGTInit();
     if (_url.hasHttpScheme()) {
         return m_urlClient->addRequest(_url.string(),
-                                       [this, cb = _callback](UrlResponse&& r) {
+                                       [=, path = _url.path(), cb = _callback](UrlResponse&& r) mutable {
+                                           LOGT("Fetched %s", path.c_str());
                                            cb(std::move(r));
                                            requestRender();
                                        });
     } else {
-        m_fileWorker.enqueue([path = _url.path(), _callback](){
+        m_fileWorker.enqueue([=, path = _url.path(), cb = _callback]() mutable {
              UrlResponse response;
              auto allocator = [&](size_t size) {
                  response.content.resize(size);
@@ -95,7 +97,10 @@ UrlRequestHandle LinuxPlatform::startUrlRequest(Url _url, UrlCallback _callback)
              };
 
              Platform::bytesFromFileSystem(path.c_str(), allocator);
-             _callback(std::move(response));
+             LOGT("Fetched %s", path.c_str());
+
+             cb(std::move(response));
+             requestRender();
         });
         return std::numeric_limits<uint64_t>::max();
     }

@@ -39,6 +39,8 @@ bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
     int channelsInFile = 0;
     int channelsRequested = bpp();
 
+    LOGTInit();
+
     m_buffer.reset(stbi_load_from_memory(data, static_cast<int>(length),
                                          &width, &height, &channelsInFile,
                                          channelsRequested));
@@ -57,6 +59,10 @@ bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
     m_bufferSize = width * height * bpp();
 
     resize(width, height);
+
+    LOGT("Decoded image data: %dx%d bpp:%d/%d",
+         width, height, channelsInFile, channelsRequested);
+
     return true;
 }
 
