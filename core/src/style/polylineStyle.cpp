@@ -93,13 +93,13 @@ void PolylineStyle::constructVertexLayout() {
 void PolylineStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
     Style::onBeginDrawFrame(rs, _view, _scene);
 
-    if (m_texture && m_texture->getWidth() > 0) {
+    if (m_texture && m_texture->width() > 0) {
         GLuint textureUnit = rs.nextAvailableTextureUnit();
 
         m_texture->bind(rs, textureUnit);
 
         m_shaderProgram->setUniformi(rs, m_uTexture, textureUnit);
-        m_shaderProgram->setUniformf(rs, m_uTextureRatio, m_texture->getHeight() / m_texture->getWidth());
+        m_shaderProgram->setUniformf(rs, m_uTextureRatio, m_texture->height() / m_texture->width());
     }
 }
 

@@ -122,7 +122,7 @@ void FrameBuffer::init(RenderState& _rs) {
         m_texture->bind(_rs, 0);
 
         GL::framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                 GL_TEXTURE_2D, m_texture->getGlHandle(), 0);
+                                 GL_TEXTURE_2D, m_texture->glHandle(), 0);
     }
 
     {

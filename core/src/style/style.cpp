@@ -464,7 +464,7 @@ bool Style::draw(RenderState& rs, const Tile& _tile) {
                 texture->bind(rs, texUnit);
 
                 textureIndexUniform.slots.push_back(texUnit);
-                rasterSizeUniform.push_back({texture->getWidth(), texture->getHeight()});
+                rasterSizeUniform.push_back({texture->width(), texture->height()});
 
                 if (tileID.z > raster.tileID.z) {
                     float dz = tileID.z - raster.tileID.z;

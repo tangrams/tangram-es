@@ -35,7 +35,7 @@ public:
         m_buffer.reset(reinterpret_cast<GLubyte*>(std::calloc(size * size, sizeof(GLubyte))));
         m_disposeBuffer = false;
         resize(size, size);
-        m_bytesPerPixel = getBytesPerPixel();
+        m_bytesPerPixel = bpp();
     }
     ~GlyphTexture() override {}
 
