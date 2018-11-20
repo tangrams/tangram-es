@@ -162,15 +162,11 @@ void Texture::setSpriteAtlas(std::unique_ptr<Tangram::SpriteAtlas> sprites) {
     m_spriteAtlas = std::move(sprites);
 }
 
-void Texture::bind(RenderState& rs, GLuint _unit) {
-    rs.textureUnit(_unit);
-    rs.texture(TEXTURE_TARGET, m_glHandle);
-}
-
 void Texture::generate(RenderState& rs, GLuint _textureUnit) {
     GL::genTextures(1, &m_glHandle);
 
-    bind(rs, _textureUnit);
+    rs.textureUnit(_textureUnit);
+    rs.texture(TEXTURE_TARGET, m_glHandle);
 
     GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_MIN_FILTER, static_cast<GLint>(m_options.minFilter));
     GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_MAG_FILTER, static_cast<GLint>(m_options.magFilter));
@@ -185,7 +181,15 @@ bool Texture::isValid() const {
     return (m_glHandle != 0) || bool(m_buffer);
 }
 
-void Texture::update(RenderState& _rs, GLuint _textureUnit) {
+bool Texture::bind(RenderState& _rs, GLuint _textureUnit) {
+
+    if (!m_shouldResize && m_dirtyRows.empty()) {
+        if (m_glHandle == 0) { return false; }
+
+        _rs.textureUnit(_textureUnit);
+        _rs.texture(TEXTURE_TARGET, m_glHandle);
+        return true;
+    }
 
     if (m_shouldResize) {
         m_shouldResize = false;
@@ -195,12 +199,13 @@ void Texture::update(RenderState& _rs, GLuint _textureUnit) {
             Hardware::maxTextureSize < m_height) {
             LOGW("Texture larger than Hardware maximum texture size");
             if (m_disposeBuffer) { m_buffer.reset(); }
-            return;
+            return false;
         }
         if (m_glHandle == 0) {
             generate(_rs, _textureUnit);
         } else {
-            bind(_rs, _textureUnit);
+            _rs.textureUnit(_textureUnit);
+            _rs.texture(TEXTURE_TARGET, m_glHandle);
         }
 
         auto format = static_cast<GLenum>(m_options.pixelFormat);
@@ -212,7 +217,8 @@ void Texture::update(RenderState& _rs, GLuint _textureUnit) {
         }
 
     } else if (!m_dirtyRows.empty()) {
-        bind(_rs, _textureUnit);
+        _rs.textureUnit(_textureUnit);
+        _rs.texture(TEXTURE_TARGET, m_glHandle);
 
         auto format = static_cast<GLenum>(m_options.pixelFormat);
         for (auto& range : m_dirtyRows) {
@@ -224,6 +230,8 @@ void Texture::update(RenderState& _rs, GLuint _textureUnit) {
         m_dirtyRows.clear();
     }
     if (m_disposeBuffer) { m_buffer.reset(); }
+
+    return true;
 }
 
 void Texture::resize(int width, int height) {

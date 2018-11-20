@@ -73,13 +73,10 @@ public:
 
     void setSpriteAtlas(std::unique_ptr<SpriteAtlas> sprites);
 
-    /* Perform texture updates, should be called at least once and after adding data or resizing */
-    virtual void update(RenderState& rs, GLuint _textureSlot);
-
     /* Resize the texture */
     void resize(int width, int height);
 
-    void bind(RenderState& rs, GLuint _unit);
+    bool bind(RenderState& rs, GLuint _unit);
 
     /* Width and Height texture getters */
     int getWidth() const { return m_width; }

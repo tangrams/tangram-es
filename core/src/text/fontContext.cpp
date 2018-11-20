@@ -124,7 +124,7 @@ void FontContext::updateTextures(RenderState& rs) {
     for (auto& gt : m_textures) {
         if (gt->dirty) {
             gt->dirty = false;
-            gt->update(rs, 0);
+            gt->bind(rs, 0);
         }
     }
 }
