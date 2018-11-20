@@ -169,16 +169,13 @@ void DuktapeContext::setCurrentFeature(const Feature* feature) {
     _feature = feature;
 }
 
-uint32_t DuktapeContext::addFunction(const std::string& source, bool& error) {
+bool DuktapeContext::setFunction(JSFunctionIndex index, const std::string& source) {
     // Get all functions (array) in context
     if (!duk_get_global_string(_ctx, FUNC_ID)) {
         LOGE("AddFunction - functions array not initialized");
         duk_pop(_ctx); // pop [undefined] sitting at stack top
-        error = true;
-        return 0;
+        return false;
     }
-
-    auto index = static_cast<uint32_t>(duk_get_length(_ctx, -1));
 
     duk_push_string(_ctx, source.c_str());
     duk_push_string(_ctx, "");
@@ -190,13 +187,13 @@ uint32_t DuktapeContext::addFunction(const std::string& source, bool& error) {
              duk_safe_to_string(_ctx, -1),
              source.c_str());
         duk_pop(_ctx);
-        error = true;
+        return false;
     }
 
     // Pop the functions array off the stack
     duk_pop(_ctx);
 
-    return index;
+    return true;
 }
 
 bool DuktapeContext::evaluateBooleanFunction(uint32_t index) {
