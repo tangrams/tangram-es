@@ -45,7 +45,7 @@ bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
 
     int width = 0, height = 0;
     int channelsInFile = 0;
-    int channelsRequested = getBytesPerPixel();
+    int channelsRequested = bpp();
 
     unsigned char* pixels = stbi_load_from_memory(data, static_cast<int>(length),
                                                   &width, &height, &channelsInFile,
@@ -260,7 +260,7 @@ void Texture::resize(int width, int height) {
     m_dirtyRows.clear();
 }
 
-size_t Texture::getBytesPerPixel() const {
+size_t Texture::bpp() const {
     switch (m_options.pixelFormat) {
     case PixelFormat::ALPHA:
     case PixelFormat::LUMINANCE:
@@ -276,14 +276,14 @@ size_t Texture::getBytesPerPixel() const {
 
 bool Texture::sanityCheck(size_t _width, size_t _height, size_t _bytesPerPixel, size_t _length) const {
     size_t dim = _width * _height;
-    if (_length != dim * getBytesPerPixel()) {
+    if (_length != dim * bpp()) {
         LOGW("Invalid data size for Texture dimension! %dx%d bpp:%d bytes:%d",
              _width, _height, _bytesPerPixel, _length);
         return false;
     }
-    if (getBytesPerPixel() != _bytesPerPixel) {
+    if (bpp() != _bytesPerPixel) {
         LOGW("PixelFormat and bytesPerPixel do not match! %d:%d",
-             getBytesPerPixel(), _bytesPerPixel);
+             bpp(), _bytesPerPixel);
         return false;
     }
     return true;

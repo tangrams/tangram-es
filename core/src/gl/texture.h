@@ -79,21 +79,19 @@ public:
     bool bind(RenderState& rs, GLuint _unit);
 
     /* Width and Height texture getters */
-    int getWidth() const { return m_width; }
-    int getHeight() const { return m_height; }
+    int width() const { return m_width; }
+    int height() const { return m_height; }
 
-    GLuint getGlHandle() const { return m_glHandle; }
+    GLuint glHandle() const { return m_glHandle; }
 
-    float getDisplayScale() const { return m_options.displayScale; }
+    float displayScale() const { return m_options.displayScale; }
 
-    const auto& getSpriteAtlas() const { return m_spriteAtlas; }
+    const auto& spriteAtlas() const { return m_spriteAtlas; }
 
     /* Checks whether the texture has valid data and has been successfully uploaded to GPU */
     bool isValid() const;
 
-    size_t getBufferSize() const { return m_bufferSize; }
-
-    size_t getBytesPerPixel() const;
+    size_t bufferSize() const { return m_bufferSize; }
 
 protected:
 
@@ -101,6 +99,8 @@ protected:
         int min;
         int max;
     };
+
+    size_t bpp() const;
 
     void generate(RenderState& rs, GLuint _textureUnit);
 
