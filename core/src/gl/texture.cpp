@@ -60,9 +60,8 @@ bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
         // Default inconsistent texture data is set to a 1*1 pixel texture
         // This reduces inconsistent behavior when texture failed loading
         // texture data but a Tangram style shader requires a shader sampler
-        GLuint blackPixel = 0x00000ff;
-        setPixelData(1, 1, sizeof(blackPixel), reinterpret_cast<GLubyte*>(&blackPixel),
-                     sizeof(blackPixel));
+        GLubyte pixel[4] = { 0, 0, 0, 255 };
+        setPixelData(1, 1, bpp(), pixel, bpp());
         return false;
     }
 
