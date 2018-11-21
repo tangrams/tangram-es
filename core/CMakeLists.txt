@@ -3,11 +3,16 @@ project(tangram-core)
 # Build core library dependencies.
 add_subdirectory(deps)
 
+if (TANGRAM_MBTILES_DATASOURCE)
+  set(MBTILES_SOURCES src/data/mbtilesDataSource.cpp)
+  set(MBTILES_LIBS SQLiteCpp sqlite3)
+  add_definitions(-DTANGRAM_MBTILES_DATASOURCE)
+endif()
+
 add_library(tangram-core
   src/map.cpp
   src/platform.cpp
   src/data/clientGeoJsonSource.cpp
-  src/data/mbtilesDataSource.cpp
   src/data/memoryCacheDataSource.cpp
   src/data/networkDataSource.cpp
   src/data/properties.cpp
@@ -94,6 +99,7 @@ add_library(tangram-core
   src/view/flyTo.cpp
   src/view/view.cpp
   src/view/viewConstraint.cpp
+  ${MBTILES_SOURCES}
 )
 
 # Include headers from core library and dependencies.
@@ -127,12 +133,11 @@ target_include_directories(tangram-core
 # Link core library dependencies.
 target_link_libraries(tangram-core
   PRIVATE
+  ${MBTILES_LIBS}
   duktape
   css-color-parser-cpp
   yaml-cpp
   alfons
-  SQLiteCpp
-  sqlite3
   double-conversion
   miniz
   z

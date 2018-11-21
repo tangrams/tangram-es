@@ -363,8 +363,12 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
 }
 
 void Map::setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath) {
+#ifdef TANGRAM_MBTILES_DATASOURCE
     std::string scenePath = std::string("sources.") + _dataSourceName + ".mbtiles";
     updateSceneAsync({SceneUpdate{scenePath.c_str(), _mbtilesFilePath}});
+#else
+    LOGE("MBTiles support is disabled. This source will be ignored: %s", _dataSourceName);
+#endif
 }
 
 void Map::resize(int _newWidth, int _newHeight) {
