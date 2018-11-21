@@ -53,7 +53,9 @@ public:
     explicit Impl(Platform& _platform) :
         platform(_platform),
         inputHandler(view),
-        scene(std::make_shared<Scene>(_platform, Url(), std::make_unique<View>())) {}
+        scene(std::make_shared<Scene>(_platform,
+                                      std::make_unique<SceneOptions>(Url()),
+                                      std::make_unique<View>())) {}
 
     void setScene(std::shared_ptr<Scene>& _scene);
 
@@ -158,12 +160,60 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
     }
 }
 
-// NB: Not thread-safe. Must be called on the main/render thread!
-// (Or externally synchronized with main/render thread)
-SceneID Map::loadScene(std::shared_ptr<Scene> scene,
+SceneID Map::loadScene(const std::string& _scenePath, bool _useScenePosition,
                        const std::vector<SceneUpdate>& _sceneUpdates) {
 
+    LOG("Loading scene file: %s", _scenePath.c_str());
+
+    auto options = std::make_unique<SceneOptions>(Url(_scenePath));
+    options->useScenePosition = _useScenePosition;
+
+    return loadScene(std::move(options));
+}
+
+SceneID Map::loadSceneYaml(const std::string& _yaml, const std::string& _resourceRoot,
+                           bool _useScenePosition, const std::vector<SceneUpdate>& _sceneUpdates) {
+
+    LOG("Loading scene string");
+
+    auto options = std::make_unique<SceneOptions>(_yaml, Url(_resourceRoot));
+    options->updates =  _sceneUpdates;
+    options->useScenePosition = _useScenePosition;
+
+    return loadScene(std::move(options));
+}
+
+SceneID Map::loadSceneAsync(const std::string& _scenePath, bool _useScenePosition,
+                            const std::vector<SceneUpdate>& _sceneUpdates) {
+
+    LOG("Loading scene file (async): %s", _scenePath.c_str());
+
+    auto options = std::make_unique<SceneOptions>(Url(_scenePath));
+    options->updates =  _sceneUpdates;
+    options->useScenePosition = _useScenePosition;
+
+    return loadSceneAsync(std::move(options));
+}
+
+SceneID Map::loadSceneYamlAsync(const std::string& _yaml, const std::string& _resourceRoot,
+                                bool _useScenePosition, const std::vector<SceneUpdate>& _sceneUpdates) {
+
+    LOG("Loading scene string (async)");
+
+    auto options = std::make_unique<SceneOptions>(_yaml, Url(_resourceRoot));
+    options->updates =  _sceneUpdates;
+    options->useScenePosition = _useScenePosition;
+
+    return loadSceneAsync(std::move(options));
+}
+
+// NB: Not thread-safe. Must be called on the main/render thread!
+// (Or externally synchronized with main/render thread)
+SceneID Map::loadScene(std::unique_ptr<SceneOptions> _sceneOptions) {
     LOGTOInit();
+    auto newScene = std::make_shared<Scene>(*platform, std::move(_sceneOptions),
+                                             std::make_unique<View>(impl->view));
+
     {
         std::unique_lock<std::mutex> lock(impl->sceneMutex);
 
@@ -172,76 +222,40 @@ SceneID Map::loadScene(std::shared_ptr<Scene> scene,
         impl->lastValidScene.reset();
     }
 
-    if (SceneLoader::loadScene(*platform, scene, _sceneUpdates)) {
-        impl->setScene(scene);
+    if (SceneLoader::loadScene(newScene)) {
+        impl->setScene(newScene);
 
         {
             std::lock_guard<std::mutex> lock(impl->sceneMutex);
-            impl->lastValidScene = scene;
+            impl->lastValidScene = newScene;
         }
     }
 
     if (impl->onSceneReady) {
-        if (scene->errors.empty()) {
-            impl->onSceneReady(scene->id, nullptr);
+        if (newScene->errors.empty()) {
+            impl->onSceneReady(newScene->id, nullptr);
         } else {
-            impl->onSceneReady(scene->id, &(scene->errors.front()));
+            impl->onSceneReady(newScene->id, &(newScene->errors.front()));
         }
     }
-    return scene->id;
+    return newScene->id;
 }
 
-SceneID Map::loadScene(const std::string& _scenePath, bool _useScenePosition,
-                       const std::vector<SceneUpdate>& _sceneUpdates) {
-
-    LOG("Loading scene file: %s", _scenePath.c_str());
-    auto scene = std::make_shared<Scene>(*platform, _scenePath, std::make_unique<View>(impl->view));
-    scene->useScenePosition = _useScenePosition;
-    return loadScene(scene, _sceneUpdates);
-}
-
-SceneID Map::loadSceneYaml(const std::string& _yaml, const std::string& _resourceRoot,
-                           bool _useScenePosition, const std::vector<SceneUpdate>& _sceneUpdates) {
-
-    LOG("Loading scene string");
-    auto scene = std::make_shared<Scene>(*platform, _yaml, _resourceRoot, std::make_unique<View>(impl->view));
-    scene->useScenePosition = _useScenePosition;
-    return loadScene(scene, _sceneUpdates);
-}
-
-SceneID Map::loadSceneAsync(const std::string& _scenePath, bool _useScenePosition,
-                            const std::vector<SceneUpdate>& _sceneUpdates) {
-
-    LOG("Loading scene file (async): %s", _scenePath.c_str());
-    auto scene = std::make_shared<Scene>(*platform, _scenePath, std::make_unique<View>(impl->view));
-    scene->useScenePosition = _useScenePosition;
-    return loadSceneAsync(scene, _sceneUpdates);
-}
-
-SceneID Map::loadSceneYamlAsync(const std::string& _yaml, const std::string& _resourceRoot,
-                                bool _useScenePosition, const std::vector<SceneUpdate>& _sceneUpdates) {
-
-    LOG("Loading scene string (async)");
-    auto scene = std::make_shared<Scene>(*platform, _yaml, _resourceRoot, std::make_unique<View>(impl->view));
-    scene->useScenePosition = _useScenePosition;
-    return loadSceneAsync(scene, _sceneUpdates);
-}
-
-SceneID Map::loadSceneAsync(std::shared_ptr<Scene> nextScene,
-                            const std::vector<SceneUpdate>& _sceneUpdates) {
-
+SceneID Map::loadSceneAsync(std::unique_ptr<SceneOptions> _sceneOptions) {
     LOGTOInit();
+    auto newScene = std::make_shared<Scene>(*platform, std::move(_sceneOptions),
+                                             std::make_unique<View>(impl->view));
     impl->sceneLoadBegin();
 
-    runAsyncTask([nextScene, _sceneUpdates, this](){
+    runAsyncTask([newScene, this](){
 
-            bool newSceneLoaded = SceneLoader::loadScene(*platform, nextScene, _sceneUpdates);
+            bool newSceneLoaded = SceneLoader::loadScene(newScene);
             if (!newSceneLoaded) {
 
                 if (impl->onSceneReady) {
                     SceneError err;
-                    if (!nextScene->errors.empty()) { err = nextScene->errors.front(); }
-                    impl->onSceneReady(nextScene->id, &err);
+                    if (!newScene->errors.empty()) { err = newScene->errors.front(); }
+                    impl->onSceneReady(newScene->id, &err);
                 }
                 impl->sceneLoadEnd();
                 return;
@@ -251,22 +265,22 @@ SceneID Map::loadSceneAsync(std::shared_ptr<Scene> nextScene,
                 std::lock_guard<std::mutex> lock(impl->sceneMutex);
                 // NB: Need to set the scene on the worker thread so that waiting
                 // applyUpdates AsyncTasks can access it to copy the config.
-                impl->lastValidScene = nextScene;
+                impl->lastValidScene = newScene;
             }
 
-            impl->jobQueue.add([nextScene, newSceneLoaded, this]() {
+            impl->jobQueue.add([newScene, newSceneLoaded, this]() {
                     if (newSceneLoaded) {
-                        auto s = nextScene;
+                        auto s = newScene;
                         impl->setScene(s);
                     }
-                    if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, nullptr); }
+                    if (impl->onSceneReady) { impl->onSceneReady(newScene->id, nullptr); }
                 });
 
             impl->sceneLoadEnd();
             platform->requestRender();
         });
 
-    return nextScene->id;
+    return newScene->id;
 }
 
 void Map::setSceneReadyListener(SceneReadyCallback _onSceneReady) {
@@ -373,10 +387,10 @@ bool Map::update(float _dt) {
         impl->scene->pendingFonts > 0 ||
         impl->scene->pendingTextures > 0) {
         platform->requestRender();
-        LOGO("Waiting for scene:%d fonts:%d textures:%d",
-             bool(impl->scene->markerManager()),
-             impl->scene->pendingFonts > 0,
-             impl->scene->pendingTextures > 0);
+        LOGTO("Waiting for scene:%d fonts:%d textures:%d",
+              bool(impl->scene->markerManager()),
+              impl->scene->pendingFonts > 0,
+              impl->scene->pendingTextures > 0);
         return false;
     }
 

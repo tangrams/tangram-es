@@ -32,6 +32,7 @@ class Light;
 class MapProjection;
 class Platform;
 class SceneLayer;
+struct SceneLoader;
 class Style;
 class Texture;
 class TileSource;
@@ -46,6 +47,21 @@ const std::string DELIMITER = ":";
  *
  * Scene is a singleton containing the styles, lighting, and interactions defining a map scene
  */
+
+class SceneOptions {
+public:
+    explicit SceneOptions(const Url& _url) : url(_url) {}
+
+    explicit SceneOptions(const std::string& _yaml, const Url& _resources)
+        : yaml(_yaml), url(_resources) {}
+
+
+    std::string yaml;
+    // The URL from which this scene was loaded
+    Url url;
+    std::vector<SceneUpdate> updates;
+    bool useScenePosition = true;
+};
 
 class Scene {
 public:
@@ -69,11 +85,9 @@ public:
         yes, no, none
     };
 
-    //Scene();
-    Scene(Platform& _platform, const Url& _url,
+    Scene(Platform& _platform, std::unique_ptr<SceneOptions> _sceneOptions,
           std::unique_ptr<View> _view = std::make_unique<View>());
-    Scene(Platform& _platform, const std::string& _yaml, const Url& _url,
-          std::unique_ptr<View> _view = std::make_unique<View>());
+
     Scene(const Scene& _other) = delete;
     Scene(Scene&& _other) = delete;
 
@@ -81,10 +95,9 @@ public:
 
     const int32_t id;
 
-    void copyConfig(const Scene& _other);
+    //void copyConfig(const Scene& _other);
 
     auto& view() { return m_view; }
-
     auto& camera() { return m_camera; }
     auto& config() { return m_config; }
     auto& tileSources() { return m_tileSources; }
@@ -102,11 +115,9 @@ public:
     auto& featureSelection() { return m_featureSelection; }
     Style* findStyle(const std::string& _name);
 
-    const auto& url() const { return m_url; }
-    const auto& yaml() { return m_yaml; }
     const auto& config() const { return m_config; }
     const auto& tileSources() const { return m_tileSources; }
-    const auto& layers() const { return m_layers; }
+    //const auto& layers() const { return m_layers; }
     const auto& styles() const { return m_styles; }
     const auto& lights() const { return m_lights; }
     const auto& lightBlocks() const { return m_lightShaderBlocks; }
@@ -129,7 +140,7 @@ public:
     // as expected within zip archives). This function expects that all required
     // zip archives will be added to the scene with addZipArchive before being
     // requested.
-    UrlRequestHandle startUrlRequest(Platform& platform, Url url, UrlCallback callback);
+    UrlRequestHandle startUrlRequest(const Url& url, UrlCallback callback);
 
     void addZipArchive(Url url, std::shared_ptr<ZipArchive> zipArchive);
 
@@ -140,7 +151,6 @@ public:
 
     int addJsFunction(const std::string& _function);
 
-    bool useScenePosition = true;
     glm::dvec2 startPosition = { 0, 0 };
     float startZoom = 0;
 
@@ -187,17 +197,24 @@ public:
         m_markerManager = std::make_unique<MarkerManager>(*this);
     }
 
+    friend struct SceneLoader;
+    friend class Importer;
+protected:
+    Platform& platform() { return m_platform; }
+    const SceneOptions& options() { return *m_options; }
+
 private:
+    Platform& m_platform;
 
-    Camera m_camera;
+    std::unique_ptr<SceneOptions> m_options;
 
-    // The URL from which this scene was loaded
-    Url m_url;
-
-    std::string m_yaml;
+    // ---------------------------------------------------------------//
+    // Loaded Scene Data
 
     // The root node of the YAML scene configuration
     YAML::Node m_config;
+
+    Camera m_camera;
 
     std::vector<DataLayer> m_layers;
     std::vector<std::shared_ptr<TileSource>> m_tileSources;
@@ -227,24 +244,21 @@ private:
 
     Color m_background;
     Stops m_backgroundStops;
-
-    std::shared_ptr<FontContext> m_fontContext;
-
-    std::unique_ptr<FeatureSelection> m_featureSelection;
-
     animate m_animated = none;
 
-    float m_pixelScale = 1.0f;
+    // ---------------------------------------------------------------//
+    // Runtime Data
 
+    float m_pixelScale = 1.0f;
     float m_time = 0.0;
 
-
+    std::shared_ptr<FontContext> m_fontContext;
+    std::unique_ptr<FeatureSelection> m_featureSelection;
     std::unique_ptr<TileWorker> m_tileWorker;
     std::unique_ptr<TileManager> m_tileManager;
     std::unique_ptr<MarkerManager> m_markerManager;
     std::unique_ptr<LabelManager> m_labelManager;
     std::unique_ptr<View> m_view;
-
 };
 
 }

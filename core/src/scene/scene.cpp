@@ -25,11 +25,11 @@ namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
 
-//Scene::Scene() : id(s_serial++) {}
 
-Scene::Scene(Platform& _platform, const Url& _url, std::unique_ptr<View> _view)
+Scene::Scene(Platform& _platform, std::unique_ptr<SceneOptions> _sceneOptions, std::unique_ptr<View> _view)
     : id(s_serial++),
-      m_url(_url),
+      m_platform(_platform),
+      m_options(std::move(_sceneOptions)),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()),
       m_tileWorker(std::make_unique<TileWorker>(_platform, 2)),
@@ -40,20 +40,7 @@ Scene::Scene(Platform& _platform, const Url& _url, std::unique_ptr<View> _view)
     m_fontContext->setPixelScale(m_pixelScale);
 }
 
-Scene::Scene(Platform& _platform, const std::string& _yaml, const Url& _url, std::unique_ptr<View> _view)
-    : id(s_serial++),
-      m_url(_url),
-      m_yaml(_yaml),
-      m_fontContext(std::make_shared<FontContext>(_platform)),
-      m_featureSelection(std::make_unique<FeatureSelection>()),
-      m_tileWorker(std::make_unique<TileWorker>(_platform, 2)),
-      m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)),
-      m_labelManager(std::make_unique<LabelManager>()),
-      m_view(std::move(_view)) {
-     m_pixelScale = m_view->pixelScale();
-     m_fontContext->setPixelScale(m_pixelScale);
-}
-
+#if 0
 void Scene::copyConfig(const Scene& _other) {
 
     m_featureSelection.reset(new FeatureSelection());
@@ -68,6 +55,7 @@ void Scene::copyConfig(const Scene& _other) {
 
     m_zipArchives = _other.m_zipArchives;
 }
+#endif
 
 Scene::~Scene() {
     //m_tileWorker->stop();
@@ -90,7 +78,7 @@ Style* Scene::findStyle(const std::string& _name) {
     return nullptr;
 }
 
-UrlRequestHandle Scene::startUrlRequest(Platform& platform, Url url, UrlCallback callback) {
+UrlRequestHandle Scene::startUrlRequest(const Url& url, UrlCallback callback) {
     if (url.scheme() == "zip") {
         UrlResponse response;
         // URL for a file in a zip archive, get the encoded source URL.
