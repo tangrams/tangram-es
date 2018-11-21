@@ -58,25 +58,25 @@ constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
 static const std::string GLOBAL_PREFIX = "global.";
 
-bool SceneLoader::loadScene(Platform& _platform, std::shared_ptr<Scene> _scene,
-                            const std::vector<SceneUpdate>& _updates) {
+bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
 
     Importer sceneImporter(_scene);
 
-    _scene->config() = sceneImporter.applySceneImports(_platform);
+    _scene->config() = sceneImporter.applySceneImports(_scene->platform());
+    LOGTO("applyImports");
 
     if (!_scene->config()) {
         return false;
     }
 
-    if (!applyUpdates(_platform, *_scene, _updates)) {
+    if (!applyUpdates(*_scene)) {
         LOGW("Scene updates failed when loading scene");
         return false;
     }
 
     applyGlobals(*_scene);
 
-    applySources(_platform, *_scene);
+    applySources(*_scene);
     LOGTO("applySources");
 
     applyCameras(*_scene);
@@ -86,13 +86,16 @@ bool SceneLoader::loadScene(Platform& _platform, std::shared_ptr<Scene> _scene,
     _scene->tileManager()->updateTileSets(*_scene->view());
     LOGTO("loadTiles");
 
-    applyTextures(_platform, _scene);
+    applyTextures(_scene);
+    LOGTO("textures");
 
     _scene->fontContext()->loadFonts();
 
-    applyFonts(_platform, _scene);
+    applyFonts(_scene);
+    LOGTO("fonts");
 
-    applyStyles(_platform, _scene);
+    applyStyles(_scene);
+    LOGTO("styles");
 
     applyLayers(*_scene);
 
@@ -105,11 +108,10 @@ bool SceneLoader::loadScene(Platform& _platform, std::shared_ptr<Scene> _scene,
     return true;
 }
 
-bool SceneLoader::applyUpdates(Platform& platform, Scene& scene,
-                               const std::vector<SceneUpdate>& updates) {
+bool SceneLoader::applyUpdates(Scene& scene) {
     auto& root = scene.config();
 
-    for (const auto& update : updates) {
+    for (const auto& update : scene.options().updates) {
         Node value;
 
         try {
@@ -132,7 +134,7 @@ bool SceneLoader::applyUpdates(Platform& platform, Scene& scene,
         }
     }
 
-    Importer::resolveSceneUrls(root, scene.url());
+    Importer::resolveSceneUrls(root, scene.options().url);
 
     return true;
 }
@@ -194,14 +196,14 @@ void SceneLoader::applyGlobals(Scene& _scene) {
     }
 }
 
-void SceneLoader::applySources(Platform& _platform, Scene& _scene) {
+void SceneLoader::applySources(Scene& _scene) {
 
     const Node& config = _scene.config();
 
     if (const Node& sources = config["sources"]) {
         for (const auto& source : sources) {
             std::string srcName = source.first.Scalar();
-            try { loadSource(_platform, srcName, source.second, sources, _scene); }
+            try { loadSource(srcName, source.second, sources, _scene); }
             catch (const YAML::RepresentationException& e) {
                 LOGNode("Parsing sources: '%s'", source, e.what());
             }
@@ -274,7 +276,7 @@ void SceneLoader::applyCameras(Scene& _scene) {
         view->setMaxPitch(camera.maxTilt);
     }
 
-    if (_scene.useScenePosition) {
+    if (_scene.options().useScenePosition) {
         auto position = _scene.startPosition;
         view->setCenterCoordinates({position.x, position.y});
         view->setZoom(_scene.startZoom);
@@ -285,12 +287,12 @@ void SceneLoader::applyCameras(Scene& _scene) {
     view->update();
 }
 
-void SceneLoader::applyTextures(Platform& _platform, const std::shared_ptr<Scene>& _scene) {
+void SceneLoader::applyTextures(std::shared_ptr<Scene>& _scene) {
     const Node& config = _scene->config();
 
     if (const Node& textures = config["textures"]) {
         for (const auto& texture : textures) {
-            try { loadTexture(_platform, texture, _scene); }
+            try { loadTexture(texture, _scene); }
             catch (const YAML::RepresentationException& e) {
                 LOGNode("Parsing texture: '%s'", texture, e.what());
             }
@@ -298,13 +300,13 @@ void SceneLoader::applyTextures(Platform& _platform, const std::shared_ptr<Scene
     }
 }
 
-void SceneLoader::applyFonts(Platform& _platform, const std::shared_ptr<Scene>& _scene) {
+void SceneLoader::applyFonts(std::shared_ptr<Scene>& _scene) {
     const Node& config = _scene->config();
 
     if (const Node& fonts = config["fonts"]) {
         if (fonts.IsMap()) {
             for (const auto& font : fonts) {
-                try { loadFont(_platform, font, _scene); }
+                try { loadFont(font, _scene); }
                 catch (const YAML::RepresentationException& e) {
                     LOGNode("Parsing font: '%s'", font, e.what());
                 }
@@ -313,7 +315,7 @@ void SceneLoader::applyFonts(Platform& _platform, const std::shared_ptr<Scene>& 
     }
 }
 
-void SceneLoader::applyStyles(Platform& _platform, const std::shared_ptr<Scene>& _scene) {
+void SceneLoader::applyStyles(std::shared_ptr<Scene>& _scene) {
     const Node& config = _scene->config();
 
     // Instantiate built-in styles
@@ -335,8 +337,7 @@ void SceneLoader::applyStyles(Platform& _platform, const std::shared_ptr<Scene>&
         for (const auto& entry : styles) {
             try {
                 auto name = entry.first.Scalar();
-                auto config = entry.second;
-                loadStyle(_platform, name, config, _scene);
+                loadStyle(name, entry.second, _scene);
             }
             catch (const YAML::RepresentationException& e) {
                 LOGNode("Parsing style: '%s'", entry, e.what());
@@ -399,8 +400,7 @@ void SceneLoader::applyLayers(Scene& _scene) {
     }
 }
 
-void SceneLoader::loadShaderConfig(Platform& platform, Node shaders, Style& style,
-                                   const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadShaderConfig(Node shaders, Style& style, std::shared_ptr<Scene>& scene) {
 
     if (!shaders) { return; }
 
@@ -449,7 +449,7 @@ void SceneLoader::loadShaderConfig(Platform& platform, Node shaders, Style& styl
             const std::string& name = uniform.first.Scalar();
             StyleUniform styleUniform;
 
-            if (parseStyleUniforms(platform, uniform.second, scene, styleUniform)) {
+            if (parseStyleUniforms(uniform.second, scene, styleUniform)) {
                 if (styleUniform.value.is<UniformArray1f>()) {
                     UniformArray1f& array = styleUniform.value.get<UniformArray1f>();
                     shader.addSourceBlock("uniforms", "uniform float " + name +
@@ -513,28 +513,28 @@ glm::vec4 parseMaterialVec(const Node& prop) {
     return glm::vec4(0.0);
 }
 
-void SceneLoader::loadMaterial(Platform& platform, Node matNode, Material& material,
-                               const std::shared_ptr<Scene>& scene, Style& style) {
+void SceneLoader::loadMaterial(Node matNode, Material& material,
+                               std::shared_ptr<Scene>& scene, Style& style) {
 
     if (!matNode.IsMap()) { return; }
 
     if (Node n = matNode["emission"]) {
         if (n.IsMap()) {
-            material.setEmission(loadMaterialTexture(platform, n, scene, style));
+            material.setEmission(loadMaterialTexture(n, scene, style));
         } else {
             material.setEmission(parseMaterialVec(n));
         }
     }
     if (Node n = matNode["diffuse"]) {
         if (n.IsMap()) {
-            material.setDiffuse(loadMaterialTexture(platform, n, scene, style));
+            material.setDiffuse(loadMaterialTexture(n, scene, style));
         } else {
             material.setDiffuse(parseMaterialVec(n));
         }
     }
     if (Node n = matNode["ambient"]) {
         if (n.IsMap()) {
-            material.setAmbient(loadMaterialTexture(platform, n, scene, style));
+            material.setAmbient(loadMaterialTexture(n, scene, style));
         } else {
             material.setAmbient(parseMaterialVec(n));
         }
@@ -542,7 +542,7 @@ void SceneLoader::loadMaterial(Platform& platform, Node matNode, Material& mater
 
     if (Node n = matNode["specular"]) {
         if (n.IsMap()) {
-            material.setSpecular(loadMaterialTexture(platform, n, scene, style));
+            material.setSpecular(loadMaterialTexture(n, scene, style));
         } else {
             material.setSpecular(parseMaterialVec(n));
         }
@@ -555,11 +555,10 @@ void SceneLoader::loadMaterial(Platform& platform, Node matNode, Material& mater
         }
     }
 
-    material.setNormal(loadMaterialTexture(platform, matNode["normal"], scene, style));
+    material.setNormal(loadMaterialTexture(matNode["normal"], scene, style));
 }
 
-MaterialTexture SceneLoader::loadMaterialTexture(Platform& platform, Node matCompNode,
-                                                 const std::shared_ptr<Scene>& scene, Style& style) {
+MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, std::shared_ptr<Scene>& scene, Style& style) {
 
     if (!matCompNode) { return MaterialTexture{}; }
 
@@ -573,7 +572,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Platform& platform, Node matCom
     const std::string& name = textureNode.Scalar();
 
     MaterialTexture matTex;
-    matTex.tex = getOrLoadTexture(platform, name, scene);
+    matTex.tex = getOrLoadTexture(name, scene);
 
     if (Node mappingNode = matCompNode["mapping"]) {
         const std::string& mapping = mappingNode.Scalar();
@@ -644,10 +643,8 @@ bool SceneLoader::parseTexFiltering(Node& filteringNode, TextureOptions& options
 }
 
 
-std::shared_ptr<Texture> SceneLoader::fetchTexture(Platform& platform,
-                                                   const std::string& name, const std::string& urlString,
-                                                   const TextureOptions& options,
-                                                   const std::shared_ptr<Scene>& scene,
+std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, const std::string& urlString,
+                                                   const TextureOptions& options, std::shared_ptr<Scene>& scene,
                                                    std::unique_ptr<SpriteAtlas> _atlas) {
     std::shared_ptr<Texture> texture;
 
@@ -678,9 +675,9 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(Platform& platform,
         texture->setSpriteAtlas(std::move(_atlas));
 
         scene->pendingTextures++;
-        LOGTime("Fetch texture");
-        scene->startUrlRequest(platform, url, [&, url, scene, texture](UrlResponse&& response) {
-                LOGTime("Got texture data");
+        LOGTO("Fetch texture");
+        scene->startUrlRequest(url, [&, url, scene, texture](UrlResponse&& response) {
+                LOGTO("Got texture data");
                 if (response.error) {
                     LOGE("Error retrieving URL '%s': %s", url.string().c_str(), response.error);
                 } else {
@@ -696,9 +693,9 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(Platform& platform,
                     }
                 }
                 scene->pendingTextures--;
-                LOGTime("Got texture ready");
+                LOGTO("Got texture ready");
                 if (scene->pendingTextures == 0) {
-                    platform.requestRender();
+                    scene->platform().requestRender();
                 }
             });
     }
@@ -706,8 +703,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(Platform& platform,
     return texture;
 }
 
-std::shared_ptr<Texture> SceneLoader::getOrLoadTexture(Platform& platform,
-                                                       const std::string& name, const std::shared_ptr<Scene>& scene) {
+std::shared_ptr<Texture> SceneLoader::getOrLoadTexture(const std::string& name, std::shared_ptr<Scene>& scene) {
 
     auto entry = scene->textures().find(name);
     if (entry != scene->textures().end()) {
@@ -716,15 +712,14 @@ std::shared_ptr<Texture> SceneLoader::getOrLoadTexture(Platform& platform,
 
     // If texture could not be found by name then interpret name as URL
     TextureOptions options;
-    auto texture = fetchTexture(platform, name, name, options, scene);
+    auto texture = fetchTexture(name, name, options, scene);
 
     scene->textures().emplace(name, texture);
 
     return texture;
 }
 
-void SceneLoader::loadTexture(Platform& platform, const std::pair<Node, Node>& node,
-                              const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadTexture( const std::pair<Node, Node>& node, std::shared_ptr<Scene>& scene) {
 
     const std::string& name = node.first.Scalar();
     const Node& textureConfig = node.second;
@@ -776,13 +771,13 @@ void SceneLoader::loadTexture(Platform& platform, const std::pair<Node, Node>& n
             }
         }
     }
-    auto texture = fetchTexture(platform, name, url, options, scene, std::move(atlas));
+    auto texture = fetchTexture(name, url, options, scene, std::move(atlas));
 
     scene->textures().emplace(name, texture);
 }
 
-void loadFontDescription(Platform& platform, const Node& node,
-                         const std::string& family, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadFontDescription(const Node& node, const std::string& family,
+                                      std::shared_ptr<Scene>& scene) {
     if (!node.IsMap()) {
         LOGW("");
         return;
@@ -821,7 +816,7 @@ void loadFontDescription(Platform& platform, const Node& node,
 
     // Load font file.
     scene->pendingFonts++;
-    scene->startUrlRequest(platform, url, [_ft, scene](UrlResponse&& response) {
+    scene->startUrlRequest(url, [_ft, scene](UrlResponse&& response) {
         if (response.error) {
             LOGE("Error retrieving font '%s' at %s: ", _ft.alias.c_str(), _ft.uri.c_str(), response.error);
         } else {
@@ -831,21 +826,19 @@ void loadFontDescription(Platform& platform, const Node& node,
     });
 }
 
-void SceneLoader::loadFont(Platform& platform, const std::pair<Node, Node>& font,
-                           const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadFont(const std::pair<Node, Node>& font, std::shared_ptr<Scene>& scene) {
     const std::string& family = font.first.Scalar();
 
     if (font.second.IsMap()) {
-        loadFontDescription(platform, font.second, family, scene);
+        loadFontDescription(font.second, family, scene);
     } else if (font.second.IsSequence()) {
         for (const auto& node : font.second) {
-            loadFontDescription(platform, node, family, scene);
+            loadFontDescription(node, family, scene);
         }
     }
 }
 
-void SceneLoader::loadStyleProps(Platform& platform, Style& style, Node styleNode,
-                                 const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadStyleProps(Style& style, Node styleNode, std::shared_ptr<Scene>& scene) {
 
     if (!styleNode) {
         LOGW("Can not parse style parameters, bad style YAML Node");
@@ -914,7 +907,7 @@ void SceneLoader::loadStyleProps(Platform& platform, Style& style, Node styleNod
     }
 
     if (Node shadersNode = styleNode["shaders"]) {
-        loadShaderConfig(platform, shadersNode, style, scene);
+        loadShaderConfig(shadersNode, style, scene);
     }
 
     if (Node lightingNode = styleNode["lighting"]) {
@@ -946,7 +939,7 @@ void SceneLoader::loadStyleProps(Platform& platform, Style& style, Node styleNod
     }
 
     if (Node materialNode = styleNode["material"]) {
-        loadMaterial(platform, materialNode, style.getMaterial(), scene, style);
+        loadMaterial(materialNode, style.getMaterial(), scene, style);
     }
 
     if (const Node& drawNode = styleNode["draw"]) {
@@ -963,8 +956,7 @@ void SceneLoader::loadStyleProps(Platform& platform, Style& style, Node styleNod
 
 }
 
-bool SceneLoader::loadStyle(Platform& platform, const std::string& name,
-                            Node config, const std::shared_ptr<Scene>& scene) {
+bool SceneLoader::loadStyle(const std::string& name, Node config, std::shared_ptr<Scene>& scene) {
 
     const auto& builtIn = Style::builtInStyleNames();
 
@@ -1009,15 +1001,15 @@ bool SceneLoader::loadStyle(Platform& platform, const std::string& name,
         }
     }
 
-    loadStyleProps(platform, *style.get(), config, scene);
+    loadStyleProps(*style.get(), config, scene);
 
     scene->styles().push_back(std::move(style));
 
     return true;
 }
 
-void SceneLoader::loadSource(Platform& platform, const std::string& name,
-                             const Node& source, const Node& sources, Scene& _scene) {
+void SceneLoader::loadSource(const std::string& name, const Node& source,
+                             const Node& sources, Scene& _scene) {
     if (_scene.getTileSource(name)) {
         LOGW("Duplicate TileSource: %s", name.c_str());
         return;
@@ -1129,13 +1121,13 @@ void SceneLoader::loadSource(Platform& platform, const std::string& name,
         // If we have MBTiles, we know the source is tiled.
         tiled = true;
         // Create an MBTiles data source from the file at the url and add it to the source chain.
-        rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, url, ""));
+        rawSources->setNext(std::make_unique<MBTilesDataSource>(_scene.platform(), name, url, ""));
 #else
         LOGE("MBTiles support is disabled. This source will be ignored: %s", name.c_str());
         return;
 #endif
     } else if (tiled) {
-        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url, std::move(subdomains), isTms));
+        rawSources->setNext(std::make_unique<NetworkDataSource>(_scene.platform(), url, std::move(subdomains), isTms));
     }
 
     std::shared_ptr<TileSource> sourcePtr;
@@ -1146,7 +1138,7 @@ void SceneLoader::loadSource(Platform& platform, const std::string& name,
         if (auto genLabelCentroidsNode = source["generate_label_centroids"]) {
             generateCentroids = true;
         }
-        sourcePtr = std::make_shared<ClientGeoJsonSource>(platform, name, url, generateCentroids,
+        sourcePtr = std::make_shared<ClientGeoJsonSource>(_scene.platform(), name, url, generateCentroids,
                                                           zoomOptions);
     } else if (type == "Raster") {
         TextureOptions options;
@@ -1176,18 +1168,18 @@ void SceneLoader::loadSource(Platform& platform, const std::string& name,
     _scene.tileSources().push_back(sourcePtr);
 
     if (auto rasters = source["rasters"]) {
-        loadSourceRasters(platform, sourcePtr, source["rasters"], sources, _scene);
+        loadSourceRasters(sourcePtr, source["rasters"], sources, _scene);
     }
 
 }
 
-void SceneLoader::loadSourceRasters(Platform& platform, std::shared_ptr<TileSource> &source,
-                                    Node rasterNode, const Node& sources, Scene& scene) {
+void SceneLoader::loadSourceRasters(std::shared_ptr<TileSource> &source, Node rasterNode,
+                                    const Node& sources, Scene& scene) {
     if (rasterNode.IsSequence()) {
         for (const auto& raster : rasterNode) {
             std::string srcName = raster.Scalar();
             try {
-                loadSource(platform, srcName, sources[srcName], sources, scene);
+                loadSource(srcName, sources[srcName], sources, scene);
             } catch (const YAML::RepresentationException& e) {
                 LOGNode("Parsing sources: '%s'", sources[srcName], e.what());
                 return;
@@ -1693,8 +1685,8 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
     }
 }
 
-bool SceneLoader::parseStyleUniforms(Platform& platform, const Node& value,
-                                     const std::shared_ptr<Scene>& scene, StyleUniform& styleUniform) {
+bool SceneLoader::parseStyleUniforms(const Node& value, std::shared_ptr<Scene>& scene,
+                                     StyleUniform& styleUniform) {
     if (value.IsScalar()) { // float, bool or string (texture)
         double fValue;
         bool bValue;
@@ -1710,7 +1702,7 @@ bool SceneLoader::parseStyleUniforms(Platform& platform, const Node& value,
             styleUniform.type = "sampler2D";
             styleUniform.value = strVal;
 
-            getOrLoadTexture(platform, strVal, scene);
+            getOrLoadTexture(strVal, scene);
         }
     } else if (value.IsSequence()) {
         size_t size = value.size();
@@ -1770,7 +1762,7 @@ bool SceneLoader::parseStyleUniforms(Platform& platform, const Node& value,
                 const std::string& textureName = strVal.Scalar();
                 textureArrayUniform.names.push_back(textureName);
 
-                getOrLoadTexture(platform, textureName, scene);
+                getOrLoadTexture(textureName, scene);
             }
 
             styleUniform.value = std::move(textureArrayUniform);
