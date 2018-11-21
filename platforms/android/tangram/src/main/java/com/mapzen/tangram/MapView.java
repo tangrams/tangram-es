@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
@@ -125,6 +126,8 @@ public class MapView extends FrameLayout {
                 mapController = controller;
                 mapController.UIThreadInit(viewHolder, handler);
                 addView(viewHolder.getView());
+                Log.d("Tangram", "UIThreadInit " + getWidth() + " / "+ getHeight());
+                mapController.resize( getWidth(), getHeight());
             }
         }
         callback.onMapReady(mapController);
@@ -288,6 +291,15 @@ public class MapView extends FrameLayout {
      */
     public void onLowMemory() {
         mapController.onLowMemory();
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        super.onLayout(changed, l, t, r, b);
+        Log.d("Tangram", "WINDOW LAYOUT " + getWidth() + " / "+ getHeight());
+        if (mapController != null) {
+            mapController.resize( getWidth(), getHeight());
+        }
     }
 
 }

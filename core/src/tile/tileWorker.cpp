@@ -106,12 +106,12 @@ void TileWorker::setScene(Scene& _scene) {
 }
 
 void TileWorker::enqueue(std::shared_ptr<TileTask> task) {
+    LOG("%d enqueue %s", m_running, task->tileId().toString().c_str());
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         if (!m_running) {
             return;
         }
-        LOG("enqueue %s", task->tileId().toString().c_str());
         m_queue.push_back(std::move(task));
     }
     m_condition.notify_one();

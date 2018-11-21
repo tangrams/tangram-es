@@ -42,6 +42,12 @@ public class MapController implements Renderer {
         return touchInput.onTouch(mapView, ev);
     }
 
+    public void resize(int width, int height) {
+        if (mapPointer > 0) {
+            nativeResize(mapPointer, width, height);
+        }
+    }
+
     /**
      * Options for interpolating map parameters
      */
@@ -227,6 +233,8 @@ public class MapController implements Renderer {
         touchInput.setSimultaneousDetectionDisabled(Gestures.SCALE, Gestures.LONG_PRESS);
 
         uiThreadHandler = new Handler(context.getMainLooper());
+
+        nativeSetPixelScale(mapPointer, displayMetrics.density);
     }
 
     /**
@@ -1420,7 +1428,6 @@ public class MapController implements Renderer {
             return;
         }
 
-        nativeSetPixelScale(mapPointer, displayMetrics.density);
         nativeResize(mapPointer, width, height);
     }
 

@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         sceneSelector.setOnSelectionListener(new PresetSelectionTextView.OnSelectionListener() {
             @Override
             public void onSelection(String selection) {
-                map.loadSceneFile(selection, sceneUpdates);
+                map.loadSceneFileAsync(selection, sceneUpdates);
             }
         });
 
@@ -117,7 +117,10 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         map = mapController;
         String sceneUrl = sceneSelector.getCurrentString();
         map.setSceneLoadListener(this);
-        map.loadSceneFile(sceneUrl, sceneUpdates);
+
+        map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
+        Log.d("Tangram", "START SCENE LOAD");
+        map.loadSceneFileAsync(sceneUrl, sceneUpdates);
 
         TouchInput touchInput = map.getTouchInput();
         touchInput.setTapResponder(this);
@@ -150,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
             }
         });
 
-        map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
+
 
         markers = map.addDataLayer("touch");
     }
