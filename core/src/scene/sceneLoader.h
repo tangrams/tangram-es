@@ -41,10 +41,14 @@ struct SceneLoader {
                           const std::vector<SceneUpdate>& updates = {});
 
     static void applyConfig(const std::shared_ptr<Platform>& platform, const std::shared_ptr<Scene>& scene);
+    static void applyTextures(const std::shared_ptr<Platform>& platform, const std::shared_ptr<Scene>& scene);
+    static void applyFonts(const std::shared_ptr<Platform>& platform, const std::shared_ptr<Scene>& scene);
+    static void applyStyles(const std::shared_ptr<Platform>& platform, const std::shared_ptr<Scene>& scene);
     static bool applyUpdates(const std::shared_ptr<Platform>& platform, Scene& scene,
                              const std::vector<SceneUpdate>& updates);
     static void applyGlobals(Scene& scene);
     static void applyCameras(Scene& scene);
+    static void applyLayers(Scene& scene);
     static void applySources(const std::shared_ptr<Platform>& _platform, Scene& scene);
 
     /*** all public for testing ***/
