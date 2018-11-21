@@ -17,6 +17,7 @@
 #include "util/mapProjection.h"
 #include "util/util.h"
 #include "util/zipArchive.h"
+#include "log.h"
 
 #include <algorithm>
 
@@ -35,7 +36,8 @@ Scene::Scene(std::shared_ptr<Platform> _platform, const Url& _url, std::unique_p
       m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)),
       m_labelManager(std::make_unique<LabelManager>()),
       m_view(std::move(_view)) {
-
+    m_pixelScale = m_view->pixelScale();
+    m_fontContext->setPixelScale(m_pixelScale);
 }
 
 Scene::Scene(std::shared_ptr<Platform> _platform, const std::string& _yaml, const Url& _url, std::unique_ptr<View> _view)
@@ -47,7 +49,10 @@ Scene::Scene(std::shared_ptr<Platform> _platform, const std::string& _yaml, cons
       m_tileWorker(std::make_unique<TileWorker>(_platform, 2)),
       m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)),
       m_labelManager(std::make_unique<LabelManager>()),
-      m_view(std::move(_view)) {}
+      m_view(std::move(_view)) {
+     m_pixelScale = m_view->pixelScale();
+     m_fontContext->setPixelScale(m_pixelScale);
+}
 
 void Scene::copyConfig(const Scene& _other) {
 
@@ -181,14 +186,18 @@ std::shared_ptr<TileSource> Scene::getTileSource(const std::string& name) {
 }
 
 void Scene::setPixelScale(float _scale) {
+    if (m_pixelScale == _scale) { return; }
+    LOGD("setPixelScale %f", _scale);
+
     m_pixelScale = _scale;
+
     for (auto& style : m_styles) {
         style->setPixelScale(_scale);
     }
     m_fontContext->setPixelScale(_scale);
 
     // Tiles must be rebuilt to apply the new pixel scale to labels.
-    // FIXME m_tileManager->clearTileSets();
+    m_tileManager->clearTileSets();
 
     // Markers must be rebuilt to apply the new pixel scale.
     if (m_markerManager) {
