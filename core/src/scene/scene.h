@@ -70,8 +70,8 @@ public:
     };
 
     //Scene();
-    Scene(std::shared_ptr<Platform> _platform, const Url& _url);
-    Scene(std::shared_ptr<Platform> _platform, const std::string& _yaml, const Url& _url);
+    Scene(std::shared_ptr<Platform> _platform, const Url& _url, std::unique_ptr<View> _view);
+    Scene(std::shared_ptr<Platform> _platform, const std::string& _yaml, const Url& _url, std::unique_ptr<View> _view);
     Scene(const Scene& _other) = delete;
     Scene(Scene&& _other) = delete;
 
@@ -80,6 +80,8 @@ public:
     const int32_t id;
 
     void copyConfig(const Scene& _other);
+
+    auto& view() { return m_view; }
 
     auto& camera() { return m_camera; }
     auto& config() { return m_config; }
@@ -156,7 +158,7 @@ public:
 
     std::vector<SceneError> errors;
 
-    bool update(View& _view, Labels& _labels, float _dt);
+    bool update(const View& _view, Labels& _labels, float _dt);
     void renderBeginFrame(RenderState& _rs);
     bool render(RenderState& _rs, View& _view);
     void renderSelection(RenderState& _rs, View& _view, Labels& _labels,
@@ -237,6 +239,7 @@ private:
     std::unique_ptr<TileWorker> m_tileWorker;
     std::unique_ptr<TileManager> m_tileManager;
     std::unique_ptr<MarkerManager> m_markerManager;
+    std::unique_ptr<View> m_view;
 
 };
 

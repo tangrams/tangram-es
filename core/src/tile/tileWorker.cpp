@@ -111,6 +111,7 @@ void TileWorker::enqueue(std::shared_ptr<TileTask> task) {
         if (!m_running) {
             return;
         }
+        LOG("enqueue %s", task->tileId().toString().c_str());
         m_queue.push_back(std::move(task));
     }
     m_condition.notify_one();
