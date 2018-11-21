@@ -37,7 +37,7 @@ public:
 
         if (!m_texture) {
             // Decode texture data
-            m_texture = source->createTexture(*rawTileData);
+            m_texture = source->createTexture(m_tileId, *rawTileData);
         }
 
         // Create tile geometries
@@ -77,18 +77,24 @@ RasterSource::RasterSource(const std::string& _name, std::unique_ptr<DataSource>
                            TextureOptions _options, TileSource::ZoomOptions _zoomOptions)
     : TileSource(_name, std::move(_sources), _zoomOptions),
       m_texOptions(_options) {
+    m_textures = std::make_shared<Cache>();
 
     m_emptyTexture = std::make_shared<Texture>(m_texOptions);
 }
 
-std::shared_ptr<Texture> RasterSource::createTexture(const std::vector<char>& _rawTileData) {
+std::shared_ptr<Texture> RasterSource::createTexture(TileID _tile, const std::vector<char>& _rawTileData) {
     if (_rawTileData.empty()) {
         return m_emptyTexture;
     }
 
     auto data = reinterpret_cast<const uint8_t*>(_rawTileData.data());
     auto length = _rawTileData.size();
-    auto texture = std::make_shared<Texture>(data, length, m_texOptions);
+
+    std::shared_ptr<Texture> texture(new Texture(data, length, m_texOptions),
+                                     [c = std::weak_ptr<Cache>(m_textures), _tile](auto t) {
+                                         if (auto cache = c.lock()) { cache->erase(_tile); }
+                                         delete t;
+                                     });
 
     return texture;
 }
@@ -135,16 +141,15 @@ std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask)
     createSubTasks(task);
 
     // First try existing textures cache
-    {
-        TileID id(_tileId.x, _tileId.y, _tileId.z);
+    TileID id(_tileId.x, _tileId.y, _tileId.z);
 
-        auto texIt = m_textures.find(id);
-        if (texIt != m_textures.end()) {
-            task->m_texture = texIt->second;
+    auto texIt = m_textures->find(id);
+    if (texIt != m_textures->end()) {
+        task->m_texture = texIt->second.lock();
 
+        if (task->m_texture) {
             // No more loading needed.
             task->startedLoading();
-
             return task;
         }
     }
@@ -156,40 +161,16 @@ Raster RasterSource::getRaster(const TileTask& _task) {
     const auto& taskTileID = _task.tileId();
     TileID id(taskTileID.x, taskTileID.y, taskTileID.z);
 
-    auto texIt = m_textures.find(id);
-    if (texIt != m_textures.end()) {
-        return { id, texIt->second };
+    auto texIt = m_textures->find(id);
+    if (texIt != m_textures->end()) {
+        auto&& texture = texIt->second.lock();
+        return { id,  texture };
     }
 
     auto& task = static_cast<const RasterTileTask&>(_task);
-    m_textures.emplace(id, task.m_texture);
+    m_textures->emplace(id, task.m_texture);
 
     return { id, task.m_texture };
-}
-
-void RasterSource::clearRasters() {
-    for (auto& raster: m_rasterSources) {
-        raster->clearRasters();
-    }
-
-    m_textures.clear();
-}
-
-void RasterSource::clearRaster(const TileID &tileID) {
-    TileID id(tileID.x, tileID.y, tileID.z);
-
-    for (auto& raster: m_rasterSources) {
-        TileID rasterID = id.withMaxSourceZoom(raster->maxZoom());
-        raster->clearRaster(rasterID);
-    }
-
-    auto rasterID = id.withMaxSourceZoom(m_zoomOptions.maxZoom);
-
-    // We do not want to delete the texture reference from the
-    // DS if any of the tiles is still using this as a reference
-    if (m_textures[rasterID].use_count() <= 1) {
-        m_textures.erase(rasterID);
-    }
 }
 
 }
