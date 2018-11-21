@@ -50,10 +50,10 @@ using CameraAnimator = std::function<uint32_t(float dt)>;
 class Map::Impl {
 
 public:
-    Impl(std::shared_ptr<Platform> _platform) :
+    explicit Impl(std::shared_ptr<Platform> _platform) :
         platform(_platform),
         inputHandler(_platform, view),
-        scene(std::make_shared<Scene>(_platform, Url())) {}
+        scene(std::make_shared<Scene>(_platform, Url(), std::make_unique<View>())) {}
 
 
     void setScene(std::shared_ptr<Scene>& _scene);
@@ -65,6 +65,7 @@ public:
 
     RenderState renderState;
     JobQueue jobQueue;
+    // Current interactive view
     View view;
     Labels labels;
     std::unique_ptr<AsyncWorker> asyncWorker = std::make_unique<AsyncWorker>();
@@ -132,40 +133,11 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
 
     scene = _scene;
 
-    scene->setPixelScale(view.pixelScale());
+    scene->view()->setSize(view.getWidth(), view.getHeight());
 
-    auto& camera = scene->camera();
-    view.setCameraType(camera.type);
+    view = *_scene->view();
 
-    switch (camera.type) {
-    case CameraType::perspective:
-        view.setVanishingPoint(camera.vanishingPoint.x, camera.vanishingPoint.y);
-        if (camera.fovStops) {
-            view.setFieldOfViewStops(camera.fovStops);
-        } else {
-            view.setFieldOfView(camera.fieldOfView);
-        }
-        break;
-    case CameraType::isometric:
-        view.setObliqueAxis(camera.obliqueAxis.x, camera.obliqueAxis.y);
-        break;
-    case CameraType::flat:
-        break;
-    }
-
-    if (camera.maxTiltStops) {
-        view.setMaxPitchStops(camera.maxTiltStops);
-    } else {
-        view.setMaxPitch(camera.maxTilt);
-    }
-
-    if (scene->useScenePosition) {
-        auto position = scene->startPosition;
-        view.setCenterCoordinates({position.x, position.y});
-        view.setZoom(scene->startZoom);
-    }
-
-    inputHandler.setView(view);
+    /// FIXME TODO scene->setPixelScale(view.pixelScale());
 
     bool animated = scene->animated() == Scene::animate::yes;
 
@@ -218,7 +190,7 @@ SceneID Map::loadScene(const std::string& _scenePath, bool _useScenePosition,
                        const std::vector<SceneUpdate>& _sceneUpdates) {
 
     LOG("Loading scene file: %s", _scenePath.c_str());
-    auto scene = std::make_shared<Scene>(platform, _scenePath);
+    auto scene = std::make_shared<Scene>(platform, _scenePath, std::make_unique<View>(impl->view));
     scene->useScenePosition = _useScenePosition;
     return loadScene(scene, _sceneUpdates);
 }
@@ -227,7 +199,7 @@ SceneID Map::loadSceneYaml(const std::string& _yaml, const std::string& _resourc
                            bool _useScenePosition, const std::vector<SceneUpdate>& _sceneUpdates) {
 
     LOG("Loading scene string");
-    auto scene = std::make_shared<Scene>(platform, _yaml, _resourceRoot);
+    auto scene = std::make_shared<Scene>(platform, _yaml, _resourceRoot, std::make_unique<View>(impl->view));
     scene->useScenePosition = _useScenePosition;
     return loadScene(scene, _sceneUpdates);
 }
@@ -236,7 +208,7 @@ SceneID Map::loadSceneAsync(const std::string& _scenePath, bool _useScenePositio
                             const std::vector<SceneUpdate>& _sceneUpdates) {
 
     LOG("Loading scene file (async): %s", _scenePath.c_str());
-    auto scene = std::make_shared<Scene>(platform, _scenePath);
+    auto scene = std::make_shared<Scene>(platform, _scenePath, std::make_unique<View>(impl->view));
     scene->useScenePosition = _useScenePosition;
     return loadSceneAsync(scene, _sceneUpdates);
 }
@@ -245,7 +217,7 @@ SceneID Map::loadSceneYamlAsync(const std::string& _yaml, const std::string& _re
                                 bool _useScenePosition, const std::vector<SceneUpdate>& _sceneUpdates) {
 
     LOG("Loading scene string (async)");
-    auto scene = std::make_shared<Scene>(platform, _yaml, _resourceRoot);
+    auto scene = std::make_shared<Scene>(platform, _yaml, _resourceRoot, std::make_unique<View>(impl->view));
     scene->useScenePosition = _useScenePosition;
     return loadSceneAsync(scene, _sceneUpdates);
 }
@@ -382,7 +354,7 @@ void Map::resize(int _newWidth, int _newHeight) {
     LOGS("resize: %d x %d", _newWidth, _newHeight);
     LOG("resize: %d x %d", _newWidth, _newHeight);
 
-    impl->renderState.viewport(0, 0, _newWidth, _newHeight);
+    // FIXME not needed?? impl->renderState.viewport(0, 0, _newWidth, _newHeight);
 
     impl->view.setSize(_newWidth, _newHeight);
 
@@ -653,7 +625,7 @@ void Map::setCameraPositionEased(const CameraPosition& _camera, float _duration,
 
 void Map::updateCameraPosition(const CameraUpdate& _update, float _duration, EaseType _e) {
 
-    CameraPosition camera;
+    CameraPosition camera{};
     if ((_update.set & CameraUpdate::SET_CAMERA) != 0) {
         camera = getCameraPosition();
     }
@@ -1089,7 +1061,7 @@ void Map::setDefaultBackgroundColor(float r, float g, float b) {
 void setDebugFlag(DebugFlags _flag, bool _on) {
 
     g_flags.set(_flag, _on);
-    // m_view->setZoom(m_view->getZoom()); // Force the view to refresh
+    // m_view.setZoom(m_view.getZoom()); // Force the view to refresh
 
 }
 
@@ -1102,7 +1074,7 @@ bool getDebugFlag(DebugFlags _flag) {
 void toggleDebugFlag(DebugFlags _flag) {
 
     g_flags.flip(_flag);
-    // m_view->setZoom(m_view->getZoom()); // Force the view to refresh
+    // m_view.setZoom(m_view.getZoom()); // Force the view to refresh
 
     // Rebuild tiles for debug modes that needs it
     // if (_flag == DebugFlags::proxy_colors

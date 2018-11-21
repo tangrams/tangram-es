@@ -49,7 +49,7 @@ void TileWorker::run(Worker* instance) {
             if (instance->tileBuilder) {
                 builder = std::move(instance->tileBuilder);
                 builder->init();
-                LOGO("Passed new TileBuilder to TileWorker");
+                LOGTO("Passed new TileBuilder to TileWorker");
             }
 
             // Check if thread should stop
@@ -111,6 +111,7 @@ void TileWorker::enqueue(std::shared_ptr<TileTask> task) {
         if (!m_running) {
             return;
         }
+        LOG("enqueue %s", task->tileId().toString().c_str());
         m_queue.push_back(std::move(task));
     }
     m_condition.notify_one();
