@@ -86,6 +86,7 @@ add_library(tangram-core
   src/util/json.cpp
   src/util/mapProjection.cpp
   src/util/rasterize.cpp
+  src/util/stbImage.cpp
   src/util/url.cpp
   src/util/yamlPath.cpp
   src/util/yamlUtil.cpp
