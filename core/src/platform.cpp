@@ -6,6 +6,9 @@
 
 namespace Tangram {
 
+std::chrono::time_point<std::chrono::system_clock> tangram_log_time_start, tangram_log_time_last;
+std::mutex tangram_log_time_mutex;
+
 Platform::Platform() : m_continuousRendering(false) {}
 
 Platform::~Platform() {}
