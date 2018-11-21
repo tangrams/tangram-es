@@ -59,23 +59,29 @@ endif()
 set(GLM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glm)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
 
-## SQLiteCpp ##
-###############
-set(SQLITECPP_RUN_CPPLINT OFF CACHE BOOL "")
-set(SQLITECPP_RUN_CPPCHECK OFF CACHE BOOL "")
-set(SQLITE_ENABLE_COLUMN_METADATA OFF CACHE BOOL "")
+if (TANGRAM_MBTILES_DATASOURCE)
+  ## SQLiteCpp ##
+  ###############
+  set(SQLITECPP_RUN_CPPLINT OFF CACHE BOOL "")
+  set(SQLITECPP_RUN_CPPCHECK OFF CACHE BOOL "")
+  set(SQLITE_ENABLE_COLUMN_METADATA OFF CACHE BOOL "")
 
-add_subdirectory(SQLiteCpp)
+  if (TANGRAM_USE_SYSTEM_SQLITE_LIBS)
+    set(SQLITECPP_INTERNAL_SQLITE OFF CACHE BOOL "")
+  endif()
 
-# Extensions aren't needed for MBTiles and aren't available in older versions of sqlite3.
-target_compile_definitions(SQLiteCpp PRIVATE SQLITE_OMIT_LOAD_EXTENSION)
+  add_subdirectory(SQLiteCpp)
 
-# needed for sqlite3 to work for ndk15c+ and android api level < 21
-# refer:
-# https://github.com/android-ndk/ndk/issues/477 and
-# https://android.googlesource.com/platform/bionic/+/master/docs/32-bit-abi.md
-if (ANDROID)
+  # Extensions aren't needed for MBTiles and aren't available in older versions of sqlite3.
+  target_compile_definitions(SQLiteCpp PRIVATE SQLITE_OMIT_LOAD_EXTENSION)
+
+  # needed for sqlite3 to work for ndk15c+ and android api level < 21
+  # refer:
+  # https://github.com/android-ndk/ndk/issues/477 and
+  # https://android.googlesource.com/platform/bionic/+/master/docs/32-bit-abi.md
+  if (ANDROID)
     target_compile_definitions(sqlite3 PRIVATE _FILE_OFFSET_BITS=32)
+  endif()
 endif()
 
 ## double-conversion ##
