@@ -8,6 +8,9 @@
 constexpr char const* shutdown_message = "Shutting down";
 constexpr char const* cancel_message = "Request canceled";
 
+std::chrono::time_point<std::chrono::system_clock> tangram_log_time_start, tangram_log_time_last;
+std::mutex tangram_log_time_mutex;
+
 namespace Tangram {
 
 Platform::Platform() : m_continuousRendering(false) {}
