@@ -193,6 +193,7 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
 SceneID Map::loadScene(std::shared_ptr<Scene> scene,
                        const std::vector<SceneUpdate>& _sceneUpdates) {
 
+    LOGTOInit();
     {
         std::unique_lock<std::mutex> lock(impl->sceneMutex);
 
@@ -259,6 +260,7 @@ SceneID Map::loadSceneYamlAsync(const std::string& _yaml, const std::string& _re
 SceneID Map::loadSceneAsync(std::shared_ptr<Scene> nextScene,
                             const std::vector<SceneUpdate>& _sceneUpdates) {
 
+    LOGTOInit();
     impl->sceneLoadBegin();
 
     runAsyncTask([nextScene, _sceneUpdates, this](){
@@ -401,6 +403,8 @@ bool Map::update(float _dt) {
     // Wait until font and texture resources are fully loaded
     if (impl->scene->pendingFonts > 0 || impl->scene->pendingTextures > 0) {
         platform->requestRender();
+        LOGTO("Waiting for Scene fonts:%d textures:%d",
+              impl->scene->pendingFonts.load(), impl->scene->pendingTextures.load());
         return false;
     }
 
@@ -475,6 +479,10 @@ bool Map::update(float _dt) {
     if (isFlinging || impl->isCameraEasing || labelsNeedUpdate || markersNeedUpdate) {
         platform->requestRender();
     }
+
+    LOGTO("View complete:%d vc:%d tl:%d tc:%d easing:%d label:%d maker:%d ",
+          viewComplete, viewChanged, tilesLoading, tilesChanged,
+          impl->isCameraEasing, labelsNeedUpdate, markersNeedUpdate);
 
     return viewComplete;
 }
