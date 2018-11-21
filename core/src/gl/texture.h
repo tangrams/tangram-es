@@ -100,6 +100,7 @@ protected:
         int max;
     };
 
+    // Bytes per pixel for current PixelFormat options
     size_t bpp() const;
 
     void generate(RenderState& rs, GLuint _textureUnit);

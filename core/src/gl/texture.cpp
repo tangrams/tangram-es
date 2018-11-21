@@ -27,7 +27,8 @@ constexpr GLenum TEXTURE_TARGET = GL_TEXTURE_2D;
 Texture::Texture(TextureOptions _options) : m_options(_options) {
 }
 
-Texture::Texture(const uint8_t* data, size_t length, TextureOptions options) : Texture(options) {
+Texture::Texture(const uint8_t* data, size_t length, TextureOptions options)
+    : Texture(options) {
     loadImageFromMemory(data, length);
 }
 
@@ -38,9 +39,10 @@ Texture::~Texture() {
 }
 
 bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
-    // stbi_load_from_memory loads the image as a series of scanlines starting from
-    // the top-left corner of the image. This flips the output such that the data
-    // begins at the bottom-left corner, as required for our OpenGL texture coordinates.
+    // stbi_load_from_memory loads the image as a series of scanlines starting
+    // from the top-left corner of the image. This flips the output such that
+    // the data begins at the bottom-left corner, as required for our OpenGL
+    // texture coordinates.
     stbi_set_flip_vertically_on_load(true);
 
     int width = 0, height = 0;
@@ -64,8 +66,8 @@ bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
         return false;
     }
 
-    bool ok =  movePixelData(width, height, channelsRequested, pixels,
-                             width * height * channelsRequested);
+    bool ok = movePixelData(width, height, channelsRequested, pixels,
+                            width * height * channelsRequested);
     if (!ok) {
         LOGE("Could not load image data: %dx%d bpp:%d/%d",
              width, height, channelsInFile, channelsRequested);
@@ -167,11 +169,15 @@ void Texture::generate(RenderState& _rs, GLuint _textureUnit) {
 
     _rs.texture(m_glHandle, _textureUnit, TEXTURE_TARGET);
 
-    GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_MIN_FILTER, static_cast<GLint>(m_options.minFilter));
-    GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_MAG_FILTER, static_cast<GLint>(m_options.magFilter));
+    GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_MIN_FILTER,
+                      static_cast<GLint>(m_options.minFilter));
+    GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_MAG_FILTER,
+                      static_cast<GLint>(m_options.magFilter));
 
-    GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_S, static_cast<GLint>(m_options.wrapS));
-    GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_T, static_cast<GLint>(m_options.wrapT));
+    GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_S,
+                      static_cast<GLint>(m_options.wrapS));
+    GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_T,
+                      static_cast<GLint>(m_options.wrapT));
 
     m_rs = &_rs;
 }
@@ -249,7 +255,8 @@ void Texture::resize(int width, int height) {
         !(isPowerOfTwo(m_width) && isPowerOfTwo(m_height)) &&
         (m_options.generateMipmaps || (m_options.wrapS == TextureWrap::REPEAT ||
                                        m_options.wrapT == TextureWrap::REPEAT))) {
-        LOGW("OpenGL ES doesn't support texture repeat wrapping for NPOT textures nor mipmap textures");
+        LOGW("OpenGL ES doesn't support texture repeat" \
+             " wrapping for NPOT textures nor mipmap textures");
         LOGW("Falling back to LINEAR Filtering");
         m_options.minFilter =TextureMinFilter::LINEAR;
         m_options.magFilter = TextureMagFilter::LINEAR;
@@ -274,7 +281,8 @@ size_t Texture::bpp() const {
     }
 }
 
-bool Texture::sanityCheck(size_t _width, size_t _height, size_t _bytesPerPixel, size_t _length) const {
+bool Texture::sanityCheck(size_t _width, size_t _height, size_t _bytesPerPixel,
+                          size_t _length) const {
     size_t dim = _width * _height;
     if (_length != dim * bpp()) {
         LOGW("Invalid data size for Texture dimension! %dx%d bpp:%d bytes:%d",
