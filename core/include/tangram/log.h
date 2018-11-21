@@ -66,3 +66,52 @@ do { Tangram::logMsg("ERROR %s:%d: " fmt "\n", __FILENAME__, __LINE__, ## __VA_A
 #define LOG(fmt, ...)
 #define LOGN(fmt, ...)
 #endif
+
+#if 1
+#include <mutex>
+#include <chrono>
+
+extern std::chrono::time_point<std::chrono::system_clock> tangram_log_time_start, tangram_log_time_last;
+extern std::mutex tangram_log_time_mutex;
+
+#define LOGTIME(fmt, ...) do { \
+    int l = strlen( __FILENAME__);  \
+    Tangram::logMsg("TIME %-18.*s " fmt "\n",                            \
+                    l > 4 ? l-4 : l, __FILENAME__, ##__VA_ARGS__); } while (0)
+
+// Overall timing init/reset
+#define LOGTOInit() do {                                                \
+        std::lock_guard<std::mutex> lock(tangram_log_time_mutex);       \
+        tangram_log_time_last = tangram_log_time_start = std::chrono::system_clock::now(); } while(0)
+
+// Overall timing
+#define LOGTO(fmt, ...) do {                                            \
+        std::lock_guard<std::mutex> lock(tangram_log_time_mutex);       \
+        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now(); \
+        std::chrono::duration<double> t1 = now - tangram_log_time_start; \
+        std::chrono::duration<double> t2 = now - tangram_log_time_last; \
+        tangram_log_time_last = now;                                    \
+        LOGTIME("%7.2f %7.2f " fmt, t1.count()*1000.f, t2.count()*1000.f, ## __VA_ARGS__); } while(0)
+
+// Local timing init
+#define LOGTInit(fmt, ...)                                              \
+    std::chrono::time_point<std::chrono::system_clock> _time_last, _time_start; \
+    std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now(); \
+    std::chrono::duration<double> t0 = now - tangram_log_time_start;    \
+    _time_start = _time_last = now;                                     \
+    LOGTIME("%7.2f                 " fmt, t0.count()*1000.f, ## __VA_ARGS__)
+
+// Local timing
+#define LOGT(fmt, ...) do {                                               \
+        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now(); \
+        std::chrono::duration<double> t0 = now - tangram_log_time_start; \
+        std::chrono::duration<double> t1 = now - _time_start;           \
+        std::chrono::duration<double> t2 = now - _time_last;            \
+        _time_last = now;                                               \
+        LOGTIME("%7.2f %7.2f %7.2f " fmt, t0.count()*1000.f, t1.count()*1000.f, t2.count()*1000.f, ## __VA_ARGS__); } while(0)
+#else
+#define LOGT(...)
+#define LOGTInit(...)
+#define LOGTOInit()
+#define LOGTO(...)
+#endif
