@@ -126,7 +126,6 @@ target_include_directories(tangram-core
 
 # Choose JavaScript implementation.
 if(TANGRAM_USE_JAVASCRIPTCORE)
-  target_sources(tangram-core PRIVATE src/js/JSCoreContext.cpp)
   if (TANGRAM_USE_JAVASCRIPTCORE_STATIC)
     find_package(ICU COMPONENTS io i18n REQUIRED)
     link_directories(${ICU_LIBRARY_DIRS})
@@ -145,7 +144,6 @@ if(TANGRAM_USE_JAVASCRIPTCORE)
 endif()
 
 if(TANGRAM_USE_DUKTAPE)
-  target_sources(tangram-core PRIVATE src/js/DuktapeContext.cpp)
   target_link_libraries(tangram-core PRIVATE duktape)
 endif()
 
