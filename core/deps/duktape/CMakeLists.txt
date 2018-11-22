@@ -6,4 +6,6 @@ target_compile_options(duktape PRIVATE
   -std=c99
   -Wall)
 
-target_include_directories(duktape PUBLIC .)
+target_include_directories(duktape
+  PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR})

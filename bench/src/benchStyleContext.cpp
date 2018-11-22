@@ -21,12 +21,12 @@
 
 #define RUN(FIXTURE, NAME)                                              \
     BENCHMARK_DEFINE_F(FIXTURE, NAME)(benchmark::State& st) { while (st.KeepRunning()) { run(); } } \
-    BENCHMARK_REGISTER_F(FIXTURE, NAME); //->Iterations(10000);
+    BENCHMARK_REGISTER_F(FIXTURE, NAME); //->Iterations(10);
 
 using namespace Tangram;
 
-//const char scene_file[] = "bubble-wrap-style.zip";
-const char scene_file[] = "res/scene.yaml";
+const char scene_file[] = "bubble-wrap-style.zip";
+//const char scene_file[] = "res/scene.yaml";
 const char tile_file[] = "res/tile.mvt";
 
 std::shared_ptr<Scene> scene;
@@ -98,29 +98,50 @@ public:
 };
 
 #ifdef TANGRAM_USE_JSCORE
-using JSCoreGetPropertyFixture = JSGetPropertyFixture<JSCoreContext>;
+using JSCoreGetPropertyFixture = JSGetPropertyFixture<JSCore::Context>;
 RUN(JSCoreGetPropertyFixture, JSCoreGetPropertyBench)
-#else
-using DuktapeGetPropertyFixture = JSGetPropertyFixture<DuktapeContext>;
-RUN(DuktapeGetPropertyFixture, DuktapeGetPropertyBench)
 #endif
 
+using DuktapeGetPropertyFixture = JSGetPropertyFixture<Duktape::Context>;
+RUN(DuktapeGetPropertyFixture, DuktapeGetPropertyBench)
+
+template<size_t jsCore>
 struct JSTileStyleFnFixture : public benchmark::Fixture {
-    StyleContext ctx;
+    std::unique_ptr<StyleContext> ctx;
     Feature feature;
     uint32_t numFunctions = 0;
     uint32_t evalCnt = 0;
 
     void SetUp(const ::benchmark::State& state) override {
         globalSetup();
-        ctx.initFunctions(*scene);
-        ctx.setKeywordZoom(10);
+        ctx.reset(new StyleContext(jsCore));
+        ctx->initFunctions(*scene);
+        ctx->setKeywordZoom(10);
     }
     void TearDown(const ::benchmark::State& state) override {
         LOG(">>> %d", evalCnt);
     }
+
+    StyleParam::Value styleValue;
+
+    __attribute__ ((noinline))
+    void filter(const SceneLayer& layer) {
+        if (layer.filter().eval(feature, *ctx)) {
+            for (auto& r : layer.rules()) {
+                for (auto& sp : r.parameters) {
+                    if (sp.function >= 0) {
+                        evalCnt++;
+                        ctx->evalStyle(sp.function, sp.key, styleValue);
+                    }
+                }
+            }
+            for (const auto& sublayer : layer.sublayers()) {
+                filter(sublayer);
+            }
+        }
+    }
+
     __attribute__ ((noinline)) void run() {
-        StyleParam::Value styleValue;
         benchmark::DoNotOptimize(styleValue);
 
         for (const auto& datalayer : scene->layers()) {
@@ -134,25 +155,8 @@ struct JSTileStyleFnFixture : public benchmark::Fixture {
                 }
 
                 for (const auto& feat : collection.features) {
-                    ctx.setFeature(feat);
+                    ctx->setFeature(feat);
 
-                    std::function<void(const SceneLayer& layer)> filter;
-                    filter = [&](const auto& layer) {
-                        if (layer.filter().eval(feature, ctx)) {
-                            for (auto& r : layer.rules()) {
-                                for (auto& sp : r.parameters) {
-                                    if (sp.function >= 0) {
-                                        evalCnt++;
-                                        ctx.evalStyle(sp.function, sp.key, styleValue);
-                                    }
-                                }
-                            }
-
-                            for (const auto& sublayer : layer.sublayers()) {
-                                filter(sublayer);
-                            }
-                        }
-                    };
                     filter(datalayer);
                 }
             }
@@ -160,7 +164,13 @@ struct JSTileStyleFnFixture : public benchmark::Fixture {
     }
 };
 
-RUN(JSTileStyleFnFixture, TileStyleFnBench);
+#ifdef TANGRAM_USE_JSCORE
+using JSCoreTileStyleFnFixture = JSTileStyleFnFixture<1>;
+RUN(JSCoreTileStyleFnFixture, JSCoreTileStyleFnBench)
+#endif
+
+using DuktapeTileStyleFnFixture = JSTileStyleFnFixture<0>;
+RUN(DuktapeTileStyleFnFixture, DuktapeTileStyleFnBench)
 
 class DirectGetPropertyFixture : public benchmark::Fixture {
 public:

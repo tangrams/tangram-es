@@ -4,13 +4,11 @@
 #pragma once
 #include <memory>
 #include <string>
-#include "js/JavaScriptFwd.h"
 
 #if TANGRAM_USE_JSCORE
-#include "js/JSCoreContext.h"
-#else
-#include "js/DuktapeContext.h"
+#include "js/jsCoreContext.h"
 #endif
+#include "js/duktapeContext.h"
 
 namespace Tangram {
 

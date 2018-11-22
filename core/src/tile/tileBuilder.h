@@ -4,6 +4,7 @@
 #include "labels/labelCollider.h"
 #include "scene/styleContext.h"
 #include "scene/drawRule.h"
+#include "util/fastmap.h"
 
 namespace Tangram {
 
