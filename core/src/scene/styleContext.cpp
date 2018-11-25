@@ -10,9 +10,13 @@
 #include "util/builders.h"
 #include "util/yamlUtil.h"
 
-#define DUMP(...) // do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
-#define DBG(...) do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
+#ifdef TANGRAM_USE_DUKTAPE
+#include "js/DuktapeContext.h"
+#endif
 
+#ifdef TANGRAM_USE_JAVASCRIPTCORE
+#include "js/JSCoreContext.h"
+#endif
 
 namespace Tangram {
 
@@ -27,7 +31,27 @@ static const std::vector<std::string> s_geometryStrings = {
 };
 
 StyleContext::StyleContext() {
-    m_jsContext = createJavaScriptContext();
+
+#ifdef TANGRAM_USE_JAVASCRIPTCORE
+    m_jsContext =  JSContext(new JSCoreContext());
+#elif TANGRAM_USE_DUKTAPE
+    m_jsContext =  JSContext(new DuktapeContext());
+#else
+    static_assert(false, "You need to enable at least on JavaScript engine!");
+#endif
+}
+
+StyleContext::StyleContext(bool _useJavaScriptCore) {
+
+#ifdef TANGRAM_USE_JAVASCRIPTCORE
+    if (_useJavaScriptCore) {
+        m_jsContext =  JSContext(new JSCoreContext());
+        return;
+    }
+#endif
+#ifdef TANGRAM_USE_DUKTAPE
+    m_jsContext = JSContext(new DuktapeContext());
+#endif
 }
 
 // Convert a scalar node to a boolean, double, or string (in that order)
@@ -114,7 +138,6 @@ bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {
 
     m_functionCount = id;
 
-    DUMP("setFunctions\n");
     return success;
 }
 
@@ -345,8 +368,6 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
     } else {
         LOGW("Unhandled return type from Javascript style function for %d.", _key);
     }
-
-    DUMP("parseStyleResult\n");
 
     return !_val.is<none_type>();
 }

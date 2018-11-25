@@ -3,7 +3,7 @@
 //
 #pragma once
 #include "IJavaScriptContext.h"
-#include <JavaScriptCore/JavaScriptCore.h>
+#include <JavaScriptCore/JavaScript.h>
 #include <list>
 #include <unordered_map>
 #include <vector>

@@ -18,8 +18,6 @@ using JSContext = std::unique_ptr<IJavaScriptContext>;
 using JSScopeMarker = int32_t;
 using JSFunctionIndex = uint32_t;
 
-JSContext createJavaScriptContext();
-
 class IJavaScriptValue {
 
 public:

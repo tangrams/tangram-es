@@ -12,10 +12,6 @@
 
 namespace Tangram {
 
-JSContext createJavaScriptContext() {
-    return JSContext(new DuktapeContext());
-}
-
 DuktapeValue::DuktapeValue(duk_context* ctx, duk_idx_t index) : _ctx(ctx), _index(index) {}
 
 bool DuktapeValue::isUndefined() {

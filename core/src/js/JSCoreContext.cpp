@@ -10,10 +10,6 @@
 
 namespace Tangram {
 
-JSContext createJavaScriptContext() {
-    return JSContext(new JSCoreContext());
-}
-
 JSCoreValue::JSCoreValue(JSContextRef ctx, JSValueRef value) : _ctx(ctx), _value(value) {
     JSValueProtect(_ctx, _value);
 }
