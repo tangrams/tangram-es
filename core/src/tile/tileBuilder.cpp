@@ -16,15 +16,29 @@
 namespace Tangram {
 
 TileBuilder::TileBuilder(std::shared_ptr<Scene> _scene)
-    : m_scene(_scene) {
+    : m_scene(_scene),
+      m_styleContext(std::make_unique<StyleContext>()) {
 
-    m_styleContext.initFunctions(*_scene);
+    m_styleContext->initFunctions(*_scene);
 
     // Initialize StyleBuilders
     for (auto& style : _scene->styles()) {
         m_styleBuilder[style->getName()] = style->createBuilder();
     }
 }
+
+TileBuilder::TileBuilder(std::shared_ptr<Scene> _scene, StyleContext* _styleContext)
+    : m_scene(_scene),
+      m_styleContext(std::unique_ptr<StyleContext>(_styleContext)) {
+
+    m_styleContext->initFunctions(*_scene);
+
+    // Initialize StyleBuilders
+    for (auto& style : _scene->styles()) {
+        m_styleBuilder[style->getName()] = style->createBuilder();
+    }
+}
+
 
 TileBuilder::~TileBuilder() {}
 
@@ -38,7 +52,7 @@ StyleBuilder* TileBuilder::getStyleBuilder(const std::string& _name) {
 void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer) {
 
     // If no rules matched the feature, return immediately
-    if (!m_ruleSet.match(_feature, _layer, m_styleContext)) { return; }
+    if (!m_ruleSet.match(_feature, _layer, *m_styleContext)) { return; }
 
     uint32_t selectionColor = 0;
     bool added = false;
@@ -57,7 +71,7 @@ void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer
         // Apply default draw rules defined for this style
         style->style().applyDefaultDrawRules(rule);
 
-        if (!m_ruleSet.evaluateRuleForContext(rule, m_styleContext)) {
+        if (!m_ruleSet.evaluateRuleForContext(rule, *m_styleContext)) {
             continue;
         }
 
@@ -103,7 +117,7 @@ std::unique_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
 
     tile->initGeometry(m_scene->styles().size());
 
-    m_styleContext.setKeywordZoom(_tileID.s);
+    m_styleContext->setKeywordZoom(_tileID.s);
 
     for (auto& builder : m_styleBuilder) {
         if (builder.second)
