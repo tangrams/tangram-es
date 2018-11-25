@@ -5,7 +5,7 @@
 
 using namespace Tangram;
 
-class Bench0Fixture : public benchmark::Fixture {
+class JSGetPropertyBenchFixture : public benchmark::Fixture {
 public:
     StyleContext ctx;
     Feature feature;
@@ -17,18 +17,18 @@ public:
     }
     void TearDown(const ::benchmark::State& state) override {}
 };
-BENCHMARK_DEFINE_F(Bench0Fixture, Bench0)(benchmark::State& st) {
+BENCHMARK_DEFINE_F(JSGetPropertyBenchFixture, JSGetPropertyBench)(benchmark::State& st) {
     StyleParam::Value value;
 
     while (st.KeepRunning()) {
         ctx.evalStyle(0, StyleParamKey::text_source, value);
     }
 }
-BENCHMARK_REGISTER_F(Bench0Fixture, Bench0);
+BENCHMARK_REGISTER_F(JSGetPropertyBenchFixture, JSGetPropertyBench)->Iterations(10000);
 
 
 
-class Bench2Fixture : public benchmark::Fixture {
+class DirectGetPropertyBenchFixture : public benchmark::Fixture {
 public:
     Feature feature;
     void SetUp(const ::benchmark::State& state) override {
@@ -36,7 +36,7 @@ public:
     }
     void TearDown(const ::benchmark::State& state) override {}
 };
-BENCHMARK_DEFINE_F(Bench2Fixture, Bench2)(benchmark::State& st) {
+BENCHMARK_DEFINE_F(DirectGetPropertyBenchFixture, DirectGetPropertyBench)(benchmark::State& st) {
     StyleParam::Value value;
 
     while (st.KeepRunning()) {
@@ -48,6 +48,6 @@ BENCHMARK_DEFINE_F(Bench2Fixture, Bench2)(benchmark::State& st) {
         }
     }
 }
-BENCHMARK_REGISTER_F(Bench2Fixture, Bench2);
+BENCHMARK_REGISTER_F(DirectGetPropertyBenchFixture, DirectGetPropertyBench);
 
 BENCHMARK_MAIN();
