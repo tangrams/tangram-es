@@ -30,7 +30,7 @@ public:
     const Scene& scene() const { return *m_scene; }
 
     // For testing
-    TileBuilder(std::shared_ptr<Scene> _scene, StyleContext&& _styleContext);
+    TileBuilder(std::shared_ptr<Scene> _scene, StyleContext* _styleContext);
 
 private:
 
@@ -39,7 +39,7 @@ private:
 
     std::shared_ptr<Scene> m_scene;
 
-    StyleContext m_styleContext;
+    std::unique_ptr<StyleContext> m_styleContext;
     DrawRuleMergeSet m_ruleSet;
 
     LabelCollider m_labelLayout;

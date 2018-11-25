@@ -18,6 +18,11 @@
 #include <iostream>
 #include <vector>
 
+
+#define RUN(FIXTURE, NAME)                                              \
+    BENCHMARK_DEFINE_F(FIXTURE, NAME)(benchmark::State& st) { while (st.KeepRunning()) { run(); } } \
+    BENCHMARK_REGISTER_F(FIXTURE, NAME);  //->Iterations(1)
+
 using namespace Tangram;
 
 //const char scene_file[] = "bubble-wrap-style.zip";
@@ -72,26 +77,29 @@ void globalSetup() {
     initialized = true;
 }
 
-
+template<size_t jscontext>
 class TileBuilderFixture : public benchmark::Fixture {
 public:
     std::unique_ptr<TileBuilder> tileBuilder;
     std::shared_ptr<Tile> result;
     void SetUp(const ::benchmark::State& state) override {
         globalSetup();
-        tileBuilder = std::make_unique<TileBuilder>(scene);
+        tileBuilder = std::make_unique<TileBuilder>(scene, new StyleContext(jscontext));
     }
     void TearDown(const ::benchmark::State& state) override {
         result.reset();
     }
-};
-BENCHMARK_DEFINE_F(TileBuilderFixture, TileBuilderBench)(benchmark::State& st) {
-    while (st.KeepRunning()) {
+
+    __attribute__ ((noinline)) void run() {
         result = tileBuilder->build({0,0,10,10}, *tileData, *source);
     }
-}
-BENCHMARK_REGISTER_F(TileBuilderFixture, TileBuilderBench);
+};
 
+using DUKTileBuilderFixture = TileBuilderFixture<0>;
+using JSCTileBuilderFixture = TileBuilderFixture<1>;
+
+RUN(DUKTileBuilderFixture, DUKTileBuilderBench)
+RUN(JSCTileBuilderFixture, JSCTileBuilderBench)
 
 
 BENCHMARK_MAIN();
