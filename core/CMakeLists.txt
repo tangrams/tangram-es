@@ -126,6 +126,37 @@ target_include_directories(tangram-core
   deps/double-conversion/include
 )
 
+# Choose JavaScript implementation.
+if(TANGRAM_USE_JAVASCRIPTCORE)
+  target_sources(tangram-core PRIVATE src/js/JSCoreContext.cpp)
+  target_compile_definitions(tangram-core
+    PRIVATE TANGRAM_USE_JAVASCRIPTCORE=1)
+
+  if (TANGRAM_USE_JAVASCRIPTCORE_STATIC)
+    find_package(ICU COMPONENTS io i18n REQUIRED)
+    link_directories(${ICU_LIBRARY_DIRS})
+    target_link_libraries(tangram-core
+      PRIVATE
+      ${ICU_LIBRARIES}
+      "${PROJECT_SOURCE_DIR}/deps/jscore/lib/libJavaScriptCore.a"
+      "${PROJECT_SOURCE_DIR}/deps/jscore/lib/libWTF.a"
+      "${PROJECT_SOURCE_DIR}/deps/jscore/lib/libbmalloc.a")
+    target_include_directories(tangram-core
+      PRIVATE
+      "${PROJECT_SOURCE_DIR}/deps/jscore/include")
+  else()
+    target_link_libraries(tangram-core PRIVATE "-framework JavaScriptCore")
+  endif()
+endif()
+
+if(TANGRAM_USE_DUKTAPE)
+  target_sources(tangram-core PRIVATE src/js/DuktapeContext.cpp)
+  target_compile_definitions(tangram-core
+    PRIVATE TANGRAM_USE_DUKTAPE=1)
+
+  target_link_libraries(tangram-core PRIVATE duktape)
+endif()
+
 # Link core library dependencies.
 target_link_libraries(tangram-core
   PRIVATE
@@ -139,14 +170,6 @@ target_link_libraries(tangram-core
   z
 )
 
-# Choose JavaScript implementation.
-if(TANGRAM_USE_JAVASCRIPTCORE)
-  target_sources(tangram-core PRIVATE src/js/JSCoreContext.cpp)
-  target_link_libraries(tangram-core PRIVATE "-framework JavaScriptCore")
-else()
-  target_sources(tangram-core PRIVATE src/js/DuktapeContext.cpp)
-  target_link_libraries(tangram-core PRIVATE duktape)
-endif()
 
 if(UNIX AND NOT APPLE)
   # SQLite needs dl dynamic library loader when Linux
