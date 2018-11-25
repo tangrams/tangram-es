@@ -8,6 +8,7 @@
 #include <algorithm>
 
 using namespace Tangram;
+namespace {
 
 // Functions to initialize DrawRule instances
 const int dg1 = 0;
@@ -204,4 +205,5 @@ TEST_CASE("DrawRule correctly reports that it doesn't contain a parameter", "[Dr
     REQUIRE(!c.matchedRules()[0].get(StyleParamKey::order, str)); REQUIRE(str == "");
 
 
+}
 }
