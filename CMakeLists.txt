@@ -3,6 +3,10 @@ cmake_minimum_required(VERSION 3.2)
 project(tangram)
 
 # Options
+option(TANGRAM_USE_DUKTAPE "Build Duktape as javascript engine and enable it on all platforms" ON)
+option(TANGRAM_USE_JAVASCRIPTCORE "Use system libraries for JavaScriptCore and enable it on IOS and OSX" OFF)
+option(TANGRAM_USE_JAVASCRIPTCORE_STATIC "Build tangram with static libraries for JavaScriptCore" OFF)
+
 option(TANGRAM_USE_SYSTEM_FONT_LIBS "Use system libraries Freetype, ICU and Harfbuzz via pkgconfig" OFF)
 option(TANGRAM_USE_SYSTEM_GLFW_LIBS "Use system libraries for GLFW3 via pkgconfig" OFF)
 
@@ -66,7 +70,6 @@ include(${TANGRAM_PLATFORM_CONFIG_FILE})
 add_subdirectory(core)
 
 if(TANGRAM_BUILD_BENCHMARKS OR TANGRAM_BUILD_TESTS)
-  add_subdirectory(platforms/common/duktape)
   add_library(platform_mock
     tests/src/mockPlatform.cpp
     tests/src/gl_mock.cpp
