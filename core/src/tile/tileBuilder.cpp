@@ -26,6 +26,19 @@ TileBuilder::TileBuilder(std::shared_ptr<Scene> _scene)
     }
 }
 
+TileBuilder::TileBuilder(std::shared_ptr<Scene> _scene, StyleContext&& _styleContext)
+    : m_scene(_scene),
+      m_styleContext(std::move(_styleContext)) {
+
+    m_styleContext.initFunctions(*_scene);
+
+    // Initialize StyleBuilders
+    for (auto& style : _scene->styles()) {
+        m_styleBuilder[style->getName()] = style->createBuilder();
+    }
+}
+
+
 TileBuilder::~TileBuilder() {}
 
 StyleBuilder* TileBuilder::getStyleBuilder(const std::string& _name) {

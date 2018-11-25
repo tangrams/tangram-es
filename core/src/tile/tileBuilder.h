@@ -20,7 +20,7 @@ class TileBuilder {
 
 public:
 
-    TileBuilder(std::shared_ptr<Scene> _scene);
+    explicit TileBuilder(std::shared_ptr<Scene> _scene);
 
     ~TileBuilder();
 
@@ -29,6 +29,9 @@ public:
     std::unique_ptr<Tile> build(TileID _tileID, const TileData& _data, const TileSource& _source);
 
     const Scene& scene() const { return *m_scene; }
+
+    // For testing
+    TileBuilder(std::shared_ptr<Scene> _scene, StyleContext&& _styleContext);
 
 private:
 
