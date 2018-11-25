@@ -3,40 +3,45 @@
 #include "scene/styleContext.h"
 #include "data/tileData.h"
 
+#define RUN(FIXTURE, NAME)                                              \
+    BENCHMARK_DEFINE_F(FIXTURE, NAME)(benchmark::State& st) { while (st.KeepRunning()) { run(); } } \
+    BENCHMARK_REGISTER_F(FIXTURE, NAME); //->Iterations(10000);
+
 using namespace Tangram;
 
-class JSGetPropertyBenchFixture : public benchmark::Fixture {
+template<size_t jscontext>
+class JSGetPropertyFixture : public benchmark::Fixture {
 public:
-    StyleContext ctx;
+    std::unique_ptr<StyleContext> ctx;
+    Feature feature;
+    void SetUp(const ::benchmark::State& state) override {
+        ctx.reset(new StyleContext(jscontext));
+        feature.props.set("message", "Hello World!");
+        ctx->setFeature(feature);
+        ctx->setFunctions({R"(function () { return feature.message; })"});
+    }
+    __attribute__ ((noinline)) void run() {
+        StyleParam::Value value;
+        benchmark::DoNotOptimize(value);
+        ctx->evalStyle(0, StyleParamKey::text_source, value);
+     }
+};
+
+using DuktapeGetPropertyFixture = JSGetPropertyFixture<0>;
+RUN(DuktapeGetPropertyFixture, DuktapeGetPropertyBench)
+
+using JSCoreGetPropertyFixture = JSGetPropertyFixture<1>;
+RUN(JSCoreGetPropertyFixture, JSCoreGetPropertyBench)
+
+class DirectGetPropertyFixture : public benchmark::Fixture {
+public:
     Feature feature;
     void SetUp(const ::benchmark::State& state) override {
         feature.props.set("message", "Hello World!");
-
-        ctx.setFeature(feature);
-        ctx.setFunctions({R"(function () { return feature.message; })"});
     }
     void TearDown(const ::benchmark::State& state) override {}
 };
-BENCHMARK_DEFINE_F(JSGetPropertyBenchFixture, JSGetPropertyBench)(benchmark::State& st) {
-    StyleParam::Value value;
-
-    while (st.KeepRunning()) {
-        ctx.evalStyle(0, StyleParamKey::text_source, value);
-    }
-}
-BENCHMARK_REGISTER_F(JSGetPropertyBenchFixture, JSGetPropertyBench)->Iterations(10000);
-
-
-
-class DirectGetPropertyBenchFixture : public benchmark::Fixture {
-public:
-    Feature feature;
-    void SetUp(const ::benchmark::State& state) override {
-        feature.props.set("message", "Hello World!");
-    }
-    void TearDown(const ::benchmark::State& state) override {}
-};
-BENCHMARK_DEFINE_F(DirectGetPropertyBenchFixture, DirectGetPropertyBench)(benchmark::State& st) {
+BENCHMARK_DEFINE_F(DirectGetPropertyFixture, DirectGetPropertyBench)(benchmark::State& st) {
     StyleParam::Value value;
 
     while (st.KeepRunning()) {
@@ -48,6 +53,6 @@ BENCHMARK_DEFINE_F(DirectGetPropertyBenchFixture, DirectGetPropertyBench)(benchm
         }
     }
 }
-BENCHMARK_REGISTER_F(DirectGetPropertyBenchFixture, DirectGetPropertyBench);
+BENCHMARK_REGISTER_F(DirectGetPropertyFixture, DirectGetPropertyBench);
 
 BENCHMARK_MAIN();
