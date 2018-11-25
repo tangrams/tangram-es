@@ -20,6 +20,7 @@
 
 using namespace Tangram;
 
+//const char scene_file[] = "bubble-wrap-style.zip";
 const char scene_file[] = "res/scene.yaml";
 const char tile_file[] = "res/tile.mvt";
 
