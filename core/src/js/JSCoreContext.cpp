@@ -105,7 +105,9 @@ void JSCoreValue::setValueForProperty(const std::string& name, JSValue value) {
 }
 
 JSCoreContext::JSCoreContext() {
-    _context = JSGlobalContextCreate(nullptr);
+
+    _group = JSContextGroupCreate();
+    _context = JSGlobalContextCreateInGroup(_group, nullptr);
 
     // Create the global 'feature' object.
     JSClassDefinition jsFeatureClassDefinition = kJSClassDefinitionEmpty;
@@ -133,6 +135,7 @@ JSCoreContext::JSCoreContext() {
 
 JSCoreContext::~JSCoreContext() {
     JSGlobalContextRelease(_context);
+    JSContextGroupRelease(_group);
 }
 
 void JSCoreContext::setGlobalValue(const std::string& name, JSValue value) {
@@ -282,7 +285,8 @@ JSValueRef JSCoreContext::jsGetPropertyCallback(JSContextRef context, JSObjectRe
     JSStringGetUTF8CString(property, nameBuffer, sizeof(nameBuffer));
     auto it = feature->props.get(nameBuffer);
     if (it.is<std::string>()) {
-        JSStringRef jsString = JSStringCreateWithUTF8CString(it.get<std::string>().c_str());
+        CFStringRef cfString = CFStringCreateWithCStringNoCopy(kCFAllocatorDefault, it.get<std::string>().c_str(), kCFStringEncodingUTF8, kCFAllocatorNull);
+        JSStringRef jsString = JSStringCreateWithCFString(cfString);
         jsValue = JSValueMakeString(context, jsString);
         JSStringRelease(jsString);
     } else if (it.is<double>()) {
