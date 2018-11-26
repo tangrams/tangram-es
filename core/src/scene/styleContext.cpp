@@ -240,14 +240,16 @@ struct StyleContextBase : public StyleContext::DynamicStyleContext {
     }
 
     bool evalStyle(JSFunctionIndex _id, StyleParamKey _key, StyleParam::Value& _val) OVERRIDE {
-        _val = none_type{};
 
         Scope jsScope(m_jsContext);
-        auto jsValue = jsScope.getFunctionResult(_id);
-        if (!jsValue) {
-            return false;
-        }
 
+        auto jsValue = jsScope.getFunctionResult(_id);
+        if (!jsValue) { return false; }
+
+        _val = none_type{};
+
+        // TODO check if duk/jscore provide functions to get a typeid and
+        // switch on that instead of calling multiple times into them
         if (jsValue.isString()) {
             std::string value = jsValue.toString();
 
