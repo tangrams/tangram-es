@@ -1,10 +1,21 @@
 #pragma once
 
+#include "scene/styleContext.h"
 #include "duktape/duktape.h"
 #include "scene/scene.h"
 #include "log.h"
 
-#define DUMP(...) // do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
+#if 0
+#define DUMP() do {                             \
+        duk_push_context_dump(_ctx);           \
+        LOG("%s", duk_to_string(_ctx, -1));    \
+        duk_pop(_ctx);                         \
+    } while(0)
+#define DBG(...) LOG(__VA_ARGS__)
+#else
+#define DUMP()
+#define DBG(...)
+#endif
 
 namespace Tangram {
 
@@ -15,6 +26,8 @@ namespace Duktape {
 
 const static char INSTANCE_ID[] = "\xff""\xff""obj";
 const static char FUNC_ID[] = "\xff""\xff""fns";
+const static char GLOBAL_ID[] = "\xff""\xff""glb";
+const static char FEATURE_ID[] = "\xff""\xff""fet";
 
 struct Context;
 
@@ -122,6 +135,18 @@ struct Value {
     }
 };
 
+struct Function {
+    JSFunctionIndex idx = 0;
+    void* ptr = nullptr;
+    struct {
+        bool feature = false;
+        bool zoom = false;
+        bool geom = false;
+        bool global = false;
+    } context;
+    // for debugging - owned by scene
+    //const std::string* source = nullptr;
+};
 
 static Context* getContext(duk_context* _ctx) {
     duk_memory_functions funcs;
@@ -133,12 +158,18 @@ struct Context {
 
     duk_context* _ctx = nullptr;
     const Feature* _feature = nullptr;
+    void* _featurePtr = nullptr;
+    void* _instancePtr = nullptr;
+    void* _functionsPtr = nullptr;
+    void* _globalPtr = nullptr;
 
-    std::vector<std::pair<JSFunctionIndex, void*>> m_functions;
+    std::vector<Function> m_functions;
+    std::array<int, 4> m_filterKeys {};
 
     ~Context() {
         duk_destroy_heap(_ctx);
-        //printf("gets:%d reused:%d - %f%%\n", fetchCnt+_reuseCnt, _reuseCnt, float(_reuseCnt) / float(fetchCnt + _reuseCnt) * 100 );
+        DBG("gets:%d reused:%d - %f%%\n", fetchCnt+_reuseCnt, _reuseCnt,
+            float(_reuseCnt) / float(fetchCnt + _reuseCnt) * 100 );
     }
 
     Context() {
@@ -148,63 +179,85 @@ struct Context {
                                this, fatalErrorHandler);
 
         //// Create global geometry constants
-        // TODO make immutable
         duk_push_number(_ctx, GeometryType::points);
         duk_put_global_string(_ctx, "point");
-
         duk_push_number(_ctx, GeometryType::lines);
         duk_put_global_string(_ctx, "line");
-
         duk_push_number(_ctx, GeometryType::polygons);
         duk_put_global_string(_ctx, "polygon");
 
-        //// Create global 'feature' object
-        // Get Proxy constructor
-        // -> [cons]
-        duk_eval_string(_ctx, "Proxy");
+        // Set up 'fns' array.
+        duk_idx_t functionsObj = duk_push_array(_ctx);
+        _functionsPtr = duk_get_heapptr(_ctx, functionsObj);
+        if (!_functionsPtr) {
+            LOGE("'Function object not set");
+            return;
+        }
+        if(!duk_put_global_string(_ctx, FUNC_ID)) {
+            LOGE("'Function object not set 2");
+            return;
+        }
 
-        // Add feature object
-        // -> [cons, { __obj: this }]
-        duk_idx_t featureObj = duk_push_object(_ctx);
-        duk_push_pointer(_ctx, this);
-        duk_put_prop_string(_ctx, featureObj, INSTANCE_ID);
+        duk_idx_t instanceObj = duk_push_object(_ctx);
+        _instancePtr = duk_get_heapptr(_ctx, instanceObj);
+        if (!_instancePtr) {
+            LOGE("'Instance object not set");
+            return;
+        }
+        if(!duk_put_global_string(_ctx, INSTANCE_ID)) {
+            LOGE("'Instance object not set 2");
+            return;
 
-        // Add handler object
-        // -> [cons, {...}, { get: func, has: func }]
+        }
+        // Create 'feature' object and store in global
+        // Feature object
+        duk_push_object(_ctx);
+
+        // Handler object
         duk_idx_t handlerObj = duk_push_object(_ctx);
         // Add 'get' property to handler
-        duk_push_c_function(_ctx, jsGetProperty, 3 /*nargs*/);
+        duk_push_c_function(_ctx, jsGetProperty, 3);
         duk_put_prop_string(_ctx, handlerObj, "get");
         // Add 'has' property to handler
-        duk_push_c_function(_ctx, jsHasProperty, 2 /*nargs*/);
+        duk_push_c_function(_ctx, jsHasProperty, 2);
         duk_put_prop_string(_ctx, handlerObj, "has");
+        // [{get:func,has:func}]
 
-        // Call proxy constructor
-        // [cons, feature, handler ] -> [obj|error]
-        if (duk_pnew(_ctx, 2) == 0) {
-            // put feature proxy object in global scope
-            if (!duk_put_global_string(_ctx, "feature")) {
-                LOGE("Initialization failed");
-            }
-        } else {
-            LOGE("Failure: %s", duk_safe_to_string(_ctx, -1));
+        duk_push_proxy(_ctx, 0);
+        _featurePtr = duk_get_heapptr(_ctx, -1);
+        // Stash 'feature' proxy object
+        if (!duk_put_global_string(_ctx, FEATURE_ID)) {
+            LOGE("Initialization failed");
             duk_pop(_ctx);
         }
-        // Set up 'fns' array.
-        duk_push_array(_ctx);
-        if (!duk_put_global_string(_ctx, FUNC_ID)) {
-            LOGE("'fns' object not set");
-        }
+        DUMP();
+        DBG("<<<<<<<<<");
     }
 
     void setGlobalValue(const std::string& name, Value value) {
+        DBG(">>>>> GLOBAL >>>>>");
+        DUMP();
         value.ensureExistsOnStackTop();
-        duk_put_global_lstring(_ctx, name.data(), name.length());
+
+        if (name == "global") {
+            _globalPtr = duk_get_heapptr(_ctx, value._index);
+            if (!_globalPtr) { LOGE("Global object invalid!"); }
+
+            // Stash global object
+            duk_put_global_string(_ctx, GLOBAL_ID);
+        } else {
+            duk_put_global_lstring(_ctx, name.data(), name.length());
+        }
+        DBG("<<<<< GLOBAL <<<<<");
     }
 
     void setCurrentFeature(const Feature* feature) {
         _feature = feature;
         _lastFeature = nullptr;
+    }
+
+    void setFilterKey(Filter::Key _key, int _val) {
+        m_filterKeys[uint8_t(_key)] = _val;
     }
 
     Value getStackTopValue() {
@@ -220,9 +273,7 @@ struct Context {
     }
 
     bool evaluateBooleanFunction(JSFunctionIndex index) {
-        if (!evaluateFunction(index)) {
-            return false;
-        }
+        if (!evaluateFunction(index)) { return false; }
         // Evaluate the "truthiness" of the function result at the top
         //  of the stack.
         bool result = duk_to_boolean(_ctx, -1) != 0;
@@ -240,62 +291,123 @@ struct Context {
     }
 
     bool setFunction(JSFunctionIndex index, const std::string& fn) {
-        // Get all functions (array) in context
+        DBG(">>>> FUNCTION >>>>");
+
+        if (m_functions.size() == index) {
+            m_functions.emplace_back();
+        } else {
+            m_functions.resize(index+1);
+        }
+
         if (!duk_get_global_string(_ctx, FUNC_ID)) {
             LOGE("AddFunction - functions array not initialized");
+            DUMP();
             duk_pop(_ctx); // pop [undefined] sitting at stack top
             return false;
         }
+        auto& function = m_functions.back();
 
-        duk_push_string(_ctx, fn.c_str());
-        duk_push_string(_ctx, "");
+        bool append = false;
+        std::string args;
+        // TODO use proper regex
 
-        if (duk_pcompile(_ctx, DUK_COMPILE_FUNCTION) == 0) {
-            void* fnPtr = duk_get_heapptr(_ctx, -1);
-            if (m_functions.size() == index) {
-                m_functions.emplace_back(index, fnPtr);
-            } else {
-                m_functions.resize(index+1);
-                m_functions[index] = {index, fnPtr};
-            }
+        size_t hasFeature = fn.find("feature");
+        if (hasFeature != std::string::npos) {
+            args += "feature";
+            append = true;
+            function.context.feature = true;
+        }
+        size_t hasZoom = fn.find("$zoom");
+        if (hasZoom != std::string::npos) {
+            if (append) { args += ","; }
+            args += "$zoom";
+            append = true;
+            function.context.zoom = true;
+        }
+        size_t hasGeom = fn.find("$geometry");
+        if (hasGeom != std::string::npos) {
+            if (append) { args += ","; }
+            args += "$geometry";
+            append = true;
+            function.context.geom = true;
+        }
+        size_t hasGlobal = fn.find("global");
+        if (hasGlobal != std::string::npos) {
+            if (append) { args += ","; }
+            args += "global";
+            function.context.global = true;
+        }
+
+        size_t beg = fn.find('(')+1;
+        std::string wrap = fn;
+        wrap.insert(beg, args);
+
+        DBG("fn: %s", wrap.c_str());
+
+        if (duk_pcompile_lstring(_ctx, DUK_COMPILE_FUNCTION,
+                                 wrap.c_str(), wrap.length()) == 0) {
+            function.ptr = duk_get_heapptr(_ctx, -1);
             // Store function in global.functions to make sure it will not be
             // garbage collected.
             duk_put_prop_index(_ctx, -2, index);
 
         } else {
             LOGW("Compile failed: %s\n%s\n---",
-                 duk_safe_to_string(_ctx, -1), fn.c_str());
+                 duk_safe_to_string(_ctx, -1), wrap.c_str());
+            // Pop error
+            duk_pop(_ctx);
+            // Pop array
             duk_pop(_ctx);
             return false;
         }
         // Pop the functions array off the stack
         duk_pop(_ctx);
-
+        DBG("<<<< FUNCTION <<<<");
         return true;
     }
 
     bool evaluateFunction(JSFunctionIndex index) {
+        DBG(">>>>> EVAL >>>>>");
 
         if (m_functions.size() <= index) {
-            LOGN("Functions array not initialized. index:%d size:%d",
+            LOGE("Functions array not initialized. index:%d size:%d",
                  index, m_functions.size());
             return false;
         }
-        if (m_functions[index].second == nullptr) {
-            LOGN("Function not set. index:%d size:%d",
-                 index, m_functions.size());
+        if (m_functions[index].ptr == nullptr) {
+            LOGE("Function not set. index:%d size:%d", index, m_functions.size());
             return false;
         }
 
-        duk_push_heapptr(_ctx, m_functions[index].second);
+        auto &function = m_functions[index];
+        duk_push_heapptr(_ctx, function.ptr);
+        int args = 0;
+        if (function.context.feature) {
+            args++;
+            duk_push_heapptr(_ctx, _featurePtr);
+        }
+        if (function.context.global) {
+            args++;
+            duk_push_heapptr(_ctx, _globalPtr);
+        }
+        if (function.context.zoom) {
+            args++;
+            duk_push_number(_ctx, m_filterKeys[uint8_t(Filter::Key::zoom)]);
+        }
+        if (function.context.geom) {
+            args++;
+            duk_push_number(_ctx, m_filterKeys[uint8_t(Filter::Key::geometry)]);
+        }
+        if (duk_pcall(_ctx, args) != 0) {
+            LOG("Error: %s, function:%d feature:%p", duk_safe_to_string(_ctx, -1),
+                index, _feature);
 
-        if (duk_pcall(_ctx, 0) != 0) {
-            LOGN("Error: %s, function:%d feaure:%p",
-                 duk_safe_to_string(_ctx, -1), index, _feature);
-
+            // Pop error
             duk_pop(_ctx);
             return false;
         }
+        // -- why not return value here?
+        DBG("<<<<< EVAL <<<<<");
         return true;
     }
 
@@ -332,9 +444,9 @@ struct Context {
     Value newFunction(const std::string& value) {
         if (duk_pcompile_lstring(_ctx, DUK_COMPILE_FUNCTION,
                                  value.data(), value.length()) != 0) {
+
             auto error = duk_safe_to_string(_ctx, -1);
-            LOGW("Compile failed in global function: %s\n%s\n---",
-                 error, value.c_str());
+            LOGW("Compile failed in global function: %s\n%s\n---", error, value.c_str());
             duk_pop(_ctx); // Pop error.
             return {nullptr, 0};
         }
@@ -393,8 +505,8 @@ private:
             duk_push_boolean(_ctx, static_cast<duk_bool_t>(hasProp));
             return 1;
         }
-        LOGN("Error: no context found for %p / %p %p",  _ctx, context,
-             context ? context->_feature : nullptr);
+        LOGN("Error: no context found for dukctx:%p this:%p feature:%p",
+             _ctx, context, context ? context->_feature : nullptr);
         return 0;
     }
 
