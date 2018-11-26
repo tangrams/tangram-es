@@ -12,8 +12,14 @@
 #include "util/mapProjection.h"
 #include "util/yamlUtil.h"
 #include "yaml-cpp/yaml.h"
+
+#ifdef TANGRAM_USE_DUKTAPE
 #include "js/DuktapeContext.h"
+#endif
+
+#ifdef TANGRAM_USE_JAVASCRIPTCORE
 #include "js/JSCoreContext.h"
+#endif
 
 #include <array>
 #include <functional>
@@ -28,6 +34,8 @@
 #endif
 
 namespace Tangram {
+
+using JSScopeMarker = int32_t;
 
 static const std::string key_geom("$geometry");
 static const std::string key_zoom("$zoom");
@@ -399,20 +407,33 @@ struct StyleContextBase : public StyleContext::DynamicStyleContext {
     }
 };
 
-
+#ifdef TANGRAM_USE_DUKTAPE
 using DuktapeStyleContext = StyleContextBase<Duktape::Context, Duktape::Value>;
+#endif
+
+#ifdef TANGRAM_USE_JAVASCRIPTCORE
 using JSCoreStyleContext = StyleContextBase<JSCore::Context, JSCore::Value>;
+#endif
 
-StyleContext::StyleContext(bool jscore) {
-    if (jscore) {
-        impl.reset(new JSCoreStyleContext());
-    } else {
-        impl.reset(new DuktapeStyleContext());
-    }
-}
-
+#ifdef TANGRAM_USE_JAVASCRIPTCORE
+StyleContext::StyleContext()
+    : impl(std::make_unique<JSCoreStyleContext>()) {}
+#elif TANGRAM_USE_DUKTAPE
 StyleContext::StyleContext()
     : impl(std::make_unique<DuktapeStyleContext>()) {}
+#endif
+
+StyleContext::StyleContext(bool jscore) {
+#ifdef TANGRAM_USE_JAVASCRIPTCORE
+    if (jscore) {
+        impl.reset(new JSCoreStyleContext());
+        return;
+    }
+#endif
+#if TANGRAM_USE_DUKTAPE
+    impl.reset(new DuktapeStyleContext());
+#endif
+}
 
 void StyleContext::setFeature(const Feature& _feature) {
     impl->setFeature(_feature);
