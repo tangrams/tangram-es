@@ -57,8 +57,8 @@ void init() {
     bike.props.set("check", "available");
     bike.props.set("serial", 4398046511105); // 2^42 + 1
 
-    ctx.setKeyword("$geometry", Value(1));
-    ctx.setKeyword("$zoom", Value("false"));
+    ctx.setFilterKey(Filter::Key::geometry, GeometryType::points);
+    ctx.setFilterKey(Filter::Key::zoom, 0);
 }
 
 

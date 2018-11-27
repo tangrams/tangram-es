@@ -2,6 +2,7 @@
 
 #include <JavaScriptCore/JavaScript.h>
 #include "log.h"
+#include "scene/filters.h"
 #include "scene/scene.h"
 
 #include <vector>
@@ -179,6 +180,10 @@ struct Context {
 
     void setCurrentFeature(const Feature* feature) {
         _feature = feature;
+    }
+
+    void setFilterKey(Filter::Key _key, int _val) {
+        setGlobalValue(Filter::keyName(_key), newNumber(_val));
     }
 
     bool setFunction(JSFunctionIndex index, const std::string& fn) {

@@ -49,12 +49,12 @@ TEST_CASE( "Test evalFilterFn with feature and keywords", "[Duktape][evalFilterF
 
     StyleContext ctx(jscore);
     ctx.setFeature(feature);
-    ctx.setKeyword("$zoom", 5);
+    ctx.setFilterKey(Filter::Key::zoom, 5);
 
     REQUIRE(ctx.setFunctions({ R"(function() { return (feature.scalerank * .5) <= ($zoom - 4); })"}));
     REQUIRE(ctx.evalFilter(0) == true);
 
-    ctx.setKeyword("$zoom", 4);
+    ctx.setFilterKey(Filter::Key::zoom, 4);
     REQUIRE(ctx.evalFilter(0) == false);
 
 }
@@ -73,9 +73,9 @@ TEST_CASE( "Test evalFilterFn with feature and keyword geometry", "[Duktape][eva
 
     // Test $geometry keyword
     REQUIRE(ctx.setFunctions({
-                R"(function() { return $geometry === 'point'; })",
-                R"(function() { return $geometry === 'line'; })",
-                R"(function() { return $geometry === 'polygon'; })"}));
+                R"(function() { return $geometry === point; })",
+                R"(function() { return $geometry === line; })",
+                R"(function() { return $geometry === polygon; })"}));
 
     ctx.setFeature(points);
     REQUIRE(ctx.evalFilter(0) == true);
@@ -115,23 +115,23 @@ TEST_CASE( "Test evalFilterFn with different features", "[Duktape][evalFilterFn]
 
 TEST_CASE( "Test numeric keyword", "[Duktape][setKeyword]") {
     StyleContext ctx(jscore);
-    ctx.setKeyword("$zoom", 10);
+    ctx.setFilterKey(Filter::Key::zoom, 10);
     REQUIRE(ctx.setFunctions({ R"(function() { return $zoom === 10 })"}));
     REQUIRE(ctx.evalFilter(0) == true);
 
-    ctx.setKeyword("$zoom", 0);
+    ctx.setFilterKey(Filter::Key::zoom, 0);
     REQUIRE(ctx.evalFilter(0) == false);
 }
 
 TEST_CASE( "Test string keyword", "[Duktape][setKeyword]") {
     StyleContext ctx(jscore);
-    ctx.setKeyword("$geometry", GeometryType::points);
+    ctx.setFilterKey(Filter::Key::geometry, GeometryType::points);
+
     REQUIRE(ctx.setFunctions({ R"(function() { return $geometry === point })"}));
     REQUIRE(ctx.evalFilter(0) == true);
 
-    ctx.setKeyword("$geometry", "none");
+    ctx.setFilterKey(Filter::Key::geometry, GeometryType::unknown);
     REQUIRE(ctx.evalFilter(0) == false);
-
 }
 
 TEST_CASE( "Test evalStyleFn - StyleParamKey::order", "[Duktape][evalStyleFn]") {

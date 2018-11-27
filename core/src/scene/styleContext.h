@@ -9,9 +9,9 @@
 namespace Tangram {
 
 struct Feature;
-class Scene;
 
 using JSFunctionIndex = uint32_t;
+using JSScopeMarker = int32_t;
 
 class StyleContext {
 public:
@@ -28,14 +28,14 @@ public:
     void setFeature(const Feature& _feature);
 
     // Set keyword for currently processed Tile
-    void setKeywordZoom(int _zoom);
+    void setFilterKey(Filter::Key _key, int _value);
 
-    // Called from Filter::eval
-    float getKeywordZoom() const;
-    const Value& getKeyword(FilterKeyword _key) const;
+    // Called from Filter::eval and used by JS functions: $zoom
+    float getZoomLevel() const { return m_zoomLevel; }
+    int getFilterKey(Filter::Key _key) const;
 
-    // returns meters per pixels at current style zoom
-    float getPixelAreaScale();
+    // Returns meters per pixels at current style zoom
+    float getPixelAreaScale() const { return m_pixelAreaScale; }
 
     // Called from Filter::eval
     bool evalFilter(JSFunctionIndex idx);
@@ -48,10 +48,6 @@ public:
 
     // Unset Feature handle
     void clear();
-
-    // Set keyword for currently processed Tile
-    void setKeyword(const std::string& _key, Value _value);
-    const Value& getKeyword(const std::string& _key) const;
 
     // Set currently processed Feature
     void setCurrentFeature(const Feature* feature);
@@ -67,6 +63,9 @@ public:
     struct StyleContextImpl;
     std::unique_ptr<StyleContextImpl> impl;
 
+    std::array<int, 4> m_filterKeys {};
+    float m_zoomLevel = 0;
+    float m_pixelAreaScale = 0;
 };
 
 } // namespace Tangram

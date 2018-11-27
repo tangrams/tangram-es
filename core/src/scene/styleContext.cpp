@@ -21,7 +21,7 @@
 #include <string>
 #include <unordered_map>
 
-//#define RUNTIME_STYLE_CONTEXT
+#define RUNTIME_STYLE_CONTEXT
 
 #ifndef RUNTIME_STYLE_CONTEXT
 #define OVERRIDE
@@ -31,31 +31,15 @@
 
 namespace Tangram {
 
-using JSScopeMarker = int32_t;
-
-static const std::string key_geom("$geometry");
-static const std::string key_zoom("$zoom");
-static const std::vector<std::string> s_geometryStrings = {
-    "", // unknown
-    "point",
-    "line",
-    "polygon",
-};
-
 #ifdef RUNTIME_STYLE_CONTEXT
 struct StyleContext::StyleContextImpl {
     virtual ~StyleContextImpl() = default;
     virtual void setFeature(const Feature& _feature) = 0;
-    virtual void setKeywordZoom(int _zoom) = 0;
-    virtual float getKeywordZoom() const = 0;
-    virtual const Value& getKeyword(FilterKeyword _key) const = 0;
+    virtual void setFilterKey(Filter::Key _key, int _value) = 0;
     virtual bool evalFilter(JSFunctionIndex id) = 0;
     virtual bool evalStyle(JSFunctionIndex id, StyleParamKey _key, StyleParam::Value& _val) = 0;
     virtual void initFunctions(const Scene& _scene) = 0;
     virtual void clear() = 0;
-    virtual void setKeyword(const std::string& _key, Value _value) = 0;
-    virtual const Value& getKeyword(const std::string& _key) const = 0;
-    virtual float getPixelAreaScale() = 0;
     virtual bool addFunction(const std::string& _function) = 0;
     virtual void setSceneGlobals(const YAML::Node& sceneGlobals) = 0;
     virtual bool setFunctions(const std::vector<std::string>& _functions)  = 0;
@@ -77,12 +61,10 @@ struct StyleContext::StyleContextImpl {
 
     using Scope = JavaScriptScope<JSContext>;
 
-    int m_keywordZoom = -1;
-    std::array<Value, 4> m_keywords {};
-    int m_keywordGeom= -1;
-    int m_functionCount = 0;
     int32_t m_sceneId = -1;
-    const Feature* m_feature = nullptr;
+
+    int m_functionCount = 0;
+
     JSContext m_jsContext;
 
     StyleContextImpl() {}
@@ -149,12 +131,11 @@ struct StyleContext::StyleContextImpl {
     }
 
     void initFunctions(const Scene& _scene) OVERRIDE {
-        if (_scene.id == m_sceneId) {
-            return;
-        }
+        if (_scene.id == m_sceneId) { return; }
         m_sceneId = _scene.id;
 
         setSceneGlobals(_scene.config()["global"]);
+
         setFunctions(_scene.functions());
     }
 
@@ -164,7 +145,6 @@ struct StyleContext::StyleContextImpl {
         for (auto& function : _functions) {
             success &= m_jsContext.setFunction(id++, function);
         }
-
         m_functionCount = id;
 
         return success;
@@ -175,59 +155,13 @@ struct StyleContext::StyleContextImpl {
         return success;
     }
 
-    void setFeature(const Feature& _feature) OVERRIDE {
-        m_feature = &_feature;
+    void setFilterKey(Filter::Key _key, int _val) OVERRIDE {
+        m_jsContext.setFilterKey(_key, _val);
+    }
 
-        if (m_keywordGeom != m_feature->geometryType) {
-            setKeyword(key_geom, s_geometryStrings[m_feature->geometryType]);
-            m_keywordGeom = m_feature->geometryType;
-        }
+    void setFeature(const Feature& _feature) OVERRIDE {
         m_jsContext.setCurrentFeature(&_feature);
     }
-
-    void setKeywordZoom(int _zoom) OVERRIDE {
-        if (m_keywordZoom != _zoom) {
-            setKeyword(key_zoom, _zoom);
-            m_keywordZoom = _zoom;
-        }
-    }
-
-    void setKeyword(const std::string& _key, Value _val) OVERRIDE {
-        auto keywordKey = Filter::keywordType(_key);
-        if (keywordKey == FilterKeyword::undefined) {
-            LOG("Undefined Keyword: %s", _key.c_str());
-            return;
-        }
-
-        // Unset shortcuts in case setKeyword was not called by
-        // the helper functions above.
-        if (_key == key_zoom) { m_keywordZoom = -1; }
-        if (_key == key_geom) { m_keywordGeom = -1; }
-
-        {
-            Scope jsScope(m_jsContext);
-            Value& entry = m_keywords[static_cast<uint8_t>(keywordKey)];
-            if (entry == _val) { return; }
-
-            if (_val.is<std::string>()) {
-                m_jsContext.setGlobalValue(_key, jsScope.newString(_val.get<std::string>()));
-            } else if (_val.is<double>()) {
-                m_jsContext.setGlobalValue(_key, jsScope.newNumber(_val.get<double>()));
-            }
-            entry = std::move(_val);
-        }
-    }
-
-    const Value& getKeyword(FilterKeyword _key) const OVERRIDE {
-        return m_keywords[static_cast<uint8_t>(_key)];
-    }
-
-    const Value& getKeyword(const std::string& _key) const OVERRIDE {
-        return getKeyword(Filter::keywordType(_key));
-    }
-
-    float getKeywordZoom() const OVERRIDE { return m_keywordZoom; }
-
 
     void clear() OVERRIDE {
         m_jsContext.setCurrentFeature(nullptr);
@@ -395,16 +329,6 @@ struct StyleContext::StyleContextImpl {
 
         return !_val.is<none_type>();
     }
-
-    // Convert a scalar node to a boolean, double, or string (in that order)
-    // and for the first conversion that works, push it to the top of the JS stack.
-    float getPixelAreaScale() OVERRIDE {
-        // scale the filter value with pixelsPerMeter
-        // used with `px2` area filtering
-        double metersPerPixel = (MapProjection::EARTH_CIRCUMFERENCE_METERS *
-                                 exp2(-m_keywordZoom) / MapProjection::tileSize());
-        return metersPerPixel * metersPerPixel;
-    }
 };
 
 #ifdef RUNTIME_STYLE_CONTEXT
@@ -443,18 +367,30 @@ StyleContext::~StyleContext() {}
 
 void StyleContext::setFeature(const Feature& _feature) {
     impl->setFeature(_feature);
+    setFilterKey(Filter::Key::geometry, _feature.geometryType);
 }
-void StyleContext::setKeywordZoom(int _zoom) {
-    impl->setKeywordZoom(_zoom);
+
+void StyleContext::setFilterKey(Filter::Key _key, int _value) {
+    if (_key == Filter::Key::other) { return; }
+
+    if (m_filterKeys[uint8_t(_key)] == _value) {
+        return;
+    }
+    m_filterKeys[uint8_t(_key)] = _value;
+
+    if (_key == Filter::Key::zoom) {
+        m_zoomLevel = _value;
+        // scale the filter value with pixelsPerMeter
+        // used with `px2` area filtering
+        double metersPerPixel = (MapProjection::EARTH_CIRCUMFERENCE_METERS *
+                                 exp2(-_value) / MapProjection::tileSize());
+        m_pixelAreaScale = metersPerPixel * metersPerPixel;
+    }
+    impl->setFilterKey(_key, _value);
 }
-float StyleContext::getKeywordZoom() const {
-    return impl->getKeywordZoom();
-}
-float StyleContext::getPixelAreaScale() {
-    return impl->getPixelAreaScale();
-}
-const Value& StyleContext::getKeyword(FilterKeyword _key) const {
-    return impl->getKeyword(_key);
+
+int StyleContext::getFilterKey(Filter::Key _key) const {
+    return m_filterKeys[static_cast<uint8_t>(_key)];
 }
 bool StyleContext::evalFilter(JSFunctionIndex _id) {
     return impl->evalFilter(_id);
@@ -476,12 +412,6 @@ bool StyleContext::addFunction(const std::string& _function) {
 }
 void StyleContext::setSceneGlobals(const YAML::Node& _sceneGlobals) {
     impl->setSceneGlobals(_sceneGlobals);
-}
-void StyleContext::setKeyword(const std::string& _key, Value _value) {
-    impl->setKeyword(_key, _value);
-}
-const Value& StyleContext::getKeyword(const std::string& _key) const {
-    return impl->getKeyword(_key);
 }
 
 } // namespace Tangram

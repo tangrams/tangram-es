@@ -191,7 +191,7 @@ bool DrawRuleMergeSet::evaluateRuleForContext(DrawRule& rule, StyleContext& ctx)
             m_evaluated[i] = *param;
             param = &m_evaluated[i];
 
-            Stops::eval(*param->stops, param->key, ctx.getKeywordZoom(), m_evaluated[i].value);
+            Stops::eval(*param->stops, param->key, ctx.getZoomLevel(), m_evaluated[i].value);
         }
     }
 

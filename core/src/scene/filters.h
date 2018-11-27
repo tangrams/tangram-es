@@ -10,13 +10,18 @@ namespace Tangram {
 class StyleContext;
 struct Feature;
 
-enum class FilterKeyword : uint8_t {
-    undefined,
-    zoom,
-    geometry,
-};
-
 struct Filter {
+    static const std::string key_geom;
+    static const std::string key_zoom;
+    static const std::string key_other;
+    static const std::vector<std::string> geometryStrings;
+
+    enum class Key : uint8_t {
+        other,
+        zoom,
+        geometry,
+    };
+
     struct OperatorAll {
         std::vector<Filter> operands;
     };
@@ -26,22 +31,32 @@ struct Filter {
     struct OperatorNone {
         std::vector<Filter> operands;
     };
-
     struct EqualitySet {
         std::string key;
         std::vector<Value> values;
-        FilterKeyword keyword;
     };
     struct Equality {
         std::string key;
         Value value;
-        FilterKeyword keyword;
+    };
+    struct EqualityKeySet {
+        Key key;
+        std::vector<Value> values;
+    };
+    struct EqualityKey {
+        Key key;
+        Value value;
     };
     struct Range {
         std::string key;
         float min;
         float max;
-        FilterKeyword keyword;
+        bool hasPixelArea;
+    };
+    struct RangeKey {
+        Key key;
+        float min;
+        float max;
         bool hasPixelArea;
     };
     struct Existence {
@@ -52,14 +67,17 @@ struct Filter {
         uint32_t id;
     };
     using Data = variant<none_type,
+                         Equality,
+                         EqualityKey,
+                         Range,
+                         RangeKey,
+                         Function,
+                         Existence,
                          OperatorAll,
                          OperatorNone,
                          OperatorAny,
                          EqualitySet,
-                         Equality,
-                         Range,
-                         Existence,
-                         Function>;
+                         EqualityKeySet>;
     Data data;
 
     Filter() : data(none_type{}) {}
@@ -82,15 +100,30 @@ struct Filter {
     }
     // Create an 'equality' filter
     inline static Filter MatchEquality(const std::string& k, const std::vector<Value>& vals) {
-        if (vals.size() == 1) {
-            return { Equality{ k, vals[0], keywordType(k) }};
+        auto key = keyType(k);
+        if (key == Key::other) {
+            if (vals.size() == 1) {
+                return { Equality{ k, vals[0]}};
+            } else {
+                return { EqualitySet{ k, vals }};
+            }
         } else {
-            return { EqualitySet{ k, vals, keywordType(k) }};
+            // FIXME check if the value is valid for the key!
+            if (vals.size() == 1) {
+                return { EqualityKey{ key, vals[0]}};
+            } else {
+                return { EqualityKeySet{ key, vals }};
+            }
         }
     }
     // Create a 'range' filter
     inline static Filter MatchRange(const std::string& k, float min, float max, bool sqA) {
-        return { Range{ k, min, max, keywordType(k), sqA }};
+        auto key = keyType(k);
+        if (key == Key::other) {
+            return { Range{ k, min, max, sqA }};
+        } else {
+            return { RangeKey{ key, min, max, sqA }};
+        }
     }
     // Create an 'existence' filter
     inline static Filter MatchExistence(const std::string& k, bool ex) {
@@ -101,13 +134,24 @@ struct Filter {
         return { Function{ id }};
     }
 
-    static FilterKeyword keywordType(const std::string& _key) {
-        if (_key == "$geometry") {
-            return FilterKeyword::geometry;
-        } else if (_key == "$zoom") {
-            return  FilterKeyword::zoom;
+    static Key keyType(const std::string& _key) {
+        if (_key == key_geom) {
+            return Key::geometry;
+        } else if (_key == key_zoom) {
+            return  Key::zoom;
         }
-        return  FilterKeyword::undefined;
+        return Key::other;
+    }
+    static const std::string& keyName(Key _key) {
+        switch(_key) {
+        case Key::geometry:
+            return key_geom;
+        case Key::zoom:
+            return key_zoom;
+        default:
+            break;
+        }
+        return key_other;
     }
 
     /* Public for testing */

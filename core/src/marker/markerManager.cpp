@@ -433,7 +433,7 @@ bool MarkerManager::buildMesh(Marker& marker, int zoom) {
     // Apply defaul draw rules defined for this style
     styler->style().applyDefaultDrawRules(*rule);
 
-    m_styleContext->setKeywordZoom(zoom);
+    m_styleContext->setFilterKey(Filter::Key::zoom, zoom);
 
     bool valid = marker.evaluateRuleForContext(*m_styleContext);
 

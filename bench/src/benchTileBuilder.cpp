@@ -87,7 +87,7 @@ public:
     std::shared_ptr<Tile> result;
     void SetUp(const ::benchmark::State& state) override {
         globalSetup();
-        tileBuilder = std::make_unique<TileBuilder>(scene, StyleContext(jscontext));
+        tileBuilder = std::make_unique<TileBuilder>(scene, new StyleContext(jscontext));
     }
     void TearDown(const ::benchmark::State& state) override {
         result.reset();

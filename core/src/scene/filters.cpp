@@ -8,6 +8,13 @@
 
 namespace Tangram {
 
+const std::string Filter::key_geom{"$geometry"};
+const std::string Filter::key_zoom{"$zoom"};
+const std::string Filter::key_other{""};
+
+const std::vector<std::string> Filter::geometryStrings = { "", "point", "line", "polygon" };
+
+
 void Filter::print(int _indent) const {
 
     switch (data.which()) {
@@ -41,40 +48,61 @@ void Filter::print(int _indent) const {
     case Data::type<EqualitySet>::value: {
         auto& f = data.get<EqualitySet>();
         if (f.values[0].is<std::string>()) {
-            logMsg("%*s equality set - keyword:%d key:%s val:%s\n", _indent, "",
-                   f.keyword != FilterKeyword::undefined,
-                   f.key.c_str(),
-                   f.values[0].get<std::string>().c_str());
+            logMsg("%*s equality set - key:%s val:%s\n", _indent, "",
+                   f.key.c_str(), f.values[0].get<std::string>().c_str());
         }
         if (f.values[0].is<double>()) {
-            logMsg("%*s equality - keyword:%d key:%s val:%f\n", _indent, "",
-                   f.keyword != FilterKeyword::undefined,
-                   f.key.c_str(),
-                   f.values[0].get<double>());
+            logMsg("%*s equality - key:%s val:%f\n", _indent, "",
+                   f.key.c_str(), f.values[0].get<double>());
         }
         break;
     }
     case Data::type<Equality>::value: {
         auto& f = data.get<Equality>();
         if (f.value.is<std::string>()) {
-            logMsg("%*s equality - keyword:%d key:%s val:%s\n", _indent, "",
-                   f.keyword != FilterKeyword::undefined,
-                   f.key.c_str(),
-                   f.value.get<std::string>().c_str());
+            logMsg("%*s equality - key:%s val:%s\n", _indent, "",
+                   f.key.c_str(), f.value.get<std::string>().c_str());
         }
         if (f.value.is<double>()) {
-            logMsg("%*s equality - keyword:%d key:%s val:%f\n", _indent, "",
-                   f.keyword != FilterKeyword::undefined,
-                   f.key.c_str(),
-                   f.value.get<double>());
+            logMsg("%*s equality - key:%s val:%f\n", _indent, "",
+                   f.key.c_str(), f.value.get<double>());
         }
         break;
     }
     case Data::type<Range>::value: {
         auto& f = data.get<Range>();
-        logMsg("%*s range - keyword:%d key:%s min:%f max:%f\n", _indent, "",
-               f.keyword != FilterKeyword::undefined,
+        logMsg("%*s range - key:%s min:%f max:%f\n", _indent, "",
                f.key.c_str(), f.min, f.max);
+        return;
+    }
+    case Data::type<EqualityKeySet>::value: {
+        auto& f = data.get<EqualityKeySet>();
+        if (f.values[0].is<std::string>()) {
+            logMsg("%*s equality set - key:%s val:%s\n", _indent, "",
+                   keyName(f.key).c_str(), f.values[0].get<std::string>().c_str());
+        }
+        if (f.values[0].is<double>()) {
+            logMsg("%*s equality - key:%s val:%f\n", _indent, "",
+                   keyName(f.key).c_str(), f.values[0].get<double>());
+        }
+        break;
+    }
+    case Data::type<EqualityKey>::value: {
+        auto& f = data.get<EqualityKey>();
+        if (f.value.is<std::string>()) {
+            logMsg("%*s equality - key:%s val:%s\n", _indent, "",
+                   keyName(f.key).c_str(), f.value.get<std::string>().c_str());
+        }
+        if (f.value.is<double>()) {
+            logMsg("%*s equality - key:%s  val:%f\n", _indent, "",
+                   keyName(f.key).c_str(), f.value.get<double>());
+        }
+        break;
+    }
+    case Data::type<RangeKey>::value: {
+        auto& f = data.get<RangeKey>();
+        logMsg("%*s range - key:%d key:%s min:%f max:%f\n", _indent, "",
+               keyName(f.key).c_str(), f.min, f.max);
         return;
     }
     case Data::type<Function>::value: {
@@ -84,7 +112,6 @@ void Filter::print(int _indent) const {
     default:
         break;
     }
-
 }
 
 
@@ -107,20 +134,30 @@ int Filter::filterCost() const {
 
     case Data::type<Existence>::value:
         // Equality and Range are more specific for increasing
-        // the chance to fail early check them before Existence
+        // the chance to fail early check them before Existence - really?
         return 20;
 
     case Data::type<EqualitySet>::value:
-        return data.get<EqualitySet>().keyword == FilterKeyword::undefined ? 10 : 1;
+        return 15;
 
     case Data::type<Equality>::value:
-        return data.get<Equality>().keyword == FilterKeyword::undefined ? 10 : 1;
+        return 10;
 
     case Data::type<Filter::Range>::value:
-        return data.get<Range>().keyword == FilterKeyword::undefined ? 10 : 1;
+        return 10;
+
+    case Data::type<EqualityKeySet>::value:
+        return 6;
+
+    case Data::type<EqualityKey>::value:
+        return 1;
+
+    case Data::type<Filter::RangeKey>::value:
+        return 1;
 
     case Data::type<Function>::value:
         // Most expensive filter should be checked last
+        // - unless it is most specific, e.g. global false..
         return 1000;
     }
     return 0;
@@ -306,11 +343,10 @@ struct match_equal {
 };
 
 struct match_range {
-    const Filter::Range& f;
-    double scale;
+    float min, max, scale;
 
     bool operator() (const double& num) const {
-        return num >= f.min * scale && num < f.max * scale;
+        return num >= min * scale && num < max * scale;
     }
     bool operator() (const std::string&) const { return false; }
     bool operator() (const none_type&) const { return false; }
@@ -351,25 +387,31 @@ struct matcher {
         return f.exists == props.contains(f.key);
     }
     bool operator() (const Filter::EqualitySet& f) const {
-        auto& value = (f.keyword == FilterKeyword::undefined)
-            ? props.get(f.key)
-            : ctx.getKeyword(f.keyword);
+        auto& value = props.get(f.key);
 
         return Value::visit(value, match_equal_set{f.values});
     }
     bool operator() (const Filter::Equality& f) const {
-        auto& value = (f.keyword == FilterKeyword::undefined)
-            ? props.get(f.key)
-            : ctx.getKeyword(f.keyword);
-
-        return Value::visit(value, match_equal{f.value});
+        return Value::visit(props.get(f.key),
+                            match_equal{f.value});
     }
     bool operator() (const Filter::Range& f) const {
         auto scale = (f.hasPixelArea) ? ctx.getPixelAreaScale() : 1.f;
-        auto& value = (f.keyword == FilterKeyword::undefined)
-            ? props.get(f.key)
-            : ctx.getKeyword(f.keyword);
-        return Value::visit(value, match_range{f, scale});
+        return Value::visit(props.get(f.key),
+                            match_range{f.min, f.max, scale});
+    }
+    bool operator() (const Filter::EqualityKeySet& f) const {
+        return Value::visit(Value{ctx.getFilterKey(f.key)},
+                            match_equal_set{f.values});
+    }
+    bool operator() (const Filter::EqualityKey& f) const {
+        return Value::visit(Value{ctx.getFilterKey(f.key)},
+                            match_equal{f.value});
+    }
+    bool operator() (const Filter::RangeKey& f) const {
+        auto scale = (f.hasPixelArea) ? ctx.getPixelAreaScale() : 1.f;
+        return Value::visit(Value{ctx.getFilterKey(f.key)},
+                            match_range{f.min, f.max, scale});
     }
     bool operator() (const Filter::Function& f) const {
         return ctx.evalFilter(f.id);

@@ -7,6 +7,7 @@
 #include "mockPlatform.h"
 #include "log.h"
 #include "data/tileSource.h"
+#include "scene/filters.h"
 #include "scene/importer.h"
 #include "scene/scene.h"
 #include "scene/dataLayer.h"
@@ -28,8 +29,8 @@
 
 using namespace Tangram;
 
-template<size_t jscontext>
-class FilterFunctionsFixture : public benchmark::Fixture {
+template<class Context>
+class GetPropertyFixtureFixture : public benchmark::Fixture {
 public:
     Context ctx;
     Feature feature;
@@ -53,13 +54,12 @@ public:
 };
 
 #ifdef TANGRAM_USE_JSCORE
-using JSCoreGetPropertyFixture = JSGetPropertyFixture<JSCore::Context>;
+using JSCoreGetPropertyFixture = GetPropertyFixtureFixture<JSCore::Context>;
 RUN(JSCoreGetPropertyFixture, JSCoreGetPropertyBench)
 #endif
 
-using DuktapeGetPropertyFixture = JSGetPropertyFixture<Duktape::Context>;
+using DuktapeGetPropertyFixture = GetPropertyFixtureFixture<Duktape::Context>;
 RUN(DuktapeGetPropertyFixture, DuktapeGetPropertyBench)
-
 
 const char scene_file[] = "bubble-wrap-style.zip";
 //const char scene_file[] = "res/scene.yaml";
@@ -119,7 +119,7 @@ struct JSTileStyleFnFixture : public benchmark::Fixture {
         globalSetup();
         ctx.reset(new StyleContext(jsCore));
         ctx->initFunctions(*scene);
-        ctx->setKeywordZoom(10);
+        ctx->setFilterKey(Filter::Key::zoom, 10);
     }
     void TearDown(const ::benchmark::State& state) override {
         LOG(">>> %d", evalCnt);
