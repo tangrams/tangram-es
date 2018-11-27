@@ -118,7 +118,7 @@ JSCoreContext::JSCoreContext() : _strings(256) {
     JSClassRelease(jsFeatureClass);
     JSObjectRef jsGlobalObject = JSContextGetGlobalObject(_context);
     JSStringRef jsFeatureName = JSStringCreateWithUTF8CString("feature");
-    JSObjectSetProperty(_context, jsGlobalObject, jsFeatureName, jsFeatureObject, kJSPropertyAttributeNone, nullptr);
+    JSObjectSetProperty(_context, jsGlobalObject, jsFeatureName, jsFeatureObject, kJSPropertyAttributeReadOnly, nullptr);
     JSStringRelease(jsFeatureName);
 
     // Create geometry constants.
@@ -142,7 +142,7 @@ void JSCoreContext::setGlobalValue(const std::string& name, JSValue value) {
     JSObjectRef jsGlobalObject = JSContextGetGlobalObject(_context);
     JSStringRef jsPropertyName = JSStringCreateWithUTF8CString(name.c_str());
     JSValueRef jsValueForProperty = reinterpret_cast<JSCoreValue*>(value.get())->getValueRef();
-    JSObjectSetProperty(_context, jsGlobalObject, jsPropertyName, jsValueForProperty, kJSPropertyAttributeNone, nullptr);
+    JSObjectSetProperty(_context, jsGlobalObject, jsPropertyName, jsValueForProperty, kJSPropertyAttributeReadOnly, nullptr);
     JSStringRelease(jsPropertyName);
 }
 
