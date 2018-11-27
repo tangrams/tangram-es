@@ -104,7 +104,7 @@ void JSCoreValue::setValueForProperty(const std::string& name, JSValue value) {
     JSObjectSetProperty(_ctx, jsObject, jsPropertyName, jsValueForProperty, kJSPropertyAttributeNone, nullptr);
 }
 
-JSCoreContext::JSCoreContext() {
+JSCoreContext::JSCoreContext() : _strings(256) {
 
     _group = JSContextGroupCreate();
     _context = JSGlobalContextCreateInGroup(_group, nullptr);
@@ -285,10 +285,7 @@ JSValueRef JSCoreContext::jsGetPropertyCallback(JSContextRef context, JSObjectRe
     JSStringGetUTF8CString(property, nameBuffer, sizeof(nameBuffer));
     auto it = feature->props.get(nameBuffer);
     if (it.is<std::string>()) {
-        CFStringRef cfString = CFStringCreateWithCStringNoCopy(kCFAllocatorDefault, it.get<std::string>().c_str(), kCFStringEncodingUTF8, kCFAllocatorNull);
-        JSStringRef jsString = JSStringCreateWithCFString(cfString);
-        jsValue = JSValueMakeString(context, jsString);
-        JSStringRelease(jsString);
+        jsValue = jsCoreContext->_strings.get(context, it.get<std::string>());
     } else if (it.is<double>()) {
         jsValue = JSValueMakeNumber(context, it.get<double>());
     }
