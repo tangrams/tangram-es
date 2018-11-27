@@ -24,7 +24,6 @@ using JSFunctionIndex = uint32_t;
 
 namespace Duktape {
 
-const static char INSTANCE_ID[] = "\xff""\xff""obj";
 const static char FUNC_ID[] = "\xff""\xff""fns";
 const static char GLOBAL_ID[] = "\xff""\xff""glb";
 const static char FEATURE_ID[] = "\xff""\xff""fet";
@@ -158,7 +157,6 @@ struct Context {
     duk_context* _ctx = nullptr;
     const Feature* _feature = nullptr;
     void* _featurePtr = nullptr;
-    void* _instancePtr = nullptr;
     void* _functionsPtr = nullptr;
     void* _globalPtr = nullptr;
 
@@ -203,17 +201,6 @@ struct Context {
             return;
         }
 
-        duk_idx_t instanceObj = duk_push_object(_ctx);
-        _instancePtr = duk_get_heapptr(_ctx, instanceObj);
-        if (!_instancePtr) {
-            LOGE("'Instance object not set");
-            return;
-        }
-        if(!duk_put_global_string(_ctx, INSTANCE_ID)) {
-            LOGE("'Instance object not set 2");
-            return;
-
-        }
         // Create 'feature' object and store in global
         // Feature object
         duk_push_object(_ctx);
@@ -533,16 +520,6 @@ private:
             DBG("[%p] >>>>> found %s - %d", context, str, blen);
             return context->_lastPushed;
         }
-        // if (context->_calling) {
-        //     DBG("[%p] >>>>> check %p - %d - cnt:%d", context, str, blen, context->m_stringCache.size());
-        //     for (auto p : context->_stringCache) {
-        //         if (p.first == str) {
-        //             DBG("[%p] >>>>> found %p - %d", context, str, blen);
-        //             out = p.first;
-        //             break;
-        //         }
-        //     }
-        // }
         return nullptr;
     }
 
