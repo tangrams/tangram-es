@@ -18,9 +18,13 @@
 #include <iostream>
 #include <vector>
 
+#define NUM_ITERATIONS 0
 
-//#define ITERATIONS ->Iterations(1)
+#if NUM_ITERATIONS
+#define ITERATIONS ->Iterations(NUM_ITERATIONS)
+#else
 #define ITERATIONS
+#endif
 
 #define RUN(FIXTURE, NAME)                                              \
     BENCHMARK_DEFINE_F(FIXTURE, NAME)(benchmark::State& st) { while (st.KeepRunning()) { run(); } } \
@@ -28,8 +32,7 @@
 
 using namespace Tangram;
 
-const char scene_file[] = "bubble-wrap-style.zip";
-//const char scene_file[] = "res/scene.yaml";
+const char scene_file[] = "res/scene.yaml";
 const char tile_file[] = "res/tile.mvt";
 
 std::shared_ptr<Scene> scene;
@@ -84,10 +87,12 @@ template<size_t jscontext>
 class TileBuilderFixture : public benchmark::Fixture {
 public:
     std::unique_ptr<TileBuilder> tileBuilder;
+    StyleContext* styleContext;
     std::shared_ptr<Tile> result;
     void SetUp(const ::benchmark::State& state) override {
         globalSetup();
-        tileBuilder = std::make_unique<TileBuilder>(scene, new StyleContext(jscontext));
+        styleContext = new StyleContext(jscontext);
+        tileBuilder = std::make_unique<TileBuilder>(scene, styleContext);
     }
     void TearDown(const ::benchmark::State& state) override {
         result.reset();
@@ -95,6 +100,7 @@ public:
 
     __attribute__ ((noinline)) void run() {
         result = tileBuilder->build({0,0,10,10}, *tileData, *source);
+        styleContext->clear();
     }
 };
 

@@ -240,6 +240,10 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::text_source", "[Duktape][evalStyle
     REQUIRE(ctx.evalStyle(1, StyleParamKey::text_source, value) == true);
     REQUIRE(value.is<std::string>());
     REQUIRE(value.get<std::string>() == "my name is my name");
+
+    REQUIRE(ctx.evalStyle(1, StyleParamKey::text_source, value) == true);
+    REQUIRE(value.is<std::string>());
+    REQUIRE(value.get<std::string>() == "my name is my name");
 }
 
 TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFilter]") {

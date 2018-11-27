@@ -20,8 +20,13 @@
 
 #include <functional>
 
-#define ITERATIONS ->Iterations(10)
-//#define ITERATIONS
+#define NUM_ITERATIONS 0
+
+#if NUM_ITERATIONS
+#define ITERATIONS ->Iterations(NUM_ITERATIONS)
+#else
+#define ITERATIONS
+#endif
 
 #define RUN(FIXTURE, NAME)                                              \
     BENCHMARK_DEFINE_F(FIXTURE, NAME)(benchmark::State& st) { while (st.KeepRunning()) { run(); } } \
