@@ -1,4 +1,4 @@
-add_library(duktape duktape.c)
+add_library(duktape duktape.c extstr.c)
 
 target_compile_options(duktape PRIVATE
   -fstrict-aliasing

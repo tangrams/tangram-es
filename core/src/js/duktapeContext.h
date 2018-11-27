@@ -172,6 +172,12 @@ struct Context {
     }
 
     Context() {
+
+        static std::atomic<bool> initialized{false};
+        if (!initialized.exchange(true)) {
+            duk_extstr_set_handler(jsExtstrInternCheck, jsExtstrFree);
+        }
+
         // Create duktape heap with default allocation functions and
         // custom fatal error handler.
         _ctx = duk_create_heap(nullptr, nullptr, nullptr,
@@ -253,6 +259,7 @@ struct Context {
     void setCurrentFeature(const Feature* feature) {
         _feature = feature;
         _lastFeature = nullptr;
+        m_stringCache.clear();
     }
 
     void setFilterKey(Filter::Key _key, int _val) {
@@ -440,8 +447,13 @@ struct Context {
             args++;
             duk_push_number(_ctx, m_filterKeys[uint8_t(Filter::Key::geometry)]);
         }
+
+        _calling = true;
+
         // DUMP();
         if (duk_pcall(_ctx, args) != 0) {
+            _calling = false;
+
             LOG("Error: %s, function:%d feature:%p\n%s", duk_safe_to_string(_ctx, -1),
                 index, _feature, function.source.c_str());
 
@@ -449,6 +461,7 @@ struct Context {
             duk_pop(_ctx);
             return false;
         }
+        _calling = false;
         // -- why not return value here?
         //DBG("<<<<< EVAL <<<<<");
         return true;
@@ -502,11 +515,41 @@ private:
     const Feature* _lastFeature = nullptr;
     using prop_key = const char*;
     using prop_val = const Tangram::Value*;
-    std::array<std::pair<prop_key, prop_val>, 16> _propertyCache {};
-    uint32_t _propertyCacheUse = 0;
 
+    // Map out strings to duk heapPtr
+    std::vector<std::pair<const std::string&, const void*>> _stringCache {};
+    std::array<std::pair<prop_key, prop_val>, 16> _propertyCache {};
+
+    uint32_t _propertyCacheUse = 0;
     int _reuseCnt = 0;
     int fetchCnt = 0;
+    bool _calling = false;
+    const char* _lastPushed = nullptr;
+
+    static const char* jsExtstrInternCheck(void* udata, void* str, unsigned long blen) {
+        Context* context = reinterpret_cast<Context*>(udata);
+        const char* out = nullptr;
+        if (context->_lastPushed == str) {
+            DBG("[%p] >>>>> found %s - %d", context, str, blen);
+            return context->_lastPushed;
+        }
+        // if (context->_calling) {
+        //     DBG("[%p] >>>>> check %p - %d - cnt:%d", context, str, blen, context->m_stringCache.size());
+        //     for (auto p : context->_stringCache) {
+        //         if (p.first == str) {
+        //             DBG("[%p] >>>>> found %p - %d", context, str, blen);
+        //             out = p.first;
+        //             break;
+        //         }
+        //     }
+        // }
+        return nullptr;
+    }
+
+    static void jsExtstrFree(void* udata, const void *extdata) {
+        //Context* context = reinterpret_cast<Context*>(udata);
+        //LOG("[%p] >>>>> free %p", context, extdata);
+    }
 
     static const Tangram::Value* getProperty(Context* context) {
         // Get the requested object key
@@ -543,8 +586,14 @@ private:
         auto context = getContext(_ctx);
 
         if (context && context->_feature) {
-            bool hasProp = !(getProperty(context)->is<none_type>());
+            const Tangram::Value* val = getProperty(context);
+            bool hasProp = !(val->is<none_type>());
 
+            //if (val->is<std::string>()) {
+            //const auto& str = val->get<std::string>();
+            //context->m_stringCache.push_back(str.c_str());
+            //DBG("push %p %s", str.c_str(), str.c_str());
+            //}
             duk_push_boolean(_ctx, static_cast<duk_bool_t>(hasProp));
             return 1;
         }
@@ -565,7 +614,12 @@ private:
             if (val->is<std::string>()) {
                 const auto& str = val->get<std::string>();
 
+                DBG("push %p %s", str.c_str(), str.c_str());
+
+                context->_lastPushed = str.c_str();
                 duk_push_lstring(_ctx, str.c_str(), str.length());
+
+                context->_stringCache.emplace_back(str, duk_get_heapptr(_ctx, -1));
 
             } else if (val->is<double>()) {
                 duk_push_number(_ctx, val->get<double>());
