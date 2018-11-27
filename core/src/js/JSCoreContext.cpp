@@ -111,7 +111,8 @@ JSCoreContext::JSCoreContext() : _strings(256) {
 
     // Create the global 'feature' object.
     JSClassDefinition jsFeatureClassDefinition = kJSClassDefinitionEmpty;
-    jsFeatureClassDefinition.hasProperty = jsHasPropertyCallback;
+    // Empirically, feature property access is slightly faster when only 'getProperty' is provided.
+    //jsFeatureClassDefinition.hasProperty = jsHasPropertyCallback;
     jsFeatureClassDefinition.getProperty = jsGetPropertyCallback;
     JSClassRef jsFeatureClass = JSClassCreate(&jsFeatureClassDefinition);
     JSObjectRef jsFeatureObject = JSObjectMake(_context, jsFeatureClass, this);
