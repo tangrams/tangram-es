@@ -19,14 +19,17 @@
 #include <vector>
 
 
+//#define ITERATIONS ->Iterations(1)
+#define ITERATIONS
+
 #define RUN(FIXTURE, NAME)                                              \
     BENCHMARK_DEFINE_F(FIXTURE, NAME)(benchmark::State& st) { while (st.KeepRunning()) { run(); } } \
-    BENCHMARK_REGISTER_F(FIXTURE, NAME);  //->Iterations(1)
+    BENCHMARK_REGISTER_F(FIXTURE, NAME)ITERATIONS;
 
 using namespace Tangram;
 
-//const char scene_file[] = "bubble-wrap-style.zip";
-const char scene_file[] = "res/scene.yaml";
+const char scene_file[] = "bubble-wrap-style.zip";
+//const char scene_file[] = "res/scene.yaml";
 const char tile_file[] = "res/tile.mvt";
 
 std::shared_ptr<Scene> scene;

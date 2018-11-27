@@ -19,11 +19,47 @@
 
 #include <functional>
 
+#define ITERATIONS ->Iterations(10)
+//#define ITERATIONS
+
 #define RUN(FIXTURE, NAME)                                              \
     BENCHMARK_DEFINE_F(FIXTURE, NAME)(benchmark::State& st) { while (st.KeepRunning()) { run(); } } \
-    BENCHMARK_REGISTER_F(FIXTURE, NAME); //->Iterations(10);
+    BENCHMARK_REGISTER_F(FIXTURE, NAME) ITERATIONS;
 
 using namespace Tangram;
+
+template<size_t jscontext>
+class FilterFunctionsFixture : public benchmark::Fixture {
+public:
+    Context ctx;
+    Feature feature;
+    void SetUp(const ::benchmark::State& state) override {
+        JavaScriptScope<Context> jsScope(ctx);
+        ctx.setGlobalValue("language", jsScope.newString("en"));
+        feature.props.set("name:en", "Ozymandias");
+        feature.props.set("title", "King of Kings");
+        feature.props.set("number", 17);
+        ctx.setCurrentFeature(&feature);
+        ctx.setFunction(0, "function () { return (language && feature['name:' + language]) || title; }");
+        ctx.setFunction(1, "function () { return feature.order || feature.number; }");
+    }
+    __attribute__ ((noinline)) void run() {
+        StyleParam::Value value;
+        benchmark::DoNotOptimize(value);
+        JavaScriptScope<Context> jsScope(ctx);
+        value = jsScope.getFunctionResult(0).toString();
+        value = (float)jsScope.getFunctionResult(1).toDouble();
+     }
+};
+
+#ifdef TANGRAM_USE_JSCORE
+using JSCoreGetPropertyFixture = JSGetPropertyFixture<JSCore::Context>;
+RUN(JSCoreGetPropertyFixture, JSCoreGetPropertyBench)
+#endif
+
+using DuktapeGetPropertyFixture = JSGetPropertyFixture<Duktape::Context>;
+RUN(DuktapeGetPropertyFixture, DuktapeGetPropertyBench)
+
 
 const char scene_file[] = "bubble-wrap-style.zip";
 //const char scene_file[] = "res/scene.yaml";
@@ -71,39 +107,6 @@ void globalSetup() {
         exit(-1);
     }
 }
-
-
-template<class Context>
-class JSGetPropertyFixture : public benchmark::Fixture {
-public:
-    Context ctx;
-    Feature feature;
-    void SetUp(const ::benchmark::State& state) override {
-        JavaScriptScope<Context> jsScope(ctx);
-        ctx.setGlobalValue("language", jsScope.newString("en"));
-        feature.props.set("name:en", "Ozymandias");
-        feature.props.set("title", "King of Kings");
-        feature.props.set("number", 17);
-        ctx.setCurrentFeature(&feature);
-        ctx.setFunction(0, "function () { return (language && feature['name:' + language]) || title; }");
-        ctx.setFunction(1, "function () { return feature.order || feature.number; }");
-    }
-    __attribute__ ((noinline)) void run() {
-        StyleParam::Value value;
-        benchmark::DoNotOptimize(value);
-        JavaScriptScope<Context> jsScope(ctx);
-        value = jsScope.getFunctionResult(0).toString();
-        value = (float)jsScope.getFunctionResult(1).toDouble();
-     }
-};
-
-#ifdef TANGRAM_USE_JSCORE
-using JSCoreGetPropertyFixture = JSGetPropertyFixture<JSCore::Context>;
-RUN(JSCoreGetPropertyFixture, JSCoreGetPropertyBench)
-#endif
-
-using DuktapeGetPropertyFixture = JSGetPropertyFixture<Duktape::Context>;
-RUN(DuktapeGetPropertyFixture, DuktapeGetPropertyBench)
 
 template<size_t jsCore>
 struct JSTileStyleFnFixture : public benchmark::Fixture {
@@ -172,6 +175,7 @@ RUN(JSCoreTileStyleFnFixture, JSCoreTileStyleFnBench)
 using DuktapeTileStyleFnFixture = JSTileStyleFnFixture<0>;
 RUN(DuktapeTileStyleFnFixture, DuktapeTileStyleFnBench)
 
+
 class DirectGetPropertyFixture : public benchmark::Fixture {
 public:
     Feature feature;
@@ -192,6 +196,6 @@ BENCHMARK_DEFINE_F(DirectGetPropertyFixture, DirectGetPropertyBench)(benchmark::
         }
     }
 }
-BENCHMARK_REGISTER_F(DirectGetPropertyFixture, DirectGetPropertyBench);
+BENCHMARK_REGISTER_F(DirectGetPropertyFixture, DirectGetPropertyBench) ITERATIONS;
 
 BENCHMARK_MAIN();
