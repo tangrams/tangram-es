@@ -7,14 +7,28 @@
 
 #if 0
 #define DUMP() do {                             \
-        duk_push_context_dump(_ctx);           \
-        LOG("%s", duk_to_string(_ctx, -1));    \
-        duk_pop(_ctx);                         \
+        bool calling = _calling;                \
+        _dumping = true;                        \
+        duk_push_context_dump(_ctx);            \
+        LOG("%s", duk_to_string(_ctx, -1));     \
+        duk_pop(_ctx);                          \
+        _calling = calling;                     \
+        _dumping = false;                       \
+    } while(0)
+#define DUMPCTX(context) do {                           \
+        bool calling = context._calling;                \
+        context._dumping = true;                        \
+        duk_push_context_dump(context._ctx);            \
+        LOG("%s", duk_to_string(context._ctx, -1));     \
+        duk_pop(context._ctx);                          \
+        context._calling = calling;                     \
+        context._dumping = false;                       \
     } while(0)
 #define DBG(...) LOG(__VA_ARGS__)
 #else
 #define DUMP()
 #define DBG(...)
+#define DUMPCTX(...)
 #endif
 
 namespace Tangram {
@@ -443,6 +457,9 @@ struct Context {
 
         _calling = true;
 
+        DBG(">>>>> Calling %d", index);
+        DUMP();
+
         // DUMP();
         if (duk_pcall(_ctx, args) != 0) {
             _calling = false;
@@ -529,16 +546,19 @@ private:
     int _freeCnt = 0;
 
     bool _calling = false;
+    bool _dumping = false;
 
     const char* _lastPushed = nullptr;
 
     static const char* jsExtstrInternCheck(void* udata, void* str, unsigned long blen) {
         Context& context = *reinterpret_cast<Context*>(udata);
-        DBG("[%p / %p] >>>>> check %.*s - %d", str, context._lastPushed, blen, str, blen);
-        if (context._lastPushed == str) {
-            DBG("[%p] >>>>> found %.*s - %d", str, blen, str, blen);
-            context._allocCnt++;
-            return context._lastPushed;
+        if (context._calling) {
+            //DBG("[%p / %p] >>>>> check %.*s - %d", str, context._lastPushed, blen, str, blen);
+            if (context._lastPushed == str) {
+                DBG("[%p] >>>>> found %.*s - %d", str, blen, str, blen);
+                context._allocCnt++;
+                return context._lastPushed;
+            }
         }
         return nullptr;
     }
@@ -611,13 +631,17 @@ private:
 
     // Implements Proxy handler.get(target_object, key)
     static int jsGetProperty(duk_context *_ctx) {
-
+        DBG("jsGetProperty");
         auto& context = getContext(_ctx);
+        if (context._dumping) { return 0; }
+
+        DUMPCTX(context);
 
         if (!context._feature) {
-            //LOGN("Error: no context found for %p / %p %p",  _ctx, context, context._feature);
+            //LOGN("Error: no featurein context %p / %p %p",  _ctx, &context, context._feature);
             return 0;
         }
+#ifdef STASH_PROPERTIES
         if (context._feature == context._lastFeature) {
             duk_push_heap_stash(_ctx);
 
@@ -633,6 +657,8 @@ private:
             duk_pop(_ctx); // pop stash
         }
         context._lastFeature = context._feature;
+#endif
+        //DUMP();
 
         // Get the property name (second parameter)
         auto& entry = getProperty(context);
@@ -645,27 +671,40 @@ private:
             } else {
                 context._lastPushed = str.c_str();
 
-                //duk_idx_t featureIdx = duk_push_heapptr(_ctx, context._featurePtr);
-                //duk_idx_t featureIdx = duk_push_heapptr(_ctx, context._objectPtr);
+#ifdef STASH_PROPERTIES
                 duk_push_heap_stash(_ctx);
+#else
+                duk_idx_t featureIdx = duk_push_heapptr(_ctx, context._featurePtr);
+                //duk_idx_t featureIdx = duk_push_heapptr(_ctx, context._objectPtr);
+#endif
+                DBG("push string  %p %s -> %p", str.c_str(), str.c_str(), entry.ptr);
 
                 // TODO check if we get an interned ref!
                 duk_push_lstring(_ctx, str.c_str(), str.length());
                 entry.ptr = duk_get_heapptr(_ctx, -1);
 
-                duk_dup_top(_ctx); //
+                DUMPCTX(context);
 
-                // Store
-                //duk_put_prop_heapptr(_ctx, featureIdx, duk_get_heapptr(_ctx, 1));
+                // Duplicate to stash string
+                duk_dup_top(_ctx);
+
+#ifdef STASH_PROPERTIES
+                // Store in s
                 duk_put_prop_heapptr(_ctx, -3, duk_get_heapptr(_ctx, 1));
+#else
+                duk_put_prop_heapptr(_ctx, featureIdx, duk_get_heapptr(_ctx, 1));
+#endif
                 //duk_pop(_ctx); // pop stash
-                 DBG("push string  %p %s -> %p", str.c_str(), str.c_str(), entry.ptr);
+                //duk_pop(_ctx); // pop stash
+
+                DUMPCTX(context);
             }
         } else if (entry.val->is<double>()) {
             duk_push_number(_ctx, entry.val->get<double>());
         } else {
             duk_push_undefined(_ctx);
         }
+        //DUMP();
         return 1;
     }
 
