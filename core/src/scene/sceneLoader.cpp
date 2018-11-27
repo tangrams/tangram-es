@@ -207,6 +207,7 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
         LOGW("No source defined in the yaml scene configuration.");
     }
 
+
     if (Node textures = config["textures"]) {
         for (const auto& texture : textures) {
             try { loadTexture(_platform, texture, _scene); }
@@ -308,9 +309,9 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
         _scene->animated(YamlUtil::getBoolOrDefault(animated, false));
     }
 
-    for (auto& style : _scene->styles()) {
-        style->build(*_scene);
-    }
+    //for (auto& style : _scene->styles()) {
+        //style->build(*_scene);
+    //}
 
     return true;
 }
