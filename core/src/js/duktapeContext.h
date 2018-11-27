@@ -144,8 +144,7 @@ struct Function {
         bool geom = false;
         bool global = false;
     } context;
-    // for debugging - owned by scene
-    //const std::string* source = nullptr;
+    std::string source;
 };
 
 static Context* getContext(duk_context* _ctx) {
@@ -236,7 +235,7 @@ struct Context {
 
     void setGlobalValue(const std::string& name, Value value) {
         DBG(">>>>> GLOBAL >>>>>");
-        DUMP();
+        //DUMP();
         value.ensureExistsOnStackTop();
 
         if (name == "global") {
@@ -290,8 +289,8 @@ struct Context {
         return getStackTopValue();
     }
 
-    bool setFunction(JSFunctionIndex index, const std::string& fn) {
-        DBG(">>>> FUNCTION >>>>");
+    bool setFunction(JSFunctionIndex index, const std::string& source) {
+        DBG(">>>> FUNCTION >>>> %d", index);
 
         if (m_functions.size() == index) {
             m_functions.emplace_back();
@@ -311,49 +310,91 @@ struct Context {
         std::string args;
         // TODO use proper regex
 
-        size_t hasFeature = fn.find("feature");
+        size_t hasGlobal = source.find("global");
+        if (hasGlobal != std::string::npos) {
+            args += "global";
+            append = true;
+            function.context.global = true;
+        }
+        size_t hasFeature = source.find("feature");
         if (hasFeature != std::string::npos) {
+            if (append) { args += ","; }
             args += "feature";
             append = true;
             function.context.feature = true;
         }
-        size_t hasZoom = fn.find("$zoom");
+        size_t hasZoom = source.find("$zoom");
         if (hasZoom != std::string::npos) {
             if (append) { args += ","; }
             args += "$zoom";
             append = true;
             function.context.zoom = true;
         }
-        size_t hasGeom = fn.find("$geometry");
+        size_t hasGeom = source.find("$geometry");
         if (hasGeom != std::string::npos) {
             if (append) { args += ","; }
             args += "$geometry";
-            append = true;
             function.context.geom = true;
         }
-        size_t hasGlobal = fn.find("global");
-        if (hasGlobal != std::string::npos) {
-            if (append) { args += ","; }
-            args += "global";
-            function.context.global = true;
-        }
 
-        size_t beg = fn.find('(')+1;
-        std::string wrap = fn;
-        wrap.insert(beg, args);
-
-        DBG("fn: %s", wrap.c_str());
+        size_t beg = source.find('(')+1;
+        function.source = source;
+        function.source.insert(beg, args);
 
         if (duk_pcompile_lstring(_ctx, DUK_COMPILE_FUNCTION,
-                                 wrap.c_str(), wrap.length()) == 0) {
+                                 function.source.c_str(), function.source.length()) == 0) {
+
+#if 0
+            if (hasGlobal != std::string::npos) {
+
+                if (duk_get_prop_string(_ctx, -1, "apply") == 0)
+
+                LOG("APPLY");
+
+                // context
+                duk_push_null(_ctx);
+                // args
+                duk_push_array(_ctx);
+                duk_push_heapptr(_ctx, _globalPtr);
+                duk_put_prop_index(_ctx, -2, 0);
+                DUMP();
+
+                //const char* pe =
+                    // R"(function(f, context, args) {
+                    //      if(!args) args = [];
+                    //      if (args.length === f.length) return f.apply(context, args);
+                    //      return function partial (a) {
+                    //         var args_copy = args.concat.apply(args, arguments);
+                    //         return this(f, context, args_copy);
+                    //       }
+                    //  })(f, context, args);)";
+
+                //if (duk_peval_string(_ctx, pe)) {
+
+
+                    if (duk_pcall(_ctx, 2) != DUK_EXEC_SUCCESS ) {
+                        LOGW("Compile partial failed: %s\n%s\n---",
+                             duk_safe_to_string(_ctx, -1), function.source.c_str());
+
+                        // Pop error
+                        // duk_pop(_ctx);
+                        // // Pop array
+                        // duk_pop(_ctx);
+
+                    }
+                    DUMP();
+                }
+#endif
+
             function.ptr = duk_get_heapptr(_ctx, -1);
+
             // Store function in global.functions to make sure it will not be
             // garbage collected.
             duk_put_prop_index(_ctx, -2, index);
 
         } else {
             LOGW("Compile failed: %s\n%s\n---",
-                 duk_safe_to_string(_ctx, -1), wrap.c_str());
+                 duk_safe_to_string(_ctx, -1), function.source.c_str());
             // Pop error
             duk_pop(_ctx);
             // Pop array
@@ -367,7 +408,7 @@ struct Context {
     }
 
     bool evaluateFunction(JSFunctionIndex index) {
-        DBG(">>>>> EVAL >>>>>");
+        //DBG(">>>>> EVAL >>>>> %d", index);
 
         if (m_functions.size() <= index) {
             LOGE("Functions array not initialized. index:%d size:%d",
@@ -381,14 +422,15 @@ struct Context {
 
         auto &function = m_functions[index];
         duk_push_heapptr(_ctx, function.ptr);
+
         int args = 0;
-        if (function.context.feature) {
-            args++;
-            duk_push_heapptr(_ctx, _featurePtr);
-        }
         if (function.context.global) {
             args++;
             duk_push_heapptr(_ctx, _globalPtr);
+        }
+        if (function.context.feature) {
+            args++;
+            duk_push_heapptr(_ctx, _featurePtr);
         }
         if (function.context.zoom) {
             args++;
@@ -398,16 +440,17 @@ struct Context {
             args++;
             duk_push_number(_ctx, m_filterKeys[uint8_t(Filter::Key::geometry)]);
         }
+        // DUMP();
         if (duk_pcall(_ctx, args) != 0) {
-            LOG("Error: %s, function:%d feature:%p", duk_safe_to_string(_ctx, -1),
-                index, _feature);
+            LOG("Error: %s, function:%d feature:%p\n%s", duk_safe_to_string(_ctx, -1),
+                index, _feature, function.source.c_str());
 
             // Pop error
             duk_pop(_ctx);
             return false;
         }
         // -- why not return value here?
-        DBG("<<<<< EVAL <<<<<");
+        //DBG("<<<<< EVAL <<<<<");
         return true;
     }
 
