@@ -146,10 +146,11 @@ struct Function {
     std::string source;
 };
 
-static Context* getContext(duk_context* _ctx) {
+static Context& getContext(duk_context* _ctx) {
     duk_memory_functions funcs;
     duk_get_memory_functions(_ctx, &funcs);
-    return reinterpret_cast<Context*>(funcs.udata);
+    assert(funcs.udata != nullptr);
+    return *reinterpret_cast<Context*>(funcs.udata);
 }
 
 struct Context {
@@ -157,6 +158,7 @@ struct Context {
     duk_context* _ctx = nullptr;
     const Feature* _feature = nullptr;
     void* _featurePtr = nullptr;
+    void* _objectPtr = nullptr;
     void* _functionsPtr = nullptr;
     void* _globalPtr = nullptr;
 
@@ -165,8 +167,10 @@ struct Context {
 
     ~Context() {
         duk_destroy_heap(_ctx);
-        DBG("gets:%d reused:%d - %f%%\n", fetchCnt+_reuseCnt, _reuseCnt,
-            float(_reuseCnt) / float(fetchCnt + _reuseCnt) * 100 );
+        LOG("gets:%d reused:%d - %f%% / extstr:%d freed%d\n",
+            _fetchCnt+_reuseCnt, _reuseCnt,
+            float(_reuseCnt) / float(_fetchCnt + _reuseCnt) * 100,
+            _allocCnt, _freeCnt);
     }
 
     Context() {
@@ -204,6 +208,7 @@ struct Context {
         // Create 'feature' object and store in global
         // Feature object
         duk_push_object(_ctx);
+        _objectPtr = duk_require_heapptr(_ctx, -1);
 
         // Handler object
         duk_idx_t handlerObj = duk_push_object(_ctx);
@@ -246,7 +251,8 @@ struct Context {
     void setCurrentFeature(const Feature* feature) {
         _feature = feature;
         _lastFeature = nullptr;
-        m_stringCache.clear();
+        _propertyCacheUse = 0;
+        //m_stringCache.clear();
     }
 
     void setFilterKey(Filter::Key _key, int _val) {
@@ -500,71 +506,95 @@ private:
 
     // Cache Feature property indexes
     const Feature* _lastFeature = nullptr;
+
+    // Map strings to duk heapPtr
+    std::vector<std::pair<const std::string&, const void*>> _stringCache {};
+
     using prop_key = const char*;
     using prop_val = const Tangram::Value*;
+    using heap_ptr = void*;
 
-    // Map out strings to duk heapPtr
-    std::vector<std::pair<const std::string&, const void*>> _stringCache {};
-    std::array<std::pair<prop_key, prop_val>, 16> _propertyCache {};
+
+    struct cache_entry {
+        prop_key key = nullptr;
+        prop_val val = &NOT_A_VALUE;
+        heap_ptr ptr = nullptr;
+    };
+    std::array<cache_entry, 16> _propertyCache {};
 
     uint32_t _propertyCacheUse = 0;
     int _reuseCnt = 0;
-    int fetchCnt = 0;
+    int _fetchCnt = 0;
+    int _allocCnt = 0;
+    int _freeCnt = 0;
+
     bool _calling = false;
+
     const char* _lastPushed = nullptr;
 
     static const char* jsExtstrInternCheck(void* udata, void* str, unsigned long blen) {
-        Context* context = reinterpret_cast<Context*>(udata);
-        const char* out = nullptr;
-        if (context->_lastPushed == str) {
-            DBG("[%p] >>>>> found %s - %d", context, str, blen);
-            return context->_lastPushed;
+        Context& context = *reinterpret_cast<Context*>(udata);
+        DBG("[%p / %p] >>>>> check %.*s - %d", str, context._lastPushed, blen, str, blen);
+        if (context._lastPushed == str) {
+            DBG("[%p] >>>>> found %.*s - %d", str, blen, str, blen);
+            context._allocCnt++;
+            return context._lastPushed;
         }
         return nullptr;
     }
 
     static void jsExtstrFree(void* udata, const void *extdata) {
-        //Context* context = reinterpret_cast<Context*>(udata);
-        //LOG("[%p] >>>>> free %p", context, extdata);
+        Context& context = *reinterpret_cast<Context*>(udata);
+        context._freeCnt++;
+        //DBG("[%p] >>>>> free %p", &context, extdata);
     }
 
-    static const Tangram::Value* getProperty(Context* context) {
+    static cache_entry& getProperty(Context& context) {
         // Get the requested object key
-        const char* key = duk_require_string(context->_ctx, 1);
+        const char* key = duk_require_string(context._ctx, 1);
 
-        if (context->_lastFeature == context->_feature) {
-            auto used = context->_propertyCacheUse;
-            auto cache = context->_propertyCache;
-            for (auto i = 0; i < used; i++) {
-                if (cache[i].first == key) {
-                    context->_reuseCnt++;
-                    return cache[i].second;
-                }
+        auto& cache = context._propertyCache;
+        size_t use = context._propertyCacheUse;
+
+        DBG("get prop %d %s", use, key);
+
+        for (auto i = 0; i < use; i++) {
+            DBG("entry cached");
+            if (cache[i].key == key) {
+                context._reuseCnt++;
+
+                return cache[i];
             }
-        } else {
-            context->_propertyCacheUse = 0;
         }
 
-        context->fetchCnt++;
-        context->_lastFeature = context->_feature;
-        auto val = &context->_feature->props.get(key);
+        context._fetchCnt++;
 
-        auto use = context->_propertyCacheUse;
-        if (use < context->_propertyCache.size()) {
-            context->_propertyCache[use] = {key, val};
-            context->_propertyCacheUse++;
+        if (use == cache.size()) {
+            LOG("overflowing cache!");
+            use = context._propertyCacheUse = 0;
         }
-        return val;
+
+        //if (use < context->_propertyCache.size()) {
+        DBG("caching");
+
+        auto& entry= cache[use];
+        entry.key = key;
+        entry.val = &(context._feature->props.get(key));
+        entry.ptr = nullptr;
+
+        ++context._propertyCacheUse;
+        //}
+        return entry;
     }
 
     // Implements Proxy handler.has(target_object, key)
     static int jsHasProperty(duk_context *_ctx) {
 
-        auto context = getContext(_ctx);
+        auto& context = getContext(_ctx);
 
-        if (context && context->_feature) {
-            const Tangram::Value* val = getProperty(context);
-            bool hasProp = !(val->is<none_type>());
+        if (context._feature) {
+            auto& entry = getProperty(context);
+            bool hasProp = !(entry.val->is<none_type>());
 
             //if (val->is<std::string>()) {
             //const auto& str = val->get<std::string>();
@@ -574,41 +604,69 @@ private:
             duk_push_boolean(_ctx, static_cast<duk_bool_t>(hasProp));
             return 1;
         }
-        LOGN("Error: no context found for dukctx:%p this:%p feature:%p",
-             _ctx, context, context ? context->_feature : nullptr);
+        //LOGN("Error: no context found for dukctx:%p this:%p feature:%p",
+        //_ctx, context, context._feature);
         return 0;
     }
 
     // Implements Proxy handler.get(target_object, key)
     static int jsGetProperty(duk_context *_ctx) {
 
-        auto context = getContext(_ctx);
+        auto& context = getContext(_ctx);
 
-        if (context && context->_feature) {
-            // Get the property name (second parameter)
-            const Tangram::Value* val = getProperty(context);
-
-            if (val->is<std::string>()) {
-                const auto& str = val->get<std::string>();
-
-                DBG("push %p %s", str.c_str(), str.c_str());
-
-                context->_lastPushed = str.c_str();
-                duk_push_lstring(_ctx, str.c_str(), str.length());
-
-                context->_stringCache.emplace_back(str, duk_get_heapptr(_ctx, -1));
-
-            } else if (val->is<double>()) {
-                duk_push_number(_ctx, val->get<double>());
-            } else {
-                duk_push_undefined(_ctx);
-            }
-            // FIXME: Distinguish Booleans here as well
-            return 1;
+        if (!context._feature) {
+            //LOGN("Error: no context found for %p / %p %p",  _ctx, context, context._feature);
+            return 0;
         }
-        LOGN("Error: no context found for %p / %p %p",  _ctx, context,
-             context ? context->_feature : nullptr);
-        return 0;
+        if (context._feature == context._lastFeature) {
+            duk_push_heap_stash(_ctx);
+
+            // duk_idx_t featureIdx = duk_push_heapptr(_ctx, context._objectPtr);
+            duk_dup(_ctx, 1);
+
+            if (duk_get_prop(_ctx, -2)) {
+                DBG("stashed");
+                return 1;
+            } else {
+                duk_pop(_ctx); // pop undefined
+            }
+            duk_pop(_ctx); // pop stash
+        }
+        context._lastFeature = context._feature;
+
+        // Get the property name (second parameter)
+        auto& entry = getProperty(context);
+
+        if (entry.val->is<std::string>()) {
+            const auto& str = entry.val->get<std::string>();
+            if (entry.ptr) {
+                DBG("push pointer %p - %s", entry.ptr, str.c_str());
+                duk_push_heapptr(_ctx, entry.ptr);
+            } else {
+                context._lastPushed = str.c_str();
+
+                //duk_idx_t featureIdx = duk_push_heapptr(_ctx, context._featurePtr);
+                //duk_idx_t featureIdx = duk_push_heapptr(_ctx, context._objectPtr);
+                duk_push_heap_stash(_ctx);
+
+                // TODO check if we get an interned ref!
+                duk_push_lstring(_ctx, str.c_str(), str.length());
+                entry.ptr = duk_get_heapptr(_ctx, -1);
+
+                duk_dup_top(_ctx); //
+
+                // Store
+                //duk_put_prop_heapptr(_ctx, featureIdx, duk_get_heapptr(_ctx, 1));
+                duk_put_prop_heapptr(_ctx, -3, duk_get_heapptr(_ctx, 1));
+                //duk_pop(_ctx); // pop stash
+                 DBG("push string  %p %s -> %p", str.c_str(), str.c_str(), entry.ptr);
+            }
+        } else if (entry.val->is<double>()) {
+            duk_push_number(_ctx, entry.val->get<double>());
+        } else {
+            duk_push_undefined(_ctx);
+        }
+        return 1;
     }
 
     static void fatalErrorHandler(void* udata, const char* message) {
