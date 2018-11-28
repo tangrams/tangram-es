@@ -2,7 +2,7 @@
 # USAGE
 #   run_bench.sh [bench_build_dir]
 #
-build_dir="build"
+build_dir="build/bench"
 if [[ $1 ]]; then
     build_dir=$1
 fi

@@ -2,7 +2,7 @@
 # USAGE
 #   run_tests.sh [test_build_dir]
 #
-build_dir="build"
+build_dir="build/tests"
 if [[ $1 ]]; then
     build_dir=$1
 fi
