@@ -44,7 +44,7 @@ void TileWorker::run(Worker* instance) {
             std::unique_lock<std::mutex> lock(m_mutex);
 
             m_condition.wait(lock, [&] {
-                return (!m_queue.empty() && m_sceneComplete) || !m_running || instance->tileBuilder;
+                return !m_queue.empty() || !m_running || instance->tileBuilder;
             });
 
             if (instance->tileBuilder) {

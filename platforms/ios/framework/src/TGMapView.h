@@ -96,17 +96,6 @@ TG_EXPORT
 #pragma mark Loading Scenes
 
 /**
- Load a scene file synchronously from a URL with a list of updates.
-
- If an error occurs while applying updates the new scene will not be applied. See `TGSceneUpdate` for details.
-
- @param url An http(s) or file URL for the scene file.
- @param updates A list of `TGSceneUpdate` to apply to the scene, or `nil`.
- @return The integer ID for the new scene or -1 if the scene cannot be loaded.
- */
-- (int)loadSceneFromURL:(NSURL *)url withUpdates:(nullable NSArray<TGSceneUpdate *> *)updates;
-
-/**
  Load a scene file asynchronously from a URL with a list of updates.
 
  Calls `-[TGMapViewDelegate mapView:didLoadScene:withError:]` on the `mapViewDelegate` when it completes.
@@ -118,22 +107,6 @@ TG_EXPORT
  @return The integer ID for the new scene or -1 if the scene cannot be loaded.
  */
 - (int)loadSceneAsyncFromURL:(NSURL *)url withUpdates:(nullable NSArray<TGSceneUpdate *> *)updates;
-
-/**
- Load a scene synchronously from string with a list of updates.
-
- Calls `-[TGMapViewDelegate mapView:didLoadScene:withError:]` on the `mapViewDelegate` when it completes.
-
- If an error occurs while applying updates the new scene will not be applied. See `TGSceneUpdate` for details.
-
- @param yaml YAML scene string.
- @param url The base URL used to resolve relative URLs in the scene.
- @param updates A list of `TGSceneUpdate` to apply to the scene, or `nil`.
- @return The integer ID for the new scene or -1 if the scene cannot be loaded.
- */
-- (int)loadSceneFromYAML:(NSString *)yaml
-           relativeToURL:(NSURL *)url
-             withUpdates:(nullable NSArray<TGSceneUpdate *> *)updates;
 
 /**
  Load a scene asynchronously from string with a list of updates.
@@ -150,18 +123,6 @@ TG_EXPORT
 - (int)loadSceneAsyncFromYAML:(NSString *)yaml
                 relativeToURL:(NSURL *)url
                   withUpdates:(nullable NSArray<TGSceneUpdate *> *)updates;
-
-/**
- Modify the current scene asynchronously with a list of updates.
-
- Calls `-[TGMapViewDelegate mapView:didLoadScene:withError:]` on the `mapViewDelegate` when it completes.
-
- If an error occurs while applying updates, no changes will be applied. See `TGSceneUpdate` for details.
-
- @param updates A list of `TGSceneUpdate` to apply to the scene.
- @return The integer ID for the updated scene or -1 if the scene cannot be updated.
- */
-- (int)updateSceneAsync:(NSArray<TGSceneUpdate *> *)updates;
 
 #pragma mark Delegates
 

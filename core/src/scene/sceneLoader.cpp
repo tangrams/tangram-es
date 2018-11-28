@@ -20,7 +20,6 @@
 #include "style/rasterStyle.h"
 #include "scene/dataLayer.h"
 #include "scene/filters.h"
-#include "scene/importer.h"
 #include "scene/scene.h"
 #include "scene/sceneLayer.h"
 #include "scene/spriteAtlas.h"
@@ -54,71 +53,6 @@ namespace Tangram {
 
 static const std::string GLOBAL_PREFIX = "global.";
 
-bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
-    LOGTO(">>> loadScene >>>");
-
-    _scene->m_loading = true;
-    Importer sceneImporter(_scene);
-
-    _scene->config() = sceneImporter.applySceneImports(_scene->platform());
-    LOGTO("<<< applyImports AKA load files, parse YAMLS, allocate Document and merge stuff");
-
-    if (!_scene->config()) {
-        return false;
-    }
-
-    if (!applyUpdates(*_scene, _scene->options().updates)) {
-        LOGW("Scene updates failed when loading scene");
-        return false;
-    }
-    LOGTO("<<< applyUpdates");
-
-    applyGlobals(*_scene);
-    LOGTO("<<< applyGlobals");
-
-    applySources(*_scene);
-    LOGTO("<<< applySources");
-
-    applyCameras(*_scene);
-    LOGTO("<<< applyCameras");
-
-    _scene->initTileManager();
-    LOGTO("<<< loadTiles");
-
-    applyTextures(*_scene);
-    LOGTO("<<< textures");
-
-    _scene->fontContext()->loadFonts();
-    LOGTO("<<< initFonts");
-
-    applyFonts(*_scene);
-    LOGTO("<<< applyFonts");
-
-    applyStyles(*_scene);
-    LOGTO("<<< applyStyles");
-
-    applyLayers(*_scene);
-    LOGTO("<<< applyLayers");
-
-    applyLights(*_scene);
-    LOGTO("<<< applyLights");
-
-    applyScene(*_scene);
-    LOGTO("<<< applyScene");
-
-    for (auto& style : _scene->styles()) {
-        style->build(*_scene);
-    }
-
-    LOGTO("<<< loadScene <<<");
-
-    // Now only waiting for pending fonts and textures:
-    // Let the TileWorker initialize its TileBuilders
-    _scene->startTileWorker();
-
-    return true;
-}
-
 bool SceneLoader::applyUpdates(Scene& _scene, const std::vector<SceneUpdate>& _updates) {
     auto& root = _scene.config();
 
@@ -129,7 +63,7 @@ bool SceneLoader::applyUpdates(Scene& _scene, const std::vector<SceneUpdate>& _u
             value = YAML::Load(update.value);
         } catch (const YAML::ParserException& e) {
             LOGE("Parsing scene update string failed. '%s'", e.what());
-            _scene.errors.push_back({update, Error::scene_update_value_yaml_syntax_error});
+            _scene.pushError({update, Error::scene_update_value_yaml_syntax_error});
             return false;
         }
 
@@ -139,14 +73,11 @@ bool SceneLoader::applyUpdates(Scene& _scene, const std::vector<SceneUpdate>& _u
             if (pathIsValid) {
                 node = value;
             } else {
-                _scene.errors.push_back({update, Error::scene_update_path_not_found});
+                _scene.pushError({update, Error::scene_update_path_not_found});
                 return false;
             }
         }
     }
-
-    Importer::resolveSceneUrls(root, _scene.options().url);
-
     return true;
 }
 
@@ -278,10 +209,6 @@ void SceneLoader::applyCameras(Scene& _scene) {
     } else {
         view->setMaxPitch(camera.maxTilt);
     }
-
-    LOGE("UPDATE VIEW %fx%f - %f %f %f", view->getWidth(), view->getHeight(), view->getZoom(),
-         view->getCenterCoordinates().longitude, view->getCenterCoordinates().latitude);
-    view->update();
 }
 
 void SceneLoader::loadCameras(Scene& _scene, const Node& _cameras) {

@@ -32,40 +32,18 @@ const char tile_file[] = "res/tile.mvt";
 std::shared_ptr<Scene> scene;
 std::shared_ptr<TileSource> source;
 std::shared_ptr<TileData> tileData;
-
-std::unique_ptr<MockPlatform> platform = std::make_unique<MockPlatform>();
+MockPlatform platform;
 
 void globalSetup() {
     static std::atomic<bool> initialized{false};
     if (initialized.exchange(true)) { return; }
 
-    Url sceneUrl(scene_file);
-    platform->putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
+    SceneOptions sceneOptions{platform.resolveUrl(Url(scene_file))};
+    sceneOptions.numTileWorkers = 0;
+    sceneOptions.prefetchTiles = false;
 
-    scene = std::make_shared<Scene>(*platform, std::make_unique<SceneOptions>(sceneUrl), std::make_unique<View>());
-    Importer importer(scene);
-    try {
-        scene->config() = importer.applySceneImports(*platform);
-    }
-    catch (const YAML::ParserException& e) {
-        LOGE("Parsing scene config '%s'", e.what());
-        exit(-1);
-    }
-    if (!scene->config()) {
-        LOGE("Invalid scene file '%s'", scene_file);
-        exit(-1);
-    }
-    SceneLoader::applyGlobals(*scene);
-    SceneLoader::applySources(*scene);
-    SceneLoader::applyCameras(*scene);
-    SceneLoader::applyTextures(scene);
-    scene->fontContext()->loadFonts();
-    SceneLoader::applyFonts(scene);
-    SceneLoader::applyStyles(scene);
-    SceneLoader::applyLayers(*scene);
-    for (auto& style : scene->styles()) {
-        style->build(*scene);
-    }
+    scene = std::make_shared<Scene>(platform, std::move(sceneOptions));
+    if (!scene->load()) { exit(-1); }
 
     for (auto& s : scene->tileSources()) {
         source = s;
@@ -92,6 +70,7 @@ public:
     void SetUp(const ::benchmark::State& state) override {
         globalSetup();
         tileBuilder = std::make_unique<TileBuilder>(*scene, new StyleContext());
+        tileBuilder->init();
     }
     void TearDown(const ::benchmark::State& state) override {
         result.reset();

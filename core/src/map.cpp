@@ -34,8 +34,6 @@
 
 namespace Tangram {
 
-//const static size_t MAX_WORKERS = 2;
-
 struct CameraEase {
     struct {
         glm::dvec2 pos;
@@ -53,11 +51,7 @@ public:
     explicit Impl(Platform& _platform) :
         platform(_platform),
         inputHandler(view),
-        scene(std::make_shared<Scene>(_platform,
-                                      std::make_unique<SceneOptions>(Url()),
-                                      std::make_unique<View>())) {}
-
-    void setScene(std::shared_ptr<Scene>& _scene);
+        scene(std::make_shared<Scene>(_platform)) {}
 
     void setPixelScale(float _pixelsPerPoint);
 
@@ -73,10 +67,12 @@ public:
     InputHandler inputHandler;
 
     std::unique_ptr<Ease> ease;
+
     std::shared_ptr<Scene> scene;
-    std::shared_ptr<Scene> lastValidScene;
-    std::atomic<int32_t> sceneLoadTasks{0};
-    std::condition_variable sceneLoadCondition;
+
+    // Keep previous scene for rendering while new scene loads
+    // TODO Render one time to texture and use that as placeholder when requested
+    std::shared_ptr<Scene> oldScene;
 
     // NB: Destruction of (managed and loading) tiles must happen
     // before implicit destruction of 'scene' above!
@@ -94,16 +90,6 @@ public:
 
     std::vector<std::shared_ptr<TileSource>> clientTileSources;
 
-    void sceneLoadBegin() {
-        sceneLoadTasks++;
-    }
-
-    void sceneLoadEnd() {
-        sceneLoadTasks--;
-        assert(sceneLoadTasks >= 0);
-
-        sceneLoadCondition.notify_one();
-    }
     bool sceneGotReady = false;
     int framesRendered = false;
 };
@@ -125,10 +111,11 @@ Map::~Map() {
     platform->shutdown();
 
     // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
-    //impl->tileWorker.stop();
+    impl->asyncWorker.reset();
+
+    impl->oldScene.reset();
     impl->scene.reset();
 
-    impl->asyncWorker.reset();
     // Make sure other threads are stopped before calling stop()!
     // All jobs will be executed immediately on add() afterwards.
     impl->jobQueue.stop();
@@ -137,66 +124,14 @@ Map::~Map() {
     Primitives::deinit();
 }
 
-void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
-    LOGTO(">>> setScene >>>");
-
-    // Stop previous TileWorker
-    //scene->stopTileWorker();
-
-    scene = _scene;
-    scene->setPixelScale(view.pixelScale());
-    scene->view()->setSize(view.getWidth(), view.getHeight());
-
-    view = *_scene->view();
-
-    /// FIXME TODO scene->setPixelScale(view.pixelScale());
-
-    bool animated = scene->animated() == Scene::animate::yes;
-
-    if (animated != platform.isContinuousRendering()) {
-        platform.setContinuousRendering(animated);
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(tilesMutex);
-        for (auto& source : clientTileSources) {
-            scene->tileManager()->addClientTileSource(source);
-        }
-    }
-    LOGTO("<<< setScene <<<");
-}
-
-SceneID Map::loadScene(const std::string& _scenePath, bool _useScenePosition,
-                       const std::vector<SceneUpdate>& _sceneUpdates) {
-
-    LOG("Loading scene file: %s", _scenePath.c_str());
-
-    auto options = std::make_unique<SceneOptions>(Url(_scenePath));
-    options->useScenePosition = _useScenePosition;
-
-    return loadScene(std::move(options));
-}
-
-SceneID Map::loadSceneYaml(const std::string& _yaml, const std::string& _resourceRoot,
-                           bool _useScenePosition, const std::vector<SceneUpdate>& _sceneUpdates) {
-
-    LOG("Loading scene string");
-
-    auto options = std::make_unique<SceneOptions>(_yaml, Url(_resourceRoot));
-    options->updates =  _sceneUpdates;
-    options->useScenePosition = _useScenePosition;
-
-    return loadScene(std::move(options));
-}
-
 SceneID Map::loadSceneAsync(const std::string& _scenePath, bool _useScenePosition,
                             const std::vector<SceneUpdate>& _sceneUpdates) {
 
     LOG("Loading scene file (async): %s", _scenePath.c_str());
 
-    auto options = std::make_unique<SceneOptions>(Url(_scenePath));
-    options->updates =  _sceneUpdates;
-    options->useScenePosition = _useScenePosition;
+    SceneOptions options{Url(_scenePath)};
+    options.updates =  _sceneUpdates;
+    options.useScenePosition = _useScenePosition;
 
     return loadSceneAsync(std::move(options));
 }
@@ -206,90 +141,58 @@ SceneID Map::loadSceneYamlAsync(const std::string& _yaml, const std::string& _re
 
     LOG("Loading scene string (async)");
 
-    auto options = std::make_unique<SceneOptions>(_yaml, Url(_resourceRoot));
-    options->updates =  _sceneUpdates;
-    options->useScenePosition = _useScenePosition;
+    SceneOptions options{_yaml, Url(_resourceRoot)};
+    options.updates =  _sceneUpdates;
+    options.useScenePosition = _useScenePosition;
 
     return loadSceneAsync(std::move(options));
 }
 
-// NB: Not thread-safe. Must be called on the main/render thread!
-// (Or externally synchronized with main/render thread)
-SceneID Map::loadScene(std::unique_ptr<SceneOptions> _sceneOptions) {
-    LOGTOInit();
-    auto newScene = std::make_shared<Scene>(*platform, std::move(_sceneOptions),
-                                             std::make_unique<View>(impl->view));
+SceneID Map::loadSceneAsync(SceneOptions&& _sceneOptions) {
 
-    {
-        std::unique_lock<std::mutex> lock(impl->sceneMutex);
-
-        impl->sceneLoadCondition.wait(lock, [&]{ return impl->sceneLoadTasks == 0; });
-
-        impl->lastValidScene.reset();
-    }
-
-    if (SceneLoader::loadScene(newScene)) {
-        impl->setScene(newScene);
-
-        {
-            std::lock_guard<std::mutex> lock(impl->sceneMutex);
-            impl->lastValidScene = newScene;
-        }
-    }
-
-    if (impl->onSceneReady) {
-        if (newScene->errors.empty()) {
-            impl->onSceneReady(newScene->id, nullptr);
-        } else {
-            impl->onSceneReady(newScene->id, &(newScene->errors.front()));
-        }
-    }
-    return newScene->id;
-}
-
-SceneID Map::loadSceneAsync(std::unique_ptr<SceneOptions> _sceneOptions) {
-    LOGTOInit();
-    LOGTO("loadSceneAsync >>>>>>>>>>>>>>> RESET TIME >>>>>>>>>>>>>>>");
     impl->framesRendered = 0;
 
-    auto newScene = std::make_shared<Scene>(*platform, std::move(_sceneOptions),
-                                             std::make_unique<View>(impl->view));
-    impl->sceneLoadBegin();
+    // Avoid loading old scene and tiles
+    impl->scene->cancelTasks();
 
-    runAsyncTask([newScene, this](){
+    if (impl->scene->isReady()) {
+        // Keep it for rendering while new scene loads
+        impl->oldScene = impl->scene;
+    }
 
-            bool newSceneLoaded = SceneLoader::loadScene(newScene);
-            if (!newSceneLoaded) {
+    _sceneOptions.view = {
+        uint32_t(impl->view.getWidth()),
+        uint32_t(impl->view.getHeight()),
+        impl->view.pixelScale()
+     };
 
-                if (impl->onSceneReady) {
-                    SceneError err;
-                    if (!newScene->errors.empty()) { err = newScene->errors.front(); }
-                    impl->onSceneReady(newScene->id, &err);
-                }
-                impl->sceneLoadEnd();
-                return;
+    impl->scene = std::make_shared<Scene>(*platform, std::move(_sceneOptions));
+
+    *(impl->scene->view().get()) = impl->view;
+
+    runAsyncTask([this, scene = impl->scene]() mutable {
+            LOG("START ASYNC LOAD");
+
+            // => Scene::State::initial
+            scene->load();
+            // => Scene::State::pending_resources
+
+            // Another Scene is in AsyncTask queue already
+            if (scene != impl->scene) {
+                //scene->cancel();
+                // => Scene::State::stopped
+                LOG("ASYNC DISPOSE SCENE >>>>");
+                scene->dispose();
+                LOG("ASYNC DISPOSE SCENE <<<");
+                // => Scene::State::disposed
             }
 
-            {
-                std::lock_guard<std::mutex> lock(impl->sceneMutex);
-                // NB: Need to set the scene on the worker thread so that waiting
-                // applyUpdates AsyncTasks can access it to copy the config.
-                impl->lastValidScene = newScene;
-            }
-
-            impl->jobQueue.add([newScene, newSceneLoaded, this]() {
-                    if (newSceneLoaded) {
-                        auto s = newScene;
-                        impl->setScene(s);
-                    }
-                    if (impl->onSceneReady) { impl->onSceneReady(newScene->id, nullptr); }
-                });
-
-            impl->sceneLoadEnd();
             platform->requestRender();
+
+            LOG("ASYNC LOAD DONE");
         });
 
-    return newScene->id;
+    return impl->scene->id;
 }
 
 void Map::setSceneReadyListener(SceneReadyCallback _onSceneReady) {
@@ -302,79 +205,6 @@ void Map::setCameraAnimationListener(CameraAnimationCallback _cb) {
 
 Platform& Map::getPlatform() {
     return *platform;
-}
-
-SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
-#if 0
-    impl->sceneLoadBegin();
-
-    std::vector<SceneUpdate> updates = _sceneUpdates;
-
-    auto nextScene = std::make_shared<Scene>();
-    nextScene->useScenePosition = false;
-
-    runAsyncTask([nextScene, updates = std::move(updates), this](){
-
-            if (!impl->lastValidScene) {
-                if (impl->onSceneReady) {
-                    SceneError err {{}, Error::no_valid_scene};
-                    impl->onSceneReady(nextScene->id, &err);
-                }
-                impl->sceneLoadEnd();
-                return;
-            }
-
-            {
-                std::lock_guard<std::mutex> lock(impl->sceneMutex);
-                nextScene->copyConfig(*impl->lastValidScene);
-            }
-
-            if (!SceneLoader::applyUpdates(platform, *nextScene, updates)) {
-                LOGW("Scene updates not applied to current scene");
-
-                if (impl->onSceneReady) {
-                    SceneError err;
-                    if (!nextScene->errors.empty()) { err = nextScene->errors.front(); }
-                    impl->onSceneReady(nextScene->id, &err);
-                }
-                impl->sceneLoadEnd();
-                return;
-            }
-
-
-            bool configApplied = SceneLoader::applyConfig(platform, nextScene);
-
-            {
-                std::lock_guard<std::mutex> lock(impl->sceneMutex);
-                // NB: Need to set the scene on the worker thread so that waiting
-                // applyUpdates AsyncTasks can access it to copy the config.
-                if (configApplied) { impl->lastValidScene = nextScene; }
-            }
-            impl->jobQueue.add([nextScene, configApplied, this]() {
-
-                    if (configApplied) {
-                        auto s = nextScene;
-                        impl->setScene(s);
-                    }
-                    if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, nullptr); }
-                });
-
-            impl->sceneLoadEnd();
-            platform->requestRender();
-        });
-
-    return nextScene->id;
-#endif
-    return 0;
-}
-
-void Map::setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath) {
-#ifdef TANGRAM_MBTILES_DATASOURCE
-    std::string scenePath = std::string("sources.") + _dataSourceName + ".mbtiles";
-    updateSceneAsync({SceneUpdate{scenePath.c_str(), _mbtilesFilePath}});
-#else
-    LOGE("MBTiles support is disabled. This source will be ignored: %s", _dataSourceName);
-#endif
 }
 
 void Map::resize(int _newWidth, int _newHeight) {
@@ -391,21 +221,42 @@ bool Map::update(float _dt) {
 
     impl->jobQueue.runJobs();
 
-    auto ready = impl->scene->isReady();
-    if (!impl->scene->complete()) {
+    auto& scene = *impl->scene;
+    auto& view = impl->view;
+
+    bool wasReady = scene.isReady();
+
+    // Check if the current scene finished loading
+    if (!scene.complete(view)) {
+
+        platform->requestRender();
         return false;
+
+    } else if (!wasReady) {
+
+        if (impl->onSceneReady) { impl->onSceneReady(scene.id, nullptr); }
+
+        bool animated = scene.animated() == Scene::animate::yes;
+        if (animated != impl->platform.isContinuousRendering()) {
+            impl->platform.setContinuousRendering(animated);
+        }
+
+        if (impl->oldScene) {
+            /// Disposing TileWorker is blocking
+            runAsyncTask([scene = impl->oldScene]() {
+                LOG("START ASYNC DISPOSE OLD SCENE");
+                scene->dispose();
+                LOG("DONE ASYNC DISPOSE OLD SCENE");
+            });
+            impl->oldScene.reset();
+        }
     }
-    LOGTInit();
-    if (!ready && impl->scene->isReady()) {
-        impl->sceneGotReady = true;
-        LOGTO("update >>>");
-    }
+
     FrameInfo::beginUpdate();
 
     bool viewComplete = true;
-    bool markersNeedUpdate = false;
-
     bool isEasing = false;
+
     if (impl->ease) {
         auto& ease = *(impl->ease);
         ease.update(_dt);
@@ -423,100 +274,68 @@ bool Map::update(float _dt) {
 
     bool isFlinging = impl->inputHandler.update(_dt);
     impl->isCameraEasing = (isEasing || isFlinging);
-    impl->view.update();
 
-    bool tilesLoading;
+    view.update();
+
+    bool tilesLoading, animateLabels, animateMarkers;
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
-        tilesLoading = impl->scene->update(impl->view, _dt);
-
-        if (impl->framesRendered == 0) {
-            if (impl->scene->tileManager()->getVisibleTiles().size() > 0) {
-                impl->framesRendered = 1;
-            }
-        }
+        std::tie(tilesLoading, animateLabels, animateMarkers) = scene.update(view, _dt);
     }
 
-    FrameInfo::endUpdate();
-
-    bool viewChanged = impl->view.changedOnLastUpdate();
-    bool labelsNeedUpdate = impl->scene->labelManager()->needUpdate();
-
-    if (viewChanged || tilesLoading || labelsNeedUpdate || impl->sceneLoadTasks > 0) {
+    if (tilesLoading || animateLabels || animateMarkers) {
         viewComplete = false;
     }
 
     // Request render if labels are in fading states or markers are easing.
-    if (isFlinging || impl->isCameraEasing || labelsNeedUpdate || markersNeedUpdate) {
+    if (impl->isCameraEasing || animateLabels || animateMarkers) {
         platform->requestRender();
     }
 
-    LOGTO("View complete:%d vc:%d tl:%d easing:%d label:%d maker:%d ",
-          viewComplete, viewChanged, tilesLoading,
-          impl->isCameraEasing, labelsNeedUpdate, markersNeedUpdate);
-
-    if (impl->sceneGotReady) {
-        LOGTO("update <<<");
-    }
+    FrameInfo::endUpdate();
 
     return viewComplete;
 }
 
-void Map::setPickRadius(float _radius) {
-    impl->pickRadius = _radius;
-}
-
-void Map::pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeaturePickCallback) {
-    impl->selectionQueries.push_back({{_x, _y}, impl->pickRadius, _onFeaturePickCallback});
-
-    platform->requestRender();
-}
-
-void Map::pickLabelAt(float _x, float _y, LabelPickCallback _onLabelPickCallback) {
-    impl->selectionQueries.push_back({{_x, _y}, impl->pickRadius, _onLabelPickCallback});
-
-    platform->requestRender();
-}
-
-void Map::pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallback) {
-    impl->selectionQueries.push_back({{_x, _y}, impl->pickRadius, _onMarkerPickCallback});
-
-    platform->requestRender();
-}
-
 bool Map::render() {
 
+    // Render old Scene while new one is loading
+    auto& scene = (!impl->scene->isReady() && impl->oldScene) ? *impl->oldScene : *impl->scene;
+    auto& view = impl->view;
+
+    auto& renderState = impl->renderState;
+
     // Do not render if any texture resources are in process of being downloaded
-    if (!impl->scene->complete()) {
+    if (!scene.isReady()) {
         return impl->isCameraEasing; // ?????
     }
 
-    LOGTInit();
-    if (impl->sceneGotReady) {
-        LOGTO("Render: Scene ready >>>");
-    }
-    if (impl->framesRendered && impl->framesRendered < 100) {
-        LOGTO("Render: Tiles ready >>> %d", impl->framesRendered);
-    }
+    // LOGTInit();
+    // if (impl->sceneGotReady) {
+    //     LOGTO("Render: Scene ready >>>");
+    // }
+    // if (impl->framesRendered && impl->framesRendered < 100) {
+    //     LOGTO("Render: Tiles ready >>> %d", impl->framesRendered);
+    // }
 
     bool drawSelectionBuffer = getDebugFlag(DebugFlags::selection_buffer);
 
     // Cache default framebuffer handle used for rendering
-    impl->renderState.cacheDefaultFramebuffer();
+    renderState.cacheDefaultFramebuffer();
 
-    Primitives::setResolution(impl->renderState, impl->view.getWidth(), impl->view.getHeight());
+    Primitives::setResolution(renderState, view.getWidth(), view.getHeight());
 
     FrameInfo::beginFrame();
 
     // Invalidate render states for new frame
     if (!impl->cacheGlState) {
-        impl->renderState.invalidateStates();
+        renderState.invalidateStates();
     }
 
     // Delete batch of gl resources
-    impl->renderState.flushResourceDeletion();
+    renderState.flushResourceDeletion();
 
-    impl->scene->renderBeginFrame(impl->renderState);
+    scene.renderBeginFrame(renderState);
 
     // Render feature selection pass to offscreen framebuffer
     if (impl->selectionQueries.size() > 0 || drawSelectionBuffer) {
@@ -524,51 +343,52 @@ bool Map::render() {
 
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
-        impl->scene->renderSelection(impl->renderState, impl->view,
-                                     *impl->selectionBuffer, impl->selectionQueries);
+        scene.renderSelection(renderState, view,
+                              *impl->selectionBuffer,
+                              impl->selectionQueries);
 
         impl->selectionQueries.clear();
     }
 
     // Get background color for frame based on zoom level, if there are stops
-    Color background = impl->scene->background(impl->view.getIntegerZoom());
+    Color background = scene.background(view.getIntegerZoom());
 
     // Setup default framebuffer for a new frame
-    glm::vec2 viewport(impl->view.getWidth(), impl->view.getHeight());
+    glm::vec2 viewport(view.getWidth(), view.getHeight());
 
-    FrameBuffer::apply(impl->renderState, impl->renderState.defaultFrameBuffer(),
+    FrameBuffer::apply(renderState, renderState.defaultFrameBuffer(),
                        viewport, background.toColorF());
 
     if (drawSelectionBuffer) {
-        impl->selectionBuffer->drawDebug(impl->renderState, viewport);
-        FrameInfo::draw(impl->renderState, impl->view, *impl->scene->tileManager());
+        impl->selectionBuffer->drawDebug(renderState, viewport);
+        FrameInfo::draw(renderState, view, *scene.tileManager());
         return impl->isCameraEasing;
     }
 
     bool drawnAnimatedStyle = false;
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
-        drawnAnimatedStyle = impl->scene->render(impl->renderState, impl->view);
+        drawnAnimatedStyle = scene.render(renderState, view);
     }
 
-    if (impl->scene->animated() != Scene::animate::no &&
+    if (scene.animated() != Scene::animate::no &&
         drawnAnimatedStyle != platform->isContinuousRendering()) {
 
         platform->setContinuousRendering(drawnAnimatedStyle);
     }
 
 
-    FrameInfo::draw(impl->renderState, impl->view, *impl->scene->tileManager());
+    FrameInfo::draw(renderState, view, *scene.tileManager());
 
-    if (impl->sceneGotReady) {
-        impl->sceneGotReady = false;
-        LOGTO("Render: Scene ready <<<");
-    }
-    if (impl->framesRendered && impl->framesRendered++ < 100) {
-        LOGT("Render: Tiles ready <<< %d", impl->framesRendered);
-    } else {
-        impl->framesRendered = 0;
-    }
+    // if (impl->sceneGotReady) {
+    //     impl->sceneGotReady = false;
+    //     LOGTO("Render: Scene ready <<<");
+    // }
+    // if (impl->framesRendered && impl->framesRendered++ < 100) {
+    //     LOGT("Render: Tiles ready <<< %d", impl->framesRendered);
+    // } else {
+    //     impl->framesRendered = 0;
+    // }
 
     return impl->isCameraEasing;
 }
@@ -586,7 +406,8 @@ float Map::getPixelScale() {
 }
 
 void Map::captureSnapshot(unsigned int* _data) {
-    GL::readPixels(0, 0, impl->view.getWidth(), impl->view.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)_data);
+    GL::readPixels(0, 0, impl->view.getWidth(), impl->view.getHeight(), GL_RGBA,
+                   GL_UNSIGNED_BYTE, (GLvoid*)_data);
 }
 
 
@@ -941,83 +762,90 @@ void Map::clearTileSource(TileSource& _source, bool _data, bool _tiles) {
 }
 
 MarkerID Map::markerAdd() {
-    if (!impl->scene->markerManager()) { return false; }
     return impl->scene->markerManager()->add();
 }
 
 bool Map::markerRemove(MarkerID _marker) {
-    if (!impl->scene->markerManager()) { return false; }
     bool success = impl->scene->markerManager()->remove(_marker);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetPoint(MarkerID _marker, LngLat _lngLat) {
-    if (!impl->scene->markerManager()) { return false; }
     bool success = impl->scene->markerManager()->setPoint(_marker, _lngLat);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetPointEased(MarkerID _marker, LngLat _lngLat, float _duration, EaseType ease) {
-    if (!impl->scene->markerManager()) { return false; }
     bool success = impl->scene->markerManager()->setPointEased(_marker, _lngLat, _duration, ease);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetPolyline(MarkerID _marker, LngLat* _coordinates, int _count) {
-    if (!impl->scene->markerManager()) { return false; }
     bool success = impl->scene->markerManager()->setPolyline(_marker, _coordinates, _count);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetPolygon(MarkerID _marker, LngLat* _coordinates, int* _counts, int _rings) {
-    if (!impl->scene->markerManager()) { return false; }
     bool success = impl->scene->markerManager()->setPolygon(_marker, _coordinates, _counts, _rings);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetStylingFromString(MarkerID _marker, const char* _styling) {
-    if (!impl->scene->markerManager()) { return false; }
     bool success = impl->scene->markerManager()->setStylingFromString(_marker, _styling);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetStylingFromPath(MarkerID _marker, const char* _path) {
-    if (!impl->scene->markerManager()) { return false; }
     bool success = impl->scene->markerManager()->setStylingFromPath(_marker, _path);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetBitmap(MarkerID _marker, int _width, int _height, const unsigned int* _data, float _density) {
-    if (!impl->scene->markerManager()) { return false; }
     bool success = impl->scene->markerManager()->setBitmap(_marker, _width, _height, _density, _data);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetVisible(MarkerID _marker, bool _visible) {
-    if (!impl->scene->markerManager()) { return false; }
     bool success = impl->scene->markerManager()->setVisible(_marker, _visible);
     platform->requestRender();
     return success;
 }
 
 bool Map::markerSetDrawOrder(MarkerID _marker, int _drawOrder) {
-    if (!impl->scene->markerManager()) { return false; }
     bool success = impl->scene->markerManager()->setDrawOrder(_marker, _drawOrder);
     platform->requestRender();
     return success;
 }
 
 void Map::markerRemoveAll() {
-    if (!impl->scene->markerManager()) { return; }
     impl->scene->markerManager()->removeAll();
+    platform->requestRender();
+}
+
+void Map::setPickRadius(float _radius) {
+    impl->pickRadius = _radius;
+}
+
+void Map::pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeaturePickCallback) {
+    impl->selectionQueries.push_back({{_x, _y}, impl->pickRadius, _onFeaturePickCallback});
+    platform->requestRender();
+}
+
+void Map::pickLabelAt(float _x, float _y, LabelPickCallback _onLabelPickCallback) {
+    impl->selectionQueries.push_back({{_x, _y}, impl->pickRadius, _onLabelPickCallback});
+    platform->requestRender();
+}
+
+void Map::pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallback) {
+    impl->selectionQueries.push_back({{_x, _y}, impl->pickRadius, _onMarkerPickCallback});
     platform->requestRender();
 }
 

@@ -28,21 +28,18 @@ namespace Tangram {
 class DataLayer;
 class FeatureSelection;
 class FontContext;
+class FrameBuffer;
+class Importer;
 class LabelManager;
 class Light;
 class MapProjection;
 class Platform;
 class SceneLayer;
-struct SceneLoader;
+class SelectionQuery;
 class Style;
 class Texture;
 class TileSource;
-class ZipArchive;
-class FrameBuffer;
-class SelectionQuery;
-
-// 16MB default in-memory DataSource cache
-constexpr size_t CACHE_SIZE = 16 * (1024 * 102);
+struct SceneLoader;
 
 // Delimiter used in sceneloader for style params and layer-sublayer naming
 const std::string DELIMITER = ":";
@@ -59,19 +56,35 @@ public:
     explicit SceneOptions(const std::string& _yaml, const Url& _resources)
         : yaml(_yaml), url(_resources) {}
 
+    SceneOptions() {}
 
     std::string yaml;
-    // The URL from which this scene was loaded
+    /// The URL from which this scene was loaded
     Url url;
-    // SceneUpdates to apply to the scene
+    /// SceneUpdates to apply to the scene
     std::vector<SceneUpdate> updates;
-    // Set the view to the position provided by the scene
+    /// Set the view to the position provided by the scene
     bool useScenePosition = true;
-    // Add styles toggled by DebguFlags
+    /// Add styles toggled by DebguFlags
     bool debugStyles = false;
 
+    /// Start loading tiles as soon as possible
+    bool prefetchTiles = true;
+
+    /// Start loading tiles as soon as possible
+    uint32_t numTileWorkers = 2;
+
+    /// 16MB default in-memory DataSource cache
+    static constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
     size_t memoryTileCacheSize = CACHE_SIZE;
+
+    struct {
+        uint32_t width = 0;
+        uint32_t height = 0;
+        float pixelScale = 1.f;
+    } view;
 };
+
 
 class Scene {
 public:
@@ -95,9 +108,7 @@ public:
         yes, no, none
     };
 
-    explicit Scene(Platform& _platform);
-    Scene(Platform& _platform, std::unique_ptr<SceneOptions> _sceneOptions,
-          std::unique_ptr<View> _view = std::make_unique<View>());
+    explicit Scene(Platform& platform, SceneOptions&& = SceneOptions{""});
 
     Scene(const Scene& _other) = delete;
     Scene(Scene&& _other) = delete;
@@ -126,7 +137,6 @@ public:
 
     const auto& config() const { return m_config; }
     const auto& tileSources() const { return m_tileSources; }
-    //const auto& layers() const { return m_layers; }
     const auto& styles() const { return m_styles; }
     const auto& lights() const { return m_lights; }
     const auto& lightBlocks() const { return m_lightShaderBlocks; }
@@ -138,20 +148,6 @@ public:
     const Style* findStyle(const std::string& _name) const;
 
     const Light* findLight(const std::string& _name) const;
-
-    // Start an asynchronous request for the scene resource at the given URL.
-    // In addition to the URL types supported by the platform instance, this
-    // also supports a custom ZIP URL scheme. ZIP URLs are of the form:
-    //   zip://path/to/file.txt#http://host.com/some/archive.zip
-    // The fragment (#http...) of the URL is the location of the archive and the
-    // relative portion of the URL (path/...) is the path of the target file
-    // within the archive (this allows relative path operations on URLs to work
-    // as expected within zip archives). This function expects that all required
-    // zip archives will be added to the scene with addZipArchive before being
-    // requested.
-    UrlRequestHandle startUrlRequest(const Url& url, UrlCallback callback);
-
-    void addZipArchive(Url url, std::shared_ptr<ZipArchive> zipArchive);
 
     float time() const { return m_time; }
 
@@ -171,7 +167,12 @@ public:
     float pixelScale() { return m_pixelScale; }
     void setPixelScale(float _scale);
 
-    bool update(const View& _view, float _dt);
+    // Returns:
+    // - hasLoadingTiles
+    // - labelsNeedUpdate
+    // - markersNeedUpdate
+    std::tuple<bool,bool,bool> update(const View& _view, float _dt);
+
     void renderBeginFrame(RenderState& _rs);
     bool render(RenderState& _rs, View& _view);
     void renderSelection(RenderState& _rs, View& _view,
@@ -189,22 +190,24 @@ public:
     MarkerManager* markerManager() { return m_markerManager.get(); }
     LabelManager* labelManager() { return m_labelManager.get(); }
 
-    void initTileManager() {
-        m_tileManager->setTileSources(m_tileSources);
-        m_tileManager->updateTileSets(*m_view);
+    bool load();
+
+    const SceneError* errors() const {
+        return (m_errors.empty() ? nullptr : &m_errors.front());
     }
 
-    void startTileWorker() {
-         m_tileWorker->setScene(*this);
-     }
+    // Return true scene-loading could be completed, false when resources for
+    // tile-building and rendering are still pending.
+    // Does the finishing touch when everything is available:
+    // - Copy Scene camera to View
+    // - Update Styles and FontContext to current pixelScale
+    // -...
+    bool complete(View& view);
 
-    void stopTileWorker() {
-        m_ready = false;
-        m_tileWorker.reset();
-    }
+    void cancelTasks();
+    void dispose();
 
-    bool complete();
-    bool isReady() const { return m_ready; };
+    bool isReady() const { return m_state == State::ready; };
 
     std::shared_ptr<Texture> fetchTexture(const std::string& name, const Url& url,
                                           const TextureOptions& options,
@@ -218,19 +221,28 @@ public:
     friend struct SceneLoader;
     friend class Importer;
 
-    std::vector<SceneError> errors;
+    const SceneOptions& options() const { return m_options; }
 
 protected:
     Platform& platform() { return m_platform; }
-    const SceneOptions& options() { return *m_options; }
+    void pushError(SceneError&& error) { m_errors.push_back(std::move(error)); }
 
 private:
     Platform& m_platform;
 
-    std::unique_ptr<SceneOptions> m_options;
+    SceneOptions m_options;
+    std::unique_ptr<Importer> m_importer;
 
-    bool m_ready = false;
-    bool m_loading = false;
+    // Only SceneUpdate errors for now
+    std::vector<SceneError> m_errors;
+
+    enum class State {
+        initial,
+        loading,             // set on worker thread at start of Scene::load()
+        pending_resources,   // set on worker thread at end of Scene::load()
+        ready,               // set main thread Scene::complete()
+        disposed
+    } m_state = State::initial;
 
     // ---------------------------------------------------------------//
     // Loaded Scene Data
@@ -248,11 +260,6 @@ private:
     std::map<std::string, std::string> m_lightShaderBlocks;
 
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
-
-    // Container for any zip archives needed for the scene. For each entry, the
-    // key is the original URL from which the zip archive was retrieved and the
-    // value is a ZipArchive initialized with the compressed archive data.
-    std::unordered_map<Url, std::shared_ptr<ZipArchive>> m_zipArchives;
 
     // Records the YAML Nodes for which global values have been swapped; keys are
     // nodes that referenced globals, values are nodes of globals themselves.
@@ -285,11 +292,13 @@ private:
     std::unique_ptr<View> m_view;
 
     struct FontTask {
-        FontTask(FontDescription ft, std::shared_ptr<FontContext> fontContext)
-            : ft(ft), fontContext(fontContext) {}
+        FontTask(Url url, FontDescription ft, std::shared_ptr<FontContext> fontContext)
+            : url(url), ft(ft), fontContext(fontContext) {}
+        Url url;
         FontDescription ft;
         std::shared_ptr<FontContext> fontContext;
         bool done = false;
+        UrlCallback cb = nullptr;
     };
     struct TextureTask {
         TextureTask(Url url, std::shared_ptr<Texture> texture)
@@ -297,6 +306,7 @@ private:
         Url url;
         std::shared_ptr<Texture> texture;
         bool done = false;
+        UrlCallback cb = nullptr;
     };
 
     std::mutex m_taskMutex;

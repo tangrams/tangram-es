@@ -151,26 +151,11 @@ public:
                            bool _useScenePosition = false,
                            const std::vector<SceneUpdate>& _sceneUpdates = {});
 
-    // Load the scene provided an explicit yaml scene string
-    SceneID loadSceneYaml(const std::string& _yaml, const std::string& _resourceRoot,
-                          bool _useScenePosition = false,
-                          const std::vector<SceneUpdate>& _sceneUpdates = {});
 
     SceneID loadSceneYamlAsync(const std::string& _yaml, const std::string& _resourceRoot,
                                bool _useScenePosition = false,
                                const std::vector<SceneUpdate>& _sceneUpdates = {});
 
-    // Load the scene at the given absolute file path synchronously
-    SceneID loadScene(const std::string& _scenePath,
-                      bool _useScenePosition = false,
-                      const std::vector<SceneUpdate>& sceneUpdates = {});
-
-    // Request updates to the current scene configuration. This reloads the
-    // scene with the updated configuration.
-    // The SceneUpdate path is a series of yaml keys separated by a '.' and the
-    // value is a string of yaml to replace the current value at the given path
-    // in the scene.
-    SceneID updateSceneAsync(const std::vector<SceneUpdate>& sceneUpdates);
 
     // Set listener for scene load events. The callback receives the SceneID
     // of the loaded scene and SceneError in case loading was not successful.
@@ -178,9 +163,6 @@ public:
     void setSceneReadyListener(SceneReadyCallback _onSceneReady);
 
     void setCameraAnimationListener(CameraAnimationCallback _cb);
-
-    // Set an MBTiles SQLite database file for a DataSource in the scene.
-    void setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath);
 
     // Initialize graphics resources; OpenGL context must be created prior to calling this
     void setupGL();
@@ -425,9 +407,8 @@ protected:
 
     std::unique_ptr<Platform> platform;
 
-    SceneID loadSceneAsync(std::unique_ptr<SceneOptions> _sceneOptions);
+    SceneID loadSceneAsync(SceneOptions&& _sceneOptions);
 
-    SceneID loadScene(std::unique_ptr<SceneOptions> _sceneOptions);
 
 private:
 

@@ -191,19 +191,6 @@ void MapController(Shutdown)(JNIEnv* jniEnv, jobject tangramInstance, jlong mapP
     map->getPlatform().shutdown();
 }
 
-jint MapController(LoadScene)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring path,
-                              jobjectArray updateStrings) {
-    auto_map(mapPtr);
-
-    auto cPath = stringFromJString(jniEnv, path);
-
-    auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
-    Url sceneUrl = Url(cPath).resolved("asset:///");
-    jint sceneId = map->loadScene(sceneUrl.string(), false, sceneUpdates);
-
-    return sceneId;
-}
-
 jint MapController(LoadSceneAsync)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring path,
                                    jobjectArray updateStrings) {
     auto_map(mapPtr);
@@ -213,22 +200,6 @@ jint MapController(LoadSceneAsync)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, js
     auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
     Url sceneUrl = Url(cPath).resolved("asset:///");
     jint sceneId = map->loadSceneAsync(sceneUrl.string(), false, sceneUpdates);
-
-    return sceneId;
-
-
-}
-
-jint MapController(LoadSceneYaml)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring yaml, jstring path,
-                                  jobjectArray updateStrings) {
-    auto_map(mapPtr);
-
-    auto cYaml = stringFromJString(jniEnv, yaml);
-    auto cPath = stringFromJString(jniEnv, path);
-
-    auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
-    Url sceneUrl = Url(cPath).resolved("asset:///");
-    jint sceneId = map->loadSceneYaml(cYaml, sceneUrl.string(), false, sceneUpdates);
 
     return sceneId;
 }
@@ -516,13 +487,6 @@ void MapController(SetDebugFlag)(JNIEnv* jniEnv, jobject obj, jint flag, jboolea
 void MapController(UseCachedGlState)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jboolean use) {
     auto_map(mapPtr);
     map->useCachedGlState(use);
-}
-
-jint MapController(UpdateScene)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jobjectArray updateStrings) {
-    auto_map(mapPtr);
-
-    auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
-    return map->updateSceneAsync(sceneUpdates);
 }
 
 void MapController(OnLowMemory)(JNIEnv* jnienv, jobject obj, jlong mapPtr) {

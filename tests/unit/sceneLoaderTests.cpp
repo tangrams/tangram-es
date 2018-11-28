@@ -16,7 +16,7 @@ using YAML::Node;
 
 TEST_CASE("Style with the same name as a built-in style are ignored") {
     MockPlatform platform;
-    Scene scene{platform, std::make_unique<SceneOptions>(Url())};
+    Scene scene{platform};
     SceneLoader::loadStyle(scene, "polygons", Node());
     REQUIRE(scene.styles().size() == 0);
 
@@ -24,7 +24,7 @@ TEST_CASE("Style with the same name as a built-in style are ignored") {
 
 TEST_CASE("Correctly instantiate a style from a YAML configuration") {
     MockPlatform platform;
-    Scene scene{platform, std::make_unique<SceneOptions>(Url())};
+    Scene scene{platform};
 
     scene.styles().emplace_back(new PolygonStyle("polygons"));
     scene.styles().emplace_back(new PolylineStyle("lines"));
