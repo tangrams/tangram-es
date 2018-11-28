@@ -28,21 +28,18 @@ namespace Tangram {
 class DataLayer;
 class FeatureSelection;
 class FontContext;
+class FrameBuffer;
+class Importer;
 class LabelManager;
 class Light;
 class MapProjection;
 class Platform;
 class SceneLayer;
-struct SceneLoader;
+class SelectionQuery;
 class Style;
 class Texture;
 class TileSource;
-class ZipArchive;
-class FrameBuffer;
-class SelectionQuery;
-
-// 16MB default in-memory DataSource cache
-constexpr size_t CACHE_SIZE = 16 * (1024 * 102);
+struct SceneLoader;
 
 // Delimiter used in sceneloader for style params and layer-sublayer naming
 const std::string DELIMITER = ":";
@@ -61,17 +58,26 @@ public:
 
 
     std::string yaml;
-    // The URL from which this scene was loaded
+    /// The URL from which this scene was loaded
     Url url;
-    // SceneUpdates to apply to the scene
+    /// SceneUpdates to apply to the scene
     std::vector<SceneUpdate> updates;
-    // Set the view to the position provided by the scene
+    /// Set the view to the position provided by the scene
     bool useScenePosition = true;
-    // Add styles toggled by DebguFlags
+    /// Add styles toggled by DebguFlags
     bool debugStyles = false;
 
+    /// Start loading tiles as soon as possible
+    bool prefetchTiles = true;
+
+    /// Start loading tiles as soon as possible
+    uint32_t numTileWorkers = 2;
+
+    /// 16MB default in-memory DataSource cache
+    static constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
     size_t memoryTileCacheSize = CACHE_SIZE;
 };
+
 
 class Scene {
 public:
@@ -139,20 +145,6 @@ public:
 
     const Light* findLight(const std::string& _name) const;
 
-    // Start an asynchronous request for the scene resource at the given URL.
-    // In addition to the URL types supported by the platform instance, this
-    // also supports a custom ZIP URL scheme. ZIP URLs are of the form:
-    //   zip://path/to/file.txt#http://host.com/some/archive.zip
-    // The fragment (#http...) of the URL is the location of the archive and the
-    // relative portion of the URL (path/...) is the path of the target file
-    // within the archive (this allows relative path operations on URLs to work
-    // as expected within zip archives). This function expects that all required
-    // zip archives will be added to the scene with addZipArchive before being
-    // requested.
-    UrlRequestHandle startUrlRequest(const Url& url, UrlCallback callback);
-
-    void addZipArchive(Url url, std::shared_ptr<ZipArchive> zipArchive);
-
     float time() const { return m_time; }
 
     int addIdForName(const std::string& _name);
@@ -189,19 +181,11 @@ public:
     MarkerManager* markerManager() { return m_markerManager.get(); }
     LabelManager* labelManager() { return m_labelManager.get(); }
 
-    void initTileManager() {
-        m_tileManager->setTileSources(m_tileSources);
-        m_tileManager->updateTileSets(*m_view);
-    }
+    bool load();
 
-    void startTileWorker() {
-         m_tileWorker->setScene(*this);
-     }
-
-    void stopTileWorker() {
-        m_ready = false;
-        m_tileWorker.reset();
-    }
+    void initTileManager();
+    void startTileWorker();
+    void stopTileWorker();
 
     bool complete();
     bool isReady() const { return m_ready; };
@@ -228,6 +212,7 @@ private:
     Platform& m_platform;
 
     std::unique_ptr<SceneOptions> m_options;
+    std::unique_ptr<Importer> m_importer;
 
     bool m_ready = false;
     bool m_loading = false;
@@ -248,11 +233,6 @@ private:
     std::map<std::string, std::string> m_lightShaderBlocks;
 
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
-
-    // Container for any zip archives needed for the scene. For each entry, the
-    // key is the original URL from which the zip archive was retrieved and the
-    // value is a ZipArchive initialized with the compressed archive data.
-    std::unordered_map<Url, std::shared_ptr<ZipArchive>> m_zipArchives;
 
     // Records the YAML Nodes for which global values have been swapped; keys are
     // nodes that referenced globals, values are nodes of globals themselves.
