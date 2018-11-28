@@ -40,10 +40,10 @@ public:
 protected:
 
     // Process and store data for an imported scene from a vector of bytes.
-    void addSceneData(const Url& sceneUrl, std::vector<char>& sceneContent);
+    void addSceneData(const Url& sceneUrl, std::vector<char>&& sceneContent);
 
     // Process and store data for an imported scene from a string of YAML.
-    void addSceneString(const Url& sceneUrl, const std::string& sceneString);
+    void addSceneYaml(const Url& sceneUrl, const char* sceneYaml, size_t length);
 
     // Get the sequence of scene names that are designated to be imported into the
     // input scene node by its 'import' fields.
