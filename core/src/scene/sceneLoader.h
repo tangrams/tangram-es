@@ -4,9 +4,7 @@
 #include "map.h"
 #include "scene/scene.h"
 
-#include <memory>
 #include <string>
-#include <tuple>
 #include <vector>
 
 #include "yaml-cpp/yaml.h"
@@ -32,8 +30,6 @@ struct StyleUniform {
 
 struct SceneLoader {
     using Node = YAML::Node;
-
-    static bool loadScene(std::shared_ptr<Scene> scene);
 
     static bool applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates);
     static void applyGlobals(Scene& scene);

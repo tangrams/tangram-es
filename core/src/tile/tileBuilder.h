@@ -19,7 +19,7 @@ class TileBuilder {
 
 public:
 
-    explicit TileBuilder(Scene& _scene) : m_scene(_scene) {}
+    explicit TileBuilder(Scene& _scene);
 
     StyleBuilder* getStyleBuilder(const std::string& _name);
 
