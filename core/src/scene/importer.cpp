@@ -2,7 +2,6 @@
 
 #include "log.h"
 #include "platform.h"
-#include "scene/sceneLoader.h"
 #include "util/zipArchive.h"
 
 #include <atomic>
@@ -15,23 +14,17 @@ using YAML::NodeType;
 
 namespace Tangram {
 
-Importer::Importer(std::shared_ptr<Scene> scene)
-    : m_scene(scene) {
-}
 
-Node Importer::applySceneImports(Platform& platform) {
-
-    Url sceneUrl = m_scene->options().url;
+Node Importer::loadSceneData(Platform& _platform, const Url& _sceneUrl, const std::string& _sceneYaml) {
 
     Url nextUrlToImport;
 
-    if (!m_scene->options().yaml.empty()) {
+    if (!_sceneYaml.empty()) {
         // Load scene from yaml string.
-        auto& yaml = m_scene->options().yaml;
-        addSceneYaml(sceneUrl, yaml.data(), yaml.length());
+        addSceneYaml(_sceneUrl, _sceneYaml.data(), _sceneYaml.length());
     } else {
         // Load scene from yaml file.
-        m_sceneQueue.push_back(sceneUrl);
+        m_sceneQueue.push_back(_sceneUrl);
     }
 
     std::atomic_uint activeDownloads(0);
@@ -62,24 +55,41 @@ Node Importer::applySceneImports(Platform& platform) {
             }
         }
 
-        activeDownloads++;
-        m_scene->startUrlRequest(nextUrlToImport, [&, nextUrlToImport](UrlResponse&& response) {
-            std::unique_lock<std::mutex> lock(sceneMutex);
-            if (response.error) {
-                LOGE("Unable to retrieve '%s': %s", nextUrlToImport.string().c_str(), response.error);
-            } else {
-                addSceneData(nextUrlToImport, std::move(response.content));
-            }
-            activeDownloads--;
-            condition.notify_all();
-        });
+        if (nextUrlToImport.scheme() == "zip") {
+            readFromZip(nextUrlToImport,
+                [&, nextUrlToImport](UrlResponse&& response) {
+                    std::unique_lock<std::mutex> lock(sceneMutex);
+                    if (response.error) {
+                        LOGE("Unable to retrieve '%s': %s",
+                             nextUrlToImport.string().c_str(), response.error);
+                    } else {
+                        addSceneData(nextUrlToImport, std::move(response.content));
+                    }
+               });
+        } else {
+            activeDownloads++;
+            _platform.startUrlRequest(nextUrlToImport,
+                [&, nextUrlToImport](UrlResponse&& response) {
+                    std::unique_lock<std::mutex> lock(sceneMutex);
+                    if (response.error) {
+                        LOGE("Unable to retrieve '%s': %s",
+                             nextUrlToImport.string().c_str(), response.error);
+                    } else {
+                        addSceneData(nextUrlToImport, std::move(response.content));
+                    }
+                    activeDownloads--;
+                    condition.notify_all();
+               });
+        }
     }
 
-    Node root;
 
     LOGD("Processing scene import Stack:");
     std::vector<Url> sceneStack;
-    importScenesRecursive(root, sceneUrl, sceneStack);
+    Node root;
+    importScenesRecursive(root, _sceneUrl, sceneStack);
+
+    m_importedScenes.clear();
 
     return root;
 }
@@ -118,8 +128,35 @@ void Importer::addSceneData(const Url& sceneUrl, std::vector<char>&& sceneData) 
             break;
         }
     }
-    // Add the archive to the scene.
-    m_scene->addZipArchive(sceneUrl, zipArchive);
+
+    m_zipArchives.emplace(sceneUrl, zipArchive);
+}
+
+UrlRequestHandle Importer::readFromZip(const Url& url, UrlCallback callback) {
+    UrlResponse response;
+    // URL for a file in a zip archive, get the encoded source URL.
+    auto source = Importer::getArchiveUrlForZipEntry(url);
+    // Search for the source URL in our archive map.
+    auto it = m_zipArchives.find(source);
+    if (it != m_zipArchives.end()) {
+        auto& archive = it->second;
+        // Found the archive! Now create a response for the request.
+        auto zipEntryPath = url.path().substr(1);
+        auto entry = archive->findEntry(zipEntryPath);
+        if (entry) {
+            response.content.resize(entry->uncompressedSize);
+            bool success = archive->decompressEntry(entry, response.content.data());
+            if (!success) {
+                response.error = "Unable to decompress zip archive file.";
+            }
+        } else {
+            response.error = "Did not find zip archive entry.";
+        }
+    } else {
+        response.error = "Could not find zip archive.";
+    }
+    callback(std::move(response));
+    return 0;
 }
 
 void Importer::addSceneYaml(const Url& sceneUrl, const char* sceneYaml, size_t length) {

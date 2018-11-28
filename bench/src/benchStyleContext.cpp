@@ -42,9 +42,9 @@ void globalSetup() {
     Url sceneUrl(scene_file);
     platform->putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
     scene = std::make_shared<Scene>(*platform, std::make_unique<SceneOptions>(sceneUrl), std::make_unique<View>());
-    Importer importer(scene);
+    Importer importer;
     try {
-        scene->config() = importer.applySceneImports(*platform);
+        scene->config() = importer.loadSceneData(*platform, sceneUrl);
     }
     catch (const YAML::ParserException& e) {
         LOGE("Parsing scene config '%s'", e.what());

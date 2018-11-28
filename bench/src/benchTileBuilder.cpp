@@ -39,33 +39,15 @@ void globalSetup() {
     static std::atomic<bool> initialized{false};
     if (initialized.exchange(true)) { return; }
 
+
     Url sceneUrl(scene_file);
     platform->putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
 
-    scene = std::make_shared<Scene>(*platform, std::make_unique<SceneOptions>(sceneUrl), std::make_unique<View>());
-    Importer importer(scene);
-    try {
-        scene->config() = importer.applySceneImports(*platform);
-    }
-    catch (const YAML::ParserException& e) {
-        LOGE("Parsing scene config '%s'", e.what());
-        exit(-1);
-    }
-    if (!scene->config()) {
-        LOGE("Invalid scene file '%s'", scene_file);
-        exit(-1);
-    }
-    SceneLoader::applyGlobals(*scene);
-    SceneLoader::applySources(*scene);
-    SceneLoader::applyCameras(*scene);
-    SceneLoader::applyTextures(scene);
-    scene->fontContext()->loadFonts();
-    SceneLoader::applyFonts(scene);
-    SceneLoader::applyStyles(scene);
-    SceneLoader::applyLayers(*scene);
-    for (auto& style : scene->styles()) {
-        style->build(*scene);
-    }
+    auto sceneOptions = std::make_unique<SceneOptions>(sceneUrl);
+    sceneOptions->prefetchTiles = false;
+
+    scene = std::make_shared<Scene>(*platform, std::move(sceneOptions), std::make_unique<View>());
+    scene->load();
 
     for (auto& s : scene->tileSources()) {
         source = s;

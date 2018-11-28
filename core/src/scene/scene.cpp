@@ -7,6 +7,7 @@
 #include "scene/dataLayer.h"
 #include "scene/importer.h"
 #include "scene/light.h"
+#include "scene/sceneLoader.h"
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
 #include "selection/featureSelection.h"
@@ -35,8 +36,6 @@ Scene::Scene(Platform& _platform, std::unique_ptr<SceneOptions> _sceneOptions, s
       m_options(std::move(_sceneOptions)),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()),
-      m_tileWorker(std::make_unique<TileWorker>(_platform, 4)),
-      m_tileManager(std::make_unique<TileManager>(_platform, *m_tileWorker)),
       m_labelManager(std::make_unique<LabelManager>()),
       m_view(std::move(_view)) {
     m_pixelScale = m_view->pixelScale();
@@ -64,6 +63,107 @@ Scene::~Scene() {
     m_tileWorker.reset();
 }
 
+bool Scene::load() {
+    if (m_loading) {
+        return false;
+    }
+    LOGTOInit();
+    LOGTO(">>>>>> loadScene >>>>>>");
+    m_loading = true;
+
+    m_importer = std::make_unique<Importer>();
+
+    // Wait until all scene-yamls are available and merged.
+    // Importer also holds reference zip archives
+    m_config = m_importer->loadSceneData(m_platform, m_options->url, m_options->yaml);
+    LOGTO("<<< applyImports AKA load files, parse YAMLS, allocate Document and merge stuff");
+
+    if (!m_config) {
+        LOGE("Scene loading failed: No config!");
+        return false;
+    }
+
+    LOGTO(">>> applyUpdates");
+    if (!SceneLoader::applyUpdates(*this, m_options->updates)) {
+        LOGE("Applying SceneUpdates failed!");
+        return false;
+    }
+    LOGTO("<<< applyUpdates");
+
+    LOGTO(">>> applyGlobals");
+    SceneLoader::applyGlobals(*this);
+    LOGTO("<<< applyGlobals");
+
+    LOGTO(">>> applySources");
+    SceneLoader::applySources(*this);
+    LOGTO("<<< applySources");
+
+    SceneLoader::applyCameras(*this);
+    LOGTO("<<< applyCameras");
+
+    LOGTO(">>> loadTiles");
+    // Scene is ready to load tiles for initial view
+    if (m_options->prefetchTiles) { initTileManager(); }
+    LOGTO("<<< loadTiles");
+
+    LOGTO(">>> textures");
+    SceneLoader::applyTextures(*this);
+    LOGTO("<<< textures");
+
+    LOGTO(">>> initFonts");
+    m_fontContext->loadFonts();
+    LOGTO("<<< initFonts");
+
+    LOGTO(">>> applyFonts");
+    SceneLoader::applyFonts(*this);
+    LOGTO("<<< applyFonts");
+
+    LOGTO(">>> applyStyles");
+    SceneLoader::applyStyles(*this);
+    LOGTO("<<< applyStyles");
+
+    LOGTO(">>> applyLayers");
+    SceneLoader::applyLayers(*this);
+    LOGTO("<<< applyLayers");
+
+    LOGTO(">>> applyLights");
+    SceneLoader::applyLights(*this);
+    LOGTO("<<< applyLights");
+
+    LOGTO(">>> applyScene");
+    SceneLoader::applyScene(*this);
+    LOGTO("<<< applyScene");
+
+    LOGTO(">>> buildStyles");
+    for (auto& style : m_styles) { style->build(*this); }
+    LOGTO("<<< buildStyles");
+
+    // Now only waiting for pending fonts and textures:
+    // Let the TileWorker initialize its TileBuilders
+    if (m_options->prefetchTiles) { startTileWorker(); }
+
+    m_importer.reset();
+
+    LOGTO("<<<<<< loadScene <<<<<<");
+    return true;
+}
+
+void Scene::initTileManager() {
+    m_tileWorker = std::make_unique<TileWorker>(m_platform, m_options->numTileWorkers);
+    m_tileManager = std::make_unique<TileManager>(m_platform, *m_tileWorker);
+
+    m_tileManager->setTileSources(m_tileSources);
+    m_tileManager->updateTileSets(*m_view);
+}
+void Scene::startTileWorker() {
+    m_tileWorker->setScene(*this);
+}
+
+void Scene::stopTileWorker() {
+    m_ready = false;
+    m_tileWorker.reset();
+}
+
 const Style* Scene::findStyle(const std::string& _name) const {
     for (auto& style : m_styles) {
         if (style->getName() == _name) { return style.get(); }
@@ -77,42 +177,6 @@ Style* Scene::findStyle(const std::string& _name) {
         if (style->getName() == _name) { return style.get(); }
     }
     return nullptr;
-}
-
-UrlRequestHandle Scene::startUrlRequest(const Url& url, UrlCallback callback) {
-    if (url.scheme() == "zip") {
-        UrlResponse response;
-        // URL for a file in a zip archive, get the encoded source URL.
-        auto source = Importer::getArchiveUrlForZipEntry(url);
-        // Search for the source URL in our archive map.
-        auto it = m_zipArchives.find(source);
-        if (it != m_zipArchives.end()) {
-            auto& archive = it->second;
-            // Found the archive! Now create a response for the request.
-            auto zipEntryPath = url.path().substr(1);
-            auto entry = archive->findEntry(zipEntryPath);
-            if (entry) {
-                response.content.resize(entry->uncompressedSize);
-                bool success = archive->decompressEntry(entry, response.content.data());
-                if (!success) {
-                    response.error = "Unable to decompress zip archive file.";
-                }
-            } else {
-                response.error = "Did not find zip archive entry.";
-            }
-        } else {
-            response.error = "Could not find zip archive.";
-        }
-        callback(std::move(response));
-        return 0;
-    }
-
-    // For non-zip URLs, send it to the platform.
-    return m_platform.startUrlRequest(url, std::move(callback));
-}
-
-void Scene::addZipArchive(Url url, std::shared_ptr<ZipArchive> zipArchive) {
-    m_zipArchives.emplace(url, zipArchive);
 }
 
 int Scene::addIdForName(const std::string& _name) {
@@ -224,13 +288,11 @@ std::shared_ptr<Texture> Scene::fetchTexture(const std::string& _name, const Url
     texture->setSpriteAtlas(std::move(_atlas));
 
     auto task = std::make_shared<TextureTask>(_url, texture);
+
     LOGTInit();
     LOGT("Fetch    texture %s", task->url.string().c_str());
-    {
-        std::lock_guard<std::mutex> lock(m_taskMutex);
-        m_pendingTextures.push_front(task);
-    }
-    startUrlRequest(_url, [=, t = std::weak_ptr<TextureTask>(task)] (UrlResponse&& response) mutable {
+
+    auto cb = [=, t = std::weak_ptr<TextureTask>(task)] (UrlResponse&& response) mutable {
         auto task = t.lock();
         if (!task) { return; }
 
@@ -250,7 +312,15 @@ std::shared_ptr<Texture> Scene::fetchTexture(const std::string& _name, const Url
             }
         }
         task->done = true;
-    });
+    };
+    if (_url.scheme() == "zip") {
+        m_importer->readFromZip(_url, cb);
+    } else {
+        std::lock_guard<std::mutex> lock(m_taskMutex);
+        m_pendingTextures.push_front(task);
+
+        m_platform.startUrlRequest(_url, std::move(cb));
+    }
 
     return texture;
 }
@@ -267,7 +337,6 @@ std::shared_ptr<Texture> Scene::loadTexture(const std::string& _name) {
     return fetchTexture(_name, _name, options);
 }
 
-
 void Scene::loadFont(const std::string& _uri, const std::string& _family,
                      const std::string& _style, const std::string& _weight) {
 
@@ -283,11 +352,8 @@ void Scene::loadFont(const std::string& _uri, const std::string& _family,
                                                            _weight, _uri}, m_fontContext);
     LOGTInit();
     LOGT("Fetch    font %s", task->ft.uri.c_str());
-    {
-        std::lock_guard<std::mutex> lock(m_taskMutex);
-        m_pendingFonts.push_front(task);
-    }
-    startUrlRequest(_uri, [=,t = std::weak_ptr<FontTask>(task)] (UrlResponse&& response) mutable {
+
+    auto cb = [=,t = std::weak_ptr<FontTask>(task)] (UrlResponse&& response) mutable {
          auto task = t.lock();
          if (!task) { return; }
 
@@ -300,7 +366,16 @@ void Scene::loadFont(const std::string& _uri, const std::string& _family,
             task->fontContext->addFont(task->ft, alfons::InputSource(std::move(response.content)));
         }
         task->done = true;
-    });
+    };
+    Url url(_uri);
+    if (url.scheme() == "zip") {
+        m_importer->readFromZip(url, cb);
+    } else {
+        std::lock_guard<std::mutex> lock(m_taskMutex);
+        m_pendingFonts.push_front(task);
+
+        m_platform.startUrlRequest(url, std::move(cb));
+    }
 }
 
 bool Scene::complete() {
