@@ -14,7 +14,6 @@ target_include_directories(platform_test
 )
 
 set(TEST_SOURCES
-  src/catch.cpp
   unit/curlTests.cpp
   unit/drawRuleTests.cpp
   unit/dukTests.cpp
