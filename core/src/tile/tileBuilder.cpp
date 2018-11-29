@@ -99,7 +99,7 @@ std::unique_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
 
     m_selectionFeatures.clear();
 
-    auto tile = std::make_unique<Tile>(_tileID, &_source);
+    auto tile = std::make_unique<Tile>(_tileID, _source.id(), _source.generation());
 
     tile->initGeometry(m_scene->styles().size());
 

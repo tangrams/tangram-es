@@ -5,7 +5,7 @@
 #include "scene/styleContext.h"
 
 using namespace Tangram;
-
+namespace {
 using Context = StyleContext;
 
 // Functions to initialize SceneLayer instances
@@ -215,4 +215,5 @@ TEST_CASE("SceneLayer correctly merges rules matched from sublayer", "[SceneLaye
     REQUIRE(matches[0].findParameter(StyleParamKey::order).key == StyleParamKey::order);
     REQUIRE(matches[0].findParameter(StyleParamKey::order).value.get<std::string>() == "value_c");
 
+}
 }

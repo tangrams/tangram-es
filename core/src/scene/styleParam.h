@@ -253,7 +253,7 @@ struct StyleParam {
         key(_key),
         value(std::move(_value)) {}
 
-    StyleParam(StyleParamKey _key, Stops* _stops) :
+    StyleParam(StyleParamKey _key, const Stops* _stops) :
         key(_key),
         value(none_type{}),
         stops(_stops) {
@@ -261,7 +261,7 @@ struct StyleParam {
 
     StyleParamKey key;
     Value value;
-    Stops* stops = nullptr;
+    const Stops* stops = nullptr;
     int32_t function = -1;
 
     bool operator<(const StyleParam& _rhs) const { return key < _rhs.key; }

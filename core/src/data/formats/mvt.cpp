@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <iterator>
 
+#define LAYER 3
+
 #define FEATURE_ID 1
 #define FEATURE_TAGS 2
 #define FEATURE_TYPE 3
@@ -330,7 +332,7 @@ std::shared_ptr<TileData> Mvt::parseTile(const TileTask& _task, int32_t _sourceI
 
     try {
         while(item.next()) {
-            if(item.tag == 3) {
+            if(item.tag == LAYER) {
                 tileData->layers.push_back(getLayer(ctx, item.getMessage()));
             } else {
                 item.skip();

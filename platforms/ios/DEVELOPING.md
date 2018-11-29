@@ -7,14 +7,11 @@ This page is for those who intend to modify Tangram ES itself, not just use it i
 
 When building and running the demo application on an iOS device, you will likely need to modify the "App ID" and "Development Team" values in the Xcode project in order to sign the application package correctly because Apple mandates that an App ID can only be used by one Development Team. This is a good security practice, but since the App ID and Developer Team values are embedded in the Xcode project data, there is no way for each developer working with the repository to use their App ID / Developer Team values without modifying the Xcode project files that are checked into source control.
 
-This can be disruptive to a git workflow because git will show the Xcode project file as modified. To work with a clean source tree, you can stash your changes to the demo Xcode project before committing changes, then restore those changes from the stash when you want to run the demo again:
+This can be disruptive to a git workflow because git will show the Xcode project file as modified. To work with a clean source tree, you should let git assume there were no changes to the demo Xcode project by running this command once:
 ```
-# Stash changes to demo project
-git stash push -m "Xcode signing info" platforms/ios/demo/TangramDemo.xcodeproj/project.pbxproj
-# Use git as normal
-git stash apply
-# Run demo project again
+git update-index --assume-unchanged platforms/ios/demo/TangramDemo.xcodeproj/project.pbxproj
 ```
+[Source](https://stackoverflow.com/questions/21756531/git-ignore-local-changes-to-portions-of-tracked-files)
 
 ## Always run builds from the Xcode workspace ##
 

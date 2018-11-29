@@ -281,11 +281,13 @@ void FontContext::addFont(const FontDescription& _ft, alfons::InputSource _sourc
     std::lock_guard<std::mutex> lock(m_fontMutex);
 
     for (size_t i = 0; i < s_fontRasterSizes.size(); i++) {
-        auto font = m_alfons.getFont(_ft.alias, s_fontRasterSizes[i]);
-        font->addFace(m_alfons.addFontFace(_source, s_fontRasterSizes[i]));
+        if (auto font = m_alfons.getFont(_ft.alias, s_fontRasterSizes[i])) {
 
-        // add fallbacks from default font
-        font->addFaces(*m_font[i]);
+            font->addFace(m_alfons.addFontFace(_source, s_fontRasterSizes[i]));
+
+            // add fallbacks from default font
+            if (m_font[i]) { font->addFaces(*m_font[i]); }
+        }
     }
 }
 

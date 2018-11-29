@@ -74,7 +74,7 @@ Node Importer::applySceneImports(std::shared_ptr<Platform> platform) {
         });
     }
 
-    Node root = Node();
+    Node root;
 
     LOGD("Processing scene import Stack:");
     std::vector<Url> sceneStack;
@@ -123,7 +123,7 @@ void Importer::addSceneString(const Url& sceneUrl, const std::string& sceneStrin
     Node sceneNode;
     try {
         sceneNode = YAML::Load(sceneString);
-    } catch (YAML::ParserException e) {
+    } catch (const YAML::ParserException& e) {
         LOGE("Parsing scene config '%s'", e.what());
         return;
     }
@@ -191,9 +191,7 @@ void Importer::importScenesRecursive(Node& root, const Url& sceneUrl, std::vecto
     sceneNode.remove("import");
 
     for (const auto& url : imports) {
-
         importScenesRecursive(root, url, sceneStack);
-
     }
 
     sceneStack.pop_back();
@@ -204,44 +202,22 @@ void Importer::importScenesRecursive(Node& root, const Url& sceneUrl, std::vecto
 }
 
 void Importer::mergeMapFields(Node& target, const Node& import) {
+    if (!target.IsMap() || !import.IsMap()) {
 
-    for (const auto& entry : import) {
-
-        const auto& key = entry.first.Scalar();
-        const auto& source = entry.second;
-        auto dest = target[key];
-
-        if (!dest) {
-            dest = source;
-            continue;
+        if (target.IsDefined() && !target.IsNull() && (target.Type() != import.Type())) {
+            LOGN("Merging different node types: \n'%s'\n<--\n'%s'",
+                 Dump(target).c_str(), Dump(import).c_str());
         }
 
-        if (dest.Type() != source.Type()) {
-            LOGN("Merging different node types: '%s'\n'%s'\n<==\n'%s'",
-                 key.c_str(), Dump(dest).c_str(), Dump(source).c_str());
-        }
+        target = import;
 
-        switch(dest.Type()) {
-            case NodeType::Null:
-            case NodeType::Scalar:
-            case NodeType::Sequence:
-                dest = source;
-                break;
+    } else {
+        for (const auto& entry : import) {
 
-            case NodeType::Map: {
-                auto newTarget = dest;
-                if (source.IsMap()) {
-                    mergeMapFields(newTarget, source);
-                } else {
-                    dest = source;
-                }
-                break;
-            }
-            default:
-                // NodeType::Undefined is handled above by checking (!dest).
-                // All types are handled, so this should never be reached.
-                assert(false);
-                break;
+            const auto& key = entry.first.Scalar();
+            const auto& source = entry.second;
+            auto dest = target[key];
+            mergeMapFields(dest, source);
         }
     }
 }

@@ -2,13 +2,13 @@
 # USAGE
 #   run_tests.sh [test_build_dir]
 #
-test_dir="build/tests/bin"
+build_dir="build/tests"
 if [[ $1 ]]; then
-    test_dir=$1
+    build_dir=$1
 fi
-echo "Running unit tests from: ${test_dir}"
-pushd ${test_dir}
-for file in unit/*.out
+echo "Running unit tests from: ${build_dir}"
+pushd ${build_dir}
+for file in tests/*.out
     do
         echo "Running ${file}"
         $file

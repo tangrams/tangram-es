@@ -5,8 +5,11 @@ add_subdirectory(benchmark)
 target_compile_options(benchmark PRIVATE -O3 -DNDEBUG)
 
 set(BENCH_SOURCES
-  src/builders.cpp
-  src/tileLoading.cpp
+  src/benchGeometryBuilder.cpp
+  src/benchStyleContext.cpp
+  src/benchTileBuilder.cpp
+  src/benchTileSource.cpp
+  src/template.cpp
 )
 
 # create an executable per bench
@@ -37,10 +40,10 @@ foreach(_src_file_path ${BENCH_SOURCES})
 
   set_target_properties(${EXECUTABLE_NAME}
     PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/bench"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
   )
 
-  add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes")
+  add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes" "res")
 
 endforeach()
 

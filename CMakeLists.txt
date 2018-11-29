@@ -6,6 +6,11 @@ project(tangram)
 option(TANGRAM_USE_SYSTEM_FONT_LIBS "Use system libraries Freetype, ICU and Harfbuzz via pkgconfig" OFF)
 option(TANGRAM_USE_SYSTEM_GLFW_LIBS "Use system libraries for GLFW3 via pkgconfig" OFF)
 
+option(TANGRAM_BUILD_TESTS "Build unit tests" OFF)
+option(TANGRAM_BUNDLE_TESTS "Compile all tests into a single binary" ON)
+option(TANGRAM_BUILD_BENCHMARKS "Build benchmarks" OFF)
+option(TANGRAM_DEV_MODE "For developers only: Don't omit the frame pointer" OFF)
+
 message(STATUS "Build type configuration: ${CMAKE_BUILD_TYPE}")
 
 # Check that submodules are present.
@@ -40,24 +45,27 @@ if(NOT TANGRAM_PLATFORM)
 endif()
 
 # Configure platform target.
-if(TANGRAM_PLATFORM)
-  set(TANGRAM_PLATFORM_CONFIG_FILE "platforms/${TANGRAM_PLATFORM}/config.cmake")
-  if(EXISTS "${PROJECT_SOURCE_DIR}/${TANGRAM_PLATFORM_CONFIG_FILE}")
-    message(STATUS "Including platform CMake config file: ${TANGRAM_PLATFORM_CONFIG_FILE}")
-  else()
-    message(SEND_ERROR "Cannot find CMake config file for platform: ${TANGRAM_PLATFORM}. Looked for: ${TANGRAM_PLATFORM_CONFIG_FILE}")
-    return()
-  endif()
-  # Cache platform target.
-  set(TANGRAM_PLATFORM ${TANGRAM_PLATFORM} CACHE INTERNAL "Tangram platform target" FORCE)
-  # Include the platform config file.
-  include(${TANGRAM_PLATFORM_CONFIG_FILE})
+if(TANGRAM_DEV_MODE AND TANGRAM_BUILD_BENCHMARKS)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer")
 endif()
+
+set(TANGRAM_PLATFORM_CONFIG_FILE "platforms/${TANGRAM_PLATFORM}/config.cmake")
+if(EXISTS "${PROJECT_SOURCE_DIR}/${TANGRAM_PLATFORM_CONFIG_FILE}")
+  message(STATUS "Including platform CMake config file: ${TANGRAM_PLATFORM_CONFIG_FILE}")
+else()
+  message(SEND_ERROR "Cannot find CMake config file for platform: ${TANGRAM_PLATFORM}. Looked for: ${TANGRAM_PLATFORM_CONFIG_FILE}")
+  return()
+endif()
+# Cache platform target.
+set(TANGRAM_PLATFORM ${TANGRAM_PLATFORM} CACHE INTERNAL "Tangram platform target" FORCE)
+# Include the platform config file.
+include(${TANGRAM_PLATFORM_CONFIG_FILE})
 
 # Add core library.
 add_subdirectory(core)
 
-if(BENCHMARK OR UNIT_TESTS)
+if(TANGRAM_BUILD_BENCHMARKS OR TANGRAM_BUILD_TESTS)
   add_library(platform_mock
     tests/src/mockPlatform.cpp
     tests/src/gl_mock.cpp
@@ -67,12 +75,12 @@ if(BENCHMARK OR UNIT_TESTS)
   target_link_libraries(platform_mock PUBLIC tangram-core)
 endif()
 
-if(UNIT_TESTS)
+if(TANGRAM_BUILD_TESTS)
   message(STATUS "Building tests")
   add_subdirectory(tests)
 endif()
 
-if(BENCHMARK)
+if(TANGRAM_BUILD_BENCHMARKS)
   message(STATUS "Building benchmarks")
   add_subdirectory(bench)
 endif()

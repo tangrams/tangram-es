@@ -454,7 +454,7 @@ bool Map::update(float _dt) {
     bool tilesLoading = impl->tileManager.hasLoadingTiles();
     bool labelsNeedUpdate = impl->labels.needUpdate();
 
-    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || impl->sceneLoadTasks > 0) {
+    if (viewChanged || tilesLoading || labelsNeedUpdate || impl->sceneLoadTasks > 0) {
         viewComplete = false;
     }
 
