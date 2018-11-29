@@ -6,7 +6,6 @@ add_subdirectory(deps)
 if (TANGRAM_MBTILES_DATASOURCE)
   set(MBTILES_SOURCES src/data/mbtilesDataSource.cpp)
   set(MBTILES_LIBS SQLiteCpp sqlite3)
-  add_definitions(-DTANGRAM_MBTILES_DATASOURCE)
 endif()
 
 add_library(tangram-core
@@ -168,6 +167,12 @@ if(TANGRAM_WARN_ON_RULE_CONFLICT)
   target_compile_definitions(tangram-core
     PRIVATE
     TANGRAM_WARN_ON_RULE_CONFLICT)
+endif()
+
+if (TANGRAM_MBTILES_DATASOURCE)
+  target_compile_definitions(tangram-core
+    PRIVATE
+    TANGRAM_MBTILES_DATASOURCE)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")

@@ -39,7 +39,10 @@ android {
                  '-Wignored-qualifiers',
                  '-Wtype-limits',
                  '-Wmissing-field-initializers',
-                 '-Wno-format-pedantic'
+                 '-Wno-format-pedantic',
+                 '-Wno-gnu-statement-expression',
+                 '-Wgnu-anonymous-struct',
+                 '-Wno-nested-anon-types'
 
         if (abi == 'all') {
           abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86'
