@@ -126,8 +126,8 @@ Map::~Map() {
     // All jobs will be executed immediately on add() afterwards.
     impl->jobQueue.stop();
 
-    TextDisplay::Instance().deinit();
-    Primitives::deinit();
+    Debug::TextDisplay::Instance().deinit();
+    Debug::Primitives::deinit();
 }
 
 
@@ -183,7 +183,7 @@ SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
 
     // Disposing TileWorker is blocking: Do this async just in case
     asyncWorker->enqueue([s = std::move(oldScene)]() mutable {
-        LOG("ASYNC DISPOSE OF OLD SCENE - %d", s.use_count() == 1);
+        LOGD("Async dispose old Scene - %d", s.use_count() == 1);
     });
 
     return scene->id;
@@ -213,7 +213,7 @@ void Map::resize(int _newWidth, int _newHeight) {
 
 MapState Map::update(float _dt) {
 
-    FrameInfo::beginUpdate();
+    Debug::FrameInfo::beginUpdate();
 
     impl->jobQueue.runJobs();
 
@@ -250,7 +250,7 @@ MapState Map::update(float _dt) {
         }
     }
 
-    FrameInfo::endUpdate();
+    Debug::FrameInfo::endUpdate();
 
     return { state };
 }
@@ -281,8 +281,8 @@ void Map::render() {
         return;
     }
 
-    Primitives::setResolution(renderState, view.getWidth(), view.getHeight());
-    FrameInfo::beginFrame();
+    Debug::Primitives::setResolution(renderState, view.getWidth(), view.getHeight());
+    Debug::FrameInfo::beginFrame();
 
     scene.renderBeginFrame(renderState);
 
@@ -309,7 +309,7 @@ void Map::render() {
 
     if (drawSelectionDebug) {
         impl->selectionBuffer->drawDebug(renderState, viewport);
-        FrameInfo::draw(renderState, view, *scene.tileManager());
+        Debug::FrameInfo::draw(renderState, view, *scene.tileManager());
         return;
     }
 
@@ -321,7 +321,7 @@ void Map::render() {
         platform->setContinuousRendering(drawnAnimatedStyle);
     }
 
-    FrameInfo::draw(renderState, view, *scene.tileManager());
+    Debug::FrameInfo::draw(renderState, view, *scene.tileManager());
 }
 
 int Map::getViewportHeight() {
@@ -884,7 +884,7 @@ void Map::setupGL() {
     }
 
     // Set default primitive render color
-    Primitives::setColor(impl->renderState, 0xffffff);
+    Debug::Primitives::setColor(impl->renderState, 0xffffff);
 
     // Load GL extensions and capabilities
     Hardware::loadExtensions();

@@ -16,8 +16,7 @@
 #include "debugTexture_fs.h"
 
 namespace Tangram {
-
-namespace Primitives {
+namespace Debug {
 
 static bool s_initialized;
 static std::unique_ptr<ShaderProgram> s_shader;
@@ -32,7 +31,7 @@ static std::unique_ptr<VertexLayout> s_textureLayout;
 
 static UniformLocation s_uTextureProj{"u_proj"};
 
-void init() {
+void Primitives::init() {
 
     // lazy init
     if (!s_initialized) {
@@ -60,7 +59,7 @@ void init() {
     }
 }
 
-void deinit() {
+void Primitives::deinit() {
 
     s_shader.reset(nullptr);
     s_layout.reset(nullptr);
@@ -70,7 +69,7 @@ void deinit() {
 
 }
 
-void drawLine(RenderState& rs, const glm::vec2& _origin, const glm::vec2& _destination) {
+void Primitives::drawLine(RenderState& rs, const glm::vec2& _origin, const glm::vec2& _destination) {
 
     init();
 
@@ -94,14 +93,14 @@ void drawLine(RenderState& rs, const glm::vec2& _origin, const glm::vec2& _desti
     rs.vertexBuffer(boundBuffer);
 }
 
-void drawRect(RenderState& rs, const glm::vec2& _origin, const glm::vec2& _destination) {
+void Primitives::drawRect(RenderState& rs, const glm::vec2& _origin, const glm::vec2& _destination) {
     drawLine(rs, _origin, {_destination.x, _origin.y});
     drawLine(rs, {_destination.x, _origin.y}, _destination);
     drawLine(rs, _destination, {_origin.x, _destination.y});
     drawLine(rs, {_origin.x,_destination.y}, _origin);
 }
 
-void drawPoly(RenderState& rs, const glm::vec2* _polygon, size_t _n) {
+void Primitives::drawPoly(RenderState& rs, const glm::vec2* _polygon, size_t _n) {
     init();
 
     if (!s_shader->use(rs)) { return; }
@@ -119,7 +118,7 @@ void drawPoly(RenderState& rs, const glm::vec2* _polygon, size_t _n) {
     rs.vertexBuffer(boundBuffer);
 }
 
-void drawTexture(RenderState& rs, Texture& _tex, glm::vec2 _pos, glm::vec2 _dim) {
+void Primitives::drawTexture(RenderState& rs, Texture& _tex, glm::vec2 _pos, glm::vec2 _dim) {
     init();
 
     if (!s_textureShader->use(rs)) { return; }
@@ -156,7 +155,7 @@ void drawTexture(RenderState& rs, Texture& _tex, glm::vec2 _pos, glm::vec2 _dim)
     rs.vertexBuffer(boundBuffer);
 }
 
-void setColor(RenderState& rs, unsigned int _color) {
+void Primitives::setColor(RenderState& rs, unsigned int _color) {
     init();
 
     float r = (_color >> 16 & 0xff) / 255.0;
@@ -166,7 +165,7 @@ void setColor(RenderState& rs, unsigned int _color) {
     s_shader->setUniformf(rs, s_uColor, r, g, b);
 }
 
-void setResolution(RenderState& rs, float _width, float _height) {
+void Primitives::setResolution(RenderState& rs, float _width, float _height) {
     init();
 
     glm::mat4 proj = glm::ortho(0.f, _width, _height, 0.f, -1.f, 1.f);
@@ -175,5 +174,5 @@ void setResolution(RenderState& rs, float _width, float _height) {
 }
 
 }
-
 }
+

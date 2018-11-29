@@ -155,10 +155,12 @@ bool Scene::load() {
 
     m_styles = SceneLoader::applyStyles(m_config["styles"], m_textures,
                                         m_jsFunctions, m_stops, m_names);
+#ifdef TAGRAM_DEBUG_RENDERER
     if (m_options.debugStyles) {
         m_styles.emplace_back(new DebugTextStyle("debugtext", true));
         m_styles.emplace_back(new DebugStyle("debug"));
     }
+#endif
     /// Styles that are opaque must be ordered first in the scene so that
     /// they are rendered 'under' styles that require blending
     std::sort(m_styles.begin(), m_styles.end(), Style::compare);

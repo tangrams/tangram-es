@@ -19,6 +19,8 @@ namespace Tangram {
 typedef int FontID;
 class RenderState;
 
+namespace Debug {
+
 template <typename T>
 std::string to_string_with_precision(const T a_value, const int n = 6) {
     std::ostringstream out;
@@ -36,8 +38,9 @@ public:
         return instance;
     }
 
-    ~TextDisplay();
 
+#ifdef TANGRAM_DEBUG_RENDERER
+    ~TextDisplay();
     void setResolution(glm::vec2 _textDisplayResolution) { m_textDisplayResolution = _textDisplayResolution; }
 
     void init();
@@ -45,14 +48,11 @@ public:
 
     /* Draw stacked messages added through log and draw _infos string list */
     void draw(RenderState& rs, const std::vector<std::string>& _infos);
-
     /* Stack the log message to be displayed in the screen log */
     void log(const char* fmt, ...);
 
 private:
-
     TextDisplay();
-
     void draw(RenderState& rs, const std::string& _text, int _posx, int _posy);
 
     glm::vec2 m_textDisplayResolution;
@@ -64,10 +64,24 @@ private:
 
     UniformLocation m_uOrthoProj{"u_orthoProj"};
     UniformLocation m_uColor{"u_color"};
-
+#else
+    ~TextDisplay() {}
+    void setResolution(glm::vec2) {}
+    void init() {}
+    void deinit() {}
+    void draw(RenderState&, const std::vector<std::string>&) {}
+    void log(const char* fmt, ...) {}
+private:
+    TextDisplay(){}
+#endif
 };
+}
 
+#ifdef TANGRAM_DEBUG_RENDERER
 #define LOGS(fmt, ...) \
-do { Tangram::TextDisplay::Instance().log(fmt, ## __VA_ARGS__); } while(0)
+    do { Tangram::Debug::TextDisplay::Instance().log(fmt, ## __VA_ARGS__); } while(0)
+#else
+#define LOGS(...)
+#endif
 
 }

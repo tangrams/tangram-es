@@ -34,10 +34,6 @@ add_library(tangram-core
   src/data/formats/mvt.cpp
   src/data/formats/topoJson.h
   src/data/formats/topoJson.cpp
-  src/debug/frameInfo.h
-  src/debug/frameInfo.cpp
-  src/debug/textDisplay.h
-  src/debug/textDisplay.cpp
   src/gl/framebuffer.h
   src/gl/framebuffer.cpp
   src/gl/glError.h
@@ -48,8 +44,6 @@ add_library(tangram-core
   src/gl/hardware.cpp
   src/gl/mesh.h
   src/gl/mesh.cpp
-  src/gl/primitives.h
-  src/gl/primitives.cpp
   src/gl/renderState.h
   src/gl/renderState.cpp
   src/gl/shaderProgram.h
@@ -122,10 +116,6 @@ add_library(tangram-core
   src/selection/featureSelection.cpp
   src/selection/selectionQuery.h
   src/selection/selectionQuery.cpp
-  src/style/debugStyle.h
-  src/style/debugStyle.cpp
-  src/style/debugTextStyle.h
-  src/style/debugTextStyle.cpp
   src/style/material.h
   src/style/material.cpp
   src/style/pointStyle.h
@@ -246,6 +236,22 @@ if(TANGRAM_JSCORE_ENABLED)
 else()
   target_sources(tangram-core PRIVATE src/js/DuktapeContext.cpp src/js/DuktapeContext.h)
   target_link_libraries(tangram-core PRIVATE duktape)
+endif()
+
+if(TANGRAM_DEV_DEBUG_RENDERER)
+  target_compile_definitions(tangram-core PRIVATE TANGRAM_DEBUG_RENDERER=1)
+  target_sources(tangram-core
+    PRIVATE
+    src/debug/frameInfo.h
+    src/debug/frameInfo.cpp
+    src/debug/textDisplay.h
+    src/debug/textDisplay.cpp
+    src/gl/primitives.h
+    src/gl/primitives.cpp
+    src/style/debugStyle.h
+    src/style/debugStyle.cpp
+    src/style/debugTextStyle.h
+    src/style/debugTextStyle.cpp)
 endif()
 
 # Add MBTiles implementation.
