@@ -32,6 +32,7 @@ foreach(_src_file_path ${BENCH_SOURCES})
   )
 
   target_link_libraries(${EXECUTABLE_NAME}
+  PRIVATE
     tangram-core
     benchmark
     platform_mock
