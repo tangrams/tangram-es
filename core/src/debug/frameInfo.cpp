@@ -18,6 +18,7 @@
 #define DEBUG_STATS_MAX_SIZE 128
 
 namespace Tangram {
+namespace Debug {
 
 static float s_lastUpdateTime = 0.0;
 
@@ -153,4 +154,5 @@ void FrameInfo::draw(RenderState& rs, const View& _view, TileManager& _tileManag
     }
 }
 
+}
 }

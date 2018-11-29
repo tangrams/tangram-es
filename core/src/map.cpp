@@ -126,8 +126,8 @@ Map::~Map() {
     // All jobs will be executed immediately on add() afterwards.
     impl->jobQueue.stop();
 
-    TextDisplay::Instance().deinit();
-    Primitives::deinit();
+    Debug::TextDisplay::Instance().deinit();
+    Debug::Primitives::deinit();
 }
 
 void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
@@ -382,7 +382,7 @@ void Map::resize(int _newWidth, int _newHeight) {
 
     impl->selectionBuffer = std::make_unique<FrameBuffer>(_newWidth/2, _newHeight/2);
 
-    Primitives::setResolution(impl->renderState, _newWidth, _newHeight);
+    Debug::Primitives::setResolution(impl->renderState, _newWidth, _newHeight);
 }
 
 bool Map::update(float _dt) {
@@ -395,7 +395,7 @@ bool Map::update(float _dt) {
         return false;
     }
 
-    FrameInfo::beginUpdate();
+    Debug::FrameInfo::beginUpdate();
 
     impl->scene->updateTime(_dt);
 
@@ -451,7 +451,7 @@ bool Map::update(float _dt) {
         }
     }
 
-    FrameInfo::endUpdate();
+    Debug::FrameInfo::endUpdate();
 
     bool viewChanged = impl->view.changedOnLastUpdate();
     bool tilesChanged = impl->tileManager.hasTileSetChanged();
@@ -504,7 +504,7 @@ bool Map::render() {
     // Cache default framebuffer handle used for rendering
     impl->renderState.cacheDefaultFramebuffer();
 
-    FrameInfo::beginFrame();
+    Debug::FrameInfo::beginFrame();
 
     // Invalidate render states for new frame
     if (!impl->cacheGlState) {
@@ -555,7 +555,7 @@ bool Map::render() {
 
     if (drawSelectionBuffer) {
         impl->selectionBuffer->drawDebug(impl->renderState, viewport);
-        FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
+        Debug::FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
         return impl->isCameraEasing;
     }
 
@@ -583,7 +583,7 @@ bool Map::render() {
 
     impl->labels.drawDebug(impl->renderState, impl->view);
 
-    FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
+    Debug::FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
 
     return impl->isCameraEasing;
 }
@@ -1077,7 +1077,7 @@ void Map::setupGL() {
     }
 
     // Set default primitive render color
-    Primitives::setColor(impl->renderState, 0xffffff);
+    Debug::Primitives::setColor(impl->renderState, 0xffffff);
 
     // Load GL extensions and capabilities
     Hardware::loadExtensions();

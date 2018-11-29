@@ -8,6 +8,15 @@ if (TANGRAM_MBTILES_DATASOURCE)
   set(MBTILES_LIBS SQLiteCpp sqlite3)
 endif()
 
+if(TANGRAM_DEV_MODE AND TANGRAM_DEV_DEBUG_RENDERER)
+  set(DEBUG_SOURCES
+    src/debug/frameInfo.cpp
+    src/debug/textDisplay.cpp
+    src/style/debugStyle.cpp
+    src/style/debugTextStyle.cpp
+    src/gl/primitives.cpp)
+endif()
+
 add_library(tangram-core
   src/map.cpp
   src/platform.cpp
@@ -20,13 +29,10 @@ add_library(tangram-core
   src/data/formats/geoJson.cpp
   src/data/formats/mvt.cpp
   src/data/formats/topoJson.cpp
-  src/debug/frameInfo.cpp
-  src/debug/textDisplay.cpp
   src/gl/framebuffer.cpp
   src/gl/glError.cpp
   src/gl/hardware.cpp
   src/gl/mesh.cpp
-  src/gl/primitives.cpp
   src/gl/renderState.cpp
   src/gl/shaderProgram.cpp
   src/gl/shaderSource.cpp
@@ -62,8 +68,6 @@ add_library(tangram-core
   src/scene/styleParam.cpp
   src/selection/featureSelection.cpp
   src/selection/selectionQuery.cpp
-  src/style/debugStyle.cpp
-  src/style/debugTextStyle.cpp
   src/style/material.cpp
   src/style/pointStyle.cpp
   src/style/pointStyleBuilder.cpp
@@ -99,6 +103,7 @@ add_library(tangram-core
   src/view/view.cpp
   src/view/viewConstraint.cpp
   ${MBTILES_SOURCES}
+  ${DEBUG_SOURCES}
 )
 
 # Include headers from core library and dependencies.
@@ -151,6 +156,18 @@ if(TANGRAM_WARN_ON_RULE_CONFLICT)
   target_compile_definitions(tangram-core
     PRIVATE
     TANGRAM_WARN_ON_RULE_CONFLICT)
+endif()
+
+if(TANGRAM_DEV_MODE)
+  target_compile_definitions(tangram-core
+    PRIVATE
+    TANGRAM_DEV_MODE)
+
+  if(TANGRAM_DEV_DEBUG_RENDERER)
+  target_compile_definitions(tangram-core
+    PRIVATE
+    TANGRAM_DEBUG_RENDERER)
+  endif()
 endif()
 
 if (TANGRAM_MBTILES_DATASOURCE)

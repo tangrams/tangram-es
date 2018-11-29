@@ -496,7 +496,9 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
     }
 }
 
+#ifdef TAGRAM_DEBUG_RENDERER
 void Labels::drawDebug(RenderState& rs, const View& _view) {
+    using Primitives = Debug::Primitives;
 
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
         return;
@@ -625,5 +627,8 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
         }
     }
 }
+#else
+void Labels::drawDebug(RenderState& rs, const View& _view) {}
+#endif
 
 }
