@@ -4,6 +4,7 @@
 #include "duktape/duktape.h"
 #include "scene/scene.h"
 #include "log.h"
+#include <array>
 
 #if 0
 #define DUMP() do {                             \
@@ -30,6 +31,7 @@
 #define DBG(...)
 #define DUMPCTX(...)
 #endif
+#define DBGCACHE(...) //LOG(__VA_ARGS__)
 
 namespace Tangram {
 
@@ -181,10 +183,12 @@ struct Context {
 
     ~Context() {
         duk_destroy_heap(_ctx);
-        LOG("gets:%d reused:%d - %f%% / extstr:%d freed%d\n",
+        LOG("gets:%d reused:%d - %f%% / extstr:%d freed:%d\n",
             _fetchCnt+_reuseCnt, _reuseCnt,
             float(_reuseCnt) / float(_fetchCnt + _reuseCnt) * 100,
             _allocCnt, _freeCnt);
+
+        _stringCache.dump();
     }
 
     Context() {
@@ -263,9 +267,13 @@ struct Context {
     }
 
     void setCurrentFeature(const Feature* feature) {
+        // if (_was_called) LOG("[%p] Feature", _feature);
+        // _was_called = false;
+
         _feature = feature;
         _lastFeature = nullptr;
         _propertyCacheUse = 0;
+
         //m_stringCache.clear();
     }
 
@@ -456,6 +464,7 @@ struct Context {
         }
 
         _calling = true;
+        _was_called = true;
 
         DBG(">>>>> Calling %d", index);
         DUMP();
@@ -518,14 +527,13 @@ struct Context {
         }
         return getStackTopValue();
     }
-
 private:
 
     // Cache Feature property indexes
     const Feature* _lastFeature = nullptr;
 
     // Map strings to duk heapPtr
-    std::vector<std::pair<const std::string&, const void*>> _stringCache {};
+    //std::vector<std::pair<const std::string&, const void*>> _stringCache {};
 
     using prop_key = const char*;
     using prop_val = const Tangram::Value*;
@@ -546,18 +554,98 @@ private:
     int _freeCnt = 0;
 
     bool _calling = false;
+    bool _was_called = false;
     bool _dumping = false;
 
     const char* _lastPushed = nullptr;
 
+    //std::set<std::string> _stringCache;
+    std::string _buffer;
+
+    struct StringCache {
+        // 16KB on x64, 8KB on 32bit
+        //  char=
+
+        static constexpr size_t entrybytes = 64;
+
+        //std::array<std::array<size_t, entrybytes / sizeof(size_t)>, 64> strings;
+        std::array<std::array<char, entrybytes>, 64> strings{};
+
+        std::array<uint8_t, 64> lengths{};
+        std::array<size_t, 64> refs{};
+
+        size_t usage = 0;
+
+        void free(const void* ptr) {
+            const char* str = (const char*)ptr;
+            const char* arr = (const char*)&strings;
+            const ptrdiff_t diff = str - arr;
+            if ((diff >= 0) && (diff < sizeof(strings))) {
+                int pos = diff / entrybytes;
+                refs[pos]--;
+                DBGCACHE("[%d] freed  %.*s", refs[pos], lengths[pos], &strings[pos][0]);
+            }
+        }
+
+        const char* add(void* ptr, size_t length) {
+            const char* str = (const char*)ptr;
+            int slot = -1;
+            for (size_t i = 0; i < usage; i++) {
+                if (length <= lengths[i] && std::memcmp(&strings[i], str, length) == 0) {
+                    refs[i]++;
+                    DBGCACHE("[%d] found '%.*s'", refs[i], length, &strings[i][0]);
+                    return &strings[i][0];
+                }
+                if (slot < 0 && refs[i] == 0) {
+                    slot = i;
+                }
+            }
+            if (slot == -1) {
+                if (usage < strings.size()) {
+                    slot = usage;
+                    usage++;
+                } else {
+                    LOG("cache full: %.*s len:%d - usage:%d, slot:%d", length, str, length, usage, slot);
+                    return str;
+                }
+            }
+
+            auto out = &strings[slot][0];
+            std::memcpy(out, str, length);
+            lengths[slot] = length;
+            refs[slot]++;
+
+            DBGCACHE("[%d] added: '%.*s'", refs[slot], length, out);
+            return out;
+        }
+        void dump() {
+            LOG("CACHE usage %d", usage);
+
+            for (size_t i = 0; i < usage; i++) {
+                 LOG("[%d] refs:%d '%.*s'", i, refs[i], lengths[i], &strings[i][0]);
+            }
+        }
+    };
+
+    StringCache _stringCache;
+
     static const char* jsExtstrInternCheck(void* udata, void* str, unsigned long blen) {
+        if (blen < 2) { return nullptr; } // TODO duk should have it's own small string cache!
+
+        if (blen > StringCache::entrybytes) {
+            LOG("[%p] >>>>> not my business %.*s - %d", str, blen, str, blen);
+        }
+
         Context& context = *reinterpret_cast<Context*>(udata);
         if (context._calling) {
             //DBG("[%p / %p] >>>>> check %.*s - %d", str, context._lastPushed, blen, str, blen);
             if (context._lastPushed == str) {
-                DBG("[%p] >>>>> found %.*s - %d", str, blen, str, blen);
-                context._allocCnt++;
+                // We hold it - safe!
+                DBGCACHE("[%p] >>>>> found %.*s - %d", str, blen, str, blen);
                 return context._lastPushed;
+            } else {
+                // todo could one stash the heapptr in this call?
+                return context._stringCache.add(str, blen);
             }
         }
         return nullptr;
@@ -565,8 +653,7 @@ private:
 
     static void jsExtstrFree(void* udata, const void *extdata) {
         Context& context = *reinterpret_cast<Context*>(udata);
-        context._freeCnt++;
-        //DBG("[%p] >>>>> free %p", &context, extdata);
+        context._stringCache.free(extdata);
     }
 
     static cache_entry& getProperty(Context& context) {
