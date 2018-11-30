@@ -78,6 +78,8 @@ void duk_extstr_set_handler(extstr_intern_check_fn _check, extstr_free_fn _free)
 
 #define DUK_USE_EXTSTR_INTERN_CHECK duk_extstr_intern_check
 #define DUK_USE_EXTSTR_FREE duk_extstr_free
+//#define DUK_USE_VOLUNTARY_GC
+#undef DUK_USE_VOLUNTARY_GC
 
 /*
  *  Intermediate helper defines
@@ -2995,7 +2997,6 @@ typedef struct duk_hthread duk_context;
 #undef DUK_USE_VALSTACK_UNSAFE
 #define DUK_USE_VERBOSE_ERRORS
 #define DUK_USE_VERBOSE_EXECUTOR_ERRORS
-#undef DUK_USE_VOLUNTARY_GC
 #define DUK_USE_ZERO_BUFFER_DATA
 
 /*
