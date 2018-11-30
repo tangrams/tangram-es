@@ -27,7 +27,8 @@ Node Importer::applySceneImports(std::shared_ptr<Platform> platform) {
 
     if (!m_scene->yaml().empty()) {
         // Load scene from yaml string.
-        addSceneString(sceneUrl, m_scene->yaml());
+
+        addSceneYaml(sceneUrl, m_scene->yaml().data(), m_scene->yaml().length());
     } else {
         // Load scene from yaml file.
         m_sceneQueue.push_back(sceneUrl);
@@ -67,7 +68,7 @@ Node Importer::applySceneImports(std::shared_ptr<Platform> platform) {
             if (response.error) {
                 LOGE("Unable to retrieve '%s': %s", nextUrlToImport.string().c_str(), response.error);
             } else {
-                addSceneData(nextUrlToImport, response.content);
+                addSceneData(nextUrlToImport, std::move(response.content));
             }
             activeDownloads--;
             condition.notify_all();
@@ -83,7 +84,7 @@ Node Importer::applySceneImports(std::shared_ptr<Platform> platform) {
     return root;
 }
 
-void Importer::addSceneData(const Url& sceneUrl, std::vector<char>& sceneContent) {
+void Importer::addSceneData(const Url& sceneUrl, std::vector<char>&& sceneData) {
 
     LOGD("Process: '%s'", sceneUrl.string().c_str());
 
@@ -92,37 +93,39 @@ void Importer::addSceneData(const Url& sceneUrl, std::vector<char>& sceneContent
         return;
     }
 
-    std::string sceneString;
-    if (isZipArchiveUrl(sceneUrl)) {
-        // We're loading a scene from a zip archive!
-        // First, create an archive from the data.
-        auto zipArchive = std::make_shared<ZipArchive>();
-        zipArchive->loadFromMemory(sceneContent);
-        // Find the "base" scene file in the archive entries.
-        for (const auto& entry : zipArchive->entries()) {
-            auto ext = Url::getPathExtension(entry.path);
-            // The "base" scene file must have extension "yaml" or "yml" and be
-            // at the root directory of the archive (i.e. no '/' in path).
-            if ((ext == "yaml" || ext == "yml") && entry.path.find('/') == std::string::npos) {
-                // Found the base, now extract the contents to the scene string.
-                sceneString.resize(entry.uncompressedSize);
-                zipArchive->decompressEntry(&entry, &sceneString[0]);
-                break;
-            }
-        }
-        // Add the archive to the scene.
-        m_scene->addZipArchive(sceneUrl, zipArchive);
-    } else {
-        sceneString = std::string(sceneContent.data(), sceneContent.size());
+    if (!isZipArchiveUrl(sceneUrl)) {
+        addSceneYaml(sceneUrl, sceneData.data(), sceneData.size());
+        return;
     }
+    // We're loading a scene from a zip archive!
+    // First, create an archive from the data.
+    auto zipArchive = std::make_shared<ZipArchive>();
+    zipArchive->loadFromMemory(std::move(sceneData));
 
-    addSceneString(sceneUrl, sceneString);
+    // Find the "base" scene file in the archive entries.
+    for (const auto& entry : zipArchive->entries()) {
+        auto ext = Url::getPathExtension(entry.path);
+        // The "base" scene file must have extension "yaml" or "yml" and be
+        // at the root directory of the archive (i.e. no '/' in path).
+        if ((ext == "yaml" || ext == "yml") && entry.path.find('/') == std::string::npos) {
+            // Found the base, now extract the contents to the scene string.
+            std::vector<char> yaml;
+            yaml.resize(entry.uncompressedSize);
+
+            zipArchive->decompressEntry(&entry, &yaml[0]);
+
+            addSceneYaml(sceneUrl, yaml.data(), yaml.size());
+            break;
+        }
+    }
+    // Add the archive to the scene.
+    m_scene->addZipArchive(sceneUrl, zipArchive);
 }
 
-void Importer::addSceneString(const Url& sceneUrl, const std::string& sceneString) {
+void Importer::addSceneYaml(const Url& sceneUrl, const char* sceneYaml, size_t length) {
     Node sceneNode;
     try {
-        sceneNode = YAML::Load(sceneString);
+        sceneNode = YAML::Load(sceneYaml, length);
     } catch (const YAML::ParserException& e) {
         LOGE("Parsing scene config '%s'", e.what());
         return;
