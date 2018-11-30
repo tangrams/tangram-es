@@ -34,17 +34,16 @@ NS_ASSUME_NONNULL_BEGIN
  The public interface provides dynamic map marker placement, change of camera view settings, and map description changes
  through scene updates.
 
- This view uses scenes descibed by the <a href="https://mapzen.com/documentation/tangram/">Tangram scene format</a>
- allowing you to fully customize your map using your own data.
- Some pre-made basemap styles can be found <a href="https://mapzen.com/documentation/cartography/styles/">here</a> using
- Mapzen data sources.
+ This view uses scene files described by the <a href="https://tangrams.readthedocs.io/en/latest/Overviews/Scene-File/">
+ Tangram scene format</a> allowing you to fully customize your map using your own data.
+ Some pre-made basemap styles can be found <a href="https://www.nextzen.org/">here</a> using Nextzen data sources.
 
- To use basemap styles you can <a href="https://mapzen.com/developers/sign_in"> sign up for an API key</a> and load it
+ To use basemap styles you can <a href="https://developers.nextzen.org/"> sign up for an API key</a> and load it
  through your application:
 
  ```swift
- let sceneURL = URL("https://mapzen.com/carto/walkabout-style-more-labels/walkabout-style-more-labels.yaml");
- let sceneUpdates = [ TGSceneUpdate(path: "sources.mapzen.url_params", value: "{ api_key: \(YOUR_API_KEY) }") ];
+ let sceneURL = URL("https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip");
+ let sceneUpdates = [ TGSceneUpdate(path: "global.sdk_api_key", value: "YOUR_API_KEY") ];
  view.loadScene(from: sceneURL, with: sceneUpdates);
  ```
  @note All the screen positions used in this inteface are in _logical pixel_ or _drawing coordinate system_ (based on a

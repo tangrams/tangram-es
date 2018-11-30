@@ -1,10 +1,10 @@
-module: Mapzen
+module: Tangram iOS SDK
 author: Mapzen
 theme: fullwidth
 author_url: https://www.mapzen.com/
 output: ../../build/ios-docs/
 github_url: https://github.com/tangrams/tangram-es
-copyright: '© 2017 [Mapzen](https://www.mapzen.com/).'
+copyright: ''
 head: |
     <link rel='shortcut icon' href='https://mapzen.com/common/styleguide/images/favicon.ico' type='image/x-icon' />
 objc: Yes
