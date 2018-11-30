@@ -1,7 +1,9 @@
-iOS
-===
+Tangram iOS SDK
+===============
 
-The recommended way to use tangram-es in an iOS project is to add it as a CocoaPods dependency. The library is hosted in CocoaPods under the pod name 'Tangram-es'. To find the latest version, check CocoaPods: https://cocoapods.org/pods/Tangram-es.
+The recommended way to use Tangram in an iOS project is to add it as a CocoaPods dependency. The library is hosted in CocoaPods under the pod name _Tangram-es_. To find the latest version, check CocoaPods: https://cocoapods.org/pods/Tangram-es. Then follow the instructions from CocoaPods on adding a pod to your Xcode project: https://guides.cocoapods.org/using/using-cocoapods.html.
+
+That's it! If you want to build Tangram for iOS from source instead, continue reading.
 
 ## Setup ##
 
@@ -34,7 +36,7 @@ Building the iOS demo application requires Xcode 9.0 or newer. From the root dir
 make ios-xcode NEXTZEN_API_KEY=yourApiKeyHere
 ```
 
-You can optionally append a `BUILD_TYPE` variable to choose the build type, for example `BUILD_TYPE=Debug`.
+You can optionally append a `BUILD_TYPE` variable to choose the build type, for example `BUILD_TYPE=Debug` or `BUILD_TYPE=Release`.
 
 This will generate an Xcode project for the Tangram iOS framework and demo application and open the project in an Xcode
 workspace. 
