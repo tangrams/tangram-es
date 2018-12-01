@@ -271,11 +271,13 @@ private:
     std::unique_ptr<View> m_view;
 
     struct FontTask {
-        FontTask(FontDescription ft, std::shared_ptr<FontContext> fontContext)
-            : ft(ft), fontContext(fontContext) {}
+        FontTask(Url url, FontDescription ft, std::shared_ptr<FontContext> fontContext)
+            : url(url), ft(ft), fontContext(fontContext) {}
+        Url url;
         FontDescription ft;
         std::shared_ptr<FontContext> fontContext;
         bool done = false;
+        UrlCallback cb = nullptr;
     };
     struct TextureTask {
         TextureTask(Url url, std::shared_ptr<Texture> texture)
@@ -283,6 +285,7 @@ private:
         Url url;
         std::shared_ptr<Texture> texture;
         bool done = false;
+        UrlCallback cb = nullptr;
     };
 
     std::mutex m_taskMutex;
