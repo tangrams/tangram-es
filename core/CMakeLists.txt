@@ -20,6 +20,7 @@ add_library(tangram-core
   src/debug/textDisplay.cpp
   src/gl/framebuffer.cpp
   src/gl/glError.cpp
+  src/gl/glyphTexture.cpp
   src/gl/hardware.cpp
   src/gl/mesh.cpp
   src/gl/primitives.cpp

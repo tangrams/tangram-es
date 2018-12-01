@@ -68,14 +68,12 @@ public:
     /* Sets texture pixel data */
     bool setPixelData(int _width, int _height, int _bytesPerPixel, const GLubyte* _data, size_t _length);
 
-    void setRowsDirty(int start, int count);
-
     void setSpriteAtlas(std::unique_ptr<SpriteAtlas> sprites);
 
     /* Resize the texture */
     void resize(int width, int height);
 
-    bool bind(RenderState& rs, GLuint _unit);
+    virtual bool bind(RenderState& rs, GLuint _unit);
 
     /* Width and Height texture getters */
     int width() const { return m_width; }
@@ -94,15 +92,12 @@ public:
 
 protected:
 
-    struct DirtyRowRange {
-        int min;
-        int max;
-    };
-
     // Bytes per pixel for current PixelFormat options
     size_t bpp() const;
 
     void generate(RenderState& rs, GLuint _textureUnit);
+
+    bool upload(RenderState& rs, GLuint _textureUnit);
 
     bool sanityCheck(size_t _width, size_t _height, size_t _bytesPerPixel, size_t _length) const;
 
@@ -119,10 +114,7 @@ protected:
     TextureOptions m_options;
 
     GLubyte* m_buffer = nullptr;
-    size_t m_bufferSize;
-    size_t m_bytesPerPixel;
-
-    std::vector<DirtyRowRange> m_dirtyRows;
+    size_t m_bufferSize = 0;
 
     GLuint m_glHandle = 0;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl/texture.h"
+#include "gl/glyphTexture.h"
 #include "labels/textLabel.h"
 #include "style/textStyle.h"
 #include "text/textUtil.h"
@@ -19,30 +19,6 @@ namespace Tangram {
 
 struct FontMetrics {
     float ascender, descender, lineHeight;
-};
-
-class GlyphTexture : public Texture {
-    static constexpr TextureOptions textureOptions() {
-        TextureOptions options;
-        options.pixelFormat = PixelFormat::ALPHA;
-        return options;
-    }
-public:
-    static constexpr int size = 256;
-
-    GlyphTexture() :
-        Texture(textureOptions()) {
-        m_buffer = reinterpret_cast<GLubyte*>(std::calloc(size * size, sizeof(GLubyte)));
-        m_disposeBuffer = false;
-        resize(size, size);
-        m_bytesPerPixel = bpp();
-    }
-    ~GlyphTexture() override {}
-
-    GLubyte* buffer() { return m_buffer; }
-
-    bool dirty = false;
-    size_t refCount = 0;
 };
 
 struct FontDescription {

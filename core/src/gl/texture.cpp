@@ -15,10 +15,7 @@
 
 namespace Tangram {
 
-constexpr GLenum TEXTURE_TARGET = GL_TEXTURE_2D;
-
-Texture::Texture(TextureOptions _options) : m_options(_options) {
-}
+Texture::Texture(TextureOptions _options) : m_options(_options) {}
 
 Texture::Texture(const uint8_t* data, size_t length, TextureOptions options)
     : Texture(options) {
@@ -49,8 +46,6 @@ bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
     m_buffer = stbi_load_from_memory(data, static_cast<int>(length),
                                      &width, &height, &channelsInFile,
                                      channelsRequested);
-
-    m_bytesPerPixel = channelsRequested;
 
     if (!m_buffer) {
         LOGE("Could not load image data: %dx%d bpp:%d/%d",
@@ -90,53 +85,10 @@ bool Texture::setPixelData(int _width, int _height, int _bytesPerPixel,
     std::memcpy(m_buffer, _data, _length);
 
     m_bufferSize = _length;
-    m_bytesPerPixel = _bytesPerPixel;
 
     resize(_width, _height);
-    setRowsDirty(0, m_height);
+
     return true;
-}
-
-void Texture::setRowsDirty(int start, int count) {
-    // FIXME: check that dirty range is valid for texture size!
-    int max = start + count;
-    int min = start;
-
-    if (m_dirtyRows.empty()) {
-        m_dirtyRows.push_back({min, max});
-        return;
-    }
-
-    auto n = m_dirtyRows.begin();
-
-    // Find first overlap
-    while (n != m_dirtyRows.end()) {
-        if (min > n->max) {
-            // this range is after current
-            ++n;
-            continue;
-        }
-        if (max < n->min) {
-            // this range is before current
-            m_dirtyRows.insert(n, {min, max});
-            return;
-        }
-        // Combine with overlapping range
-        n->min = std::min(n->min, min);
-        n->max = std::max(n->max, max);
-        break;
-    }
-    if (n == m_dirtyRows.end()) {
-        m_dirtyRows.push_back({min, max});
-        return;
-    }
-
-    // Merge up to last overlap
-    auto it = n+1;
-    while (it != m_dirtyRows.end() && max >= it->min) {
-        n->max = std::max(it->max, max);
-        it = m_dirtyRows.erase(it);
-    }
 }
 
 void Texture::setSpriteAtlas(std::unique_ptr<Tangram::SpriteAtlas> sprites) {
@@ -146,16 +98,16 @@ void Texture::setSpriteAtlas(std::unique_ptr<Tangram::SpriteAtlas> sprites) {
 void Texture::generate(RenderState& _rs, GLuint _textureUnit) {
     GL::genTextures(1, &m_glHandle);
 
-    _rs.texture(m_glHandle, _textureUnit, TEXTURE_TARGET);
+    _rs.texture(m_glHandle, _textureUnit, GL_TEXTURE_2D);
 
-    GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_MIN_FILTER,
+    GL::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                       static_cast<GLint>(m_options.minFilter));
-    GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_MAG_FILTER,
+    GL::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
                       static_cast<GLint>(m_options.magFilter));
 
-    GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_S,
+    GL::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
                       static_cast<GLint>(m_options.wrapS));
-    GL::texParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_T,
+    GL::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
                       static_cast<GLint>(m_options.wrapT));
 
     m_rs = &_rs;
@@ -165,63 +117,45 @@ bool Texture::isValid() const {
     return (m_glHandle != 0) || bool(m_buffer);
 }
 
-bool Texture::bind(RenderState& _rs, GLuint _textureUnit) {
+bool Texture::upload(RenderState& _rs, GLuint _textureUnit) {
+    m_shouldResize = false;
 
-    if (!m_shouldResize && m_dirtyRows.empty()) {
-        if (m_glHandle == 0) { return false; }
-
-        _rs.texture(m_glHandle, _textureUnit, TEXTURE_TARGET);
-        return true;
-    }
-
-    if (m_shouldResize) {
-        m_shouldResize = false;
-        m_dirtyRows.clear();
-
-        if (Hardware::maxTextureSize < m_width ||
-            Hardware::maxTextureSize < m_height) {
-            LOGW("Texture larger than Hardware maximum texture size");
-            if (m_disposeBuffer) { freeBufferData(); }
-            return false;
-        }
-        if (m_glHandle == 0) {
-            generate(_rs, _textureUnit);
-        } else {
-            _rs.texture(m_glHandle, _textureUnit, TEXTURE_TARGET);
-        }
-
-        auto format = static_cast<GLenum>(m_options.pixelFormat);
-        GL::texImage2D(TEXTURE_TARGET, 0, format, m_width, m_height, 0, format,
-                       GL_UNSIGNED_BYTE, m_buffer);
-
-        if (m_buffer && m_options.generateMipmaps) {
-            GL::generateMipmap(TEXTURE_TARGET);
-        }
-
+    if (Hardware::maxTextureSize < m_width ||
+        Hardware::maxTextureSize < m_height) {
+        LOGW("Texture larger than Hardware maximum texture size");
         if (m_disposeBuffer) { freeBufferData(); }
-        return true;
+        return false;
     }
-
     if (m_glHandle == 0) {
-        LOGW("Texture is not ready!");
-        return false;
-    } else if (!m_buffer) {
-        LOGE("No data to update Texture!");
-        return false;
+        generate(_rs, _textureUnit);
+    } else {
+        _rs.texture(m_glHandle, _textureUnit, GL_TEXTURE_2D);
     }
-
-    _rs.texture(m_glHandle, _textureUnit, TEXTURE_TARGET);
 
     auto format = static_cast<GLenum>(m_options.pixelFormat);
-    for (auto& range : m_dirtyRows) {
-        auto rows = range.max - range.min;
-        auto offset = m_buffer + (range.min * m_width * m_bytesPerPixel);
-        GL::texSubImage2D(TEXTURE_TARGET, 0, 0, range.min, m_width, rows, format,
-                          GL_UNSIGNED_BYTE, offset);
-    }
-    m_dirtyRows.clear();
+    GL::texImage2D(GL_TEXTURE_2D, 0, format, m_width, m_height, 0, format,
+                   GL_UNSIGNED_BYTE, m_buffer);
 
+    if (m_buffer && m_options.generateMipmaps) {
+        GL::generateMipmap(GL_TEXTURE_2D);
+    }
     return true;
+}
+
+bool Texture::bind(RenderState& _rs, GLuint _textureUnit) {
+
+    if (!m_shouldResize) {
+        if (m_glHandle == 0) { return false; }
+
+        _rs.texture(m_glHandle, _textureUnit, GL_TEXTURE_2D);
+        return true;
+    }
+
+    bool ok = upload(_rs, _textureUnit);
+
+    if (m_disposeBuffer) { freeBufferData(); }
+
+    return ok;
 }
 
 void Texture::resize(int width, int height) {
@@ -243,7 +177,6 @@ void Texture::resize(int width, int height) {
     }
 
     m_shouldResize = true;
-    m_dirtyRows.clear();
 }
 
 size_t Texture::bpp() const {

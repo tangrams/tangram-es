@@ -107,12 +107,12 @@ void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_
                                  &m_sdfBuffer[0]);
 
     texture->setRowsDirty(gy, gh);
-    m_textures[id]->dirty = true;
 }
 
 void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
     if (!_refs.any()) { return; }
     std::lock_guard<std::mutex> lock(m_textureMutex);
+
     for (size_t i = 0; i < m_textures.size(); i++) {
         if (_refs[i]) { m_atlasRefCount[i] -= 1; }
     }
@@ -121,18 +121,13 @@ void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
 void FontContext::updateTextures(RenderState& rs) {
     std::lock_guard<std::mutex> lock(m_textureMutex);
 
-    for (auto& gt : m_textures) {
-        if (gt->dirty) {
-            gt->dirty = false;
-            gt->bind(rs, 0);
-        }
-    }
+    for (auto& gt : m_textures) { gt->bind(rs, 0); }
 }
 
 void FontContext::bindTexture(RenderState& rs, alfons::AtlasID _id, GLuint _unit) {
     std::lock_guard<std::mutex> lock(m_textureMutex);
-    m_textures[_id]->bind(rs, _unit);
 
+    m_textures[_id]->bind(rs, _unit);
 }
 
 bool FontContext::layoutText(TextStyle::Parameters& _params, const icu::UnicodeString& _text,
@@ -252,7 +247,7 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const icu::UnicodeS
 
             if (!_refs[it->atlas]) {
                 _refs[it->atlas] = true;
-                m_atlasRefCount[it->atlas]++;
+                m_atlasRefCount[it->atlas] += 1;
             }
 
             it->quad[0].pos -= offset;
