@@ -32,6 +32,7 @@ const char tile_file[] = "res/tile.mvt";
 std::shared_ptr<Scene> scene;
 std::shared_ptr<TileSource> source;
 std::shared_ptr<TileData> tileData;
+MockPlatform platform;
 
 void globalSetup() {
     static std::atomic<bool> initialized{false};
@@ -42,11 +43,13 @@ void globalSetup() {
     Url sceneUrl(scene_file);
     platform.putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
 
-    auto sceneOptions = std::make_unique<SceneOptions>(sceneUrl);
-    sceneOptions->prefetchTiles = false;
+    SceneOptions sceneOptions{sceneUrl};
+    sceneOptions.prefetchTiles = false;
 
-    scene = std::make_shared<Scene>(platform, std::move(sceneOptions), std::make_unique<View>());
-    scene->load();
+    scene = std::make_shared<Scene>(platform);
+    if (!scene->load(std::move(sceneOptions))) {
+        exit(-1);
+    }
 
     for (auto& s : scene->tileSources()) {
         source = s;
@@ -73,6 +76,7 @@ public:
     void SetUp(const ::benchmark::State& state) override {
         globalSetup();
         tileBuilder = std::make_unique<TileBuilder>(scene, new StyleContext());
+        tileBuilder->init();
     }
     void TearDown(const ::benchmark::State& state) override {
         result.reset();

@@ -59,6 +59,7 @@ public:
     explicit SceneOptions(const std::string& _yaml, const Url& _resources)
         : yaml(_yaml), url(_resources) {}
 
+    SceneOptions() {}
 
     std::string yaml;
     // The URL from which this scene was loaded
@@ -77,6 +78,12 @@ public:
     uint32_t numTileWorkers = 2;
 
     size_t memoryTileCacheSize = CACHE_SIZE;
+
+    struct {
+        uint32_t width = 0;
+        uint32_t height = 0;
+        float pixelScale = 1.f;
+    } view;
 };
 
 class Scene {
@@ -101,9 +108,7 @@ public:
         yes, no, none
     };
 
-    explicit Scene(Platform& _platform);
-    Scene(Platform& _platform, std::unique_ptr<SceneOptions> _sceneOptions,
-          std::unique_ptr<View> _view = std::make_unique<View>());
+    explicit Scene(Platform& platform);
 
     Scene(const Scene& _other) = delete;
     Scene(Scene&& _other) = delete;
@@ -181,7 +186,8 @@ public:
     MarkerManager* markerManager() { return m_markerManager.get(); }
     LabelManager* labelManager() { return m_labelManager.get(); }
 
-    bool load();
+    bool load(SceneOptions&& _sceneOptions);
+
 
     void initTileManager();
     void startTileWorker();
@@ -206,12 +212,12 @@ public:
 
 protected:
     Platform& platform() { return m_platform; }
-    const SceneOptions& options() { return *m_options; }
+    const SceneOptions& options() { return m_options; }
 
 private:
     Platform& m_platform;
 
-    std::unique_ptr<SceneOptions> m_options;
+    SceneOptions m_options;
     std::unique_ptr<Importer> m_importer;
 
     bool m_ready = false;
