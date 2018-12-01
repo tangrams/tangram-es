@@ -188,7 +188,9 @@ struct Context {
             float(_reuseCnt) / float(_fetchCnt + _reuseCnt) * 100,
             _allocCnt, _freeCnt);
 
-        _stringCache.dump();
+        _stringCache8.dump();
+        _stringCache32.dump();
+        _stringCache128.dump();
     }
 
     Context() {
@@ -562,39 +564,47 @@ private:
     //std::set<std::string> _stringCache;
     std::string _buffer;
 
+    template<size_t SIZE, size_t ENTRIES>
     struct StringCache {
         // 16KB on x64, 8KB on 32bit
         //  char=
 
-        static constexpr size_t entrybytes = 64;
+        static constexpr size_t entrybytes = SIZE;
+        static constexpr size_t stroffset = 1;
 
         //std::array<std::array<size_t, entrybytes / sizeof(size_t)>, 64> strings;
-        std::array<std::array<char, entrybytes>, 64> strings{};
+        // first char holds length!
 
-        std::array<uint8_t, 64> lengths{};
-        std::array<size_t, 64> refs{};
+        std::array<std::array<char, entrybytes>, ENTRIES> strings{};
+
+        //std::array<uint8_t, SIZE> lengths{};
+        std::array<int32_t, SIZE> refs{};
 
         size_t usage = 0;
 
-        void free(const void* ptr) {
-            const char* str = (const char*)ptr;
-            const char* arr = (const char*)&strings;
+        void free(Context& context, const void* ptr) {
+            const char* str = (const char*)(ptr);
+            const char* arr = (const char*)(&strings);
             const ptrdiff_t diff = str - arr;
-            if ((diff >= 0) && (diff < sizeof(strings))) {
-                int pos = diff / entrybytes;
+
+            if ((diff > 0) && (diff < sizeof(strings))) {
+                context._freeCnt++;
+
+                int pos = (diff - stroffset) / ptrdiff_t(entrybytes);
                 refs[pos]--;
-                DBGCACHE("[%d] freed  %.*s", refs[pos], lengths[pos], &strings[pos][0]);
+
+                DBGCACHE("[%d] freed  %.*s", refs[pos], strings[pos][0], &strings[pos][stroffset]);
             }
         }
 
-        const char* add(void* ptr, size_t length) {
+        const char* add(Context& context, void* ptr, size_t length) {
             const char* str = (const char*)ptr;
             int slot = -1;
             for (size_t i = 0; i < usage; i++) {
-                if (length <= lengths[i] && std::memcmp(&strings[i], str, length) == 0) {
+                if (length <= strings[i][0] && std::memcmp(&strings[i][1], str, length) == 0) {
                     refs[i]++;
-                    DBGCACHE("[%d] found '%.*s'", refs[i], length, &strings[i][0]);
-                    return &strings[i][0];
+                    DBGCACHE("[%d] found '%.*s'", refs[i], length, &strings[i][stroffset]);
+                    return &strings[i][stroffset];
                 }
                 if (slot < 0 && refs[i] == 0) {
                     slot = i;
@@ -606,46 +616,57 @@ private:
                     usage++;
                 } else {
                     LOG("cache full: %.*s len:%d - usage:%d, slot:%d", length, str, length, usage, slot);
-                    return str;
+                    return nullptr;
                 }
             }
 
-            auto out = &strings[slot][0];
-            std::memcpy(out, str, length);
-            lengths[slot] = length;
+            std::memcpy(&strings[slot][stroffset], str, length);
+            strings[slot][0] = uint8_t(length);
+
             refs[slot]++;
 
+            context._allocCnt++;
+
             DBGCACHE("[%d] added: '%.*s'", refs[slot], length, out);
-            return out;
+
+            return &strings[slot][stroffset];
         }
         void dump() {
             LOG("CACHE usage %d", usage);
-
             for (size_t i = 0; i < usage; i++) {
-                 LOG("[%d] refs:%d '%.*s'", i, refs[i], lengths[i], &strings[i][0]);
+                 LOG("[%d] refs:%d '%.*s'", i, refs[i], strings[i][0], &strings[i][stroffset]);
             }
         }
     };
 
-    StringCache _stringCache;
+    StringCache<8, 128> _stringCache8;
+    StringCache<32, 64> _stringCache32;
+    StringCache<128, 16> _stringCache128;
 
     static const char* jsExtstrInternCheck(void* udata, void* str, unsigned long blen) {
         if (blen < 2) { return nullptr; } // TODO duk should have it's own small string cache!
 
-        if (blen > StringCache::entrybytes) {
+        if (blen > 127) {
             LOG("[%p] >>>>> not my business %.*s - %d", str, blen, str, blen);
         }
 
         Context& context = *reinterpret_cast<Context*>(udata);
         if (context._calling) {
             //DBG("[%p / %p] >>>>> check %.*s - %d", str, context._lastPushed, blen, str, blen);
+
             if (context._lastPushed == str) {
                 // We hold it - safe!
                 DBGCACHE("[%p] >>>>> found %.*s - %d", str, blen, str, blen);
                 return context._lastPushed;
-            } else {
+            }
+
+            if (blen < 8){
                 // todo could one stash the heapptr in this call?
-                return context._stringCache.add(str, blen);
+                return context._stringCache8.add(context, str, blen);
+            } else if (blen < 64){
+                return context._stringCache32.add(context, str, blen);
+            } else  {
+                return context._stringCache128.add(context, str, blen);
             }
         }
         return nullptr;
@@ -653,7 +674,10 @@ private:
 
     static void jsExtstrFree(void* udata, const void *extdata) {
         Context& context = *reinterpret_cast<Context*>(udata);
-        context._stringCache.free(extdata);
+
+        context._stringCache8.free(context, extdata);
+        context._stringCache32.free(context, extdata);
+        context._stringCache128.free(context, extdata);
     }
 
     static cache_entry& getProperty(Context& context) {
