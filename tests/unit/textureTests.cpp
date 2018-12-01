@@ -1,17 +1,18 @@
 #include "catch.hpp"
 
 #include "gl/texture.h"
+#include "gl/glyphTexture.h"
 
 using namespace Tangram;
 
-class TestTexture : public Texture {
+class TestTexture : public GlyphTexture {
 public:
-    using Texture::Texture;
+    using GlyphTexture::GlyphTexture;
     const std::vector<DirtyRowRange>& dirtyRanges() { return m_dirtyRows; }
 };
 
 TEST_CASE("Merging of dirty Regions - Non overlapping, test ordering", "[Texture]") {
-    TestTexture texture(TextureOptions{});
+    TestTexture texture{};
     texture.resize(512, 512);
     REQUIRE(texture.dirtyRanges().size() == 0);
 
@@ -42,7 +43,7 @@ TEST_CASE("Merging of dirty Regions - Non overlapping, test ordering", "[Texture
 }
 
 TEST_CASE("Merging of dirty Regions - Merge overlapping", "[Texture]") {
-    TestTexture texture(TextureOptions{});
+    TestTexture texture{};
     texture.resize(512, 512);
     REQUIRE(texture.dirtyRanges().size() == 0);
 
@@ -61,7 +62,7 @@ TEST_CASE("Merging of dirty Regions - Merge overlapping", "[Texture]") {
 TEST_CASE("Merging of dirty Regions - Merge three regions, when 3rd region is added", "[Texture]") {
     { // just touching
 
-        TestTexture texture(TextureOptions{});
+        TestTexture texture{};
         texture.resize(512, 512);
         REQUIRE(texture.dirtyRanges().size() == 0);
 
@@ -86,7 +87,7 @@ TEST_CASE("Merging of dirty Regions - Merge three regions, when 3rd region is ad
 
     { // overlapping
 
-        TestTexture texture(TextureOptions{});
+        TestTexture texture{};
         texture.resize(512, 512);
         REQUIRE(texture.dirtyRanges().size() == 0);
 
