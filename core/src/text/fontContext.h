@@ -32,14 +32,14 @@ public:
 
     GlyphTexture() :
         Texture(textureOptions()) {
-        m_buffer.reset(reinterpret_cast<GLubyte*>(std::calloc(size * size, sizeof(GLubyte))));
+        m_buffer = reinterpret_cast<GLubyte*>(std::calloc(size * size, sizeof(GLubyte)));
         m_disposeBuffer = false;
         resize(size, size);
         m_bytesPerPixel = bpp();
     }
     ~GlyphTexture() override {}
 
-    GLubyte* buffer() { return m_buffer.get(); }
+    GLubyte* buffer() { return m_buffer; }
 
     bool dirty = false;
     size_t refCount = 0;
