@@ -119,13 +119,24 @@ bool Scene::load(SceneOptions&& _sceneOptions) {
     // Let the TileWorker initialize its TileBuilders
     if (m_options.prefetchTiles) { startTileWorker(); }
 
-    m_importer.reset();
     m_featureSelection = std::make_unique<FeatureSelection>();
     m_labelManager = std::make_unique<LabelManager>();
 
     m_fontContext->setPixelScale(m_pixelScale);
 
     LOGTO("<<<<<< loadScene <<<<<<");
+
+    {
+        std::lock_guard<std::mutex> lock(m_taskMutex);
+        for (auto& task : m_pendingTextures) {
+            if (task->cb) { m_importer->readFromZip(task->url, task->cb); }
+        }
+        for (auto& task : m_pendingFonts) {
+            if (task->cb) { m_importer->readFromZip(task->url, task->cb); }
+        }
+    }
+    m_importer.reset();
+
     return true;
 }
 
@@ -271,7 +282,6 @@ std::shared_ptr<Texture> Scene::fetchTexture(const std::string& _name, const Url
     auto task = std::make_shared<TextureTask>(_url, texture);
 
     LOGTInit();
-    LOGT("Fetch    texture %s", task->url.string().c_str());
 
     auto cb = [=, t = std::weak_ptr<TextureTask>(task)] (UrlResponse&& response) mutable {
         auto task = t.lock();
@@ -294,13 +304,16 @@ std::shared_ptr<Texture> Scene::fetchTexture(const std::string& _name, const Url
         }
         task->done = true;
     };
-    if (_url.scheme() == "zip") {
-        m_importer->readFromZip(_url, cb);
-    } else {
+
+    {
         std::lock_guard<std::mutex> lock(m_taskMutex);
         m_pendingTextures.push_front(task);
-
-        m_platform.startUrlRequest(_url, std::move(cb));
+        if (_url.scheme() == "zip") {
+            task->cb = cb;
+        } else {
+            LOGT("Fetch    texture %s", task->url.string().c_str());
+            m_platform.startUrlRequest(_url, std::move(cb));
+        }
     }
 
     return texture;
@@ -329,10 +342,11 @@ void Scene::loadFont(const std::string& _uri, const std::string& _family,
     std::transform(_family.begin(), _family.end(), familyNormalized.begin(), ::tolower);
     std::transform(_style.begin(), _style.end(), styleNormalized.begin(), ::tolower);
 
-    auto task = std::make_shared<FontTask>(FontDescription{familyNormalized,styleNormalized,
-                                                           _weight, _uri}, m_fontContext);
+    Url url(_uri);
+
+    auto task = std::make_shared<FontTask>(url, FontDescription{familyNormalized,styleNormalized,
+                                                                _weight, _uri}, m_fontContext);
     LOGTInit();
-    LOGT("Fetch    font %s", task->ft.uri.c_str());
 
     auto cb = [=,t = std::weak_ptr<FontTask>(task)] (UrlResponse&& response) mutable {
          auto task = t.lock();
@@ -348,14 +362,17 @@ void Scene::loadFont(const std::string& _uri, const std::string& _family,
         }
         task->done = true;
     };
-    Url url(_uri);
-    if (url.scheme() == "zip") {
-        m_importer->readFromZip(url, cb);
-    } else {
+
+    {
         std::lock_guard<std::mutex> lock(m_taskMutex);
         m_pendingFonts.push_front(task);
 
-        m_platform.startUrlRequest(url, std::move(cb));
+        if (url.scheme() == "zip") {
+            task->cb = cb;
+        } else {
+            LOGT("Fetch    font %s", task->ft.uri.c_str());
+            m_platform.startUrlRequest(url, std::move(cb));
+        }
     }
 }
 
