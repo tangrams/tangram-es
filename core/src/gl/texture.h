@@ -66,7 +66,6 @@ public:
     bool loadImageFromMemory(const uint8_t* data, size_t length);
 
     /* Sets texture pixel data */
-    bool movePixelData(int _width, int _height, int _bytesPerPixel, GLubyte* _data, size_t _length);
     bool setPixelData(int _width, int _height, int _bytesPerPixel, const GLubyte* _data, size_t _length);
 
     void setRowsDirty(int start, int count);
@@ -107,9 +106,19 @@ protected:
 
     bool sanityCheck(size_t _width, size_t _height, size_t _bytesPerPixel, size_t _length) const;
 
+    void freeBufferData() {
+        std::free(m_buffer);
+        m_buffer = nullptr;
+    }
+    void setBufferData(GLubyte* buffer, size_t size) {
+        if (m_buffer == buffer) { return; }
+        std::free(m_buffer);
+        m_buffer = buffer;
+    }
+
     TextureOptions m_options;
 
-    std::unique_ptr<GLubyte> m_buffer;
+    GLubyte* m_buffer = nullptr;
     size_t m_bufferSize;
     size_t m_bytesPerPixel;
 
