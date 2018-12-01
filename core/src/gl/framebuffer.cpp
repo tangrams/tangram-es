@@ -119,10 +119,10 @@ void FrameBuffer::init(RenderState& _rs) {
 
         m_texture = std::make_unique<Texture>(options);
         m_texture->resize(m_width, m_height);
-        m_texture->update(_rs, 0);
+        m_texture->bind(_rs, 0);
 
         GL::framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                 GL_TEXTURE_2D, m_texture->getGlHandle(), 0);
+                                 GL_TEXTURE_2D, m_texture->glHandle(), 0);
     }
 
     {

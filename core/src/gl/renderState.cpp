@@ -333,24 +333,17 @@ bool RenderState::shaderProgram(GLuint program) {
     return true;
 }
 
-bool RenderState::texture(GLenum target, GLuint handle) {
-    if (!m_texture.set || m_texture.target != target || m_texture.handle != handle) {
-        m_texture = { target, handle, true };
-        GL::bindTexture(target, handle);
-        return false;
-    }
-    return true;
-}
-
-bool RenderState::textureUnit(GLuint unit) {
+void RenderState::texture(GLuint handle, GLuint unit, GLenum target) {
     if (!m_textureUnit.set || m_textureUnit.unit != unit) {
         m_textureUnit = { unit, true };
         // Our cached texture handle is irrelevant on the new unit, so unset it.
         m_texture.set = false;
         GL::activeTexture(getTextureUnit(unit));
-        return false;
     }
-    return true;
+    if (!m_texture.set || m_texture.target != target || m_texture.handle != handle) {
+        m_texture = { target, handle, true };
+        GL::bindTexture(target, handle);
+    }
 }
 
 bool RenderState::vertexBuffer(GLuint handle) {

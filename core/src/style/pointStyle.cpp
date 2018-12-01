@@ -80,10 +80,7 @@ void PointStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _sc
 
         m_shaderProgram->setUniformi(rs, m_mainUniforms.uSpriteMode, bool(tex) ? 1 : 0);
 
-        if (tex) {
-            tex->update(rs, texUnit);
-            tex->bind(rs, texUnit);
-        }
+        if (tex) { tex->bind(rs, texUnit); }
 
         m_mesh->drawRange(rs, *m_shaderProgram, vertexPos, batch.vertexCount);
 

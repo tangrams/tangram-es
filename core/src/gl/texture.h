@@ -56,67 +56,71 @@ public:
 
     Texture(const uint8_t* data, size_t length, TextureOptions _options);
 
-    Texture(Texture&& _other) noexcept;
-    Texture& operator=(Texture&& _other) noexcept;
+    Texture(const Texture& _other) = delete;
+    Texture& operator=(const Texture& _other) = delete;
+    Texture(Texture&& _other) = delete;
+    Texture& operator=(Texture&& _other) = delete;
 
     virtual ~Texture();
 
     bool loadImageFromMemory(const uint8_t* data, size_t length);
 
     /* Sets texture pixel data */
-    void setPixelData(const GLuint* data, size_t length);
-
-    void setRowsDirty(int start, int count);
+    bool setPixelData(int _width, int _height, int _bytesPerPixel, const GLubyte* _data, size_t _length);
 
     void setSpriteAtlas(std::unique_ptr<SpriteAtlas> sprites);
-
-    /* Perform texture updates, should be called at least once and after adding data or resizing */
-    virtual void update(RenderState& rs, GLuint _textureSlot);
-
-    virtual void update(RenderState& rs, GLuint _textureSlot, const GLuint* data);
 
     /* Resize the texture */
     void resize(int width, int height);
 
-    void bind(RenderState& rs, GLuint _unit);
+    virtual bool bind(RenderState& rs, GLuint _unit);
 
     /* Width and Height texture getters */
-    int getWidth() const { return m_width; }
-    int getHeight() const { return m_height; }
+    int width() const { return m_width; }
+    int height() const { return m_height; }
 
-    GLuint getGlHandle() const { return m_glHandle; }
+    GLuint glHandle() const { return m_glHandle; }
 
-    float getDisplayScale() const { return m_options.displayScale; }
+    float displayScale() const { return m_options.displayScale; }
 
-    const auto& getSpriteAtlas() const { return m_spriteAtlas; }
+    const auto& spriteAtlas() const { return m_spriteAtlas; }
 
     /* Checks whether the texture has valid data and has been successfully uploaded to GPU */
     bool isValid() const;
 
-    size_t getBytesPerPixel() const;
-
-    size_t getBufferSize() const;
-
-    static void flipImageData(GLuint* result, int width, int height);
+    size_t bufferSize() const { return m_bufferSize; }
 
 protected:
 
-    struct DirtyRowRange {
-        int min;
-        int max;
-    };
+    // Bytes per pixel for current PixelFormat options
+    size_t bpp() const;
 
     void generate(RenderState& rs, GLuint _textureUnit);
 
+    bool upload(RenderState& rs, GLuint _textureUnit);
+
+    bool sanityCheck(size_t _width, size_t _height, size_t _bytesPerPixel, size_t _length) const;
+
+    void freeBufferData() {
+        std::free(m_buffer);
+        m_buffer = nullptr;
+    }
+    void setBufferData(GLubyte* buffer, size_t size) {
+        if (m_buffer == buffer) { return; }
+        std::free(m_buffer);
+        m_buffer = buffer;
+    }
+
     TextureOptions m_options;
 
-    std::vector<GLuint> m_data;
-
-    std::vector<DirtyRowRange> m_dirtyRows;
+    GLubyte* m_buffer = nullptr;
+    size_t m_bufferSize = 0;
 
     GLuint m_glHandle = 0;
 
     bool m_shouldResize = false;
+    // Dipose buffer after texture upload
+    bool m_disposeBuffer = true;
 
     int m_width = 0;
     int m_height = 0;
