@@ -449,7 +449,7 @@ bool Map::update(float _dt) {
     bool viewChanged = impl->view.changedOnLastUpdate();
     bool labelsNeedUpdate = impl->scene->labelManager()->needUpdate();
 
-    if (viewChanged || tilesLoading || labelsNeedUpdate || impl->sceneLoadTasks > 0) {
+    if (tilesLoading || labelsNeedUpdate || impl->sceneLoadTasks > 0) {
         viewComplete = false;
     }
 
