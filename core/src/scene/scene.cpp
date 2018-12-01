@@ -30,43 +30,19 @@ static std::atomic<int32_t> s_serial;
 
 Scene::Scene(Platform& _platform) : id(s_serial++), m_platform(_platform) {}
 
-Scene::Scene(Platform& _platform, std::unique_ptr<SceneOptions> _sceneOptions, std::unique_ptr<View> _view)
-    : id(s_serial++),
-      m_platform(_platform),
-      m_options(std::move(_sceneOptions)),
-      m_fontContext(std::make_shared<FontContext>(_platform)),
-      m_featureSelection(std::make_unique<FeatureSelection>()),
-      m_labelManager(std::make_unique<LabelManager>()),
-      m_view(std::move(_view)) {
-    m_pixelScale = m_view->pixelScale();
-    m_fontContext->setPixelScale(m_pixelScale);
-}
-
-#if 0
-void Scene::copyConfig(const Scene& _other) {
-
-    m_featureSelection.reset(new FeatureSelection());
-
-    m_config = YAML::Clone(_other.m_config);
-    m_fontContext = _other.m_fontContext;
-
-    m_url = _other.m_url;
-    m_yaml = _other.m_yaml;
-
-    m_globalRefs = _other.m_globalRefs;
-
-    m_zipArchives = _other.m_zipArchives;
-}
-#endif
-
 Scene::~Scene() {
     m_tileWorker.reset();
 }
 
-bool Scene::load() {
-    if (m_loading) {
-        return false;
-    }
+
+bool Scene::load(SceneOptions&& _sceneOptions) {
+
+    if (m_loading || m_ready) { return false; }
+
+    m_options = std::move(_sceneOptions);
+    m_view = std::make_unique<View>();
+    m_view->setSize(_sceneOptions.view.width, _sceneOptions.view.height);
+
     LOGTOInit();
     LOGTO(">>>>>> loadScene >>>>>>");
     m_loading = true;
@@ -75,7 +51,7 @@ bool Scene::load() {
 
     // Wait until all scene-yamls are available and merged.
     // Importer also holds reference zip archives
-    m_config = m_importer->loadSceneData(m_platform, m_options->url, m_options->yaml);
+    m_config = m_importer->loadSceneData(m_platform, m_options.url, m_options.yaml);
     LOGTO("<<< applyImports AKA load files, parse YAMLS, allocate Document and merge stuff");
 
     if (!m_config) {
@@ -84,7 +60,7 @@ bool Scene::load() {
     }
 
     LOGTO(">>> applyUpdates");
-    if (!SceneLoader::applyUpdates(*this, m_options->updates)) {
+    if (!SceneLoader::applyUpdates(*this, m_options.updates)) {
         LOGE("Applying SceneUpdates failed!");
         return false;
     }
@@ -103,7 +79,7 @@ bool Scene::load() {
 
     LOGTO(">>> loadTiles");
     // Scene is ready to load tiles for initial view
-    if (m_options->prefetchTiles) { initTileManager(); }
+    if (m_options.prefetchTiles) { initTileManager(); }
     LOGTO("<<< loadTiles");
 
     LOGTO(">>> textures");
@@ -111,6 +87,7 @@ bool Scene::load() {
     LOGTO("<<< textures");
 
     LOGTO(">>> initFonts");
+    m_fontContext = std::make_shared<FontContext>(m_platform);
     m_fontContext->loadFonts();
     LOGTO("<<< initFonts");
 
@@ -140,16 +117,20 @@ bool Scene::load() {
 
     // Now only waiting for pending fonts and textures:
     // Let the TileWorker initialize its TileBuilders
-    if (m_options->prefetchTiles) { startTileWorker(); }
+    if (m_options.prefetchTiles) { startTileWorker(); }
 
     m_importer.reset();
+    m_featureSelection = std::make_unique<FeatureSelection>();
+    m_labelManager = std::make_unique<LabelManager>();
+
+    m_fontContext->setPixelScale(m_pixelScale);
 
     LOGTO("<<<<<< loadScene <<<<<<");
     return true;
 }
 
 void Scene::initTileManager() {
-    m_tileWorker = std::make_unique<TileWorker>(m_platform, m_options->numTileWorkers);
+    m_tileWorker = std::make_unique<TileWorker>(m_platform, m_options.numTileWorkers);
     m_tileManager = std::make_unique<TileManager>(m_platform, *m_tileWorker);
 
     m_tileManager->setTileSources(m_tileSources);
