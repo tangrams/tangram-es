@@ -58,6 +58,8 @@ bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
         setPixelData(1, 1, bpp(), pixel, bpp());
         return false;
     }
+    m_bufferSize = width * height * bpp();
+
     resize(width, height);
     return true;
 }
