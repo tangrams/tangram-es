@@ -441,10 +441,7 @@ bool Scene::update(const View& _view, float _dt) {
         m_labelManager->updateLabels(_view.state(), _dt, m_styles, tiles, markers);
     }
 
-    bool tilesChanged = m_tileManager->hasTileSetChanged();
-    bool tilesLoading = m_tileManager->hasLoadingTiles();
-
-    return tilesChanged || tilesLoading;
+    return m_tileManager->hasLoadingTiles();
 }
 
 void Scene::renderBeginFrame(RenderState& _rs) {
