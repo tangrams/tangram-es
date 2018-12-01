@@ -21,9 +21,9 @@ View::View(int _width, int _height) :
     m_width(0),
     m_height(0),
     m_type(CameraType::perspective),
-    m_changed(false),
     m_dirtyMatrices(true),
-    m_dirtyTiles(true) {
+    m_dirtyTiles(true),
+    m_changed(false) {
 
     auto bounds = MapProjection::mapProjectedMetersBounds();
     m_constraint.setLimitsY(bounds.min.y, bounds.max.y);

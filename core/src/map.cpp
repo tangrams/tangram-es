@@ -53,9 +53,7 @@ public:
     explicit Impl(Platform& _platform) :
         platform(_platform),
         inputHandler(view),
-        scene(std::make_shared<Scene>(_platform,
-                                      std::make_unique<SceneOptions>(Url()),
-                                      std::make_unique<View>())) {}
+        scene(std::make_shared<Scene>(_platform)) {}
 
     void setScene(std::shared_ptr<Scene>& _scene);
 
@@ -171,8 +169,8 @@ SceneID Map::loadScene(const std::string& _scenePath, bool _useScenePosition,
 
     LOG("Loading scene file: %s", _scenePath.c_str());
 
-    auto options = std::make_unique<SceneOptions>(Url(_scenePath));
-    options->useScenePosition = _useScenePosition;
+    SceneOptions options{Url(_scenePath)};
+    options.useScenePosition = _useScenePosition;
 
     return loadScene(std::move(options));
 }
@@ -182,9 +180,9 @@ SceneID Map::loadSceneYaml(const std::string& _yaml, const std::string& _resourc
 
     LOG("Loading scene string");
 
-    auto options = std::make_unique<SceneOptions>(_yaml, Url(_resourceRoot));
-    options->updates =  _sceneUpdates;
-    options->useScenePosition = _useScenePosition;
+    SceneOptions options{_yaml, Url(_resourceRoot)};
+    options.updates =  _sceneUpdates;
+    options.useScenePosition = _useScenePosition;
 
     return loadScene(std::move(options));
 }
@@ -194,9 +192,9 @@ SceneID Map::loadSceneAsync(const std::string& _scenePath, bool _useScenePositio
 
     LOG("Loading scene file (async): %s", _scenePath.c_str());
 
-    auto options = std::make_unique<SceneOptions>(Url(_scenePath));
-    options->updates =  _sceneUpdates;
-    options->useScenePosition = _useScenePosition;
+    SceneOptions options{Url(_scenePath)};
+    options.updates =  _sceneUpdates;
+    options.useScenePosition = _useScenePosition;
 
     return loadSceneAsync(std::move(options));
 }
@@ -206,20 +204,25 @@ SceneID Map::loadSceneYamlAsync(const std::string& _yaml, const std::string& _re
 
     LOG("Loading scene string (async)");
 
-    auto options = std::make_unique<SceneOptions>(_yaml, Url(_resourceRoot));
-    options->updates =  _sceneUpdates;
-    options->useScenePosition = _useScenePosition;
+    SceneOptions options{_yaml, Url(_resourceRoot)};
+    options.updates =  _sceneUpdates;
+    options.useScenePosition = _useScenePosition;
 
     return loadSceneAsync(std::move(options));
 }
 
 // NB: Not thread-safe. Must be called on the main/render thread!
 // (Or externally synchronized with main/render thread)
-SceneID Map::loadScene(std::unique_ptr<SceneOptions> _sceneOptions) {
+SceneID Map::loadScene(SceneOptions&& _sceneOptions) {
 
-    auto newScene = std::make_shared<Scene>(*platform, std::move(_sceneOptions),
-                                             std::make_unique<View>(impl->view));
+    //if (_sceneOptions.view.width == 0)
+    _sceneOptions.view = {
+        uint32_t(impl->view.getWidth()),
+        uint32_t(impl->view.getHeight()),
+        impl->view.pixelScale()
+     };
 
+    auto newScene = std::make_shared<Scene>(*platform);
     {
         std::unique_lock<std::mutex> lock(impl->sceneMutex);
 
@@ -228,7 +231,7 @@ SceneID Map::loadScene(std::unique_ptr<SceneOptions> _sceneOptions) {
         impl->lastValidScene.reset();
     }
 
-    if (newScene->load()) {
+    if (newScene->load(std::move(_sceneOptions))) {
         impl->setScene(newScene);
 
         {
@@ -247,17 +250,22 @@ SceneID Map::loadScene(std::unique_ptr<SceneOptions> _sceneOptions) {
     return newScene->id;
 }
 
-SceneID Map::loadSceneAsync(std::unique_ptr<SceneOptions> _sceneOptions) {
+SceneID Map::loadSceneAsync(SceneOptions&& _sceneOptions) {
+
+    _sceneOptions.view = {
+        uint32_t(impl->view.getWidth()),
+        uint32_t(impl->view.getHeight()),
+        impl->view.pixelScale()
+     };
 
     impl->framesRendered = 0;
 
-    auto newScene = std::make_shared<Scene>(*platform, std::move(_sceneOptions),
-                                             std::make_unique<View>(impl->view));
+    auto newScene = std::make_shared<Scene>(*platform);
     impl->sceneLoadBegin();
 
-    runAsyncTask([newScene, this](){
+    runAsyncTask([newScene, options = std::move(_sceneOptions), this]() mutable {
 
-            bool newSceneLoaded = newScene->load();
+            bool newSceneLoaded = newScene->load(std::move(options));
             if (!newSceneLoaded) {
 
                 if (impl->onSceneReady) {

@@ -8,7 +8,7 @@
 
 #include <libgen.h>
 
-#define DEFAULT_FONT "fonts/NotoSans-Regular.ttf"
+#define DEFAULT_FONT "res/fonts/NotoSans-Regular.ttf"
 
 #include "log.h"
 

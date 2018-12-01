@@ -43,11 +43,11 @@ void globalSetup() {
     Url sceneUrl(scene_file);
     platform->putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
 
-    auto sceneOptions = std::make_unique<SceneOptions>(sceneUrl);
-    sceneOptions->prefetchTiles = false;
+    SceneOptions sceneOptions(sceneUrl);
+    sceneOptions.prefetchTiles = false;
 
-    scene = std::make_shared<Scene>(*platform, std::move(sceneOptions), std::make_unique<View>());
-    scene->load();
+    scene = std::make_shared<Scene>(*platform);
+    scene->load(std::move(sceneOptions));
 
     for (auto& s : scene->tileSources()) {
         source = s;

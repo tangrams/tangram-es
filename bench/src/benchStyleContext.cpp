@@ -41,21 +41,13 @@ void globalSetup() {
 
     Url sceneUrl(scene_file);
     platform->putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
-    scene = std::make_shared<Scene>(*platform, std::make_unique<SceneOptions>(sceneUrl), std::make_unique<View>());
-    Importer importer;
-    try {
-        scene->config() = importer.loadSceneData(*platform, sceneUrl);
-    }
-    catch (const YAML::ParserException& e) {
-        LOGE("Parsing scene config '%s'", e.what());
-        exit(-1);
-    }
-    if (!scene->config()) {
-        LOGE("Invalid scene file '%s'", scene_file);
-        exit(-1);
-    }
-    //SceneLoader::applyConfig(*platform, scene);
-    scene->fontContext()->loadFonts();
+
+    SceneOptions sceneOptions(sceneUrl);
+    sceneOptions.prefetchTiles = false;
+
+    scene = std::make_shared<Scene>(*platform);
+    scene->load(std::move(sceneOptions));
+
     for (auto& s : scene->tileSources()) {
         source = s;
         if (source->generateGeometry()) { break; }

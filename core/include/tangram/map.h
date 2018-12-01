@@ -425,9 +425,9 @@ protected:
 
     std::unique_ptr<Platform> platform;
 
-    SceneID loadSceneAsync(std::unique_ptr<SceneOptions> _sceneOptions);
+    SceneID loadSceneAsync(SceneOptions&& _sceneOptions);
 
-    SceneID loadScene(std::unique_ptr<SceneOptions> _sceneOptions);
+    SceneID loadScene(SceneOptions&& _sceneOptions);
 
 private:
 
