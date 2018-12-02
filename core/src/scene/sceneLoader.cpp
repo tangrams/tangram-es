@@ -69,11 +69,15 @@ bool SceneLoader::applyUpdates(Scene& _scene, const std::vector<SceneUpdate>& _u
         }
 
         if (value) {
+
             Node node;
             bool pathIsValid = YamlPath(update.path).get(root, node);
             if (pathIsValid) {
                 node = value;
             } else {
+                LOGW("Update: %s - %s", update.path.c_str(), update.value.c_str());
+                LOGNode("", root);
+
                 _scene.errors.push_back({update, Error::scene_update_path_not_found});
                 return false;
             }
