@@ -9,6 +9,8 @@
 #include <condition_variable>
 #include <mutex>
 
+#include "yaml-cpp/proto/protobuf.h"
+
 using YAML::Node;
 using YAML::NodeType;
 
@@ -160,13 +162,22 @@ UrlRequestHandle Importer::readFromZip(const Url& url, UrlCallback callback) {
 }
 
 void Importer::addSceneYaml(const Url& sceneUrl, const char* sceneYaml, size_t length) {
+    LOGTO("Parsing scene config bytes: %d - '%s' ", length, sceneUrl.path().c_str());
+
     Node sceneNode;
-    try {
-        sceneNode = YAML::Load(sceneYaml, length);
-    } catch (const YAML::ParserException& e) {
-        LOGE("Parsing scene config '%s'", e.what());
-        return;
+    if (Url::getPathExtension(sceneUrl.path()) == "pbf") {
+        sceneNode = YAML::Protobuf::Load(sceneYaml, length);
+
+    } else {
+        try {
+            sceneNode = YAML::Load(sceneYaml, length);
+        } catch (const YAML::ParserException& e) {
+            LOGE("Parsing scene config '%s'", e.what());
+            return;
+        }
     }
+    LOGTO("Parsing done");
+
     if (!sceneNode.IsDefined() || !sceneNode.IsMap()) {
         LOGE("Scene is not a valid YAML map: %s", sceneUrl.string().c_str());
         return;
