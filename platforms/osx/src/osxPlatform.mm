@@ -172,6 +172,7 @@ UrlRequestHandle OSXPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
         if (_callback) {
             _callback(std::move(urlResponse));
         }
+        requestRender();
     };
 
     NSURL* nsUrl = [NSURL URLWithString:[NSString stringWithUTF8String:_url.string().c_str()]];
