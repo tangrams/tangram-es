@@ -20,6 +20,7 @@
 #include "util/util.h"
 #include "util/zipArchive.h"
 #include "log.h"
+#include "scene.h"
 
 #include <algorithm>
 
@@ -42,6 +43,9 @@ bool Scene::load(SceneOptions&& _sceneOptions) {
     m_options = std::move(_sceneOptions);
     m_view = std::make_unique<View>();
     m_view->setSize(_sceneOptions.view.width, _sceneOptions.view.height);
+
+    m_pixelScale  = _sceneOptions.view.pixelScale;
+    m_view->setPixelScale(m_pixelScale);
 
     LOGTOInit();
     LOGTO(">>>>>> loadScene >>>>>>");
@@ -121,8 +125,6 @@ bool Scene::load(SceneOptions&& _sceneOptions) {
 
     m_featureSelection = std::make_unique<FeatureSelection>();
     m_labelManager = std::make_unique<LabelManager>();
-
-    m_fontContext->setPixelScale(m_pixelScale);
 
     LOGTO("<<<<<< loadScene <<<<<<");
 
@@ -235,6 +237,8 @@ void Scene::setPixelScale(float _scale) {
     LOGD("setPixelScale %f", _scale);
 
     m_pixelScale = _scale;
+
+    if (!m_ready) { return; }
 
     for (auto& style : m_styles) {
         style->setPixelScale(_scale);
@@ -393,11 +397,18 @@ bool Scene::complete() {
         }
     }
 
-    m_markerManager = std::make_unique<MarkerManager>(*this);
+    m_ready = true;
+    m_loading = false;
+
+    for (auto& style : m_styles) {
+        style->setPixelScale(m_pixelScale);
+    }
+    m_fontContext->setPixelScale(m_pixelScale);
+
+    // Tell the TileWorker Scene is ready so it should check its work-queue
     m_tileWorker->poke();
 
-    m_loading = false;
-    m_ready = true;
+    m_markerManager = std::make_unique<MarkerManager>(*this);
 
     return true;
 }
