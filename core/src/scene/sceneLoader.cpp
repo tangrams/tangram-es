@@ -1575,14 +1575,23 @@ SceneLayer SceneLoader::loadSublayer(const Node& layer, const std::string& layer
         } else if (key == "visible") {
             if (!layer["enabled"].IsDefined()) {
                 YAML::convert<bool>::decode(member.second, enabled);
+                if (!enabled) {
+                    LOG("Drop disabled layer '%s'", layerName.c_str());
+                    return { layerName, {}, {}, {}, false };
+                }
             }
         } else if (key == "enabled") {
             YAML::convert<bool>::decode(member.second, enabled);
+            if (!enabled) {
+                LOG("Drop disabled layer '%s'", layerName.c_str());
+                return { layerName, {}, {}, {}, false };
+            }
         } else {
             // Member is a sublayer
             sublayers.push_back(loadSublayer(member.second, (layerName + DELIMITER + key), scene));
         }
     }
+
     return { layerName, std::move(filter), rules, std::move(sublayers), enabled };
 }
 
