@@ -242,6 +242,8 @@ struct Context {
         // [{get:func,has:func}]
 
         duk_push_proxy(_ctx, 0);
+        duk_freeze(_ctx, -1);
+
         _featurePtr = duk_get_heapptr(_ctx, -1);
         // Stash 'feature' proxy object
         if (!duk_put_global_string(_ctx, FEATURE_ID)) {
@@ -261,6 +263,8 @@ struct Context {
             _globalPtr = duk_get_heapptr(_ctx, value._index);
             if (!_globalPtr) { LOGE("Global object invalid!"); }
 
+            // Freeze object to not allow modifications
+            duk_freeze(_ctx, -1);
             // Stash global object
             duk_put_global_string(_ctx, GLOBAL_ID);
         } else {
