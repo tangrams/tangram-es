@@ -73,6 +73,10 @@ public:
     /* Resize the texture */
     void resize(int width, int height);
 
+    /// Binds texture to texture unit _unit and uploads new texture data when it has changed.
+    /// Returns false when no data was set (and resize has not been called in order to create
+    /// an empty RenderBuffer texture) or when the requested size is greater than supported
+    /// by the driver.
     virtual bool bind(RenderState& rs, GLuint _unit);
 
     /* Width and Height texture getters */
