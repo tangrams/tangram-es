@@ -2,48 +2,53 @@
 // Created by Matt Blair on 11/15/18.
 //
 #pragma once
-#include "IJavaScriptContext.h"
+#include "js/JavaScriptFwd.h"
 #include <JavaScriptCore/JavaScript.h>
 #include <list>
 #include <unordered_map>
+#include <string>
 #include <vector>
 
 namespace Tangram {
 
-class JSCoreValue : public IJavaScriptValue {
+class JSCoreValue {
 
 public:
 
+    JSCoreValue() = default;
+
     JSCoreValue(JSContextRef ctx, JSValueRef value);
 
-    ~JSCoreValue() override;
+    ~JSCoreValue();
 
-    bool isUndefined() override;
-    bool isNull() override;
-    bool isBoolean() override;
-    bool isNumber() override;
-    bool isString() override;
-    bool isArray() override;
-    bool isObject() override;
+    operator bool() const { return _ctx != nullptr; }
 
-    bool toBool() override;
-    int toInt() override;
-    double toDouble() override;
-    std::string toString() override;
+    bool isUndefined();
+    bool isNull();
+    bool isBoolean();
+    bool isNumber();
+    bool isString();
+    bool isArray();
+    bool isObject();
 
-    size_t getLength() override;
-    JSValue getValueAtIndex(size_t index) override;
-    JSValue getValueForProperty(const std::string& name) override;
+    bool toBool();
+    int toInt();
+    double toDouble();
+    std::string toString();
 
-    void setValueAtIndex(size_t index, JSValue value) override;
-    void setValueForProperty(const std::string& name, JSValue value) override;
+    size_t getLength();
+    JSCoreValue getValueAtIndex(size_t index);
+    JSCoreValue getValueForProperty(const std::string& name);
+
+    void setValueAtIndex(size_t index, JSCoreValue value);
+    void setValueForProperty(const std::string& name, JSCoreValue value);
 
     JSValueRef getValueRef() { return _value; }
 
 private:
 
-    JSContextRef _ctx;
-    JSValueRef _value;
+    JSContextRef _ctx = nullptr;
+    JSValueRef _value = nullptr;
 };
 
 class JSCoreStringCache {
@@ -100,35 +105,35 @@ private:
     size_t _capacity;
 };
 
-class JSCoreContext : public IJavaScriptContext {
+class JSCoreContext {
 
 public:
 
     JSCoreContext();
 
-    ~JSCoreContext() override;
+    ~JSCoreContext();
 
-    void setGlobalValue(const std::string& name, JSValue value) override;
+    void setGlobalValue(const std::string& name, JSCoreValue value);
 
-    void setCurrentFeature(const Feature* feature) override;
+    void setCurrentFeature(const Feature* feature);
 
-    bool setFunction(JSFunctionIndex index, const std::string& source) override;
+    bool setFunction(JSFunctionIndex index, const std::string& source);
 
-    bool evaluateBooleanFunction(JSFunctionIndex index) override;
+    bool evaluateBooleanFunction(JSFunctionIndex index);
 
 protected:
 
-    JSValue newNull() override;
-    JSValue newBoolean(bool value) override;
-    JSValue newNumber(double value) override;
-    JSValue newString(const std::string& value) override;
-    JSValue newArray() override;
-    JSValue newObject() override;
-    JSValue newFunction(const std::string& value) override;
-    JSValue getFunctionResult(JSFunctionIndex index) override;
+    JSCoreValue newNull();
+    JSCoreValue newBoolean(bool value);
+    JSCoreValue newNumber(double value);
+    JSCoreValue newString(const std::string& value);
+    JSCoreValue newArray();
+    JSCoreValue newObject();
+    JSCoreValue newFunction(const std::string& value);
+    JSCoreValue getFunctionResult(JSFunctionIndex index);
 
-    JSScopeMarker getScopeMarker() override;
-    void resetToScopeMarker(JSScopeMarker marker) override;
+    JSScopeMarker getScopeMarker();
+    void resetToScopeMarker(JSScopeMarker marker);
 
 private:
 
@@ -145,6 +150,8 @@ private:
     JSCoreStringCache _strings;
 
     const Feature* _feature;
+
+    friend JavaScriptScope;
 };
 
 } // namespace Tangram

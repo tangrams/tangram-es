@@ -62,25 +62,23 @@ size_t DuktapeValue::getLength() {
     return duk_get_length(_ctx, _index);
 }
 
-JSValue DuktapeValue::getValueAtIndex(size_t index) {
+DuktapeValue DuktapeValue::getValueAtIndex(size_t index) {
     duk_get_prop_index(_ctx, _index, static_cast<duk_uarridx_t>(index));
-    return JSValue(new DuktapeValue(_ctx, duk_normalize_index(_ctx, -1)));
+    return DuktapeValue(_ctx, duk_normalize_index(_ctx, -1));
 }
 
-JSValue DuktapeValue::getValueForProperty(const std::string& name) {
+DuktapeValue DuktapeValue::getValueForProperty(const std::string& name) {
     duk_get_prop_lstring(_ctx, _index, name.data(), name.length());
-    return JSValue(new DuktapeValue(_ctx, duk_normalize_index(_ctx, -1)));
+    return DuktapeValue(_ctx, duk_normalize_index(_ctx, -1));
 }
 
-void DuktapeValue::setValueAtIndex(size_t index, JSValue value) {
-    auto dukValue = reinterpret_cast<DuktapeValue*>(value.get());
-    dukValue->ensureExistsOnStackTop();
+void DuktapeValue::setValueAtIndex(size_t index, DuktapeValue value) {
+    value.ensureExistsOnStackTop();
     duk_put_prop_index(_ctx, _index, static_cast<duk_uarridx_t>(index));
 }
 
-void DuktapeValue::setValueForProperty(const std::string& name, JSValue value) {
-    auto dukValue = reinterpret_cast<DuktapeValue*>(value.get());
-    dukValue->ensureExistsOnStackTop();
+void DuktapeValue::setValueForProperty(const std::string& name, DuktapeValue value) {
+    value.ensureExistsOnStackTop();
     duk_put_prop_lstring(_ctx, _index, name.data(), name.length());
 
 }
@@ -155,9 +153,8 @@ DuktapeContext::~DuktapeContext() {
     duk_destroy_heap(_ctx);
 }
 
-void DuktapeContext::setGlobalValue(const std::string& name, JSValue value) {
-    auto dukValue = reinterpret_cast<DuktapeValue*>(value.get());
-    dukValue->ensureExistsOnStackTop();
+void DuktapeContext::setGlobalValue(const std::string& name, DuktapeValue value) {
+    value.ensureExistsOnStackTop();
     duk_put_global_lstring(_ctx, name.data(), name.length());
 }
 
@@ -206,49 +203,49 @@ bool DuktapeContext::evaluateBooleanFunction(uint32_t index) {
     return result;
 }
 
-JSValue DuktapeContext::getFunctionResult(uint32_t index) {
+DuktapeValue DuktapeContext::getFunctionResult(uint32_t index) {
     if (!evaluateFunction(index)) {
-        return nullptr;
+        return DuktapeValue();
     }
     return getStackTopValue();
 }
 
-JSValue DuktapeContext::newNull() {
+DuktapeValue DuktapeContext::newNull() {
     duk_push_null(_ctx);
     return getStackTopValue();
 }
 
-JSValue DuktapeContext::newBoolean(bool value) {
+DuktapeValue DuktapeContext::newBoolean(bool value) {
     duk_push_boolean(_ctx, static_cast<duk_bool_t>(value));
     return getStackTopValue();
 }
 
-JSValue DuktapeContext::newNumber(double value) {
+DuktapeValue DuktapeContext::newNumber(double value) {
     duk_push_number(_ctx, value);
     return getStackTopValue();
 }
 
-JSValue DuktapeContext::newString(const std::string& value) {
+DuktapeValue DuktapeContext::newString(const std::string& value) {
     duk_push_lstring(_ctx, value.data(), value.length());
     return getStackTopValue();
 }
 
-JSValue DuktapeContext::newArray() {
+DuktapeValue DuktapeContext::newArray() {
     duk_push_array(_ctx);
     return getStackTopValue();
 }
 
-JSValue DuktapeContext::newObject() {
+DuktapeValue DuktapeContext::newObject() {
     duk_push_object(_ctx);
     return getStackTopValue();
 }
 
-JSValue DuktapeContext::newFunction(const std::string& value) {
+DuktapeValue DuktapeContext::newFunction(const std::string& value) {
     if (duk_pcompile_lstring(_ctx, DUK_COMPILE_FUNCTION, value.data(), value.length()) != 0) {
         auto error = duk_safe_to_string(_ctx, -1);
         LOGW("Compile failed in global function: %s\n%s\n---", error, value.c_str());
         duk_pop(_ctx); // Pop error.
-        return nullptr;
+        return DuktapeValue();
     }
     return getStackTopValue();
 }

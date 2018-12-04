@@ -4,38 +4,44 @@
 
 #pragma once
 
-#include "IJavaScriptContext.h"
+#include "js/JavaScriptFwd.h"
 #include "duktape/duktape.h"
+
+#include <string>
 
 namespace Tangram {
 
-class DuktapeValue : public IJavaScriptValue {
+class DuktapeValue {
 
 public:
 
+    DuktapeValue() = default;
+
     DuktapeValue(duk_context* ctx, duk_idx_t index);
 
-    ~DuktapeValue() override = default;
+    ~DuktapeValue() = default;
 
-    bool isUndefined() override;
-    bool isNull() override;
-    bool isBoolean() override;
-    bool isNumber() override;
-    bool isString() override;
-    bool isArray() override;
-    bool isObject() override;
+    operator bool() const { return _ctx != nullptr; }
 
-    bool toBool() override;
-    int toInt() override;
-    double toDouble() override;
-    std::string toString() override;
+    bool isUndefined();
+    bool isNull();
+    bool isBoolean();
+    bool isNumber();
+    bool isString();
+    bool isArray();
+    bool isObject();
 
-    size_t getLength() override;
-    JSValue getValueAtIndex(size_t index) override;
-    JSValue getValueForProperty(const std::string& name) override;
+    bool toBool();
+    int toInt();
+    double toDouble();
+    std::string toString();
 
-    void setValueAtIndex(size_t index, JSValue value) override;
-    void setValueForProperty(const std::string& name, JSValue value) override;
+    size_t getLength();
+    DuktapeValue getValueAtIndex(size_t index);
+    DuktapeValue getValueForProperty(const std::string& name);
+
+    void setValueAtIndex(size_t index, DuktapeValue value);
+    void setValueForProperty(const std::string& name, DuktapeValue value);
 
     auto getStackIndex() { return _index; }
 
@@ -48,35 +54,35 @@ private:
     duk_idx_t _index = 0;
 };
 
-class DuktapeContext : public IJavaScriptContext {
+class DuktapeContext {
 
 public:
 
     DuktapeContext();
 
-    ~DuktapeContext() override;
+    ~DuktapeContext();
 
-    void setGlobalValue(const std::string& name, JSValue value) override;
+    void setGlobalValue(const std::string& name, DuktapeValue value);
 
-    void setCurrentFeature(const Feature* feature) override;
+    void setCurrentFeature(const Feature* feature);
 
-    bool setFunction(JSFunctionIndex index, const std::string& source) override;
+    bool setFunction(JSFunctionIndex index, const std::string& source);
 
-    bool evaluateBooleanFunction(JSFunctionIndex index) override;
+    bool evaluateBooleanFunction(JSFunctionIndex index);
 
 protected:
-    JSValue newNull() override;
+    DuktapeValue newNull();
 
-    JSValue newBoolean(bool value) override;
-    JSValue newNumber(double value) override;
-    JSValue newString(const std::string& value) override;
-    JSValue newArray() override;
-    JSValue newObject() override;
-    JSValue newFunction(const std::string& value) override;
-    JSValue getFunctionResult(JSFunctionIndex index) override;
+    DuktapeValue newBoolean(bool value);
+    DuktapeValue newNumber(double value);
+    DuktapeValue newString(const std::string& value);
+    DuktapeValue newArray();
+    DuktapeValue newObject();
+    DuktapeValue newFunction(const std::string& value);
+    DuktapeValue getFunctionResult(JSFunctionIndex index);
 
-    JSScopeMarker getScopeMarker() override;
-    void resetToScopeMarker(JSScopeMarker marker) override;
+    JSScopeMarker getScopeMarker();
+    void resetToScopeMarker(JSScopeMarker marker);
 
 private:
 
@@ -88,14 +94,15 @@ private:
 
     bool evaluateFunction(uint32_t index);
 
-    JSValue getStackTopValue() {
-        return JSValue(new DuktapeValue(_ctx, duk_normalize_index(_ctx, -1)));
+    DuktapeValue getStackTopValue() {
+        return DuktapeValue(_ctx, duk_normalize_index(_ctx, -1));
     }
 
     duk_context* _ctx = nullptr;
 
     const Feature* _feature = nullptr;
 
+    friend JavaScriptScope;
 };
 
 } // namespace Tangram

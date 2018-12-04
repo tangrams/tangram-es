@@ -1,6 +1,6 @@
 #pragma once
 
-#include "js/IJavaScriptContext.h"
+#include "js/JavaScriptFwd.h"
 #include "scene/styleParam.h"
 #include "util/fastmap.h"
 
@@ -33,7 +33,7 @@ public:
     StyleContext();
     StyleContext(bool _useJavaScriptCore);
 
-    ~StyleContext() = default;
+    ~StyleContext();
 
     /*
      * Set currently processed Feature
@@ -80,8 +80,6 @@ public:
 
 private:
 
-    JSValue parseSceneGlobals(JavaScriptScope& jsScope, const YAML::Node& node);
-
     std::array<Value, 4> m_keywords;
     int m_keywordGeom= -1;
     int m_keywordZoom = -1;
@@ -92,7 +90,7 @@ private:
 
     const Feature* m_feature = nullptr;
 
-    JSContext m_jsContext = nullptr;
+    std::unique_ptr<JSContext> m_jsContext;
 };
 
 }
