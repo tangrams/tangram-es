@@ -151,18 +151,6 @@ TG_EXPORT
                 relativeToURL:(NSURL *)url
                   withUpdates:(nullable NSArray<TGSceneUpdate *> *)updates;
 
-/**
- Modify the current scene asynchronously with a list of updates.
-
- Calls `-[TGMapViewDelegate mapView:didLoadScene:withError:]` on the `mapViewDelegate` when it completes.
-
- If an error occurs while applying updates, no changes will be applied. See `TGSceneUpdate` for details.
-
- @param updates A list of `TGSceneUpdate` to apply to the scene.
- @return The integer ID for the updated scene or -1 if the scene cannot be updated.
- */
-- (int)updateSceneAsync:(NSArray<TGSceneUpdate *> *)updates;
-
 #pragma mark Delegates
 
 /**

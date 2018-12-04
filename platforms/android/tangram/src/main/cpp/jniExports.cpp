@@ -612,15 +612,6 @@ extern "C" {
         jniEnv->ReleaseIntArrayElements(buffer, ptr, JNI_ABORT);
     }
 
-    JNIEXPORT jint JNICALL Java_com_mapzen_tangram_MapController_nativeUpdateScene(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jobjectArray updateStrings) {
-        assert(mapPtr > 0);
-
-        auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-
-        return map->updateSceneAsync(sceneUpdates);
-    }
-
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeOnLowMemory(JNIEnv* jnienv, jobject obj, jlong mapPtr) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
