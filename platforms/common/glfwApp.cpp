@@ -67,17 +67,26 @@ Tangram::MarkerID marker = 0;
 Tangram::MarkerID poiMarker = 0;
 Tangram::MarkerID polyline = 0;
 
-void loadSceneFile(bool setPosition) {
-    std::vector<SceneUpdate> updates;
+std::vector<SceneUpdate> sceneUpdates;
 
-    if (!apiKey.empty()) {
-        updates.push_back(SceneUpdate("global.sdk_api_key", apiKey));
+void loadSceneFile(bool setPosition = false, std::vector<SceneUpdate> updates = {}) {
+
+    for (auto& update : updates) {
+        bool found = false;
+        for (auto& prev : sceneUpdates) {
+            if (update.path == prev.path) {
+                prev = update;
+                found = true;
+                break;
+            }
+        }
+        if (!found) { sceneUpdates.push_back(update); }
     }
 
     if (!sceneYaml.empty()) {
-        map->loadSceneYamlAsync(sceneYaml, sceneFile, setPosition, updates);
+        map->loadSceneYamlAsync(sceneYaml, sceneFile, setPosition, sceneUpdates);
     } else {
-        map->loadSceneAsync(sceneFile, setPosition, updates);
+        map->loadSceneAsync(sceneFile, setPosition, sceneUpdates);
     }
 }
 
@@ -130,6 +139,10 @@ void create(std::unique_ptr<Platform> p, int w, int h) {
              "\n\n\texport NEXTZEN_API_KEY=YOUR_KEY_HERE"
              "\n\nOr, if using an IDE on macOS, with: "
              "\n\n\tlaunchctl setenv NEXTZEN_API_KEY YOUR_API_KEY\n");
+    }
+
+    if (!apiKey.empty()) {
+        sceneUpdates.push_back(SceneUpdate("global.sdk_api_key", apiKey));
     }
 
     // Setup tangram
@@ -435,10 +448,10 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 map->setPixelScale(pixel_scale);
                 break;
             case GLFW_KEY_P:
-                map->updateSceneAsync({SceneUpdate{"cameras", "{ main_camera: { type: perspective } }"}});
+                loadSceneFile(false, {SceneUpdate{"cameras", "{ main_camera: { type: perspective } }"}});
                 break;
             case GLFW_KEY_I:
-                map->updateSceneAsync({SceneUpdate{"cameras", "{ main_camera: { type: isometric } }"}});
+                loadSceneFile(false, {SceneUpdate{"cameras", "{ main_camera: { type: isometric } }"}});
                 break;
             case GLFW_KEY_M:
                 map->loadSceneYamlAsync("{ scene: { background: { color: red } } }", std::string(""));
@@ -446,15 +459,13 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             case GLFW_KEY_G:
                 static bool geoJSON = false;
                 if (!geoJSON) {
-                    map->updateSceneAsync({
-                            SceneUpdate{"sources.osm.type", "GeoJSON"},
-                            SceneUpdate{"sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.json"}
-                        });
+                    loadSceneFile(false,
+                                  { SceneUpdate{"sources.osm.type", "GeoJSON"},
+                                    SceneUpdate{"sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.json"}});
                 } else {
-                    map->updateSceneAsync({
-                            SceneUpdate{"sources.osm.type", "MVT"},
-                            SceneUpdate{"sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt"}
-                        });
+                    loadSceneFile(false,
+                                  { SceneUpdate{"sources.osm.type", "MVT"},
+                                    SceneUpdate{"sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt"}});
                 }
                 geoJSON = !geoJSON;
                 break;

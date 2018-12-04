@@ -366,28 +366,6 @@ public class MapController {
     }
 
     /**
-     * Apply SceneUpdates to the current scene asyncronously
-     * If a updates trigger an error, scene updates won't be applied.
-     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
-     * ready.
-     * @param sceneUpdates List of {@code SceneUpdate}
-     * @return new scene ID
-     */
-    public int updateSceneAsync(@NonNull final List<SceneUpdate> sceneUpdates) {
-        checkPointer(mapPointer);
-
-        if (sceneUpdates == null || sceneUpdates.size() == 0) {
-            throw new IllegalArgumentException("sceneUpdates can not be null or empty in queueSceneUpdates");
-        }
-
-        removeAllMarkers();
-
-        final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-
-        return nativeUpdateScene(mapPointer, updateStrings);
-    }
-
-    /**
      * Set the camera position of the map view
      * @param update CameraUpdate to modify current camera position
      */
@@ -1435,7 +1413,6 @@ public class MapController {
     private synchronized native void nativeHandlePinchGesture(long mapPtr, float posX, float posY, float scale, float velocity);
     private synchronized native void nativeHandleRotateGesture(long mapPtr, float posX, float posY, float rotation);
     private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
-    private synchronized native int nativeUpdateScene(long mapPtr, String[] updateStrings);
     private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY);
