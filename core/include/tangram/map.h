@@ -165,22 +165,12 @@ public:
                       bool _useScenePosition = false,
                       const std::vector<SceneUpdate>& sceneUpdates = {});
 
-    // Request updates to the current scene configuration. This reloads the
-    // scene with the updated configuration.
-    // The SceneUpdate path is a series of yaml keys separated by a '.' and the
-    // value is a string of yaml to replace the current value at the given path
-    // in the scene.
-    SceneID updateSceneAsync(const std::vector<SceneUpdate>& sceneUpdates);
-
     // Set listener for scene load events. The callback receives the SceneID
     // of the loaded scene and SceneError in case loading was not successful.
     // The callback may be be called from the main or worker thread.
     void setSceneReadyListener(SceneReadyCallback _onSceneReady);
 
     void setCameraAnimationListener(CameraAnimationCallback _cb);
-
-    // Set an MBTiles SQLite database file for a DataSource in the scene.
-    void setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath);
 
     // Initialize graphics resources; OpenGL context must be created prior to calling this
     void setupGL();

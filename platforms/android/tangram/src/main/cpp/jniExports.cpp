@@ -518,13 +518,6 @@ void MapController(UseCachedGlState)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, 
     map->useCachedGlState(use);
 }
 
-jint MapController(UpdateScene)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jobjectArray updateStrings) {
-    auto_map(mapPtr);
-
-    auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
-    return map->updateSceneAsync(sceneUpdates);
-}
-
 void MapController(OnLowMemory)(JNIEnv* jnienv, jobject obj, jlong mapPtr) {
     auto_map(mapPtr);
     map->onMemoryWarning();
