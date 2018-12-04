@@ -339,12 +339,17 @@ struct Context {
         std::string args;
         // TODO use proper regex
 
+//#define BIND_GLOBAL_TO_FUNCTION
+#ifndef BIND_GLOBAL_TO_FUNCTION
         size_t hasGlobal = source.find("global");
         if (hasGlobal != std::string::npos) {
             args += "global";
             append = true;
             function.context.global = true;
         }
+#endif
+
+
         size_t hasFeature = source.find("feature");
         if (hasFeature != std::string::npos) {
             if (append) { args += ","; }
@@ -370,49 +375,26 @@ struct Context {
         function.source = source;
         function.source.insert(beg, args);
 
+
+#ifdef BIND_GLOBAL_TO_FUNCTION
+        size_t hasGlobal = source.find("global");
+        if (hasGlobal != std::string::npos) {
+            function.source = "function(global) { return " + function.source + " }";
+            function.context.global = true;
+        }
+#endif
+
         if (duk_pcompile_lstring(_ctx, DUK_COMPILE_FUNCTION,
                                  function.source.c_str(), function.source.length()) == 0) {
 
-#if 0
-            if (hasGlobal != std::string::npos) {
-
-                if (duk_get_prop_string(_ctx, -1, "apply") == 0)
-
-                LOG("APPLY");
-
-                // context
-                duk_push_null(_ctx);
-                // args
-                duk_push_array(_ctx);
+#ifdef BIND_GLOBAL_TO_FUNCTION
+            if (function.context.global) {
                 duk_push_heapptr(_ctx, _globalPtr);
-                duk_put_prop_index(_ctx, -2, 0);
-                DUMP();
 
-                //const char* pe =
-                    // R"(function(f, context, args) {
-                    //      if(!args) args = [];
-                    //      if (args.length === f.length) return f.apply(context, args);
-                    //      return function partial (a) {
-                    //         var args_copy = args.concat.apply(args, arguments);
-                    //         return this(f, context, args_copy);
-                    //       }
-                    //  })(f, context, args);)";
-
-                //if (duk_peval_string(_ctx, pe)) {
-
-
-                    if (duk_pcall(_ctx, 2) != DUK_EXEC_SUCCESS ) {
-                        LOGW("Compile partial failed: %s\n%s\n---",
-                             duk_safe_to_string(_ctx, -1), function.source.c_str());
-
-                        // Pop error
-                        // duk_pop(_ctx);
-                        // // Pop array
-                        // duk_pop(_ctx);
-
-                    }
-                    DUMP();
+                if (duk_pcall(_ctx, 1) != 0) {
+                    LOG("ERRRRRRRRRRRRR");
                 }
+            }
 #endif
 
             function.ptr = duk_get_heapptr(_ctx, -1);
@@ -451,12 +433,13 @@ struct Context {
 
         auto &function = m_functions[index];
         duk_push_heapptr(_ctx, function.ptr);
-
         int args = 0;
+#ifndef BIND_GLOBAL_TO_FUNCTION
         if (function.context.global) {
-            args++;
-            duk_push_heapptr(_ctx, _globalPtr);
+             args++;
+             duk_push_heapptr(_ctx, _globalPtr);
         }
+#endif
         if (function.context.feature) {
             args++;
             duk_push_heapptr(_ctx, _featurePtr);
