@@ -31,7 +31,8 @@
 #define DBG(...)
 #define DUMPCTX(...)
 #endif
-#define DBGCACHE(...) //LOG(__VA_ARGS__)
+#define DBGCACHE(...)
+//#define DBGCACHE(...) LOG(__VA_ARGS__)
 
 namespace Tangram {
 
@@ -580,7 +581,7 @@ private:
         //std::array<uint8_t, SIZE> lengths{};
         std::array<int32_t, SIZE> refs{};
 
-        size_t usage = 0;
+        int usage = 0;
 
         void free(Context& context, const void* ptr) {
             const char* str = (const char*)(ptr);
@@ -600,7 +601,10 @@ private:
         const char* add(Context& context, void* ptr, size_t length) {
             const char* str = (const char*)ptr;
             int slot = -1;
-            for (size_t i = 0; i < usage; i++) {
+            for (int i = 0; i < usage; i++) {
+                DBGCACHE("[%d/%d]", i, usage);
+                assert(int64_t(ENTRIES) - int64_t(i) > 0);
+
                 if (length <= strings[i][0] && std::memcmp(&strings[i][1], str, length) == 0) {
                     refs[i]++;
                     DBGCACHE("[%d] found '%.*s'", refs[i], length, &strings[i][stroffset]);
@@ -611,9 +615,8 @@ private:
                 }
             }
             if (slot == -1) {
-                if (usage < strings.size()) {
-                    slot = usage;
-                    usage++;
+                if (usage < ENTRIES) {
+                    slot = usage++;
                 } else {
                     LOG("cache full: %.*s len:%d - usage:%d, slot:%d", length, str, length, usage, slot);
                     return nullptr;
@@ -627,14 +630,14 @@ private:
 
             context._allocCnt++;
 
-            DBGCACHE("[%d] added: '%.*s'", refs[slot], length, out);
+            DBGCACHE("[%d] added: '%.*s'", refs[slot], length, str);
 
             return &strings[slot][stroffset];
         }
         void dump() {
-            LOG("CACHE usage %d", usage);
+            DBGCACHE("CACHE usage %d", usage);
             for (size_t i = 0; i < usage; i++) {
-                 LOG("[%d] refs:%d '%.*s'", i, refs[i], strings[i][0], &strings[i][stroffset]);
+                 DBGCACHE("[%d] refs:%d '%.*s'", i, refs[i], strings[i][0], &strings[i][stroffset]);
             }
         }
     };
