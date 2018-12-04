@@ -5,15 +5,14 @@
 
 using namespace Tangram;
 
-class TestTexture : public GlyphTexture {
-public:
+struct TestTexture : public GlyphTexture {
+    TestTexture() { resize(512, 512); }
     using GlyphTexture::GlyphTexture;
     const std::vector<DirtyRowRange>& dirtyRanges() { return m_dirtyRows; }
 };
 
 TEST_CASE("Merging of dirty Regions - Non overlapping, test ordering", "[Texture]") {
     TestTexture texture{};
-    texture.resize(512, 512);
     REQUIRE(texture.dirtyRanges().size() == 0);
 
     // A range from 20-30
@@ -44,7 +43,6 @@ TEST_CASE("Merging of dirty Regions - Non overlapping, test ordering", "[Texture
 
 TEST_CASE("Merging of dirty Regions - Merge overlapping", "[Texture]") {
     TestTexture texture{};
-    texture.resize(512, 512);
     REQUIRE(texture.dirtyRanges().size() == 0);
 
     // range from 50-100
@@ -63,7 +61,6 @@ TEST_CASE("Merging of dirty Regions - Merge three regions, when 3rd region is ad
     { // just touching
 
         TestTexture texture{};
-        texture.resize(512, 512);
         REQUIRE(texture.dirtyRanges().size() == 0);
 
         // range from 50-100
@@ -88,7 +85,6 @@ TEST_CASE("Merging of dirty Regions - Merge three regions, when 3rd region is ad
     { // overlapping
 
         TestTexture texture{};
-        texture.resize(512, 512);
         REQUIRE(texture.dirtyRanges().size() == 0);
 
         // range from 50-150

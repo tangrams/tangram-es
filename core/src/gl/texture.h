@@ -70,13 +70,9 @@ public:
 
     void setSpriteAtlas(std::unique_ptr<SpriteAtlas> sprites);
 
-    /* Resize the texture */
-    void resize(int width, int height);
-
     /// Binds texture to texture unit _unit and uploads new texture data when it has changed.
-    /// Returns false when no data was set (and resize has not been called in order to create
-    /// an empty RenderBuffer texture) or when the requested size is greater than supported
-    /// by the driver.
+    /// Returns false when no data has been set or when the requested size is greater than
+    /// supported by the driver.
     virtual bool bind(RenderState& rs, GLuint _unit);
 
     /* Width and Height texture getters */
@@ -92,6 +88,9 @@ public:
     size_t bufferSize() const { return m_bufferSize; }
 
 protected:
+
+    // Resize the texture
+    void resize(int width, int height);
 
     // Bytes per pixel for current PixelFormat options
     size_t bpp() const;
