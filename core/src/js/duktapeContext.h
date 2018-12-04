@@ -441,7 +441,7 @@ struct Context {
             return false;
         }
 
-        auto &function = m_functions[index];
+        auto& function = m_functions[index];
         duk_push_heapptr(_ctx, function.ptr);
         int args = 0;
 #ifndef BIND_GLOBAL_TO_FUNCTION
