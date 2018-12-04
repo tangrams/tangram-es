@@ -85,9 +85,6 @@ public:
 
     const auto& spriteAtlas() const { return m_spriteAtlas; }
 
-    /* Checks whether the texture has valid data and has been successfully uploaded to GPU */
-    bool isValid() const;
-
     size_t bufferSize() const { return m_bufferSize; }
 
 protected:

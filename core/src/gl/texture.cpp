@@ -115,10 +115,6 @@ void Texture::generate(RenderState& _rs, GLuint _textureUnit) {
     m_rs = &_rs;
 }
 
-bool Texture::isValid() const {
-    return (m_glHandle != 0) || bool(m_buffer);
-}
-
 bool Texture::upload(RenderState& _rs, GLuint _textureUnit) {
     m_shouldResize = false;
 
