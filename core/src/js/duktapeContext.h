@@ -264,6 +264,22 @@ struct Context {
         DBG("<<<<<<<<<");
     }
 
+    void addStringProxy() {
+        // duk_push_object(_ctx);
+        // //_objectPtr = duk_require_heapptr(_ctx, -1);
+        // // Handler object
+        // duk_idx_t handlerObj = duk_push_object(_ctx);
+        // // Add 'get' property to handler
+        // duk_push_c_function(_ctx, dukStringProxyLength, 0);
+        // duk_put_prop_string(_ctx, handlerObj, "length");
+        // // Add 'has' property to handler
+        // duk_push_c_function(_ctx, dukStringProxyValueOf, 0);
+        // duk_put_prop_string(_ctx, handlerObj, "valueOf");
+        // // [{get:func,has:func}]
+        // duk_push_proxy(_ctx, 0);
+        // _featurePtr = duk_get_heapptr(_ctx, -1);
+    }
+
     void setGlobalValue(const std::string& name, Value value) {
         DBG(">>>>> GLOBAL >>>>>");
         //DUMP();
@@ -275,6 +291,7 @@ struct Context {
 
             // Freeze object to not allow modifications
             duk_freeze(_ctx, -1);
+            //duk_push_proxy(duk_context *ctx, duk_uint_t proxy_flags)
             // Stash global object
             duk_put_global_string(_ctx, GLOBAL_ID);
         } else {
