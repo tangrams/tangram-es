@@ -5,9 +5,14 @@
 #include <memory>
 #include <vector>
 
+namespace YAML {
+class Node;
+}
+
 namespace Tangram {
 
 class StyleContext;
+struct SceneFunctions;
 struct Feature;
 
 struct Filter {
@@ -22,6 +27,13 @@ struct Filter {
         geometry,
     };
 
+    enum class Geometry : uint8_t {
+        unknown,
+        point,
+        line,
+        polygon,
+    };
+
     struct OperatorAll {
         std::vector<Filter> operands;
     };
@@ -31,33 +43,44 @@ struct Filter {
     struct OperatorNone {
         std::vector<Filter> operands;
     };
-    struct EqualitySet {
-        std::string key;
-        std::vector<Value> values;
-    };
-    struct Equality {
-        std::string key;
-        Value value;
-    };
-    struct EqualityKeySet {
-        Key key;
-        std::vector<Value> values;
-    };
     struct EqualityKey {
         Key key;
-        Value value;
+        int value;
+    };
+    struct EqualityString {
+        std::string key;
+        std::string value;
+    };
+    struct EqualityNumber {
+        std::string key;
+        double value;
+    };
+    // struct EqualityKeySet {
+    //     Key key;
+    //     std::vector<int> values;
+    // };
+    struct EqualityStringSet {
+        std::string key;
+        std::vector<std::string> values;
+    };
+    struct EqualityNumberSet {
+        std::string key;
+        std::vector<double> values;
     };
     struct Range {
         std::string key;
         float min;
         float max;
-        bool hasPixelArea;
     };
-    struct RangeKey {
-        Key key;
+    struct RangeArea {
+        std::string key;
         float min;
         float max;
-        bool hasPixelArea;
+    };
+    struct RangeKeyZoom {
+        Key key;
+        int min;
+        int max;
     };
     struct Existence {
         std::string key;
@@ -66,73 +89,9 @@ struct Filter {
     struct Function {
         uint32_t id;
     };
-    using Data = variant<none_type,
-                         Equality,
-                         EqualityKey,
-                         Range,
-                         RangeKey,
-                         Function,
-                         Existence,
-                         OperatorAll,
-                         OperatorNone,
-                         OperatorAny,
-                         EqualitySet,
-                         EqualityKeySet>;
-    Data data;
 
-    Filter() : data(none_type{}) {}
-    Filter(Data _data) : data(std::move(_data)) {}
 
     bool eval(const Feature& feat, StyleContext& ctx) const;
-
-    // Create an 'any', 'all', or 'none' filter
-    inline static Filter MatchAny(std::vector<Filter> filters) {
-        sort(filters);
-        return { OperatorAny{ std::move(filters) }};
-    }
-    inline static Filter MatchAll(std::vector<Filter> filters) {
-        sort(filters);
-        return { OperatorAll{ std::move(filters) }};
-    }
-    inline static Filter MatchNone(std::vector<Filter> filters) {
-        sort(filters);
-        return { OperatorNone{ std::move(filters) }};
-    }
-    // Create an 'equality' filter
-    inline static Filter MatchEquality(const std::string& k, const std::vector<Value>& vals) {
-        auto key = keyType(k);
-        if (key == Key::other) {
-            if (vals.size() == 1) {
-                return { Equality{ k, vals[0]}};
-            } else {
-                return { EqualitySet{ k, vals }};
-            }
-        } else {
-            // FIXME check if the value is valid for the key!
-            if (vals.size() == 1) {
-                return { EqualityKey{ key, vals[0]}};
-            } else {
-                return { EqualityKeySet{ key, vals }};
-            }
-        }
-    }
-    // Create a 'range' filter
-    inline static Filter MatchRange(const std::string& k, float min, float max, bool sqA) {
-        auto key = keyType(k);
-        if (key == Key::other) {
-            return { Range{ k, min, max, sqA }};
-        } else {
-            return { RangeKey{ key, min, max, sqA }};
-        }
-    }
-    // Create an 'existence' filter
-    inline static Filter MatchExistence(const std::string& k, bool ex) {
-        return { Existence{ k, ex }};
-    }
-    // Create an 'function' filter with reference to Scene function id
-    inline static Filter MatchFunction(uint32_t id) {
-        return { Function{ id }};
-    }
 
     static Key keyType(const std::string& _key) {
         if (_key == key_geom) {
@@ -164,5 +123,54 @@ struct Filter {
 
     bool isValid() const { return !data.is<none_type>(); }
     operator bool() const { return isValid(); }
+
+    using Data =
+        variant<none_type,
+                EqualityKey,
+                EqualityString,
+                EqualityNumber,
+                RangeKeyZoom,
+                Range,
+                RangeArea,
+                // EqualityKeySet,
+                EqualityStringSet,
+                EqualityNumberSet,
+                Existence,
+                Function,
+                OperatorAll,
+                OperatorAny,
+                OperatorNone
+                >;
+    Data data;
+    explicit Filter(Data&& _data) : data(std::move(_data)) {}
+    static int compareSetFilter(const Filter& a, const Filter& b);
+    struct matcher;
+
+public:
+    Filter() : data(none_type{}) {}
+
+    // Create an 'equality' filter
+    static Filter getEqualityStringFilter(const std::string& k, const std::vector<std::string>& vals);
+    static Filter getEqualityNumberFilter(const std::string& k, const std::vector<double>& vals);
+
+    // Create a 'range' filter
+    static Filter getRangeFilter(const std::string& k, float min, float max, bool sqArea);
+
+    // Create an 'existence' filter
+    static Filter getExistenceFilter(const std::string& k, bool ex) {
+        return Filter{ Existence{ k, ex }};
+    }
+    // Create an 'function' filter with reference to Scene function id
+    static Filter getFunctionFilter(uint32_t id) {
+        return Filter{ Function{ id }};
+    }
+
+    static Filter generateFilter(const YAML::Node& _filter, SceneFunctions& _fns);
+    static Filter generatePredicate(const YAML::Node& _value, std::string _key);
+    static Filter generateAnyFilter(const YAML::Node& _filter, SceneFunctions& _fns);
+    static Filter generateAllFilter(const YAML::Node& _filter, SceneFunctions& _fns);
+    static Filter generateNoneFilter(const YAML::Node& _filter, SceneFunctions& _fns);
+    static bool getFilterRangeValue(const YAML::Node& node, double& val, bool& hasPixelArea);
+
 };
 }

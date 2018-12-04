@@ -38,7 +38,7 @@ struct StyleContext::StyleContextImpl {
     virtual void setFilterKey(Filter::Key _key, int _value) = 0;
     virtual bool evalFilter(JSFunctionIndex id) = 0;
     virtual bool evalStyle(JSFunctionIndex id, StyleParamKey _key, StyleParam::Value& _val) = 0;
-    virtual void initFunctions(const Scene& _scene) = 0;
+    virtual void initScene(const Scene& _scene) = 0;
     virtual void clear() = 0;
     virtual bool addFunction(const std::string& _function) = 0;
     virtual void setSceneGlobals(const YAML::Node& sceneGlobals) = 0;
@@ -130,13 +130,13 @@ struct StyleContext::StyleContextImpl {
         m_jsContext.setGlobalValue("global", std::move(jsValue));
     }
 
-    void initFunctions(const Scene& _scene) OVERRIDE {
+    void initScene(const Scene& _scene) OVERRIDE {
         if (_scene.id == m_sceneId) { return; }
         m_sceneId = _scene.id;
 
         setSceneGlobals(_scene.config()["global"]);
 
-        setFunctions(_scene.functions());
+        setFunctions(_scene.functions().functions);
     }
 
     bool setFunctions(const std::vector<std::string>& _functions) OVERRIDE {
@@ -398,8 +398,8 @@ bool StyleContext::evalFilter(JSFunctionIndex _id) {
 bool StyleContext::evalStyle(JSFunctionIndex _id, StyleParamKey _key, StyleParam::Value& _value) {
     return impl->evalStyle(_id, _key, _value);
 }
-void StyleContext::initFunctions(const Scene& _scene) {
-    impl->initFunctions(_scene);
+void StyleContext::initScene(const Scene& _scene) {
+    impl->initScene(_scene);
 }
 void StyleContext::clear() {
     impl->clear();

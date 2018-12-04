@@ -123,7 +123,7 @@ struct JSTileStyleFnFixture : public benchmark::Fixture {
     void SetUp(const ::benchmark::State& state) override {
         globalSetup();
         ctx.reset(new StyleContext(jsCore));
-        ctx->initFunctions(*scene);
+        ctx->initScene(*scene);
         ctx->setFilterKey(Filter::Key::zoom, 10);
     }
     void TearDown(const ::benchmark::State& state) override {

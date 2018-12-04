@@ -22,7 +22,7 @@ class SceneLayer {
 
 public:
 
-    SceneLayer(std::string _name, Filter _filter,
+    SceneLayer(std::string _name, Filter&& _filter,
                std::vector<DrawRuleData> _rules,
                std::vector<SceneLayer> _sublayers,
                bool _enabled);

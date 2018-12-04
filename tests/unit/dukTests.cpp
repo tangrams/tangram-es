@@ -247,20 +247,21 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::text_source", "[Duktape][evalStyle
 }
 
 TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFilter]") {
-    Scene scene(std::make_shared<MockPlatform>(), Url());
+    SceneFunctions functions;
+
     YAML::Node n0 = YAML::Load(R"(filter: function() { return feature.sort_key === 2; })");
     YAML::Node n1 = YAML::Load(R"(filter: function() { return feature.name === 'test'; })");
 
-    Filter filter0 = SceneLoader::generateFilter(n0["filter"], scene);
-    Filter filter1 = SceneLoader::generateFilter(n1["filter"], scene);
+    Filter filter0 = Filter::generateFilter(n0["filter"], functions);
+    Filter filter1 = Filter::generateFilter(n1["filter"], functions);
 
-    REQUIRE(scene.functions().size() == 2);
+    REQUIRE(functions.size() == 2);
 
     REQUIRE(filter0.data.is<Filter::Function>());
     REQUIRE(filter1.data.is<Filter::Function>());
 
     StyleContext ctx(jscore);
-    ctx.initFunctions(scene);
+    ctx.setFunctions(functions.functions);
 
     Feature feat1;
     feat1.props.set("sort_key", 2);
@@ -308,7 +309,7 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
     // }
 
     StyleContext ctx(jscore);
-    ctx.initFunctions(*scene);
+    ctx.initScene(*scene);
 
     for (auto& style : styles) {
         //logMsg("S: %d - '%s' %d\n", style.key, style.toString().c_str(), style.function);
@@ -362,7 +363,7 @@ TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
     REQUIRE(scene->functions().size() == 4);
 
     StyleContext ctx(jscore);
-    ctx.initFunctions(*scene);
+    ctx.initScene(*scene);
 
     for (auto& style : styles) {
         if (style.key == StyleParamKey::color) {

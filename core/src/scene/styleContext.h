@@ -44,7 +44,7 @@ public:
     bool evalStyle(JSFunctionIndex idx, StyleParamKey _key, StyleParam::Value& _val);
 
     // Setup filter and style functions from @_scene
-    void initFunctions(const Scene& _scene);
+    void initScene(const Scene& _scene);
 
     // Unset Feature handle
     void clear();

@@ -19,7 +19,7 @@ TileBuilder::TileBuilder(std::shared_ptr<Scene> _scene)
     : m_scene(_scene),
       m_styleContext(std::make_unique<StyleContext>()){
 
-    m_styleContext->initFunctions(*_scene);
+    m_styleContext->initScene(*_scene);
 
     // Initialize StyleBuilders
     for (auto& style : _scene->styles()) {
@@ -31,7 +31,7 @@ TileBuilder::TileBuilder(std::shared_ptr<Scene> _scene, StyleContext* _styleCont
     : m_scene(_scene) {
 
     m_styleContext.reset(_styleContext);
-    m_styleContext->initFunctions(*_scene);
+    m_styleContext->initScene(*_scene);
 
     // Initialize StyleBuilders
     for (auto& style : _scene->styles()) {

@@ -22,16 +22,16 @@ SceneLayer instance_a() {
 
     DrawRuleData rule = { "dg0", dg0, { { StyleParamKey::order, "value_a" } } };
 
-    return { "layer_a", f, { rule }, {}, true };
+    return { "layer_a", std::move(f), { rule }, {}, true };
 }
 
 SceneLayer instance_b() {
 
-    Filter f = Filter::MatchAny({}); // passes nothing
+    Filter f = Filter{Filter::OperatorAny{{}}}; // passes nothing
 
     DrawRuleData rule = { "dg1", dg1, { { StyleParamKey::order, "value_b" } } };
 
-    return { "layer_b", f, { rule }, {}, true };
+    return { "layer_b", std::move(f), { rule }, {}, true };
 }
 
 SceneLayer instance_c() {
@@ -40,7 +40,7 @@ SceneLayer instance_c() {
 
     DrawRuleData rule = { "dg2", dg2, { { StyleParamKey::order, "value_c" } } };
 
-    return { "layer_c", f, { rule }, { instance_a(), instance_b() }, true };
+    return { "layer_c", std::move(f), { rule }, { instance_a(), instance_b() }, true };
 }
 
 SceneLayer instance_d() {
@@ -49,7 +49,7 @@ SceneLayer instance_d() {
 
     DrawRuleData rule = { "dg0", dg0, { { StyleParamKey::order, "value_d" } } };
 
-    return { "layer_d", f, { rule }, {}, true };
+    return { "layer_d", std::move(f), { rule }, {}, true };
 }
 
 SceneLayer instance_e() {
@@ -58,34 +58,34 @@ SceneLayer instance_e() {
 
     DrawRuleData rule = { "dg2", dg2, { { StyleParamKey::order, "value_e" } } };
 
-    return { "layer_e", f, { rule }, { instance_c(), instance_d() }, true };
+    return { "layer_e", std::move(f), { rule }, { instance_c(), instance_d() }, true };
 }
 
 SceneLayer instance_2() {
 
-    Filter f = Filter::MatchExistence("two", true);
+    Filter f = Filter::getExistenceFilter("two", true);
 
     DrawRuleData rule = { "group2", group2, {} };
 
-    return { "subLayer2", f, { rule }, {}, true };
+    return { "subLayer2", std::move(f), { rule }, {}, true };
 }
 
 SceneLayer instance_1() {
 
-    Filter f = Filter::MatchExistence("one", true);
+    Filter f = Filter::getExistenceFilter("one", true);
 
     DrawRuleData rule = { "group1", group1, {} };
 
-    return { "subLayer1", f, { rule }, {}, true };
+    return { "subLayer1", std::move(f), { rule }, {}, true };
 }
 
 SceneLayer instance() {
 
-    Filter f = Filter::MatchExistence("base", true);
+    Filter f = Filter::getExistenceFilter("base", true);
 
     DrawRuleData rule = { "group1", group1, { {StyleParamKey::order, "a" } } };
 
-    return { "layer", f, { rule }, { instance_1(), instance_2() }, true };
+    return { "layer", std::move(f), { rule }, { instance_1(), instance_2() }, true };
 }
 
 TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {

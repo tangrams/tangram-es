@@ -29,7 +29,6 @@
 #include "scene/styleMixer.h"
 #include "scene/styleParam.h"
 #include "util/base64.h"
-#include "util/floatFormatter.h"
 #include "util/yamlPath.h"
 #include "util/yamlUtil.h"
 #include "view/view.h"
@@ -155,7 +154,6 @@ void createGlobalRefs(const Node& node, Scene& scene, YamlPathBuffer& path) {
 }
 
 void SceneLoader::applyGlobals(Node root, Scene& scene) {
-
     YamlPathBuffer path;
     createGlobalRefs(root, scene, path);
     const auto& globals = root["global"];
@@ -1333,178 +1331,6 @@ void SceneLoader::loadCameras(Node _cameras, const std::shared_ptr<Scene>& _scen
     }
 }
 
-Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
-
-    switch (_filter.Type()) {
-    case NodeType::Scalar: {
-
-        const std::string& val = _filter.Scalar();
-        if (val.compare(0, 8, "function") == 0) {
-            return Filter::MatchFunction(scene.addJsFunction(val));
-        }
-        return Filter();
-    }
-    case NodeType::Sequence: {
-        return generateAnyFilter(_filter, scene);
-    }
-    case NodeType::Map: {
-        std::vector<Filter> filters;
-        for (const auto& filtItr : _filter) {
-            const std::string& key = filtItr.first.Scalar();
-            Node node = _filter[key];
-            Filter f;
-            if (key == "none") {
-                f = generateNoneFilter(node, scene);
-            } else if (key == "not") {
-                f = generateNoneFilter(node, scene);
-            } else if (key == "any") {
-                f = generateAnyFilter(node, scene);
-            } else if (key == "all") {
-                f = generateAllFilter(node, scene);
-            } else {
-                f = generatePredicate(node, key);
-            }
-
-            if (f.isValid()) { filters.push_back(std::move(f)); }
-        }
-
-        if (!filters.empty()) {
-            if (filters.size() == 1) { return filters.front(); }
-
-            return Filter::MatchAll(std::move(filters));
-        }
-        return Filter();
-    }
-    default:
-        return Filter();
-    }
-}
-
-Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
-
-    switch (_node.Type()) {
-    case NodeType::Scalar: {
-        if (_node.Tag() == "tag:yaml.org,2002:str") {
-            // Node was explicitly tagged with '!!str' or the canonical tag
-            // 'tag:yaml.org,2002:str' yaml-cpp normalizes the tag value to the
-            // canonical form
-            return Filter::MatchEquality(_key, { Value(_node.Scalar()) });
-        }
-        double number;
-        if (YamlUtil::getDouble(_node, number, false)) {
-            return Filter::MatchEquality(_key, { Value(number) });
-        }
-        bool existence;
-        if (YamlUtil::getBool(_node, existence)) {
-            return Filter::MatchExistence(_key, existence);
-        }
-        const std::string& value = _node.Scalar();
-        return Filter::MatchEquality(_key, { Value(std::move(value)) });
-    }
-    case NodeType::Sequence: {
-        std::vector<Value> values;
-        for (const auto& valItr : _node) {
-            double number;
-            if (YamlUtil::getDouble(valItr, number, false)) {
-                values.emplace_back(number);
-            } else {
-                const std::string& value = valItr.Scalar();
-                values.emplace_back(std::move(value));
-            }
-        }
-        return Filter::MatchEquality(_key, std::move(values));
-    }
-    case NodeType::Map: {
-        double minVal = -std::numeric_limits<double>::infinity();
-        double maxVal = std::numeric_limits<double>::infinity();
-        bool hasMinPixelArea = false;
-        bool hasMaxPixelArea = false;
-
-        for (const auto& n : _node) {
-            if (n.first.Scalar() == "min") {
-                if(!getFilterRangeValue(n.second, minVal, hasMinPixelArea)) {
-                    return Filter();
-                }
-            } else if (n.first.Scalar() == "max") {
-                if (!getFilterRangeValue(n.second, maxVal, hasMaxPixelArea)) {
-                    return Filter();
-                }
-            }
-        }
-
-        if (_node["max"].IsScalar() && _node["min"].IsScalar() &&
-                (hasMinPixelArea != hasMaxPixelArea)) { return Filter(); }
-
-        return Filter::MatchRange(_key, minVal, maxVal, hasMinPixelArea | hasMaxPixelArea);
-    }
-    default:
-        return Filter();
-    }
-}
-
-bool SceneLoader::getFilterRangeValue(const Node& node, double& val, bool& hasPixelArea) {
-    if (!YamlUtil::getDouble(node, val, false)) {
-        auto strVal = node.Scalar();
-        auto n = strVal.find("px2");
-        if (n == std::string::npos) { return false; }
-        try {
-            val = ff::stof(std::string(strVal, 0, n));
-            hasPixelArea = true;
-        } catch (std::invalid_argument) { return false; }
-    }
-    return true;
-}
-
-Filter SceneLoader::generateAnyFilter(Node _filter, Scene& scene) {
-
-    if (_filter.IsSequence()) {
-        std::vector<Filter> filters;
-
-        for (const auto& filt : _filter) {
-            if (Filter f = generateFilter(filt, scene)) {
-                filters.push_back(std::move(f));
-            } else { return Filter(); }
-        }
-        return Filter::MatchAny(std::move(filters));
-    }
-    return Filter();
-}
-
-Filter SceneLoader::generateAllFilter(Node _filter, Scene& scene) {
-
-    if (_filter.IsSequence()) {
-        std::vector<Filter> filters;
-
-        for (const auto& filt : _filter) {
-            if (Filter f = generateFilter(filt, scene)) {
-                filters.push_back(std::move(f));
-            } else { return Filter(); }
-        }
-        return Filter::MatchAll(std::move(filters));
-    }
-    return Filter();
-}
-
-Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
-
-    if (_filter.IsSequence()) {
-        std::vector<Filter> filters;
-
-        for (const auto& filt : _filter) {
-            if (Filter f = generateFilter(filt, scene)) {
-                filters.push_back(std::move(f));
-            } else { return Filter(); }
-        }
-        return Filter::MatchNone(std::move(filters));
-
-    } else if (_filter.IsMap() || _filter.IsScalar()) {
-        // 'not' case
-        if (Filter f = generateFilter(_filter, scene)) {
-            return Filter::MatchNone({std::move(f)});
-        }
-    }
-    return Filter();
-}
 
 void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& scene,
                                    const std::string& prefix, std::vector<StyleParam>& out) {
@@ -1741,7 +1567,7 @@ SceneLayer SceneLoader::loadSublayer(const Node& layer, const std::string& layer
                 rules.push_back({ ruleName, ruleId, std::move(params) });
             }
         } else if (key == "filter") {
-            filter = generateFilter(member.second, *scene);
+            filter = Filter::generateFilter(member.second, scene->functions());
             if (!filter.isValid()) {
                 LOGNode("Invalid 'filter' in layer '%s'", member.second, layerName.c_str());
                 return { layerName, {}, {}, {}, false };
@@ -1757,7 +1583,6 @@ SceneLayer SceneLoader::loadSublayer(const Node& layer, const std::string& layer
             sublayers.push_back(loadSublayer(member.second, (layerName + DELIMITER + key), scene));
         }
     }
-
     return { layerName, std::move(filter), rules, std::move(sublayers), enabled };
 }
 

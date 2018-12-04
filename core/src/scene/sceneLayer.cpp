@@ -7,7 +7,7 @@ namespace Tangram {
 
 static_assert(std::is_move_constructible<SceneLayer>::value, "check");
 
-SceneLayer::SceneLayer(std::string _name, Filter _filter,
+SceneLayer::SceneLayer(std::string _name, Filter&& _filter,
                        std::vector<DrawRuleData> _rules,
                        std::vector<SceneLayer> _sublayers,
                        bool _enabled) :
