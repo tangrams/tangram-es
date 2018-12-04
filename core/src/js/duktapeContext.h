@@ -178,6 +178,7 @@ struct Context {
     void* _objectPtr = nullptr;
     void* _functionsPtr = nullptr;
     void* _globalPtr = nullptr;
+    void* _stringStashPtr = nullptr;
 
     std::vector<Function> m_functions;
     std::array<int, 4> m_filterKeys {};
@@ -250,6 +251,15 @@ struct Context {
             LOGE("Initialization failed");
             duk_pop(_ctx);
         }
+
+        {
+            duk_push_heap_stash(_ctx);
+            duk_push_array(_ctx);
+            _stringStashPtr = duk_get_heapptr(_ctx, -1);
+            duk_put_prop_string(_ctx, -2, "stringstash");
+            duk_pop(_ctx); // pop stash
+        }
+
         DUMP();
         DBG("<<<<<<<<<");
     }
@@ -670,7 +680,7 @@ private:
         context._stringCache128.free(context, extdata);
     }
 
-    static cache_entry& getProperty(Context& context) {
+    static int getProperty(Context& context) {
         // Get the requested object key
         const char* key = duk_require_string(context._ctx, 1);
 
@@ -683,8 +693,7 @@ private:
             DBG("entry cached");
             if (cache[i].key == key) {
                 context._reuseCnt++;
-
-                return cache[i];
+                return i;
             }
         }
 
@@ -705,43 +714,36 @@ private:
 
         ++context._propertyCacheUse;
         //}
-        return entry;
+        return use;
     }
 
     // Implements Proxy handler.has(target_object, key)
     static int jsHasProperty(duk_context *_ctx) {
-
         auto& context = getContext(_ctx);
-
         if (context._feature) {
-            auto& entry = getProperty(context);
+
+            int id = getProperty(context);
+            auto& entry = context._propertyCache[id];
+
             bool hasProp = !(entry.val->is<none_type>());
 
-            //if (val->is<std::string>()) {
-            //const auto& str = val->get<std::string>();
-            //context->m_stringCache.push_back(str.c_str());
-            //DBG("push %p %s", str.c_str(), str.c_str());
-            //}
             duk_push_boolean(_ctx, static_cast<duk_bool_t>(hasProp));
             return 1;
         }
-        //LOGN("Error: no context found for dukctx:%p this:%p feature:%p",
-        //_ctx, context, context._feature);
         return 0;
     }
 
     // Implements Proxy handler.get(target_object, key)
     static int jsGetProperty(duk_context *_ctx) {
         DBG("jsGetProperty");
+
         auto& context = getContext(_ctx);
         if (context._dumping) { return 0; }
 
         DUMPCTX(context);
 
-        if (!context._feature) {
-            //LOGN("Error: no featurein context %p / %p %p",  _ctx, &context, context._feature);
-            return 0;
-        }
+        if (!context._feature) { return 0; }
+
 #ifdef STASH_PROPERTIES
         if (context._feature == context._lastFeature) {
             duk_push_heap_stash(_ctx);
@@ -762,7 +764,8 @@ private:
         //DUMP();
 
         // Get the property name (second parameter)
-        auto& entry = getProperty(context);
+        int id = getProperty(context);
+        auto& entry = context._propertyCache[id];
 
         if (entry.val->is<std::string>()) {
             const auto& str = entry.val->get<std::string>();
@@ -775,8 +778,8 @@ private:
 #ifdef STASH_PROPERTIES
                 duk_push_heap_stash(_ctx);
 #else
-                duk_idx_t featureIdx = duk_push_heapptr(_ctx, context._featurePtr);
-                //duk_idx_t featureIdx = duk_push_heapptr(_ctx, context._objectPtr);
+                //duk_idx_t featureIdx = duk_push_heapptr(_ctx, context._featurePtr);
+               duk_idx_t stringStash = duk_push_heapptr(_ctx, context._stringStashPtr);
 #endif
                 DBG("push string  %p %s -> %p", str.c_str(), str.c_str(), entry.ptr);
 
@@ -790,13 +793,11 @@ private:
                 duk_dup_top(_ctx);
 
 #ifdef STASH_PROPERTIES
-                // Store in s
                 duk_put_prop_heapptr(_ctx, -3, duk_get_heapptr(_ctx, 1));
 #else
-                duk_put_prop_heapptr(_ctx, featureIdx, duk_get_heapptr(_ctx, 1));
+                //duk_put_prop_heapptr(_ctx, featureIdx, duk_get_heapptr(_ctx, 1));
+                duk_put_prop_index(_ctx, stringStash, id);
 #endif
-                //duk_pop(_ctx); // pop stash
-                //duk_pop(_ctx); // pop stash
 
                 DUMPCTX(context);
             }
