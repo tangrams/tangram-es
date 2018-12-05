@@ -165,12 +165,16 @@ void UrlClient::curlLoop(uint32_t index) {
             }
         }
         if (haveRequest) {
+            const char* url = task.request.url.data();
+            LOGTInit("[%u] Starting request: %s", index, url);
+            if (task.request.canceled) {
+                LOGT("[%u] -------------- canceled -----------", index);
+            }
+
             UrlResponse response;
 
             // Configure the easy handle.
-            const char* url = task.request.url.data();
             curl_easy_setopt(handle, CURLOPT_URL, url);
-            LOGTInit("[%u] Starting request: %s", index, url);
             // Perform the request.
             auto result = curl_easy_perform(handle);
             // Handle success or error.
@@ -185,11 +189,13 @@ void UrlClient::curlLoop(uint32_t index) {
                 response.error = curlErrorString;
             }
             // If a callback is given, always run it regardless of request result.
+           if (task.request.canceled) {
+               LOGT("[%u] >>>-------------- canceled -----------", index);
+            }
             if (task.request.callback) {
                 LOGT("[%u] Finished request", index);
                 response.content = task.content;
                 task.request.callback(std::move(response));
-                LOGT("[%u] Ran callback", index);
             }
         }
         // Reset the task.
