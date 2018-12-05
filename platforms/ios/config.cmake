@@ -17,22 +17,24 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/platforms/ios/demo/Info.plist.in
   ${PROJECT_BINARY_DIR}/Info.plist)
 
-# Sets ${PROJECT_BINARY_DIR}
+set(CONFIG_DIR ${PROJECT_SOURCE_DIR}/platforms/ios)
+set(TEMPLATE_DIR ${CONFIG_DIR}/templates)
+# Sets @PROJECT_BINARY_DIR@
 configure_file(
-  ${PROJECT_SOURCE_DIR}/platforms/ios/templates/contents.xcworkspacedata
-  ${PROJECT_SOURCE_DIR}/platforms/ios/Tangram.xcworkspace/contents.xcworkspacedata
+  ${TEMPLATE_DIR}/contents.xcworkspacedata
+  ${CONFIG_DIR}/Tangram.xcworkspace/contents.xcworkspacedata
   @ONLY)
 
 # Sets @PROJECT_BINARY_DIR@
 configure_file(
-  ${PROJECT_SOURCE_DIR}/platforms/ios/templates/WorkspaceSettings.xcsettings
-  ${PROJECT_SOURCE_DIR}/platforms/ios/Tangram.xcworkspace/xcuserdata/$ENV{USER}.xcuserdatad/WorkspaceSettings.xcsettings
+  ${TEMPLATE_DIR}/WorkspaceSettings.xcsettings
+  ${CONFIG_DIR}/Tangram.xcworkspace/xcuserdata/$ENV{USER}.xcuserdatad/WorkspaceSettings.xcsettings
   @ONLY)
 
 # Sets @PROJECT_BINARY_DIR@
 configure_file(
-  ${PROJECT_SOURCE_DIR}/platforms/ios/templates/project.pbxproj
-  ${PROJECT_SOURCE_DIR}/platforms/ios/demo/TangramDemo.xcodeproj/project.pbxproj
+  ${TEMPLATE_DIR}/project.pbxproj
+  ${CONFIG_DIR}/demo/TangramDemo.xcodeproj/project.pbxproj
   @ONLY)
 
 # Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
