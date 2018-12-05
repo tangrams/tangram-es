@@ -656,7 +656,7 @@ void Map::setCameraPositionEased(const CameraPosition& _camera, float _duration,
     e.end.pos = MapProjection::lngLatToProjectedMeters({lonEnd, latEnd});
 
     e.start.zoom = getZoom();
-    e.end.zoom = _camera.zoom;
+    e.end.zoom = glm::clamp(_camera.zoom, getMinZoom(), getMaxZoom());
 
     float radiansStart = getRotation();
 
