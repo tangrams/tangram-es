@@ -67,6 +67,7 @@ do { Tangram::logMsg("ERROR %s:%d: " fmt "\n", __FILENAME__, __LINE__, ## __VA_A
 #define LOGN(fmt, ...)
 #endif
 
+#if 1
 #include <mutex>
 #include <chrono>
 
@@ -108,3 +109,9 @@ extern std::mutex tangram_log_time_mutex;
         std::chrono::duration<double> t2 = now - _time_last;            \
         _time_last = now;                                               \
         LOGTIME("%7.2f %7.2f %7.2f " fmt, t0.count()*1000.f, t1.count()*1000.f, t2.count()*1000.f, ## __VA_ARGS__); } while(0)
+#else
+#define LOGT(...)
+#define LOGTInit(...)
+#define LOGTOInit()
+#define LOGTO(...)
+#endif

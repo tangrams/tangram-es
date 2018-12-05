@@ -90,7 +90,7 @@ struct TileID {
     }
 
     std::string toString() const {
-        return std::to_string(x) + "/" + std::to_string(y) + "/" + std::to_string(z) + "/" + std::to_string(s);
+        return std::to_string(x) + "/" + std::to_string(y) + "/" + std::to_string(z) + "/s:" + std::to_string(s);
     }
 
 };

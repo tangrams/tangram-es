@@ -93,17 +93,15 @@ void TileWorker::run(Worker* instance) {
         if (task->isCanceled()) {
             continue;
         }
-        LOGTInit(">>> %s", task->tileId().toString().c_str());
+        LOGTInit(">>> process %s", task->tileId().toString().c_str());
         task->process(*builder);
-        LOGT("<<< %s", task->tileId().toString().c_str());
+        LOGT("<<< process %s", task->tileId().toString().c_str());
 
         m_platform.requestRender();
     }
 }
 
 void TileWorker::setScene(Scene& _scene) {
-    LOGTO("Set Scene >>>>>>>>>>>>>>>>>>>>");
-
     for (auto& worker : m_workers) {
         worker->tileBuilder = std::make_unique<TileBuilder>(_scene);
     }
@@ -114,7 +112,7 @@ void TileWorker::enqueue(std::shared_ptr<TileTask> task) {
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         if (!m_running) { return; }
-        LOGTO("%d enqueue %s", m_queue.size()+1, task->tileId().toString().c_str());
+        LOGTO("--- %d enqueue %s", m_queue.size()+1, task->tileId().toString().c_str());
         m_queue.push_back(std::move(task));
     }
     m_condition.notify_one();
