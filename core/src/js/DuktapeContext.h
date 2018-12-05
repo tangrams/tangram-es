@@ -173,7 +173,7 @@ private:
 
     const Feature* _feature = nullptr;
 
-    friend JavaScriptScope<DuktapeContext, DuktapeValue>;
+    friend JavaScriptScope<DuktapeContext>;
 };
 
 } // namespace Tangram

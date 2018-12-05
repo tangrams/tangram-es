@@ -14,7 +14,7 @@
 
 namespace Tangram {
 
-template<class Context, class Value>
+template<class Context>
 class JavaScriptScope {
 
 public:
@@ -30,14 +30,14 @@ public:
     JavaScriptScope& operator=(const JavaScriptScope& other) = delete;
     JavaScriptScope& operator=(JavaScriptScope&& other) = delete;
 
-    Value newNull() { return _context.newNull(); }
-    Value newBoolean(bool value) { return _context.newBoolean(value); }
-    Value newNumber(double value) { return _context.newNumber(value); }
-    Value newString(const std::string& value) { return _context.newString(value); }
-    Value newArray() { return _context.newArray(); }
-    Value newObject() { return _context.newObject(); }
-    Value newFunction(const std::string& value) { return _context.newFunction(value); }
-    Value getFunctionResult(JSFunctionIndex index) { return _context.getFunctionResult(index); }
+    auto newNull() { return _context.newNull(); }
+    auto newBoolean(bool value) { return _context.newBoolean(value); }
+    auto newNumber(double value) { return _context.newNumber(value); }
+    auto newString(const std::string& value) { return _context.newString(value); }
+    auto newArray() { return _context.newArray(); }
+    auto newObject() { return _context.newObject(); }
+    auto newFunction(const std::string& value) { return _context.newFunction(value); }
+    auto getFunctionResult(JSFunctionIndex index) { return _context.getFunctionResult(index); }
 
 private:
 

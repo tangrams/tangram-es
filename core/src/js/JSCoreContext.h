@@ -235,7 +235,7 @@ private:
 
     const Feature* _feature;
 
-    friend JavaScriptScope<JSCoreContext, JSCoreValue>;
+    friend JavaScriptScope<JSCoreContext>;
 };
 
 } // namespace Tangram

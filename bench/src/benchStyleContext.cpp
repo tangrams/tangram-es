@@ -12,13 +12,13 @@
 
 using namespace Tangram;
 
-template<class Context, class Value>
+template<class Context>
 class JSGetPropertyFixture : public benchmark::Fixture {
 public:
     Context ctx;
     Feature feature;
     void SetUp(const ::benchmark::State& state) override {
-        JavaScriptScope<Context, Value> jsScope(ctx);
+        JavaScriptScope<Context> jsScope(ctx);
         ctx.setGlobalValue("language", jsScope.newString("en"));
         feature.props.set("name:en", "Ozymandias");
         feature.props.set("title", "King of Kings");
@@ -30,16 +30,16 @@ public:
     __attribute__ ((noinline)) void run() {
         StyleParam::Value value;
         benchmark::DoNotOptimize(value);
-        JavaScriptScope<Context, Value> jsScope(ctx);
+        JavaScriptScope<Context> jsScope(ctx);
         value = jsScope.getFunctionResult(0).toString();
         value = (float)jsScope.getFunctionResult(1).toDouble();
      }
 };
 
-using DuktapeGetPropertyFixture = JSGetPropertyFixture<DuktapeContext, DuktapeValue>;
+using DuktapeGetPropertyFixture = JSGetPropertyFixture<DuktapeContext>;
 RUN(DuktapeGetPropertyFixture, DuktapeGetPropertyBench)
 
-using JSCoreGetPropertyFixture = JSGetPropertyFixture<JSCoreContext, JSCoreValue>;
+using JSCoreGetPropertyFixture = JSGetPropertyFixture<JSCoreContext>;
 RUN(JSCoreGetPropertyFixture, JSCoreGetPropertyBench)
 
 class DirectGetPropertyFixture : public benchmark::Fixture {
