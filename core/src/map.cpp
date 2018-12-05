@@ -235,11 +235,7 @@ SceneID Map::loadScene(SceneOptions&& _sceneOptions) {
     }
 
     if (impl->onSceneReady) {
-        if (newScene->errors.empty()) {
-            impl->onSceneReady(newScene->id, nullptr);
-        } else {
-            impl->onSceneReady(newScene->id, &(newScene->errors.front()));
-        }
+        impl->onSceneReady(newScene->id, newScene->errors());
     }
     return newScene->id;
 }
@@ -263,9 +259,7 @@ SceneID Map::loadSceneAsync(SceneOptions&& _sceneOptions) {
             if (!newSceneLoaded) {
 
                 if (impl->onSceneReady) {
-                    SceneError err;
-                    if (!newScene->errors.empty()) { err = newScene->errors.front(); }
-                    impl->onSceneReady(newScene->id, &err);
+                    impl->onSceneReady(newScene->id, newScene->errors());
                 }
                 impl->sceneLoadEnd();
                 return;
@@ -283,7 +277,9 @@ SceneID Map::loadSceneAsync(SceneOptions&& _sceneOptions) {
                         auto s = newScene;
                         impl->setScene(s);
                     }
-                    if (impl->onSceneReady) { impl->onSceneReady(newScene->id, nullptr); }
+                    if (impl->onSceneReady) {
+                        impl->onSceneReady(newScene->id, nullptr);
+                    }
                 });
 
             impl->sceneLoadEnd();
