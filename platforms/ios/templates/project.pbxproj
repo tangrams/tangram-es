@@ -46,7 +46,7 @@
 
 /* Begin PBXFileReference section */
 		D20C4A54212B6D93005BDB9A /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
-		D222B92321642BCA007E6FD6 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../../../build/ios/Info.plist; sourceTree = "<group>"; };
+		D222B92321642BCA007E6FD6 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = @PROJECT_BINARY_DIR@/Info.plist; sourceTree = "<group>"; };
 		D298721620D05D8E009A0AB8 /* TangramDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TangramDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D298723020D05F6E009A0AB8 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		D298723120D05F6E009A0AB8 /* MapViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MapViewController.m; sourceTree = "<group>"; };
@@ -386,12 +386,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				INFOPLIST_FILE = ../../../build/ios/Info.plist;
+				INFOPLIST_FILE = @PROJECT_BINARY_DIR@/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.mapzen.ios.TangramDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SYMROOT = ../../../build/ios;
+				SYMROOT = @PROJECT_BINARY_DIR@;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -403,13 +403,13 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				INFOPLIST_FILE = ../../../build/ios/Info.plist;
+				INFOPLIST_FILE = @PROJECT_BINARY_DIR@/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mapzen.ios.TangramDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SYMROOT = ../../../build/ios;
+				SYMROOT = @PROJECT_BINARY_DIR@;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -420,14 +420,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
-				HEADER_SEARCH_PATHS = ../../../build/ios/Include;
-				INFOPLIST_FILE = ../../../build/ios/Info.plist;
+				HEADER_SEARCH_PATHS = @PROJECT_BINARY_DIR@/Include;
+				INFOPLIST_FILE = @PROJECT_BINARY_DIR@/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.mapzen.ios.TangramDemo-static";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SYMROOT = ../../../build/ios;
+				SYMROOT = @PROJECT_BINARY_DIR@;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -438,14 +438,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
-				HEADER_SEARCH_PATHS = ../../../build/ios/Include;
-				INFOPLIST_FILE = ../../../build/ios/Info.plist;
+				HEADER_SEARCH_PATHS = @PROJECT_BINARY_DIR@/Include;
+				INFOPLIST_FILE = @PROJECT_BINARY_DIR@/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.mapzen.ios.TangramDemo-static";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SYMROOT = ../../../build/ios;
+				SYMROOT = @PROJECT_BINARY_DIR@;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

@@ -7,7 +7,7 @@
 	<key>CustomBuildLocationType</key>
 	<string>RelativeToDerivedData</string>
 	<key>DerivedDataCustomLocation</key>
-	<string>../../build/ios/DerivedData</string>
+	<string>@PROJECT_BINARY_DIR@/DerivedData</string>
 	<key>DerivedDataLocationStyle</key>
 	<string>WorkspaceRelativePath</string>
 	<key>EnabledFullIndexStoreVisibility</key>

@@ -5,6 +5,6 @@
       location = "group:demo/TangramDemo.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:../../build/ios/tangram.xcodeproj">
+      location = "group:@PROJECT_BINARY_DIR@/tangram.xcodeproj">
    </FileRef>
 </Workspace>
