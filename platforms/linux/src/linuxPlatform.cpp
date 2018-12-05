@@ -80,11 +80,11 @@ FontSourceHandle LinuxPlatform::systemFont(const std::string& _name,
 
 UrlRequestHandle LinuxPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
     if (m_shutdown) { return 0; }
-    LOGTInit();
+    //LOGTInit();
     if (_url.hasHttpScheme()) {
         return m_urlClient->addRequest(_url.string(),
                                        [=, path = _url.path(), cb = _callback](UrlResponse&& r) mutable {
-                                           LOGT("Fetched %s", path.c_str());
+                                           //LOGT("Fetched %s", path.c_str());
                                            cb(std::move(r));
                                            requestRender();
                                        });
@@ -97,7 +97,7 @@ UrlRequestHandle LinuxPlatform::startUrlRequest(Url _url, UrlCallback _callback)
              };
 
              Platform::bytesFromFileSystem(path.c_str(), allocator);
-             LOGT("Fetched %s", path.c_str());
+             //LOGT("Fetched %s", path.c_str());
 
              cb(std::move(response));
              requestRender();

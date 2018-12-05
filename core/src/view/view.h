@@ -43,8 +43,6 @@ public:
 
     View(int _width = 800, int _height = 600);
 
-    View(const View& _view) = default;
-
     void setCameraType(CameraType _type);
     auto cameraType() const { return m_type; }
 

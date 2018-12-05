@@ -4,8 +4,10 @@
 #include <fstream>
 #include <string>
 
+#ifdef LOGTIME
 std::chrono::time_point<std::chrono::system_clock> tangram_log_time_start, tangram_log_time_last;
 std::mutex tangram_log_time_mutex;
+#endif
 
 namespace Tangram {
 
