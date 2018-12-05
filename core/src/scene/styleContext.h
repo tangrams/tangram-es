@@ -31,7 +31,6 @@ public:
     using FunctionID = uint32_t;
 
     StyleContext();
-    StyleContext(bool _useJavaScriptCore);
 
     ~StyleContext();
 

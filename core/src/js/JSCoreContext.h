@@ -17,31 +17,115 @@ public:
 
     JSCoreValue() = default;
 
-    JSCoreValue(JSContextRef ctx, JSValueRef value);
+    JSCoreValue(JSContextRef ctx, JSValueRef value) : _ctx(ctx), _value(value) {
+        JSValueProtect(_ctx, _value);
+    }
 
-    ~JSCoreValue();
+    JSCoreValue(JSCoreValue&& other) noexcept : _ctx(other._ctx), _value(other._value) {
+        other._ctx = nullptr;
+        other._value = nullptr;
+    }
+
+    ~JSCoreValue() {
+        if (_ctx) {
+            JSValueUnprotect(_ctx, _value);
+        }
+    }
+
+    JSCoreValue& operator=(const JSCoreValue& other) = delete;
+
+    JSCoreValue& operator=(JSCoreValue&& other) noexcept {
+        _ctx = other._ctx;
+        _value = other._value;
+        other._ctx = nullptr;
+        other._value = nullptr;
+        return *this;
+    }
 
     operator bool() const { return _ctx != nullptr; }
 
-    bool isUndefined();
-    bool isNull();
-    bool isBoolean();
-    bool isNumber();
-    bool isString();
-    bool isArray();
-    bool isObject();
+    bool isUndefined() {
+        return JSValueIsUndefined(_ctx, _value);
+    }
 
-    bool toBool();
-    int toInt();
-    double toDouble();
-    std::string toString();
+    bool isNull() {
+        return JSValueIsNull(_ctx, _value);
+    }
 
-    size_t getLength();
-    JSCoreValue getValueAtIndex(size_t index);
-    JSCoreValue getValueForProperty(const std::string& name);
+    bool isBoolean() {
+        return JSValueIsBoolean(_ctx, _value);
+    }
 
-    void setValueAtIndex(size_t index, JSCoreValue value);
-    void setValueForProperty(const std::string& name, JSCoreValue value);
+    bool isNumber() {
+        return JSValueIsNumber(_ctx, _value);
+    }
+
+    bool isString() {
+        return JSValueIsString(_ctx, _value);
+    }
+
+    bool isArray() {
+        return JSValueIsArray(_ctx, _value);
+    }
+
+    bool isObject() {
+        return JSValueIsObject(_ctx, _value);
+    }
+
+    bool toBool() {
+        return JSValueToBoolean(_ctx, _value);
+    }
+
+    int toInt() {
+        return static_cast<int>(JSValueToNumber(_ctx, _value, nullptr));
+    }
+
+    double toDouble() {
+        return JSValueToNumber(_ctx, _value, nullptr);
+    }
+
+    std::string toString() {
+        JSStringRef jsString = JSValueToStringCopy(_ctx, _value, nullptr);
+        std::string result(JSStringGetMaximumUTF8CStringSize(jsString), '\0');
+        size_t bytesWrittenIncludingNull = JSStringGetUTF8CString(jsString, &result[0], result.capacity());
+        result.resize(bytesWrittenIncludingNull - 1);
+        JSStringRelease(jsString);
+        return result;
+    }
+
+    size_t getLength() {
+        JSStringRef jsLengthProperty = JSStringCreateWithUTF8CString("length");
+        JSObjectRef jsObject = JSValueToObject(_ctx, _value, nullptr);
+        JSValueRef jsLengthValue = JSObjectGetProperty(_ctx, jsObject, jsLengthProperty, nullptr);
+        JSStringRelease(jsLengthProperty);
+        return static_cast<size_t>(JSValueToNumber(_ctx, jsLengthValue, nullptr));
+    }
+
+    JSCoreValue getValueAtIndex(size_t index) {
+        JSObjectRef jsObject = JSValueToObject(_ctx, _value, nullptr);
+        JSValueRef jsValue = JSObjectGetPropertyAtIndex(_ctx, jsObject, static_cast<uint32_t>(index), nullptr);
+        return JSCoreValue(_ctx, jsValue);
+    }
+
+    JSCoreValue getValueForProperty(const std::string& name) {
+        JSObjectRef jsObject = JSValueToObject(_ctx, _value, nullptr);
+        JSStringRef jsPropertyName = JSStringCreateWithUTF8CString(name.c_str());
+        JSValueRef jsPropertyValue = JSObjectGetProperty(_ctx, jsObject, jsPropertyName, nullptr);
+        JSStringRelease(jsPropertyName);
+        return JSCoreValue(_ctx, jsPropertyValue);
+    }
+
+    void setValueAtIndex(size_t index, JSCoreValue value) {
+        JSObjectRef jsObject = JSValueToObject(_ctx, _value, nullptr);
+        JSObjectSetPropertyAtIndex(_ctx, jsObject, static_cast<uint32_t>(index), value.getValueRef(), nullptr);
+    }
+
+    void setValueForProperty(const std::string& name, JSCoreValue value) {
+        JSObjectRef jsObject = JSValueToObject(_ctx, _value, nullptr);
+        JSStringRef jsPropertyName = JSStringCreateWithUTF8CString(name.c_str());
+        JSObjectSetProperty(_ctx, jsObject, jsPropertyName, value.getValueRef(), kJSPropertyAttributeNone, nullptr);
+        JSStringRelease(jsPropertyName);
+    }
 
     JSValueRef getValueRef() { return _value; }
 
@@ -151,7 +235,7 @@ private:
 
     const Feature* _feature;
 
-    friend JavaScriptScope;
+    friend JavaScriptScope<JSCoreContext, JSCoreValue>;
 };
 
 } // namespace Tangram

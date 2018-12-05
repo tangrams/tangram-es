@@ -27,15 +27,11 @@ StyleContext::StyleContext() {
     m_jsContext = std::make_unique<JSContext>();
 }
 
-StyleContext::StyleContext(bool _useJavaScriptCore) : StyleContext() {
-}
-
-StyleContext::~StyleContext() {
-}
+StyleContext::~StyleContext() = default;
 
 // Convert a scalar node to a boolean, double, or string (in that order)
 // and for the first conversion that works, push it to the top of the JS stack.
-JSValue pushYamlScalarAsJsPrimitive(JavaScriptScope& jsScope, const YAML::Node& node) {
+JSValue pushYamlScalarAsJsPrimitive(JSScope& jsScope, const YAML::Node& node) {
     bool booleanValue = false;
     double numberValue = 0.;
     if (YamlUtil::getBool(node, booleanValue)) {
@@ -47,7 +43,7 @@ JSValue pushYamlScalarAsJsPrimitive(JavaScriptScope& jsScope, const YAML::Node& 
     }
 }
 
-JSValue pushYamlScalarAsJsFunctionOrString(JavaScriptScope& jsScope, const YAML::Node& node) {
+JSValue pushYamlScalarAsJsFunctionOrString(JSScope& jsScope, const YAML::Node& node) {
     auto value = jsScope.newFunction(node.Scalar());
     if (value) {
         return value;
@@ -55,7 +51,7 @@ JSValue pushYamlScalarAsJsFunctionOrString(JavaScriptScope& jsScope, const YAML:
     return jsScope.newString(node.Scalar());
 }
 
-JSValue parseSceneGlobals(JavaScriptScope& jsScope, const YAML::Node& node) {
+JSValue parseSceneGlobals(JSScope& jsScope, const YAML::Node& node) {
     switch(node.Type()) {
     case YAML::NodeType::Scalar: {
         auto& scalar = node.Scalar();
@@ -90,7 +86,7 @@ void StyleContext::setSceneGlobals(const YAML::Node& sceneGlobals) {
 
     if (!sceneGlobals) { return; }
 
-    JavaScriptScope jsScope(*m_jsContext);
+    JSScope jsScope(*m_jsContext);
 
     auto jsValue = parseSceneGlobals(jsScope, sceneGlobals);
 
@@ -160,7 +156,7 @@ void StyleContext::setKeyword(const std::string& _key, Value _val) {
     if (entry == _val) { return; }
 
     {
-        JavaScriptScope jsScope(*m_jsContext);
+        JSScope jsScope(*m_jsContext);
         JSValue value;
         if (_val.is<std::string>()) {
             value = jsScope.newString(_val.get<std::string>());
@@ -197,7 +193,7 @@ bool StyleContext::evalFilter(FunctionID _id) {
 bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) {
     _val = none_type{};
 
-    JavaScriptScope jsScope(*m_jsContext);
+    JSScope jsScope(*m_jsContext);
     auto jsValue = jsScope.getFunctionResult(_id);
     if (!jsValue) {
         return false;

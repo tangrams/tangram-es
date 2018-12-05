@@ -28,5 +28,8 @@ struct Feature;
 using JSScopeMarker = int32_t;
 using JSFunctionIndex = uint32_t;
 
-class JavaScriptScope;
-}
+template<class Context, class Value> class JavaScriptScope;
+
+using JSScope = JavaScriptScope<JSContext, JSValue>;
+
+} // namespace Tangram
