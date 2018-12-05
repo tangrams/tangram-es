@@ -191,7 +191,6 @@ public:
     const SceneError* errors() const {
         return (m_errors.empty() ? nullptr : &m_errors.front());
     }
-
     void initTileManager();
     void startTileWorker();
     void stopTileWorker();
@@ -214,6 +213,7 @@ public:
 protected:
     Platform& platform() { return m_platform; }
     const SceneOptions& options() { return m_options; }
+    void pushError(SceneError&& error) { m_errors.push_back(std::move(error)); }
 
 private:
     Platform& m_platform;

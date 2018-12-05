@@ -20,7 +20,6 @@
 #include "style/rasterStyle.h"
 #include "scene/dataLayer.h"
 #include "scene/filters.h"
-#include "scene/importer.h"
 #include "scene/scene.h"
 #include "scene/sceneLayer.h"
 #include "scene/spriteAtlas.h"
@@ -64,7 +63,7 @@ bool SceneLoader::applyUpdates(Scene& _scene, const std::vector<SceneUpdate>& _u
             value = YAML::Load(update.value);
         } catch (const YAML::ParserException& e) {
             LOGE("Parsing scene update string failed. '%s'", e.what());
-            _scene.errors.push_back({update, Error::scene_update_value_yaml_syntax_error});
+            _scene.pushError({update, Error::scene_update_value_yaml_syntax_error});
             return false;
         }
 
@@ -78,14 +77,11 @@ bool SceneLoader::applyUpdates(Scene& _scene, const std::vector<SceneUpdate>& _u
                 LOGW("Update: %s - %s", update.path.c_str(), update.value.c_str());
                 LOGNode("", root);
 
-                _scene.errors.push_back({update, Error::scene_update_path_not_found});
+                _scene.pushError({update, Error::scene_update_path_not_found});
                 return false;
             }
         }
     }
-
-    Importer::resolveSceneUrls(root, _scene.options().url);
-
     return true;
 }
 

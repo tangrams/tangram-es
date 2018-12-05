@@ -69,6 +69,7 @@ bool Scene::load(SceneOptions&& _sceneOptions) {
         return false;
     }
     LOGTO("<<< applyUpdates");
+    Importer::resolveSceneUrls(m_config, m_options.url);
 
     LOGTO(">>> applyGlobals");
     SceneLoader::applyGlobals(*this);
