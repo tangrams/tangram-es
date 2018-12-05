@@ -1,7 +1,10 @@
 #include "benchmark/benchmark.h"
 
-#include "scene/styleContext.h"
 #include "data/tileData.h"
+#include "js/JavaScriptContext.h"
+#include "js/DuktapeContext.h"
+#include "js/JSCoreContext.h"
+#include "scene/styleContext.h"
 
 #define RUN(FIXTURE, NAME)                                              \
     BENCHMARK_DEFINE_F(FIXTURE, NAME)(benchmark::State& st) { while (st.KeepRunning()) { run(); } } \
@@ -9,28 +12,34 @@
 
 using namespace Tangram;
 
-template<size_t jscontext>
+template<class Context, class Value>
 class JSGetPropertyFixture : public benchmark::Fixture {
 public:
-    std::unique_ptr<StyleContext> ctx;
+    Context ctx;
     Feature feature;
     void SetUp(const ::benchmark::State& state) override {
-        ctx.reset(new StyleContext(jscontext));
-        feature.props.set("message", "Hello World!");
-        ctx->setFeature(feature);
-        ctx->setFunctions({R"(function () { return feature.message; })"});
+        JavaScriptScope<Context, Value> jsScope(ctx);
+        ctx.setGlobalValue("language", jsScope.newString("en"));
+        feature.props.set("name:en", "Ozymandias");
+        feature.props.set("title", "King of Kings");
+        feature.props.set("number", 17);
+        ctx.setCurrentFeature(&feature);
+        ctx.setFunction(0, "function () { return (language && feature['name:' + language]) || title; }");
+        ctx.setFunction(1, "function () { return feature.order || feature.number; }");
     }
     __attribute__ ((noinline)) void run() {
         StyleParam::Value value;
         benchmark::DoNotOptimize(value);
-        ctx->evalStyle(0, StyleParamKey::text_source, value);
+        JavaScriptScope<Context, Value> jsScope(ctx);
+        value = jsScope.getFunctionResult(0).toString();
+        value = (float)jsScope.getFunctionResult(1).toDouble();
      }
 };
 
-using DuktapeGetPropertyFixture = JSGetPropertyFixture<0>;
+using DuktapeGetPropertyFixture = JSGetPropertyFixture<DuktapeContext, DuktapeValue>;
 RUN(DuktapeGetPropertyFixture, DuktapeGetPropertyBench)
 
-using JSCoreGetPropertyFixture = JSGetPropertyFixture<1>;
+using JSCoreGetPropertyFixture = JSGetPropertyFixture<JSCoreContext, JSCoreValue>;
 RUN(JSCoreGetPropertyFixture, JSCoreGetPropertyBench)
 
 class DirectGetPropertyFixture : public benchmark::Fixture {
