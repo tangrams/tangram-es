@@ -217,35 +217,47 @@ TEST_CASE("Regression: scene update requesting a sequence from a scalar") {
 
 TEST_CASE("Scene update statuses") {
     MockPlatform platform;
-    Scene scene{platform};
-    REQUIRE(loadConfig(sceneString, scene.config()));
-    Node& root = scene.config();
 
-    std::vector<SceneUpdate> updates = {{"map.a", "{ first_value"}};
-    CHECK(SceneLoader::applyUpdates(scene, updates) == false);
-    CHECK(scene.errors.front().error == Error::scene_update_value_yaml_syntax_error);
-    scene.errors.clear();
+    {
+        Scene scene{platform};
+        REQUIRE(loadConfig(sceneString, scene.config()));
+        std::vector<SceneUpdate> updates = {{"map.a", "{ first_value"}};
+        CHECK(SceneLoader::applyUpdates(scene, updates) == false);
+        CHECK(scene.errors()->error == Error::scene_update_value_yaml_syntax_error);
+    }
 
-    updates = {{"someKey.somePath", "someValue"}};
-    CHECK(SceneLoader::applyUpdates(scene, updates) == false);
-    CHECK(scene.errors.front().error == Error::scene_update_path_not_found);
-    scene.errors.clear();
-
-    updates = {{"map.a.map_a_value", "someValue"}};
-    CHECK(SceneLoader::applyUpdates(scene, updates) == false);
-    CHECK(scene.errors.front().error == Error::scene_update_path_not_found);
-    scene.errors.clear();
-
-    updates = {{"!map#0", "first_value"}};
-    CHECK(SceneLoader::applyUpdates(scene, updates) == false);
-    CHECK(scene.errors.front().error == Error::scene_update_path_not_found);
-    scene.errors.clear();
-
-    updates = {{"key_not_existing", "first_value"}};
-    CHECK(SceneLoader::applyUpdates(scene, updates) == true);
-
-    updates = {{"!map#0", "{ first_value"}};
-    CHECK(SceneLoader::applyUpdates(scene, updates) == false);
-    CHECK(scene.errors.front().error == Error::scene_update_value_yaml_syntax_error);
-    scene.errors.clear();
+    {
+        Scene scene{platform};
+        REQUIRE(loadConfig(sceneString, scene.config()));
+        std::vector<SceneUpdate> updates = {{"someKey.somePath", "someValue"}};
+        CHECK(SceneLoader::applyUpdates(scene, updates) == false);
+        CHECK(scene.errors()->error == Error::scene_update_path_not_found);
+    }
+    {
+        Scene scene{platform};
+        REQUIRE(loadConfig(sceneString, scene.config()));
+        std::vector<SceneUpdate> updates = {{"map.a.map_a_value", "someValue"}};
+        CHECK(SceneLoader::applyUpdates(scene, updates) == false);
+        CHECK(scene.errors()->error == Error::scene_update_path_not_found);
+    }
+    {
+        Scene scene{platform};
+        REQUIRE(loadConfig(sceneString, scene.config()));
+        std::vector<SceneUpdate> updates = {{"!map#0", "first_value"}};
+        CHECK(SceneLoader::applyUpdates(scene, updates) == false);
+        CHECK(scene.errors()->error == Error::scene_update_path_not_found);
+    }
+    {
+        Scene scene{platform};
+        REQUIRE(loadConfig(sceneString, scene.config()));
+        std::vector<SceneUpdate>  updates = {{"key_not_existing", "first_value"}};
+        CHECK(SceneLoader::applyUpdates(scene, updates) == true);
+    }
+    {
+        Scene scene{platform};
+        REQUIRE(loadConfig(sceneString, scene.config()));
+        std::vector<SceneUpdate> updates = {{"!map#0", "{ first_value"}};
+        CHECK(SceneLoader::applyUpdates(scene, updates) == false);
+        CHECK(scene.errors()->error == Error::scene_update_value_yaml_syntax_error);
+    }
 }
