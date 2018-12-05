@@ -188,6 +188,9 @@ public:
 
     bool load(SceneOptions&& _sceneOptions);
 
+    const SceneError* errors() const {
+        return (m_errors.empty() ? nullptr : &m_errors.front());
+    }
 
     void initTileManager();
     void startTileWorker();
@@ -208,8 +211,6 @@ public:
     friend struct SceneLoader;
     friend class Importer;
 
-    std::vector<SceneError> errors;
-
 protected:
     Platform& platform() { return m_platform; }
     const SceneOptions& options() { return m_options; }
@@ -219,6 +220,9 @@ private:
 
     SceneOptions m_options;
     std::unique_ptr<Importer> m_importer;
+
+    // Only SceneUpdate errors for now
+    std::vector<SceneError> m_errors;
 
     bool m_ready = false;
     bool m_loading = false;
