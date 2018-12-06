@@ -136,20 +136,7 @@ if(TANGRAM_JSCORE_ENABLED)
   target_sources(tangram-core PRIVATE src/js/JSCoreContext.cpp)
 
   if (TANGRAM_USE_JSCORE_STATIC)
-    if(NOT EXISTS "${PROJECT_SOURCE_DIR}/deps/jscore/lib/libJavaScriptCore.a")
-      message(SEND_ERROR "Please add static JavaScriptCore libary to core/deps/jscore/")
-    endif()
-    find_package(ICU COMPONENTS io i18n REQUIRED)
-    link_directories(${ICU_LIBRARY_DIRS})
-    target_link_libraries(tangram-core
-      PRIVATE
-      ${ICU_LIBRARIES}
-      "${PROJECT_SOURCE_DIR}/deps/jscore/lib/libJavaScriptCore.a"
-      "${PROJECT_SOURCE_DIR}/deps/jscore/lib/libWTF.a"
-      "${PROJECT_SOURCE_DIR}/deps/jscore/lib/libbmalloc.a")
-    target_include_directories(tangram-core
-      PRIVATE
-      "${PROJECT_SOURCE_DIR}/deps/jscore/include")
+    target_link_libraries(tangram-core PRIVATE jscore-static)
   else()
     target_link_libraries(tangram-core PRIVATE "-framework JavaScriptCore")
   endif()
