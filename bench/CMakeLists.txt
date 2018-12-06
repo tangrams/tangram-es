@@ -43,6 +43,12 @@ foreach(_src_file_path ${BENCH_SOURCES})
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
   )
 
+  if(TANGRAM_JSCORE_ENABLED)
+    target_compile_definitions(${EXECUTABLE_NAME}
+    PRIVATE
+    TANGRAM_USE_JSCORE=1)
+  endif()
+
   add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes" "res")
 
 endforeach()
