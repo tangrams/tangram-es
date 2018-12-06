@@ -134,17 +134,8 @@ if(TANGRAM_JSCORE_ENABLED)
   else()
     target_link_libraries(tangram-core PRIVATE "-framework JavaScriptCore")
   endif()
-  target_compile_definitions(tangram-core
-    PRIVATE
-    TANGRAM_USE_JSCORE=1)
+  target_compile_definitions(tangram-core PRIVATE TANGRAM_USE_JSCORE=1)
 else()
-  target_compile_definitions(tangram-core
-    PRIVATE
-    TANGRAM_USE_JSCORE=0)
-endif()
-# If the JSCore implementation is not enabled or if we're building benchmarks,
-# then enable and build the Duktape implementation.
-if((NOT TANGRAM_JSCORE_ENABLED) OR TANGRAM_BUILD_BENCHMARKS)
   target_sources(tangram-core PRIVATE src/js/DuktapeContext.cpp)
   target_link_libraries(tangram-core PRIVATE duktape)
 endif()

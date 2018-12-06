@@ -2,10 +2,6 @@
 
 #include "data/tileData.h"
 #include "js/JavaScript.h"
-#include "js/DuktapeContext.h"
-#if TANGRAM_USE_JSCORE
-#include "js/JSCoreContext.h"
-#endif
 #include "scene/styleContext.h"
 
 #include "mockPlatform.h"
@@ -101,12 +97,12 @@ public:
      }
 };
 
-using DuktapeGetPropertyFixture = JSGetPropertyFixture<DuktapeContext>;
-RUN(DuktapeGetPropertyFixture, DuktapeGetPropertyBench)
-
 #ifdef TANGRAM_USE_JSCORE
 using JSCoreGetPropertyFixture = JSGetPropertyFixture<JSCoreContext>;
 RUN(JSCoreGetPropertyFixture, JSCoreGetPropertyBench)
+#else
+using DuktapeGetPropertyFixture = JSGetPropertyFixture<DuktapeContext>;
+RUN(DuktapeGetPropertyFixture, DuktapeGetPropertyBench)
 #endif
 
 struct JSTileStyleFnFixture : public benchmark::Fixture {
@@ -165,7 +161,6 @@ struct JSTileStyleFnFixture : public benchmark::Fixture {
 };
 
 RUN(JSTileStyleFnFixture, TileStyleFnBench);
-
 
 class DirectGetPropertyFixture : public benchmark::Fixture {
 public:
