@@ -12,7 +12,30 @@ execute_process(COMMAND xcrun --sdk iphoneos --show-sdk-version OUTPUT_VARIABLE 
 
 # Configure the API key in the Info.plist for the demo app.
 set(NEXTZEN_API_KEY $ENV{NEXTZEN_API_KEY})
-configure_file(${PROJECT_SOURCE_DIR}/platforms/ios/demo/Info.plist.in ${PROJECT_BINARY_DIR}/Info.plist)
+
+configure_file(
+  ${PROJECT_SOURCE_DIR}/platforms/ios/demo/Info.plist.in
+  ${PROJECT_BINARY_DIR}/Info.plist)
+
+set(CONFIG_DIR ${PROJECT_SOURCE_DIR}/platforms/ios)
+set(TEMPLATE_DIR ${CONFIG_DIR}/templates)
+# Sets @PROJECT_BINARY_DIR@
+configure_file(
+  ${TEMPLATE_DIR}/contents.xcworkspacedata
+  ${CONFIG_DIR}/Tangram.xcworkspace/contents.xcworkspacedata
+  @ONLY)
+
+# Sets @PROJECT_BINARY_DIR@
+configure_file(
+  ${TEMPLATE_DIR}/WorkspaceSettings.xcsettings
+  ${CONFIG_DIR}/Tangram.xcworkspace/xcuserdata/$ENV{USER}.xcuserdatad/WorkspaceSettings.xcsettings
+  @ONLY)
+
+# Sets @PROJECT_BINARY_DIR@
+configure_file(
+  ${TEMPLATE_DIR}/project.pbxproj
+  ${CONFIG_DIR}/demo/TangramDemo.xcodeproj/project.pbxproj
+  @ONLY)
 
 # Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
 if (IOS_SDK_VERSION VERSION_LESS 11.0)
@@ -68,7 +91,7 @@ set(TANGRAM_FRAMEWORK_SOURCES
   platforms/ios/framework/src/TGURLHandler.mm
 )
 
-### Configure dynamic framework build target. 
+### Configure dynamic framework build target.
 
 add_library(TangramMap SHARED
   ${TANGRAM_FRAMEWORK_SOURCES}
