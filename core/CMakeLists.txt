@@ -128,10 +128,17 @@ target_include_directories(tangram-core
 
 # Add JavaScript implementation.
 if(TANGRAM_JSCORE_ENABLED)
+
+  target_compile_definitions(tangram-core
+    PRIVATE
+    TANGRAM_USE_JSCORE=1)
+
   target_sources(tangram-core PRIVATE src/js/JSCoreContext.cpp)
-  add_definitions(-DTANGRAM_USE_JSCORE=1)
 
   if (TANGRAM_USE_JSCORE_STATIC)
+    if(NOT EXISTS "${PROJECT_SOURCE_DIR}/deps/jscore/lib/libJavaScriptCore.a")
+      message(SEND_ERROR "Please add static JavaScriptCore libary to core/deps/jscore/")
+    endif()
     find_package(ICU COMPONENTS io i18n REQUIRED)
     link_directories(${ICU_LIBRARY_DIRS})
     target_link_libraries(tangram-core
@@ -146,6 +153,10 @@ if(TANGRAM_JSCORE_ENABLED)
   else()
     target_link_libraries(tangram-core PRIVATE "-framework JavaScriptCore")
   endif()
+else()
+  target_compile_definitions(tangram-core
+    PRIVATE
+    TANGRAM_USE_JSCORE=0)
 endif()
 # If the JSCore implementation is not enabled or if we're building benchmarks,
 # then enable and build the Duktape implementation.
@@ -174,7 +185,9 @@ if(UNIX AND NOT APPLE)
 endif()
 
 if(TANGRAM_WARN_ON_RULE_CONFLICT)
-  add_definitions(-DTANGRAM_WARN_ON_RULE_CONFLICT)
+  target_compile_definitions(tangram-core
+    PRIVATE
+    TANGRAM_WARN_ON_RULE_CONFLICT)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")

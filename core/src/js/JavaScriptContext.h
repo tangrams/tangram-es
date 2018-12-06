@@ -6,7 +6,7 @@
 #include <string>
 #include "js/JavaScriptFwd.h"
 
-#ifdef TANGRAM_USE_JAVASCRIPTCORE
+#if TANGRAM_USE_JSCORE
 #include "js/JSCoreContext.h"
 #else
 #include "js/DuktapeContext.h"

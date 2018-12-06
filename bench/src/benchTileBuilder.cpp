@@ -34,8 +34,8 @@ std::shared_ptr<TileSource> source;
 std::shared_ptr<TileData> tileData;
 
 void globalSetup() {
-    static bool initialized = false;
-    if (initialized) { return; }
+    static std::atomic<bool> initialized{false};
+    if (initialized.exchange(true)) { return; }
 
     std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
 
@@ -74,17 +74,15 @@ void globalSetup() {
         LOGE("Invalid tile file '%s'", tile_file);
         exit(-1);
     }
-    initialized = true;
 }
 
-template<size_t jscontext>
 class TileBuilderFixture : public benchmark::Fixture {
 public:
     std::unique_ptr<TileBuilder> tileBuilder;
     std::shared_ptr<Tile> result;
     void SetUp(const ::benchmark::State& state) override {
         globalSetup();
-        tileBuilder = std::make_unique<TileBuilder>(scene, new StyleContext(jscontext));
+        tileBuilder = std::make_unique<TileBuilder>(scene, new StyleContext());
     }
     void TearDown(const ::benchmark::State& state) override {
         result.reset();
@@ -95,11 +93,8 @@ public:
     }
 };
 
-using DUKTileBuilderFixture = TileBuilderFixture<0>;
-using JSCTileBuilderFixture = TileBuilderFixture<1>;
+RUN(TileBuilderFixture, TileBuilderBench);
 
-RUN(DUKTileBuilderFixture, DUKTileBuilderBench)
-RUN(JSCTileBuilderFixture, JSCTileBuilderBench)
 
 
 BENCHMARK_MAIN();

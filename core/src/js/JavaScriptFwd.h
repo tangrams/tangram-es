@@ -5,23 +5,19 @@
 
 #include <cstdint>
 
-#ifdef TANGRAM_USE_JAVASCRIPTCORE
 namespace Tangram {
+
+#if TANGRAM_USE_JSCORE
 class JSCoreValue;
 class JSCoreContext;
 using JSValue = JSCoreValue;
 using JSContext = JSCoreContext;
-}
 #else
-namespace Tangram {
 class DuktapeValue;
 class DuktapeContext;
 using JSValue = DuktapeValue;
 using JSContext = DuktapeContext;
-}
 #endif
-
-namespace Tangram {
 
 struct Feature;
 
