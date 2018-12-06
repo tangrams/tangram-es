@@ -1,7 +1,7 @@
 #include "benchmark/benchmark.h"
 
 #include "data/tileData.h"
-#include "js/JavaScriptContext.h"
+#include "js/JavaScript.h"
 #include "js/DuktapeContext.h"
 #if TANGRAM_USE_JSCORE
 #include "js/JSCoreContext.h"

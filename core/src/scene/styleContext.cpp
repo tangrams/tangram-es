@@ -2,7 +2,7 @@
 
 #include "data/propertyItem.h"
 #include "data/tileData.h"
-#include "js/JavaScriptContext.h"
+#include "js/JavaScript.h"
 #include "log.h"
 #include "platform.h"
 #include "scene/filters.h"
