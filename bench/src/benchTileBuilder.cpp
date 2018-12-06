@@ -18,6 +18,11 @@
 #include <iostream>
 #include <vector>
 
+
+#define RUN(FIXTURE, NAME)                                              \
+    BENCHMARK_DEFINE_F(FIXTURE, NAME)(benchmark::State& st) { while (st.KeepRunning()) { run(); } } \
+    BENCHMARK_REGISTER_F(FIXTURE, NAME);  //->Iterations(1)
+
 using namespace Tangram;
 
 //const char scene_file[] = "bubble-wrap-style.zip";
@@ -29,8 +34,8 @@ std::shared_ptr<TileSource> source;
 std::shared_ptr<TileData> tileData;
 
 void globalSetup() {
-    static bool initialized = false;
-    if (initialized) { return; }
+    static std::atomic<bool> initialized{false};
+    if (initialized.exchange(true)) { return; }
 
     std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
 
@@ -69,9 +74,7 @@ void globalSetup() {
         LOGE("Invalid tile file '%s'", tile_file);
         exit(-1);
     }
-    initialized = true;
 }
-
 
 class TileBuilderFixture : public benchmark::Fixture {
 public:
@@ -79,18 +82,18 @@ public:
     std::shared_ptr<Tile> result;
     void SetUp(const ::benchmark::State& state) override {
         globalSetup();
-        tileBuilder = std::make_unique<TileBuilder>(scene);
+        tileBuilder = std::make_unique<TileBuilder>(scene, new StyleContext());
     }
     void TearDown(const ::benchmark::State& state) override {
         result.reset();
     }
-};
-BENCHMARK_DEFINE_F(TileBuilderFixture, TileBuilderBench)(benchmark::State& st) {
-    while (st.KeepRunning()) {
+
+    __attribute__ ((noinline)) void run() {
         result = tileBuilder->build({0,0,10,10}, *tileData, *source);
     }
-}
-BENCHMARK_REGISTER_F(TileBuilderFixture, TileBuilderBench);
+};
+
+RUN(TileBuilderFixture, TileBuilderBench);
 
 
 

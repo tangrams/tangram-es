@@ -142,7 +142,6 @@ target_include_directories(tangram-static PRIVATE
 # delimits with semicolons. Xcode expects a space-delimited list.
 set(TANGRAM_STATIC_DEPENDENCIES "\
   $<TARGET_FILE:tangram-core>
-  $<TARGET_FILE:duktape>
   $<TARGET_FILE:css-color-parser-cpp>
   $<TARGET_FILE:yaml-cpp>
   $<TARGET_FILE:alfons>
@@ -155,6 +154,9 @@ set(TANGRAM_STATIC_DEPENDENCIES "\
   $<TARGET_FILE:miniz>
   "
 )
+if (NOT TANGRAM_USE_JSCORE)
+  set(TANGRAM_STATIC_DEPENDENCIES "${TANGRAM_STATIC_DEPENDENCIES} $<TARGET_FILE:duktape>")
+endif()
 
 set_target_properties(tangram-static PROPERTIES
   XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${TANGRAM_FRAMEWORK_VERSION}"

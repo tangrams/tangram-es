@@ -105,11 +105,11 @@ target_include_directories(tangram-core
   # TODO: These headers shouldn't be public, but Platform classes use them.
   src
   # TODO: This header shouldn't be public, but we use it in propertyItem.h
+  deps/glm
   deps/variant/include
   PRIVATE
   generated
   deps
-  deps/glm
   deps/earcut/include
   deps/isect2d/include
   deps/hash-library
@@ -126,10 +126,23 @@ target_include_directories(tangram-core
   deps/double-conversion/include
 )
 
+# Add JavaScript implementation.
+if(TANGRAM_JSCORE_ENABLED)
+  target_sources(tangram-core PRIVATE src/js/JSCoreContext.cpp)
+  if (TANGRAM_USE_JSCORE_STATIC)
+    target_link_libraries(tangram-core PRIVATE jscore-static)
+  else()
+    target_link_libraries(tangram-core PRIVATE "-framework JavaScriptCore")
+  endif()
+  target_compile_definitions(tangram-core PRIVATE TANGRAM_USE_JSCORE=1)
+else()
+  target_sources(tangram-core PRIVATE src/js/DuktapeContext.cpp)
+  target_link_libraries(tangram-core PRIVATE duktape)
+endif()
+
 # Link core library dependencies.
 target_link_libraries(tangram-core
   PRIVATE
-  duktape
   css-color-parser-cpp
   yaml-cpp
   alfons
@@ -140,13 +153,16 @@ target_link_libraries(tangram-core
   z
 )
 
+
 if(UNIX AND NOT APPLE)
   # SQLite needs dl dynamic library loader when Linux
   target_link_libraries(tangram-core PRIVATE dl)
 endif()
 
 if(TANGRAM_WARN_ON_RULE_CONFLICT)
-  add_definitions(-DTANGRAM_WARN_ON_RULE_CONFLICT)
+  target_compile_definitions(tangram-core
+    PRIVATE
+    TANGRAM_WARN_ON_RULE_CONFLICT)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")

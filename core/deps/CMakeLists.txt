@@ -25,18 +25,8 @@ target_include_directories(css-color-parser-cpp PUBLIC css-color-parser-cpp)
 
 ## duktape ##
 #############
-add_library(duktape
-  ${CMAKE_CURRENT_SOURCE_DIR}/duktape/duktape.c)
+add_subdirectory(duktape)
 
-target_compile_options(duktape PRIVATE
-  -fstrict-aliasing
-  -fomit-frame-pointer
-  -std=c99
-  -Wall)
-
-target_include_directories(duktape
-  PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/duktape)
 
 ## miniz ##
 ###########
@@ -91,3 +81,34 @@ endif()
 ## double-conversion ##
 #######################
 add_subdirectory(double-conversion)
+
+
+## Prebuild JavascriptCore ##
+#############################
+if (TANGRAM_USE_JSCORE_STATIC)
+  add_library(jscore-static STATIC IMPORTED GLOBAL)
+  if(NOT EXISTS "${PROJECT_SOURCE_DIR}/deps/jscore/lib/libJavaScriptCore.a")
+    message(SEND_ERROR "Please add static JavaScriptCore libary to core/deps/jscore/")
+  endif()
+  find_package(ICU COMPONENTS io i18n REQUIRED)
+  link_directories(${ICU_LIBRARY_DIRS})
+
+  set(JSCORE_LIBS
+    ${ICU_LIBRARIES}
+    "${CMAKE_CURRENT_SOURCE_DIR}/jscore/lib/libJavaScriptCore.a"
+    "${CMAKE_CURRENT_SOURCE_DIR}/jscore/lib/libWTF.a"
+    "${CMAKE_CURRENT_SOURCE_DIR}/jscore/lib/libbmalloc.a")
+
+  set_target_properties(jscore-static
+         PROPERTIES
+         IMPORTED_LOCATION
+         ${JSCORE_LIBS})
+
+  target_link_libraries(jscore-static
+    INTERFACE
+    ${JSCORE_LIBS})
+
+  target_include_directories(jscore-static
+    INTERFACE
+    "${CMAKE_CURRENT_SOURCE_DIR}/jscore/include")
+endif()
