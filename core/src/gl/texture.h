@@ -79,7 +79,6 @@ public:
     int width() const { return m_width; }
     int height() const { return m_height; }
 
-    GLuint glHandle() const { return m_glHandle; }
 
     float displayScale() const { return m_options.displayScale; }
 

@@ -24,6 +24,7 @@ public:
         : Texture(textureOptions()) {
         resize(width, height);
     }
+    GLuint glHandle() const { return m_glHandle; }
 };
 
 FrameBuffer::FrameBuffer(int _width, int _height, bool _colorRenderBuffer) :
