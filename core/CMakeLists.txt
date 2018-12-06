@@ -128,18 +128,15 @@ target_include_directories(tangram-core
 
 # Add JavaScript implementation.
 if(TANGRAM_JSCORE_ENABLED)
-
-  target_compile_definitions(tangram-core
-    PRIVATE
-    TANGRAM_USE_JSCORE=1)
-
   target_sources(tangram-core PRIVATE src/js/JSCoreContext.cpp)
-
   if (TANGRAM_USE_JSCORE_STATIC)
     target_link_libraries(tangram-core PRIVATE jscore-static)
   else()
     target_link_libraries(tangram-core PRIVATE "-framework JavaScriptCore")
   endif()
+  target_compile_definitions(tangram-core
+    PRIVATE
+    TANGRAM_USE_JSCORE=1)
 else()
   target_compile_definitions(tangram-core
     PRIVATE
