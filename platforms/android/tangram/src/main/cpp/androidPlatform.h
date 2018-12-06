@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform.h"
+#include "jniWorker.h"
 #include "util/asyncWorker.h"
 
 
@@ -66,6 +67,7 @@ private:
     std::mutex m_callbackMutex;
     std::unordered_map<UrlRequestHandle, UrlCallback> m_callbacks;
 
+    mutable JniWorker m_jniWorker;  // FIX requestRender const.. Lets use Rust if we want this for real
     AsyncWorker m_fileWorker;
 
 };
