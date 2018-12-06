@@ -4,8 +4,8 @@ project(tangram)
 
 # Options
 option(TANGRAM_USE_DUKTAPE "Build Duktape as javascript engine and enable it on all platforms" ON)
-option(TANGRAM_USE_JAVASCRIPTCORE "Use system libraries for JavaScriptCore and enable it on IOS and OSX" OFF)
-option(TANGRAM_USE_JAVASCRIPTCORE_STATIC "Build tangram with static libraries for JavaScriptCore" OFF)
+option(TANGRAM_USE_JSCORE "Use system libraries for JavaScriptCore and enable it on iOS and macOS" OFF)
+option(TANGRAM_USE_JSCORE_STATIC "Build with pre-compiled static libraries for JavaScriptCore" OFF)
 
 option(TANGRAM_USE_SYSTEM_FONT_LIBS "Use system libraries Freetype, ICU and Harfbuzz via pkgconfig" OFF)
 option(TANGRAM_USE_SYSTEM_GLFW_LIBS "Use system libraries for GLFW3 via pkgconfig" OFF)

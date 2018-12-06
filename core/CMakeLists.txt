@@ -127,12 +127,12 @@ target_include_directories(tangram-core
 )
 
 # Choose JavaScript implementation.
-if(TANGRAM_USE_JAVASCRIPTCORE)
+set(TANGRAM_JSCORE_AVAILABLE ((TANGRAM_IOS OR TANGRAM_OSX) OR TANGRAM_USE_JSCORE_STATIC))
+if(TANGRAM_USE_JSCORE AND TANGRAM_JSCORE_AVAILABLE)
   target_sources(tangram-core PRIVATE src/js/JSCoreContext.cpp)
-  target_compile_definitions(tangram-core
-    PRIVATE TANGRAM_USE_JAVASCRIPTCORE=1)
+  target_compile_definitions(tangram-core PRIVATE TANGRAM_USE_JSCORE=1)
 
-  if (TANGRAM_USE_JAVASCRIPTCORE_STATIC)
+  if (TANGRAM_USE_JSCORE_STATIC)
     find_package(ICU COMPONENTS io i18n REQUIRED)
     link_directories(${ICU_LIBRARY_DIRS})
     target_link_libraries(tangram-core
@@ -151,9 +151,6 @@ endif()
 
 if(TANGRAM_USE_DUKTAPE)
   target_sources(tangram-core PRIVATE src/js/DuktapeContext.cpp)
-  target_compile_definitions(tangram-core
-    PRIVATE TANGRAM_USE_DUKTAPE=1)
-
   target_link_libraries(tangram-core PRIVATE duktape)
 endif()
 

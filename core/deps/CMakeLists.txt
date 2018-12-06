@@ -26,7 +26,7 @@ target_include_directories(css-color-parser-cpp PUBLIC css-color-parser-cpp)
 ## duktape ##
 #############
 if(TANGRAM_USE_DUKTAPE)
-add_subdirectory(duktape)
+  add_subdirectory(duktape)
 endif()
 
 
