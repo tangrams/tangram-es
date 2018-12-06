@@ -56,35 +56,29 @@ public:
 
     Texture(const uint8_t* data, size_t length, TextureOptions _options);
 
-    Texture(const Texture& _other) = delete;
-    Texture& operator=(const Texture& _other) = delete;
-    Texture(Texture&& _other) = delete;
-    Texture& operator=(Texture&& _other) = delete;
-
     virtual ~Texture();
 
     bool loadImageFromMemory(const uint8_t* data, size_t length);
 
-    /* Sets texture pixel data */
+    // Sets texture pixel data
     bool setPixelData(int _width, int _height, int _bytesPerPixel, const GLubyte* _data, size_t _length);
 
-    void setSpriteAtlas(std::unique_ptr<SpriteAtlas> sprites);
-
-    /// Binds texture to texture unit _unit and uploads new texture data when it has changed.
-    /// Returns false when no data has been set or when the requested size is greater than
-    /// supported by the driver.
+    // Binds texture to texture unit _unit and uploads new texture data when it has changed.
+    // Returns false when no data has been set or when the requested size is greater than
+    // supported by the driver.
     virtual bool bind(RenderState& rs, GLuint _unit);
 
-    /* Width and Height texture getters */
+    // Width and Height texture getters
     int width() const { return m_width; }
     int height() const { return m_height; }
 
+    // Size of texture data in bytes
+    size_t bufferSize() const { return m_bufferSize; }
 
     float displayScale() const { return m_options.displayScale; }
 
     const auto& spriteAtlas() const { return m_spriteAtlas; }
-
-    size_t bufferSize() const { return m_bufferSize; }
+    void setSpriteAtlas(std::unique_ptr<SpriteAtlas> sprites);
 
 protected:
 
