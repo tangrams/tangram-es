@@ -134,11 +134,13 @@ public:
     JniThreadBinding(JavaVM* _jvm) : jvm(_jvm) {
         status = jvm->GetEnv((void**)&jniEnv, TANGRAM_JNI_VERSION);
         if (status == JNI_EDETACHED) {
+            LOG("---------------->>> ATTACH");
             jvm->AttachCurrentThread(&jniEnv, NULL);
         }
     }
     ~JniThreadBinding() {
         if (status == JNI_EDETACHED) {
+            LOG("---------------->>> DETACH");
             jvm->DetachCurrentThread();
         }
     }
