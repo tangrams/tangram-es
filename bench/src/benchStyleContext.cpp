@@ -39,8 +39,10 @@ public:
 using DuktapeGetPropertyFixture = JSGetPropertyFixture<DuktapeContext>;
 RUN(DuktapeGetPropertyFixture, DuktapeGetPropertyBench)
 
+#ifdef TANGRAM_USE_JSCORE
 using JSCoreGetPropertyFixture = JSGetPropertyFixture<JSCoreContext>;
 RUN(JSCoreGetPropertyFixture, JSCoreGetPropertyBench)
+#endif
 
 class DirectGetPropertyFixture : public benchmark::Fixture {
 public:

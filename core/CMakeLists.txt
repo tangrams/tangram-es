@@ -126,11 +126,10 @@ target_include_directories(tangram-core
   deps/double-conversion/include
 )
 
-# Choose JavaScript implementation.
-set(TANGRAM_JSCORE_AVAILABLE ((TANGRAM_IOS OR TANGRAM_OSX) OR TANGRAM_USE_JSCORE_STATIC))
-if(TANGRAM_USE_JSCORE AND TANGRAM_JSCORE_AVAILABLE)
+# Add JavaScript implementation.
+if(TANGRAM_JSCORE_ENABLED)
   target_sources(tangram-core PRIVATE src/js/JSCoreContext.cpp)
-  target_compile_definitions(tangram-core PRIVATE TANGRAM_USE_JSCORE=1)
+  add_definitions(-DTANGRAM_USE_JSCORE=1)
 
   if (TANGRAM_USE_JSCORE_STATIC)
     find_package(ICU COMPONENTS io i18n REQUIRED)
@@ -148,8 +147,9 @@ if(TANGRAM_USE_JSCORE AND TANGRAM_JSCORE_AVAILABLE)
     target_link_libraries(tangram-core PRIVATE "-framework JavaScriptCore")
   endif()
 endif()
-
-if(TANGRAM_USE_DUKTAPE)
+# If the JSCore implementation is not enabled or if we're building benchmarks,
+# then enable and build the Duktape implementation.
+if((NOT TANGRAM_JSCORE_ENABLED) OR TANGRAM_BUILD_BENCHMARKS)
   target_sources(tangram-core PRIVATE src/js/DuktapeContext.cpp)
   target_link_libraries(tangram-core PRIVATE duktape)
 endif()

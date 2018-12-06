@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.2)
 project(tangram)
 
 # Options
-option(TANGRAM_USE_DUKTAPE "Build Duktape as javascript engine and enable it on all platforms" ON)
 option(TANGRAM_USE_JSCORE "Use system libraries for JavaScriptCore and enable it on iOS and macOS" OFF)
 option(TANGRAM_USE_JSCORE_STATIC "Build with pre-compiled static libraries for JavaScriptCore" OFF)
 
@@ -65,6 +64,13 @@ endif()
 set(TANGRAM_PLATFORM ${TANGRAM_PLATFORM} CACHE INTERNAL "Tangram platform target" FORCE)
 # Include the platform config file.
 include(${TANGRAM_PLATFORM_CONFIG_FILE})
+
+# Choose JavaScript implementation.
+set(TANGRAM_JSCORE_AVAILABLE ((TANGRAM_IOS OR TANGRAM_OSX) OR TANGRAM_USE_JSCORE_STATIC))
+set(TANGRAM_JSCORE_ENABLED ((TANGRAM_USE_JSCORE OR TANGRAM_BUILD_BENCHMARKS) AND TANGRAM_JSCORE_AVAILABLE))
+if(TANGRAM_JSCORE_ENABLED)
+  add_definitions(-DTANGRAM_USE_JSCORE=1)
+endif()
 
 # Add core library.
 add_subdirectory(core)
