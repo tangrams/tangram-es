@@ -70,7 +70,7 @@ void FontContext::addTexture(alfons::AtlasID id, uint16_t width, uint16_t height
         LOGE("Way too many glyph textures!");
         return;
     }
-    m_textures.emplace_back();
+    m_textures.push_back(std::make_unique<GlyphTexture>());
 }
 
 // Synchronized on m_mutex in layoutText(), called on tile-worker threads
@@ -81,8 +81,8 @@ void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_
 
     if (id >= max_textures) { return; }
 
-    auto& texData = m_textures[id].texData;
-    auto& texture = m_textures[id].texture;
+    auto texData = m_textures[id]->buffer();
+    auto& texture = m_textures[id];
 
     size_t stride = GlyphTexture::size;
     size_t width =  GlyphTexture::size;
@@ -106,13 +106,13 @@ void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_
                                  dst, gw, gh, width,
                                  &m_sdfBuffer[0]);
 
-    texture.setRowsDirty(gy, gh);
-    m_textures[id].dirty = true;
+    texture->setRowsDirty(gy, gh);
 }
 
 void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
     if (!_refs.any()) { return; }
     std::lock_guard<std::mutex> lock(m_textureMutex);
+
     for (size_t i = 0; i < m_textures.size(); i++) {
         if (_refs[i]) { m_atlasRefCount[i] -= 1; }
     }
@@ -121,19 +121,13 @@ void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
 void FontContext::updateTextures(RenderState& rs) {
     std::lock_guard<std::mutex> lock(m_textureMutex);
 
-    for (auto& gt : m_textures) {
-        if (gt.dirty) {
-            gt.dirty = false;
-            auto td = reinterpret_cast<const GLuint*>(gt.texData.data());
-            gt.texture.update(rs, 0, td);
-        }
-    }
+    for (auto& gt : m_textures) { gt->bind(rs, 0); }
 }
 
 void FontContext::bindTexture(RenderState& rs, alfons::AtlasID _id, GLuint _unit) {
     std::lock_guard<std::mutex> lock(m_textureMutex);
-    m_textures[_id].texture.bind(rs, _unit);
 
+    m_textures[_id]->bind(rs, _unit);
 }
 
 bool FontContext::layoutText(TextStyle::Parameters& _params, const icu::UnicodeString& _text,
@@ -253,7 +247,7 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const icu::UnicodeS
 
             if (!_refs[it->atlas]) {
                 _refs[it->atlas] = true;
-                m_atlasRefCount[it->atlas]++;
+                m_atlasRefCount[it->atlas] += 1;
             }
 
             it->quad[0].pos -= offset;
@@ -266,8 +260,7 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const icu::UnicodeS
         for (size_t i = 0; i < m_textures.size(); i++) {
             if (m_atlasRefCount[i] == 0) {
                 m_atlas.clear(i);
-                m_textures[i].texData.assign(GlyphTexture::size *
-                                             GlyphTexture::size, 0);
+                std::memset(m_textures[i]->buffer(), 0, GlyphTexture::size * GlyphTexture::size);
             }
         }
     }

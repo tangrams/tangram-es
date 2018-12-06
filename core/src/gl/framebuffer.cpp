@@ -12,6 +12,21 @@
 
 namespace Tangram {
 
+class RenderTexture : public Texture {
+    static constexpr TextureOptions textureOptions() {
+        TextureOptions options;
+        options.minFilter = TextureMinFilter::NEAREST;
+        options.magFilter = TextureMagFilter::NEAREST;
+        return options;
+    }
+public:
+    RenderTexture(int width, int height)
+        : Texture(textureOptions()) {
+        resize(width, height);
+    }
+    GLuint glHandle() const { return m_glHandle; }
+};
+
 FrameBuffer::FrameBuffer(int _width, int _height, bool _colorRenderBuffer) :
     m_glFrameBufferHandle(0),
     m_glDepthRenderBufferHandle(0),
@@ -113,16 +128,11 @@ void FrameBuffer::init(RenderState& _rs) {
         GL::framebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                     GL_RENDERBUFFER, m_glColorRenderBufferHandle);
     } else {
-        TextureOptions options;
-        options.minFilter = TextureMinFilter::NEAREST;
-        options.magFilter = TextureMagFilter::NEAREST;
-
-        m_texture = std::make_unique<Texture>(options);
-        m_texture->resize(m_width, m_height);
-        m_texture->update(_rs, 0);
+        m_texture = std::make_unique<RenderTexture>(m_width, m_height);
+        m_texture->bind(_rs, 0);
 
         GL::framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                 GL_TEXTURE_2D, m_texture->getGlHandle(), 0);
+                                 GL_TEXTURE_2D, m_texture->glHandle(), 0);
     }
 
     {

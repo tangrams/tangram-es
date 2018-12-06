@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl/texture.h"
+#include "gl/glyphTexture.h"
 #include "labels/textLabel.h"
 #include "style/textStyle.h"
 #include "text/textUtil.h"
@@ -19,29 +19,6 @@ namespace Tangram {
 
 struct FontMetrics {
     float ascender, descender, lineHeight;
-};
-
-// TODO could be a shared_ptr<Texture>
-struct GlyphTexture {
-
-    static constexpr int size = 256;
-
-    static constexpr TextureOptions textureOptions() {
-        TextureOptions options;
-        options.pixelFormat = PixelFormat::ALPHA;
-        return options;
-    }
-
-    GlyphTexture() : texture(textureOptions()) {
-        texture.resize(size, size);
-        texData.resize(size * size);
-    }
-
-    std::vector<unsigned char> texData;
-    Texture texture;
-
-    bool dirty = false;
-    size_t refCount = 0;
 };
 
 struct FontDescription {
@@ -138,7 +115,7 @@ private:
     alfons::FontManager m_alfons;
     std::array<std::shared_ptr<alfons::Font>, 3> m_font;
 
-    std::vector<GlyphTexture> m_textures;
+    std::vector<std::unique_ptr<GlyphTexture>> m_textures;
 
     // TextShaper to create <LineLayout> for a given text and Font
     alfons::TextShaper m_shaper;

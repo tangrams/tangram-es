@@ -9,8 +9,8 @@
 
 namespace Tangram {
 
-class Texture;
 class RenderState;
+class RenderTexture;
 
 class FrameBuffer {
 
@@ -47,7 +47,7 @@ private:
 
     void init(RenderState& _rs);
 
-    std::unique_ptr<Texture> m_texture;
+    std::unique_ptr<RenderTexture> m_texture;
 
     RenderState* m_rs = nullptr;
 

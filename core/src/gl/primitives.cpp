@@ -129,8 +129,8 @@ void drawTexture(RenderState& rs, Texture& _tex, glm::vec2 _pos, glm::vec2 _dim)
     rs.vertexBuffer(0);
     rs.depthTest(GL_FALSE);
 
-    float w = _tex.getWidth();
-    float h = _tex.getHeight();
+    float w = _tex.width();
+    float h = _tex.height();
 
     if (_dim != glm::vec2(0)) {
         w = _dim.x;
