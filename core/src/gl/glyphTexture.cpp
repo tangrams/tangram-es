@@ -7,7 +7,7 @@ namespace Tangram {
 
 GlyphTexture::GlyphTexture() : Texture(textureOptions()) {
 
-    m_buffer = reinterpret_cast<GLubyte*>(std::calloc(size * size, sizeof(GLubyte)));
+    m_buffer.reset(reinterpret_cast<GLubyte*>(std::calloc(size * size, sizeof(GLubyte))));
     m_disposeBuffer = false;
     resize(size, size);
 }
@@ -37,7 +37,7 @@ bool GlyphTexture::bind(RenderState& _rs, GLuint _textureUnit) {
     auto format = static_cast<GLenum>(m_options.pixelFormat);
     for (auto& range : m_dirtyRows) {
         auto rows = range.max - range.min;
-        auto offset = m_buffer + (range.min * m_width * bpp());
+        auto offset = m_buffer.get() + (range.min * m_width * bpp());
         GL::texSubImage2D(GL_TEXTURE_2D, 0, 0, range.min, m_width, rows, format,
                           GL_UNSIGNED_BYTE, offset);
     }

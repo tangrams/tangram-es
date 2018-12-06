@@ -23,16 +23,12 @@ Texture::Texture(const uint8_t* data, size_t length, TextureOptions options)
 }
 
 Texture::~Texture() {
-    freeBufferData();
-
     if (m_rs) {
         m_rs->queueTextureDeletion(m_glHandle);
     }
 }
 
 bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
-    freeBufferData();
-
     // stbi_load_from_memory loads the image as a series of scanlines starting
     // from the top-left corner of the image. This flips the output such that
     // the data begins at the bottom-left corner, as required for our OpenGL
@@ -43,9 +39,9 @@ bool Texture::loadImageFromMemory(const uint8_t* data, size_t length) {
     int channelsInFile = 0;
     int channelsRequested = bpp();
 
-    m_buffer = stbi_load_from_memory(data, static_cast<int>(length),
-                                     &width, &height, &channelsInFile,
-                                     channelsRequested);
+    m_buffer.reset(stbi_load_from_memory(data, static_cast<int>(length),
+                                         &width, &height, &channelsInFile,
+                                         channelsRequested));
 
     if (!m_buffer) {
         LOGE("Could not load image data: %dx%d bpp:%d/%d",
@@ -72,11 +68,11 @@ bool Texture::setPixelData(int _width, int _height, int _bytesPerPixel,
     }
 
     if (m_bufferSize != _length) {
-        freeBufferData();
+        m_buffer.reset();
     }
 
     if (!m_buffer) {
-        m_buffer = reinterpret_cast<GLubyte*>(std::malloc(_length));
+        m_buffer.reset(reinterpret_cast<GLubyte*>(std::malloc(_length)));
     }
 
     if (!m_buffer) {
@@ -84,7 +80,7 @@ bool Texture::setPixelData(int _width, int _height, int _bytesPerPixel,
         return false;
     }
 
-    std::memcpy(m_buffer, _data, _length);
+    std::memcpy(m_buffer.get(), _data, _length);
 
     m_bufferSize = _length;
 
@@ -121,7 +117,7 @@ bool Texture::upload(RenderState& _rs, GLuint _textureUnit) {
     if (Hardware::maxTextureSize < m_width ||
         Hardware::maxTextureSize < m_height) {
         LOGW("Texture larger than Hardware maximum texture size");
-        if (m_disposeBuffer) { freeBufferData(); }
+        if (m_disposeBuffer) { m_buffer.reset(); }
         return false;
     }
     if (m_glHandle == 0) {
@@ -132,7 +128,7 @@ bool Texture::upload(RenderState& _rs, GLuint _textureUnit) {
 
     auto format = static_cast<GLenum>(m_options.pixelFormat);
     GL::texImage2D(GL_TEXTURE_2D, 0, format, m_width, m_height, 0, format,
-                   GL_UNSIGNED_BYTE, m_buffer);
+                   GL_UNSIGNED_BYTE, m_buffer.get());
 
     if (m_buffer && m_options.generateMipmaps) {
         GL::generateMipmap(GL_TEXTURE_2D);
@@ -151,7 +147,7 @@ bool Texture::bind(RenderState& _rs, GLuint _textureUnit) {
 
     bool ok = upload(_rs, _textureUnit);
 
-    if (m_disposeBuffer) { freeBufferData(); }
+    if (m_disposeBuffer) { m_buffer.reset(); }
 
     return ok;
 }

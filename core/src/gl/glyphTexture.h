@@ -19,7 +19,7 @@ public:
 
     void setRowsDirty(int start, int count);
 
-    GLubyte* buffer() { return m_buffer; }
+    GLubyte* buffer() { return m_buffer.get(); }
 
 protected:
     struct DirtyRowRange {

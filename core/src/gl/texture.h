@@ -101,19 +101,17 @@ protected:
 
     bool sanityCheck(size_t _width, size_t _height, size_t _bytesPerPixel, size_t _length) const;
 
-    void freeBufferData() {
-        std::free(m_buffer);
-        m_buffer = nullptr;
-    }
     void setBufferData(GLubyte* buffer, size_t size) {
-        if (m_buffer == buffer) { return; }
-        std::free(m_buffer);
-        m_buffer = buffer;
+        if (m_buffer.get() == buffer) { return; }
+        m_buffer.reset(buffer);
     }
 
     TextureOptions m_options;
 
-    GLubyte* m_buffer = nullptr;
+    struct malloc_deleter { void operator()(GLubyte* x) { std::free(x); } };
+    using TextureData = std::unique_ptr<GLubyte, malloc_deleter>;
+    TextureData m_buffer = nullptr;
+
     size_t m_bufferSize = 0;
 
     GLuint m_glHandle = 0;
