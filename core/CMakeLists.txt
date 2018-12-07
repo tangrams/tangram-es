@@ -3,11 +3,6 @@ project(tangram-core)
 # Build core library dependencies.
 add_subdirectory(deps)
 
-if (TANGRAM_MBTILES_DATASOURCE)
-  set(MBTILES_SOURCES src/data/mbtilesDataSource.cpp)
-  set(MBTILES_LIBS SQLiteCpp sqlite3)
-endif()
-
 add_library(tangram-core
   src/map.cpp
   src/platform.cpp
@@ -100,7 +95,6 @@ add_library(tangram-core
   src/view/flyTo.cpp
   src/view/view.cpp
   src/view/viewConstraint.cpp
-  ${MBTILES_SOURCES}
 )
 
 # Include headers from core library and dependencies.
@@ -131,6 +125,17 @@ target_include_directories(tangram-core
   deps/double-conversion/include
 )
 
+# Link core library dependencies.
+target_link_libraries(tangram-core
+  PRIVATE
+  css-color-parser-cpp
+  yaml-cpp
+  alfons
+  double-conversion
+  miniz
+  z
+)
+
 # Add JavaScript implementation.
 if(TANGRAM_JSCORE_ENABLED)
   target_sources(tangram-core PRIVATE src/js/JSCoreContext.cpp)
@@ -145,18 +150,12 @@ else()
   target_link_libraries(tangram-core PRIVATE duktape)
 endif()
 
-# Link core library dependencies.
-target_link_libraries(tangram-core
-  PRIVATE
-  ${MBTILES_LIBS}
-  css-color-parser-cpp
-  yaml-cpp
-  alfons
-  double-conversion
-  miniz
-  z
-)
-
+# Add MBTiles implementation.
+if(TANGRAM_MBTILES_DATASOURCE)
+  target_sources(tangram-core PRIVATE src/data/mbtilesDataSource.cpp)
+  target_link_libraries(tangram-core PRIVATE SQLiteCpp sqlite3)
+  target_compile_definitions(tangram-core PRIVATE TANGRAM_MBTILES_DATASOURCE=1)
+endif()
 
 if(UNIX AND NOT APPLE)
   # SQLite needs dl dynamic library loader when Linux
@@ -167,12 +166,6 @@ if(TANGRAM_WARN_ON_RULE_CONFLICT)
   target_compile_definitions(tangram-core
     PRIVATE
     TANGRAM_WARN_ON_RULE_CONFLICT)
-endif()
-
-if (TANGRAM_MBTILES_DATASOURCE)
-  target_compile_definitions(tangram-core
-    PRIVATE
-    TANGRAM_MBTILES_DATASOURCE)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
