@@ -23,8 +23,9 @@
 #include <codecvt>
 #include <locale>
 
+#ifdef TANGRAM_MBTILES_DATASOURCE
 #include "sqlite3ndk.h"
-
+#endif
 
 PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT = 0;
 PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT = 0;
@@ -182,7 +183,9 @@ AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject
         return;
     }
 
+#ifdef TANGRAM_MBTILES_DATASOURCE
     sqlite3_ndk_init(m_assetManager);
+#endif
 }
 
 void AndroidPlatform::dispose(JNIEnv* _jniEnv) {

@@ -13,13 +13,13 @@ add_library(tangram SHARED
   platforms/common/platform_gl.cpp
   platforms/android/tangram/src/main/cpp/jniExports.cpp
   platforms/android/tangram/src/main/cpp/androidPlatform.cpp
-  platforms/android/tangram/src/main/cpp/sqlite3ndk.cpp
 )
 
-target_include_directories(tangram
-  PRIVATE
-  core/deps/SQLiteCpp/sqlite3 # sqlite3ndk.cpp needs sqlite3.h
-)
+if(TANGRAM_MBTILES_DATASOURCE)
+  target_sources(tangram PRIVATE platforms/android/tangram/src/main/cpp/sqlite3ndk.cpp)
+  target_include_directories(tangram PRIVATE core/deps/SQLiteCpp/sqlite3) # sqlite3ndk.cpp needs sqlite3.h
+  target_compile_definitions(tangram PRIVATE TANGRAM_MBTILES_DATASOURCE=1)
+endif()
 
 target_link_libraries(tangram
   PRIVATE
