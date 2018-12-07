@@ -254,6 +254,7 @@ bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     if (!checkRule(_rule)) { return false; }
 
     TextStyle::Parameters params = applyRule(_rule, _feat.props, false);
+    if (!params.font) { return false; }
 
     Label::Type labelType;
     if (_feat.geometryType == GeometryType::lines) {
@@ -578,9 +579,6 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         p.text = _props.getString(key_name);
     }
 
-
-    if (p.text.empty()) { return p; }
-
     auto fontFamily = _rule.get<std::string>(StyleParamKey::text_font_family);
     fontFamily = (!fontFamily) ? &defaultFamily : fontFamily;
 
@@ -594,7 +592,10 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     p.fontSize *= m_style.pixelScale();
 
     p.font = m_style.context()->getFont(*fontFamily, *fontStyle, *fontWeight, p.fontSize);
-
+    if (!p.font) {
+        LOGW("Missing font for %s / %s / %s / %d", fontFamily->c_str(), fontStyle->c_str(), fontWeight->c_str(), p.fontSize);
+        return p;
+    }
     _rule.get(StyleParamKey::text_font_fill, p.fill);
 
     _rule.get(StyleParamKey::text_font_stroke_color, p.strokeColor);
