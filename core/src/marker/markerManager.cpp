@@ -24,7 +24,7 @@ void MarkerManager::setScene(std::shared_ptr<Scene> scene) {
 
     m_scene = scene;
 
-    m_styleContext = std::make_unique<StyleContext>();
+    m_styleContext = std::make_unique<StyleContext>(false);
     m_styleContext->initScene(*scene);
 
     // Initialize StyleBuilders.

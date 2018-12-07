@@ -21,44 +21,11 @@
 #include <string>
 #include <unordered_map>
 
-#define RUNTIME_STYLE_CONTEXT
-
-#ifndef RUNTIME_STYLE_CONTEXT
-#define OVERRIDE
-#else
-#define OVERRIDE override
-#endif
-
 namespace Tangram {
 
-#ifdef RUNTIME_STYLE_CONTEXT
-struct StyleContext::StyleContextImpl {
-    virtual ~StyleContextImpl() = default;
-    virtual void setFeature(const Feature& _feature) = 0;
-    virtual void setFilterKey(Filter::Key _key, int _value) = 0;
-    virtual bool evalFilter(JSFunctionIndex id) = 0;
-    virtual bool evalStyle(JSFunctionIndex id, StyleParamKey _key, StyleParam::Value& _val) = 0;
-    virtual void initScene(const Scene& _scene) = 0;
-    virtual void clear() = 0;
-    virtual bool addFunction(const std::string& _function) = 0;
-    virtual void setSceneGlobals(const YAML::Node& sceneGlobals) = 0;
-    virtual bool setFunctions(const std::vector<std::string>& _functions)  = 0;
-};
-#endif
-
-
-#ifdef RUNTIME_STYLE_CONTEXT
-template<class JSContext, class JSValue>
+template<class JSContext>
 struct StyleContextImpl : public StyleContext::StyleContextImpl {
-#else
-struct StyleContext::StyleContextImpl {
-#endif
-
-#ifndef RUNTIME_STYLE_CONTEXT
-    using JSContext = Duktape::Context;
-    using JSValue = Duktape::Value;
-#endif
-
+    using JSValue = typename JSContext::Value;
     using Scope = JavaScriptScope<JSContext>;
 
     int32_t m_sceneId = -1;
@@ -121,7 +88,7 @@ struct StyleContext::StyleContextImpl {
         }
     }
 
-    void setSceneGlobals(const YAML::Node& sceneGlobals) OVERRIDE {
+    void setSceneGlobals(const YAML::Node& sceneGlobals) override {
         if (!sceneGlobals) { return; }
 
         Scope jsScope(m_jsContext);
@@ -130,7 +97,7 @@ struct StyleContext::StyleContextImpl {
         m_jsContext.setGlobalValue("global", std::move(jsValue));
     }
 
-    void initScene(const Scene& _scene) OVERRIDE {
+    void initScene(const Scene& _scene) override {
         if (_scene.id == m_sceneId) { return; }
         m_sceneId = _scene.id;
 
@@ -139,7 +106,7 @@ struct StyleContext::StyleContextImpl {
         setFunctions(_scene.functions().functions);
     }
 
-    bool setFunctions(const std::vector<std::string>& _functions) OVERRIDE {
+    bool setFunctions(const std::vector<std::string>& _functions) override {
         uint32_t id = 0;
         bool success = true;
         for (auto& function : _functions) {
@@ -150,28 +117,28 @@ struct StyleContext::StyleContextImpl {
         return success;
     }
 
-    bool addFunction(const std::string& _function) OVERRIDE {
+    bool addFunction(const std::string& _function) override {
         bool success = m_jsContext.setFunction(m_functionCount++, _function);
         return success;
     }
 
-    void setFilterKey(Filter::Key _key, int _val) OVERRIDE {
+    void setFilterKey(Filter::Key _key, int _val) override {
         m_jsContext.setFilterKey(_key, _val);
     }
 
-    void setFeature(const Feature& _feature) OVERRIDE {
+    void setFeature(const Feature& _feature) override {
         m_jsContext.setCurrentFeature(&_feature);
     }
 
-    void clear() OVERRIDE {
+    void clear() override {
         m_jsContext.setCurrentFeature(nullptr);
     }
 
-    bool evalFilter(JSFunctionIndex _id) OVERRIDE {
+    bool evalFilter(JSFunctionIndex _id) override {
         return m_jsContext.evaluateBooleanFunction(_id);
     }
 
-    bool evalStyle(JSFunctionIndex _id, StyleParamKey _key, StyleParam::Value& _val) OVERRIDE {
+    bool evalStyle(JSFunctionIndex _id, StyleParamKey _key, StyleParam::Value& _val) override {
 
         Scope jsScope(m_jsContext);
 
@@ -331,11 +298,126 @@ struct StyleContext::StyleContextImpl {
     }
 };
 
-#ifdef RUNTIME_STYLE_CONTEXT
-using DuktapeStyleContext = StyleContextImpl<Duktape::Context, Duktape::Value>;
+template<class JSContext>
+struct StyleContextRecorder : public StyleContextImpl<JSContext> {
+
+    using Base = StyleContextImpl<JSContext>;
+
+    // TODO record geomtype
+    std::map<JSFunctionIndex, std::vector<const Feature*>> filterCalls;
+    std::map<JSFunctionIndex, std::vector<std::pair<StyleParamKey, const Feature*>>> styleCalls;
+
+    const Feature* feature;
+    std::vector<std::string> functions;
+    const Scene* scene;
+
+    void setFeature(const Feature& _feature) override {
+        feature = &_feature;
+        Base::setFeature(_feature);
+    }
+    void setFilterKey(Filter::Key _key, int _value) override {
+        Base::setFilterKey(_key, _value);
+    }
+    bool evalFilter(JSFunctionIndex _id) override {
+
+        filterCalls[_id].emplace_back(feature);
+
+        return Base::evalFilter(_id);
+    }
+    bool evalStyle(JSFunctionIndex _id, StyleParamKey _key, StyleParam::Value& _value) override {
+        styleCalls[_id].emplace_back(_key, feature);
+        return Base::evalStyle(_id, _key, _value);
+    }
+    void initScene(const Scene& _scene) override {
+        scene = &_scene;
+
+        Base::initScene(_scene);
+    }
+    void clear() override {
+        Base::clear();
+    }
+    bool addFunction(const std::string& _function) override {
+        return Base::addFunction(_function);
+    }
+    void setSceneGlobals(const YAML::Node& _sceneGlobals) override {
+        Base::setSceneGlobals(_sceneGlobals);
+    }
+    bool setFunctions(const std::vector<std::string>& _functions)  override {
+        return Base::setFunctions(_functions);
+    }
+
+    void recorderLog() override {
+        size_t sum = 0;
+        for (auto& entry : filterCalls) {
+            sum += entry.second.size();
+        }
+        printf(">>>>>>>>>>>>>>> [%d] filter functions used for[%d] features <<<<<<<<<<<<<<<\n", filterCalls.size(), sum);
+
+        for (auto& entry : filterCalls) {
+            printf("--------------------  fn:[%d] features:[%zu] --------------------\n", entry.first, entry.second.size());
+            printf("%s\n", scene->functions().functions[entry.first].c_str());
+        }
+        sum = 0;
+        for (auto& entry : styleCalls) {
+            sum += entry.second.size();
+        }
+        printf(">>>>>>>>>>>>>>> [%d] style functions used for [%d] features <<<<<<<<<<<<<<<\n", styleCalls.size(), sum);
+        for (auto& entry : styleCalls) {
+            printf("--------------------  fn:[%d] features:[%zu] --------------------\n", entry.first, entry.second.size());
+            printf("%s\n", scene->functions().functions[entry.first].c_str());
+        }
+    }
+    // Recorder interface
+    void replayFilters() override {
+        for (auto& entry : filterCalls) {
+            for (auto& feature : entry.second) {
+                Base::setFeature(*feature);
+                Base::evalFilter(entry.first);
+            }
+        }
+    }
+    // Recorder interface
+    void replayStyles() override {
+        for (auto& entry : styleCalls) {
+            for (auto& keyFeature : entry.second) {
+                StyleParam::Value value;
+                Base::setFeature(*keyFeature.second);
+                Base::evalStyle(entry.first, keyFeature.first, value);
+            }
+        }
+    }
+};
+
+using DuktapeStyleContext = StyleContextImpl<Duktape::Context>;
+using DuktapeStyleContextRecorder = StyleContextRecorder<Duktape::Context>;
 #ifdef TANGRAM_USE_JSCORE
-using JSCoreStyleContext = StyleContextImpl<JSCore::Context, JSCore::Value>;
+using JSCoreStyleContext = StyleContextImpl<JSCore::Context>;
+using JSCoreStyleContextRecorder = StyleContextRecorder<JSCore::Context>;
 #endif
+
+
+StyleContext::StyleContext(bool jscore, bool record) {
+    if (record) {
+#ifdef TANGRAM_USE_JSCORE
+        if (jscore) {
+            LOG(">>>>>>>>  record <<<<<");
+            impl.reset(new JSCoreStyleContextRecorder());
+            return;
+        }
+#endif
+        LOG(">>>>>>>>  record <<<<<");
+        impl.reset(new DuktapeStyleContextRecorder());
+
+    } else {
+#ifdef TANGRAM_USE_JSCORE
+        if (jscore) {
+            impl.reset(new JSCoreStyleContext());
+            return;
+        }
+#endif
+        impl.reset(new DuktapeStyleContext());
+    }
+}
 
 #ifdef TANGRAM_USE_JSCORE
 StyleContext::StyleContext()
@@ -343,24 +425,6 @@ StyleContext::StyleContext()
 #else
 StyleContext::StyleContext()
     : impl(std::make_unique<DuktapeStyleContext>()) {}
-#endif
-
-StyleContext::StyleContext(bool jscore) {
-#ifdef TANGRAM_USE_JSCORE
-    if (jscore) {
-        impl.reset(new JSCoreStyleContext());
-        return;
-    }
-#endif
-    impl.reset(new DuktapeStyleContext());
-}
-#else
-StyleContext::StyleContext()
-    : impl(std::make_unique<StyleContext::StyleContextImpl>()) {}
-
-StyleContext::StyleContext(bool jscore)
-    : impl(std::make_unique<StyleContext::StyleContextImpl>()) {}
-
 #endif
 
 StyleContext::~StyleContext() {}

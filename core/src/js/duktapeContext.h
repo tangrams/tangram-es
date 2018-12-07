@@ -171,6 +171,7 @@ static Context& getContext(duk_context* _ctx) {
 }
 
 struct Context {
+    using Value = Duktape::Value;
 
     duk_context* _ctx = nullptr;
     const Feature* _feature = nullptr;

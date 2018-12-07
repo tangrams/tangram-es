@@ -113,62 +113,56 @@ void globalSetup() {
     }
 }
 
+__attribute__ ((noinline))
+void filter(StyleContext& ctx, const SceneLayer& layer, const Feature& feature) {
+    StyleParam::Value styleValue;
+    benchmark::DoNotOptimize(styleValue);
+
+    if (layer.filter().eval(feature, ctx)) {
+        for (auto& r : layer.rules()) {
+            for (auto& sp : r.parameters) {
+                if (sp.function >= 0) {
+                    //evalCnt++;
+                    ctx.evalStyle(sp.function, sp.key, styleValue);
+                }
+            }
+        }
+        for (const auto& sublayer : layer.sublayers()) {
+            filter(ctx, sublayer, feature);
+        }
+    }
+}
+
+void applyStyling(StyleContext& ctx) {
+    for (const auto& datalayer : scene->layers()) {
+        for (const auto& collection : tileData->layers) {
+            if (!collection.name.empty()) {
+                const auto& dlc = datalayer.collections();
+                bool layerContainsCollection =
+                    std::find(dlc.begin(), dlc.end(), collection.name) != dlc.end();
+
+                if (!layerContainsCollection) { continue; }
+            }
+
+            for (const auto& feature : collection.features) {
+                ctx.setFeature(feature);
+                filter(ctx, datalayer, feature);
+            }
+        }
+    }
+}
+
 template<size_t jsCore>
 struct JSTileStyleFnFixture : public benchmark::Fixture {
     std::unique_ptr<StyleContext> ctx;
-    Feature feature;
-    uint32_t numFunctions = 0;
-    uint32_t evalCnt = 0;
-
     void SetUp(const ::benchmark::State& state) override {
         globalSetup();
         ctx.reset(new StyleContext(jsCore));
         ctx->initScene(*scene);
         ctx->setFilterKey(Filter::Key::zoom, 10);
     }
-    void TearDown(const ::benchmark::State& state) override {
-        LOG(">>> %d", evalCnt);
-    }
-
-    StyleParam::Value styleValue;
-
-    __attribute__ ((noinline))
-    void filter(const SceneLayer& layer) {
-        if (layer.filter().eval(feature, *ctx)) {
-            for (auto& r : layer.rules()) {
-                for (auto& sp : r.parameters) {
-                    if (sp.function >= 0) {
-                        evalCnt++;
-                        ctx->evalStyle(sp.function, sp.key, styleValue);
-                    }
-                }
-            }
-            for (const auto& sublayer : layer.sublayers()) {
-                filter(sublayer);
-            }
-        }
-    }
-
     __attribute__ ((noinline)) void run() {
-        benchmark::DoNotOptimize(styleValue);
-
-        for (const auto& datalayer : scene->layers()) {
-            for (const auto& collection : tileData->layers) {
-                if (!collection.name.empty()) {
-                    const auto& dlc = datalayer.collections();
-                    bool layerContainsCollection =
-                        std::find(dlc.begin(), dlc.end(), collection.name) != dlc.end();
-
-                    if (!layerContainsCollection) { continue; }
-                }
-
-                for (const auto& feat : collection.features) {
-                    ctx->setFeature(feat);
-
-                    filter(datalayer);
-                }
-            }
-        }
+        applyStyling(*ctx);
     }
 };
 
@@ -179,6 +173,32 @@ RUN(JSCoreTileStyleFnFixture, JSCoreTileStyleFnBench)
 
 using DuktapeTileStyleFnFixture = JSTileStyleFnFixture<0>;
 RUN(DuktapeTileStyleFnFixture, DuktapeTileStyleFnBench)
+
+
+template<size_t jsCore>
+struct JSTileStyleFnReplayFixture : public benchmark::Fixture {
+    std::unique_ptr<StyleContext> ctx;
+    void SetUp(const ::benchmark::State& state) override {
+        globalSetup();
+        ctx.reset(new StyleContext(jsCore, true));
+        ctx->initScene(*scene);
+        ctx->setFilterKey(Filter::Key::zoom, 10);
+        applyStyling(*ctx);
+        ctx->impl->recorderLog();
+    }
+    __attribute__ ((noinline)) void run() {
+        ctx->impl->replayFilters();
+        ctx->impl->replayStyles();
+    }
+};
+
+#ifdef TANGRAM_USE_JSCORE
+using JSCoreTileStyleFnReplayFixture = JSTileStyleFnReplayFixture<1>;
+RUN(JSCoreTileStyleFnReplayFixture, JSCoreTileStyleFnReplayBench)
+#endif
+
+using DuktapeTileStyleFnReplayFixture = JSTileStyleFnReplayFixture<0>;
+RUN(DuktapeTileStyleFnReplayFixture, DuktapeTileStyleFnReplayBench)
 
 
 class DirectGetPropertyFixture : public benchmark::Fixture {

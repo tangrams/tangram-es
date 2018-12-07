@@ -17,7 +17,7 @@ namespace Tangram {
 
 TileBuilder::TileBuilder(std::shared_ptr<Scene> _scene)
     : m_scene(_scene),
-      m_styleContext(std::make_unique<StyleContext>()){
+      m_styleContext(std::make_unique<StyleContext>(false)){
 
     m_styleContext->initScene(*_scene);
 

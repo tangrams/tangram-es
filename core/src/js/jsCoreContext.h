@@ -131,6 +131,7 @@ struct Value {
 
 
 struct Context {
+    using Value = JSCore::Value;
 
     const Feature* _feature;
     std::vector<JSObjectRef> _functions;
