@@ -8,6 +8,8 @@ option(TANGRAM_USE_JSCORE_STATIC "Build with pre-compiled static libraries for J
 
 option(TANGRAM_USE_SYSTEM_FONT_LIBS "Use system libraries Freetype, ICU and Harfbuzz via pkgconfig" OFF)
 option(TANGRAM_USE_SYSTEM_GLFW_LIBS "Use system libraries for GLFW3 via pkgconfig" OFF)
+option(TANGRAM_USE_SYSTEM_SQLITE_LIBS "Use system libraries for SQLite via pkgconfig" OFF)
+option(TANGRAM_MBTILES_DATASOURCE "Build MBTiles Datasource" ON)
 
 option(TANGRAM_BUILD_TESTS "Build unit tests" OFF)
 option(TANGRAM_BUNDLE_TESTS "Compile all tests into a single binary" ON)

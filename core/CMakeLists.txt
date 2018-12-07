@@ -7,7 +7,6 @@ add_library(tangram-core
   src/map.cpp
   src/platform.cpp
   src/data/clientGeoJsonSource.cpp
-  src/data/mbtilesDataSource.cpp
   src/data/memoryCacheDataSource.cpp
   src/data/networkDataSource.cpp
   src/data/properties.cpp
@@ -126,6 +125,17 @@ target_include_directories(tangram-core
   deps/double-conversion/include
 )
 
+# Link core library dependencies.
+target_link_libraries(tangram-core
+  PRIVATE
+  css-color-parser-cpp
+  yaml-cpp
+  alfons
+  double-conversion
+  miniz
+  z
+)
+
 # Add JavaScript implementation.
 if(TANGRAM_JSCORE_ENABLED)
   target_sources(tangram-core PRIVATE src/js/JSCoreContext.cpp)
@@ -140,19 +150,12 @@ else()
   target_link_libraries(tangram-core PRIVATE duktape)
 endif()
 
-# Link core library dependencies.
-target_link_libraries(tangram-core
-  PRIVATE
-  css-color-parser-cpp
-  yaml-cpp
-  alfons
-  SQLiteCpp
-  sqlite3
-  double-conversion
-  miniz
-  z
-)
-
+# Add MBTiles implementation.
+if(TANGRAM_MBTILES_DATASOURCE)
+  target_sources(tangram-core PRIVATE src/data/mbtilesDataSource.cpp)
+  target_link_libraries(tangram-core PRIVATE SQLiteCpp sqlite3)
+  target_compile_definitions(tangram-core PRIVATE TANGRAM_MBTILES_DATASOURCE=1)
+endif()
 
 if(UNIX AND NOT APPLE)
   # SQLite needs dl dynamic library loader when Linux
