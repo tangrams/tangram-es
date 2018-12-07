@@ -25,42 +25,53 @@ void logMsg(const char* fmt, ...) {
     va_end(args);
 }
 
-LinuxPlatform::LinuxPlatform() :
-    m_urlClient(UrlClient::Options{}) {
+LinuxPlatform::LinuxPlatform() {
+    m_urlClient = std::make_unique<UrlClient>(UrlClient::Options{});
     m_fcConfig = FcInitLoadConfigAndFonts();
 }
 
 LinuxPlatform::LinuxPlatform(UrlClient::Options urlClientOptions) :
-    m_urlClient(urlClientOptions) {}
+    m_urlClient(std::make_unique<UrlClient>(urlClientOptions)) {
+    m_fcConfig = FcInitLoadConfigAndFonts();
+}
+
+LinuxPlatform::~LinuxPlatform() {
+    FcConfigDestroy(m_fcConfig);
+}
+
+void LinuxPlatform::shutdown() {
+    // Stop all UrlWorker threads
+    m_shutdown = true;
+    m_urlClient.reset();
+}
 
 void LinuxPlatform::requestRender() const {
+    if (m_shutdown) { return; }
     glfwPostEmptyEvent();
 }
 
 std::vector<FontSourceHandle> LinuxPlatform::systemFontFallbacksHandle() const {
 
-    /*
-     * Read system fontconfig to get list of fallback font for each supported language
-     */
+    // Read system fontconfig to get list of fallback font for each
+    // supported language
     auto fallbackFonts = systemFallbackFonts(m_fcConfig);
 
-    /*
-     * create FontSourceHandle from the found list of fallback fonts
-     */
+    // Create FontSourceHandle from the found list of fallback fonts
     std::vector<FontSourceHandle> handles;
     handles.reserve(fallbackFonts.size());
 
-    for (auto& path : fallbackFonts) {
-        handles.emplace_back(Url(path));
-    }
+    std::transform(std::begin(fallbackFonts), std::end(fallbackFonts),
+                   std::back_inserter(handles),
+                   [](auto& path) { return FontSourceHandle(Url(path)); });
 
     return handles;
 }
 
-FontSourceHandle LinuxPlatform::systemFont(const std::string& _name, const std::string& _weight,
+FontSourceHandle LinuxPlatform::systemFont(const std::string& _name,
+                                           const std::string& _weight,
                                            const std::string& _face) const {
 
-    std::string fontFile = systemFontPath(m_fcConfig, _name, _weight, _face);
+    auto fontFile = systemFontPath(m_fcConfig, _name, _weight, _face);
 
     if (fontFile.empty()) { return {}; }
 
@@ -68,14 +79,34 @@ FontSourceHandle LinuxPlatform::systemFont(const std::string& _name, const std::
 }
 
 UrlRequestHandle LinuxPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
-    return m_urlClient.addRequest(_url.string(), _callback);
+    if (m_shutdown) { return 0; }
+    if (_url.hasHttpScheme()) {
+        return m_urlClient->addRequest(_url.string(),
+                                       [this, cb = _callback](UrlResponse&& r) {
+                                           cb(std::move(r));
+                                           requestRender();
+                                       });
+    } else {
+        m_fileWorker.enqueue([path = _url.path(), _callback](){
+             UrlResponse response;
+             auto allocator = [&](size_t size) {
+                 response.content.resize(size);
+                 return response.content.data();
+             };
+
+             Platform::bytesFromFileSystem(path.c_str(), allocator);
+             _callback(std::move(response));
+        });
+        return std::numeric_limits<uint64_t>::max();
+    }
 }
 
 void LinuxPlatform::cancelUrlRequest(UrlRequestHandle _request) {
-    m_urlClient.cancelRequest(_request);
-}
+    if (m_shutdown) { return; }
+    if (_request == std::numeric_limits<uint64_t>::max()) { return; }
 
-LinuxPlatform::~LinuxPlatform() {}
+    m_urlClient->cancelRequest(_request);
+}
 
 void setCurrentThreadPriority(int priority) {
     setpriority(PRIO_PROCESS, 0, priority);
