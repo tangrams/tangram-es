@@ -19,7 +19,7 @@ check_unsupported_compiler_version()
 
 add_definitions(-DTANGRAM_LINUX)
 
-
+set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 
 include(cmake/glfw.cmake)
