@@ -8,7 +8,7 @@
 
 #include <libgen.h>
 
-#define DEFAULT_FONT "fonts/NotoSans-Regular.ttf"
+#define DEFAULT_FONT "res/fonts/NotoSans-Regular.ttf"
 
 #include "log.h"
 
@@ -35,13 +35,16 @@ UrlRequestHandle MockPlatform::startUrlRequest(Url _url, UrlCallback _callback) 
 
     UrlResponse response;
 
-    auto it = m_files.find(_url);
-    if (it != m_files.end()) {
-        response.content = it->second;
+    if (!m_files.empty()){
+        auto it = m_files.find(_url);
+        if (it != m_files.end()) {
+            response.content = it->second;
+        } else {
+            response.error = "Url contents could not be found!";
+        }
     } else {
-        response.error = "Url contents could not be found!";
+        response.content = getBytesFromFile(_url.path().c_str());
     }
-
     _callback(std::move(response));
 
     return 0;
