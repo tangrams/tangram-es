@@ -32,18 +32,20 @@
 
 using namespace Tangram;
 
-const char scene_file[] = "res/scene.yaml";
+const char scene_file[] = "bubble-wrap-style.zip";
+//const char scene_file[] = "res/scene.yaml";
 const char tile_file[] = "res/tile.mvt";
 
 std::shared_ptr<Scene> scene;
 std::shared_ptr<TileSource> source;
 std::shared_ptr<TileData> tileData;
+std::shared_ptr<MockPlatform> platform;
 
 void globalSetup() {
     static bool initialized = false;
     if (initialized) { return; }
 
-    std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
+    platform = std::make_shared<MockPlatform>();
 
     Url sceneUrl(scene_file);
     platform->putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));

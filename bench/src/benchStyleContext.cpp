@@ -170,7 +170,6 @@ struct JSTileStyleFnFixture : public benchmark::Fixture {
 using JSCoreTileStyleFnFixture = JSTileStyleFnFixture<1>;
 RUN(JSCoreTileStyleFnFixture, JSCoreTileStyleFnBench)
 #endif
-
 using DuktapeTileStyleFnFixture = JSTileStyleFnFixture<0>;
 RUN(DuktapeTileStyleFnFixture, DuktapeTileStyleFnBench)
 
@@ -196,7 +195,6 @@ struct JSTileStyleFnReplayFixture : public benchmark::Fixture {
 using JSCoreTileStyleFnReplayFixture = JSTileStyleFnReplayFixture<1>;
 RUN(JSCoreTileStyleFnReplayFixture, JSCoreTileStyleFnReplayBench)
 #endif
-
 using DuktapeTileStyleFnReplayFixture = JSTileStyleFnReplayFixture<0>;
 RUN(DuktapeTileStyleFnReplayFixture, DuktapeTileStyleFnReplayBench)
 
