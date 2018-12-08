@@ -145,6 +145,12 @@ public:
 
     void setFormat(Format format) { m_format = format; }
 
+    struct PropertyFilter {
+        std::vector<std::string> drop;
+        std::vector<std::string> keep;
+    };
+    void setPropertyFilter(PropertyFilter&& filter) { m_propertyFilter = std::move(filter); }
+
 protected:
 
     void addRasterTasks(TileTask& _task);
@@ -171,6 +177,8 @@ protected:
     std::vector<RasterSource*> m_rasterSources;
 
     std::unique_ptr<DataSource> m_sources;
+
+    PropertyFilter m_propertyFilter;
 };
 
 }

@@ -969,6 +969,26 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         }
     }
 
+    TileSource::PropertyFilter propFilter;
+    if (auto n = source["drop_feature_properties"]) {
+        if (n.IsSequence()) {
+            for (auto& key : n) {
+                if (key.IsScalar()) {
+                    propFilter.drop.push_back(key.Scalar());
+                }
+            }
+        }
+    }
+    if (auto n = source["keep_feature_properties"]) {
+        if (n.IsSequence()) {
+            for (auto& key : n) {
+                if (key.IsScalar()) {
+                    propFilter.keep.push_back(key.Scalar());
+                }
+            }
+        }
+    }
+
     // Parse and append any URL parameters.
     if (auto urlParamsNode = source["url_params"]) {
         std::stringstream urlStream;
@@ -1084,6 +1104,8 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
                 "This source will be ignored.", name.c_str());
             return;
         }
+
+        sourcePtr->setPropertyFilter(std::move(propFilter));
     }
 
     _scene->tileSources().push_back(sourcePtr);
