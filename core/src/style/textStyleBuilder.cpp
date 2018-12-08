@@ -579,9 +579,6 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         p.text = _props.getString(key_name);
     }
 
-
-    if (p.text.empty()) { return p; }
-
     auto fontFamily = _rule.get<std::string>(StyleParamKey::text_font_family);
     fontFamily = (!fontFamily) ? &defaultFamily : fontFamily;
 
