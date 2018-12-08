@@ -117,12 +117,14 @@ Feature Mvt::getFeature(ParserContext& _ctx, protobuf::message _featureIn) {
                     }
 
                     auto valueKey = tagsMsg.varint();
-
+                    // Check if the property should be dropped
+                    if (_ctx.keys[tagKey].empty()) {
+                        continue;
+                    }
                     if( _ctx.values.size() <= valueKey ) {
                         LOGE("accessing out of bound values");
                         return feature;
                     }
-
                     _ctx.featureTags[tagKey] = valueKey;
                 }
                 break;
@@ -215,7 +217,8 @@ Feature Mvt::getFeature(ParserContext& _ctx, protobuf::message _featureIn) {
     return feature;
 }
 
-Layer Mvt::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
+Layer Mvt::getLayer(ParserContext& _ctx, protobuf::message _layerIn,
+                    const TileSource::PropertyFilter& filter) {
 
     Layer layer("");
 
@@ -245,7 +248,29 @@ Layer Mvt::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
                 continue;
             }
             case LAYER_KEY: {
-                _ctx.keys.push_back(_layerIn.string());
+                std::string key = _layerIn.string();
+                // Check whether the key must be kept
+                if (std::find(std::begin(filter.keep), std::end(filter.keep), key) == std::end(filter.keep)) {
+                    // Check whether the key should be dropped
+                    if (std::find_if(std::begin(filter.drop), std::end(filter.drop),
+                                     [&](auto& k) {
+                                         if (k.back() == '*' && key.length() >= k.length()-1) {
+                                             int n = std::strncmp(key.c_str(), k.c_str(), k.length()-1);
+                                             //LOG("check %s / %d / %d", k.c_str(), n, k.length()-1);
+                                             return  n == 0;
+                                         } else {
+                                             return key == k;
+                                         }}) != std::end(filter.drop)) {
+
+                        LOG("drop key: %s", key.c_str());
+                        key = "";
+                        //} else {
+                        //LOG("keep key: %s", key.c_str());
+                    }
+                    //} else {
+                    //LOG("keep key: %s", key.c_str());
+                }
+                _ctx.keys.emplace_back(std::move(key));
                 break;
             }
             case LAYER_VALUE: {
@@ -321,7 +346,8 @@ Layer Mvt::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
     return layer;
 }
 
-std::shared_ptr<TileData> Mvt::parseTile(const TileTask& _task, int32_t _sourceId) {
+std::shared_ptr<TileData> Mvt::parseTile(const TileTask& _task, int32_t _sourceId,
+                                         const TileSource::PropertyFilter& filter) {
 
     auto tileData = std::make_shared<TileData>();
 
@@ -333,7 +359,7 @@ std::shared_ptr<TileData> Mvt::parseTile(const TileTask& _task, int32_t _sourceI
     try {
         while(item.next()) {
             if(item.tag == LAYER) {
-                tileData->layers.push_back(getLayer(ctx, item.getMessage()));
+                tileData->layers.push_back(getLayer(ctx, item.getMessage(), filter));
             } else {
                 item.skip();
             }
