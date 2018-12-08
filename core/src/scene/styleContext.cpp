@@ -346,25 +346,39 @@ struct StyleContextRecorder : public StyleContextImpl<JSContext> {
         return Base::setFunctions(_functions);
     }
 
-    void recorderLog() override {
+    void recorderLog(bool printFunctions, bool printFeatures) override {
         size_t sum = 0;
         for (auto& entry : filterCalls) {
             sum += entry.second.size();
         }
-        printf(">>>>>>>>>>>>>>> [%d] filter functions used for[%d] features <<<<<<<<<<<<<<<\n", filterCalls.size(), sum);
+        printf(">>>>>>>>>>>>>>> [%zu] filter functions calls <<<<<<<<<<<<<<<\n", sum);
 
         for (auto& entry : filterCalls) {
             printf("--------------------  fn:[%d] features:[%zu] --------------------\n", entry.first, entry.second.size());
-            printf("%s\n", scene->functions().functions[entry.first].c_str());
+            if (printFunctions) {
+                printf("%s\n", scene->functions().functions[entry.first].c_str());
+            }
+            if (printFeatures) {
+                for (auto& feature : entry.second) {
+                    printf("F:%d %s\n", entry.first, feature->props.toJson().c_str());
+                }
+            }
         }
         sum = 0;
         for (auto& entry : styleCalls) {
             sum += entry.second.size();
         }
-        printf(">>>>>>>>>>>>>>> [%d] style functions used for [%d] features <<<<<<<<<<<<<<<\n", styleCalls.size(), sum);
+        printf(">>>>>>>>>>>>>>> [%zu] style functions calls <<<<<<<<<<<<<<<\n", sum);
         for (auto& entry : styleCalls) {
             printf("--------------------  fn:[%d] features:[%zu] --------------------\n", entry.first, entry.second.size());
-            printf("%s\n", scene->functions().functions[entry.first].c_str());
+            if (printFunctions) {
+                printf("%s\n", scene->functions().functions[entry.first].c_str());
+            }
+            if (printFeatures) {
+                for (auto& keyFeature : entry.second) {
+                    printf("S:%d %s\n", entry.first, keyFeature.second->props.toJson().c_str());
+                }
+            }
         }
     }
     // Recorder interface

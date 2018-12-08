@@ -70,7 +70,7 @@ public:
         virtual void setSceneGlobals(const YAML::Node& sceneGlobals) = 0;
         virtual bool setFunctions(const std::vector<std::string>& _functions)  = 0;
         // Recorder
-        virtual void recorderLog() {}
+        virtual void recorderLog(bool functions = true, bool features = false) {}
         virtual void replayFilters() {}
         virtual void replayStyles() {}
     };
