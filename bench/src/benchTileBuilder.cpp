@@ -18,26 +18,34 @@
 #include <iostream>
 #include <vector>
 
+#define NUM_ITERATIONS 0
+
+#if NUM_ITERATIONS
+#define ITERATIONS ->Iterations(NUM_ITERATIONS)
+#else
+#define ITERATIONS
+#endif
 
 #define RUN(FIXTURE, NAME)                                              \
     BENCHMARK_DEFINE_F(FIXTURE, NAME)(benchmark::State& st) { while (st.KeepRunning()) { run(); } } \
-    BENCHMARK_REGISTER_F(FIXTURE, NAME);  //->Iterations(1)
+    BENCHMARK_REGISTER_F(FIXTURE, NAME)ITERATIONS;
 
 using namespace Tangram;
 
-//const char scene_file[] = "bubble-wrap-style.zip";
-const char scene_file[] = "res/scene.yaml";
+const char scene_file[] = "bubble-wrap-style.zip";
+//const char scene_file[] = "res/scene.yaml";
 const char tile_file[] = "res/tile.mvt";
 
 std::shared_ptr<Scene> scene;
 std::shared_ptr<TileSource> source;
 std::shared_ptr<TileData> tileData;
+std::shared_ptr<MockPlatform> platform;
 
 void globalSetup() {
-    static std::atomic<bool> initialized{false};
-    if (initialized.exchange(true)) { return; }
+    static bool initialized = false;
+    if (initialized) { return; }
 
-    std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
+    platform = std::make_shared<MockPlatform>();
 
     Url sceneUrl(scene_file);
     platform->putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
@@ -74,15 +82,19 @@ void globalSetup() {
         LOGE("Invalid tile file '%s'", tile_file);
         exit(-1);
     }
+    initialized = true;
 }
 
+template<size_t jscontext>
 class TileBuilderFixture : public benchmark::Fixture {
 public:
     std::unique_ptr<TileBuilder> tileBuilder;
+    StyleContext* styleContext;
     std::shared_ptr<Tile> result;
     void SetUp(const ::benchmark::State& state) override {
         globalSetup();
-        tileBuilder = std::make_unique<TileBuilder>(scene, new StyleContext());
+        styleContext = new StyleContext(jscontext);
+        tileBuilder = std::make_unique<TileBuilder>(scene, styleContext);
     }
     void TearDown(const ::benchmark::State& state) override {
         result.reset();
@@ -90,11 +102,15 @@ public:
 
     __attribute__ ((noinline)) void run() {
         result = tileBuilder->build({0,0,10,10}, *tileData, *source);
+        styleContext->clear();
     }
 };
 
-RUN(TileBuilderFixture, TileBuilderBench);
+using DUKTileBuilderFixture = TileBuilderFixture<0>;
+using JSCTileBuilderFixture = TileBuilderFixture<1>;
 
+RUN(DUKTileBuilderFixture, DUKTileBuilderBench)
+RUN(JSCTileBuilderFixture, JSCTileBuilderBench)
 
 
 BENCHMARK_MAIN();

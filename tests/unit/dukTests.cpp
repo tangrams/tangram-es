@@ -11,8 +11,11 @@
 
 using namespace Tangram;
 
+const bool jscore = false;
+
 TEST_CASE( "", "[Duktape][init]") {
-    StyleContext();
+    StyleContext(false);
+    StyleContext(true);
 }
 
 TEST_CASE( "Test evalFilterFn with feature", "[Duktape][evalFilterFn]") {
@@ -21,7 +24,7 @@ TEST_CASE( "Test evalFilterFn with feature", "[Duktape][evalFilterFn]") {
     feature.props.set("b", "B");
     feature.props.set("n", 42);
 
-    StyleContext ctx;
+    StyleContext ctx(jscore);
     ctx.setFeature(feature);
 
     REQUIRE(ctx.setFunctions({R"(function() { return feature.a === 'A' })"}));
@@ -44,14 +47,14 @@ TEST_CASE( "Test evalFilterFn with feature and keywords", "[Duktape][evalFilterF
     Feature feature;
     feature.props.set("scalerank", 2);
 
-    StyleContext ctx;
+    StyleContext ctx(jscore);
     ctx.setFeature(feature);
-    ctx.setKeyword("$zoom", 5);
+    ctx.setFilterKey(Filter::Key::zoom, 5);
 
     REQUIRE(ctx.setFunctions({ R"(function() { return (feature.scalerank * .5) <= ($zoom - 4); })"}));
     REQUIRE(ctx.evalFilter(0) == true);
 
-    ctx.setKeyword("$zoom", 4);
+    ctx.setFilterKey(Filter::Key::zoom, 4);
     REQUIRE(ctx.evalFilter(0) == false);
 
 }
@@ -66,13 +69,13 @@ TEST_CASE( "Test evalFilterFn with feature and keyword geometry", "[Duktape][eva
     Feature polygons;
     polygons.geometryType = GeometryType::polygons;
 
-    StyleContext ctx;
+    StyleContext ctx(jscore);
 
     // Test $geometry keyword
     REQUIRE(ctx.setFunctions({
-                R"(function() { return $geometry === 'point'; })",
-                R"(function() { return $geometry === 'line'; })",
-                R"(function() { return $geometry === 'polygon'; })"}));
+                R"(function() { return $geometry === point; })",
+                R"(function() { return $geometry === line; })",
+                R"(function() { return $geometry === polygon; })"}));
 
     ctx.setFeature(points);
     REQUIRE(ctx.evalFilter(0) == true);
@@ -92,7 +95,7 @@ TEST_CASE( "Test evalFilterFn with feature and keyword geometry", "[Duktape][eva
 }
 
 TEST_CASE( "Test evalFilterFn with different features", "[Duktape][evalFilterFn]") {
-    StyleContext ctx;
+    StyleContext ctx(jscore);
 
     REQUIRE(ctx.setFunctions({ R"(function() { return feature.scalerank === 2; })"}));
 
@@ -111,31 +114,31 @@ TEST_CASE( "Test evalFilterFn with different features", "[Duktape][evalFilterFn]
 }
 
 TEST_CASE( "Test numeric keyword", "[Duktape][setKeyword]") {
-    StyleContext ctx;
-    ctx.setKeyword("$zoom", 10);
+    StyleContext ctx(jscore);
+    ctx.setFilterKey(Filter::Key::zoom, 10);
     REQUIRE(ctx.setFunctions({ R"(function() { return $zoom === 10 })"}));
     REQUIRE(ctx.evalFilter(0) == true);
 
-    ctx.setKeyword("$zoom", 0);
+    ctx.setFilterKey(Filter::Key::zoom, 0);
     REQUIRE(ctx.evalFilter(0) == false);
 }
 
 TEST_CASE( "Test string keyword", "[Duktape][setKeyword]") {
-    StyleContext ctx;
-    ctx.setKeyword("$geometry", GeometryType::points);
+    StyleContext ctx(jscore);
+    ctx.setFilterKey(Filter::Key::geometry, GeometryType::points);
+
     REQUIRE(ctx.setFunctions({ R"(function() { return $geometry === point })"}));
     REQUIRE(ctx.evalFilter(0) == true);
 
-    ctx.setKeyword("$geometry", "none");
+    ctx.setFilterKey(Filter::Key::geometry, GeometryType::unknown);
     REQUIRE(ctx.evalFilter(0) == false);
-
 }
 
 TEST_CASE( "Test evalStyleFn - StyleParamKey::order", "[Duktape][evalStyleFn]") {
     Feature feat;
     feat.props.set("sort_key", 2);
 
-    StyleContext ctx;
+    StyleContext ctx(jscore);
     ctx.setFeature(feat);
     REQUIRE(ctx.setFunctions({ R"(function () { return feature.sort_key + 5 })"}));
 
@@ -148,7 +151,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::order", "[Duktape][evalStyleFn]") 
 
 TEST_CASE( "Test evalStyleFn - StyleParamKey::color", "[Duktape][evalStyleFn]") {
 
-    StyleContext ctx;
+    StyleContext ctx(jscore);
     StyleParam::Value value;
 
     REQUIRE(ctx.setFunctions({ R"(function () { return '#f0f'; })"}));
@@ -177,7 +180,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::width", "[Duktape][evalStyleFn]") 
     Feature feat;
     feat.props.set("width", 2.0);
 
-    StyleContext ctx;
+    StyleContext ctx(jscore);
     ctx.setFeature(feat);
     REQUIRE(ctx.setFunctions({ R"(function () { return feature.width * 2.3; })"}));
 
@@ -192,7 +195,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::extrude", "[Duktape][evalStyleFn]"
     Feature feat;
     feat.props.set("width", 2.0);
 
-    StyleContext ctx;
+    StyleContext ctx(jscore);
     ctx.setFeature(feat);
     REQUIRE(ctx.setFunctions({
                 R"(function () { return true; })",
@@ -222,7 +225,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::text_source", "[Duktape][evalStyle
     Feature feat;
     feat.props.set("name", "my name is my name");
 
-    StyleContext ctx;
+    StyleContext ctx(jscore);
     ctx.setFeature(feat);
     REQUIRE(ctx.setFunctions({
                 R"(function () { return 'hello!'; })",
@@ -237,23 +240,28 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::text_source", "[Duktape][evalStyle
     REQUIRE(ctx.evalStyle(1, StyleParamKey::text_source, value) == true);
     REQUIRE(value.is<std::string>());
     REQUIRE(value.get<std::string>() == "my name is my name");
+
+    REQUIRE(ctx.evalStyle(1, StyleParamKey::text_source, value) == true);
+    REQUIRE(value.is<std::string>());
+    REQUIRE(value.get<std::string>() == "my name is my name");
 }
 
 TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFilter]") {
-    Scene scene(std::make_shared<MockPlatform>(), Url());
+    SceneFunctions functions;
+
     YAML::Node n0 = YAML::Load(R"(filter: function() { return feature.sort_key === 2; })");
     YAML::Node n1 = YAML::Load(R"(filter: function() { return feature.name === 'test'; })");
 
-    Filter filter0 = SceneLoader::generateFilter(n0["filter"], scene);
-    Filter filter1 = SceneLoader::generateFilter(n1["filter"], scene);
+    Filter filter0 = Filter::generateFilter(n0["filter"], functions);
+    Filter filter1 = Filter::generateFilter(n1["filter"], functions);
 
-    REQUIRE(scene.functions().size() == 2);
+    REQUIRE(functions.size() == 2);
 
     REQUIRE(filter0.data.is<Filter::Function>());
     REQUIRE(filter1.data.is<Filter::Function>());
 
-    StyleContext ctx;
-    ctx.initFunctions(scene);
+    StyleContext ctx(jscore);
+    ctx.setFunctions(functions.functions);
 
     Feature feat1;
     feat1.props.set("sort_key", 2);
@@ -300,8 +308,8 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
     //     logMsg("F: '%s'\n", str.c_str());
     // }
 
-    StyleContext ctx;
-    ctx.initFunctions(*scene);
+    StyleContext ctx(jscore);
+    ctx.initScene(*scene);
 
     for (auto& style : styles) {
         //logMsg("S: %d - '%s' %d\n", style.key, style.toString().c_str(), style.function);
@@ -354,8 +362,8 @@ TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
 
     REQUIRE(scene->functions().size() == 4);
 
-    StyleContext ctx;
-    ctx.initFunctions(*scene);
+    StyleContext ctx(jscore);
+    ctx.initScene(*scene);
 
     for (auto& style : styles) {
         if (style.key == StyleParamKey::color) {

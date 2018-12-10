@@ -22,10 +22,11 @@ Context ctx;
 Feature civic, bmw1, bike;
 
 Filter load(const std::string& filterYaml) {
-    Scene scene(std::make_shared<MockPlatform>(), Url());
+    SceneFunctions functions;
+
     YAML::Node node = YAML::Load(filterYaml);
-    auto filter = SceneLoader::generateFilter(node["filter"], scene);
-    ctx.initFunctions(scene);
+    auto filter = Filter::generateFilter(node["filter"], functions);
+    ctx.setFunctions(functions.functions);
     return filter;
 }
 
@@ -57,8 +58,8 @@ void init() {
     bike.props.set("check", "available");
     bike.props.set("serial", 4398046511105); // 2^42 + 1
 
-    ctx.setKeyword("$geometry", Value(1));
-    ctx.setKeyword("$zoom", Value("false"));
+    ctx.setFilterKey(Filter::Key::geometry, GeometryType::points);
+    ctx.setFilterKey(Filter::Key::zoom, 0);
 }
 
 

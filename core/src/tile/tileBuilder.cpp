@@ -17,9 +17,9 @@ namespace Tangram {
 
 TileBuilder::TileBuilder(std::shared_ptr<Scene> _scene)
     : m_scene(_scene),
-      m_styleContext(std::make_unique<StyleContext>()) {
+      m_styleContext(std::make_unique<StyleContext>(false)){
 
-    m_styleContext->initFunctions(*_scene);
+    m_styleContext->initScene(*_scene);
 
     // Initialize StyleBuilders
     for (auto& style : _scene->styles()) {
@@ -28,10 +28,10 @@ TileBuilder::TileBuilder(std::shared_ptr<Scene> _scene)
 }
 
 TileBuilder::TileBuilder(std::shared_ptr<Scene> _scene, StyleContext* _styleContext)
-    : m_scene(_scene),
-      m_styleContext(std::unique_ptr<StyleContext>(_styleContext)) {
+    : m_scene(_scene) {
 
-    m_styleContext->initFunctions(*_scene);
+    m_styleContext.reset(_styleContext);
+    m_styleContext->initScene(*_scene);
 
     // Initialize StyleBuilders
     for (auto& style : _scene->styles()) {
@@ -117,7 +117,7 @@ std::unique_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
 
     tile->initGeometry(m_scene->styles().size());
 
-    m_styleContext->setKeywordZoom(_tileID.s);
+    m_styleContext->setFilterKey(Filter::Key::zoom, _tileID.s);
 
     for (auto& builder : m_styleBuilder) {
         if (builder.second)

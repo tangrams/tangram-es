@@ -62,12 +62,6 @@ struct SceneLoader {
     static void loadShaderConfig(const std::shared_ptr<Platform>& platform, Node shaders, Style& style, const std::shared_ptr<Scene>& scene);
     static void loadFont(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& font, const std::shared_ptr<Scene>& scene);
     static SceneLayer loadSublayer(const Node& layer, const std::string& name, const std::shared_ptr<Scene>& scene);
-    static Filter generateFilter(Node filter, Scene& scene);
-    static Filter generateAnyFilter(Node filter, Scene& scene);
-    static Filter generateAllFilter(Node filter, Scene& scene);
-    static Filter generateNoneFilter(Node filter, Scene& scene);
-    static Filter generatePredicate(Node filter, std::string _key);
-    static bool getFilterRangeValue(const Node& node, double& val, bool& hasPixelArea);
     /* loads a texture with default texture properties */
     static std::shared_ptr<Texture> getOrLoadTexture(const std::shared_ptr<Platform>& platform, const std::string& url, const std::shared_ptr<Scene>& scene);
     static std::shared_ptr<Texture> fetchTexture(const std::shared_ptr<Platform>& platform, const std::string& name, const std::string& url,

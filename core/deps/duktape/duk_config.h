@@ -59,6 +59,28 @@
 #if !defined(DUK_CONFIG_H_INCLUDED)
 #define DUK_CONFIG_H_INCLUDED
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+typedef const char* (*extstr_intern_check_fn)(void* _udata, void* _str, unsigned long _blen);
+typedef void (*extstr_free_fn)(void* _udata, const void* _extdata);
+
+//const duk_uint8_t *str
+const char* duk_extstr_intern_check(void* _udata, void* _str, unsigned long _blen);
+void duk_extstr_free(void* _udata, const void* _extdata);
+void duk_extstr_set_handler(extstr_intern_check_fn _check, extstr_free_fn _free);
+
+#if defined(__cplusplus)
+/* end 'extern "C"' wrapper */
+}
+#endif
+
+#define DUK_USE_EXTSTR_INTERN_CHECK duk_extstr_intern_check
+#define DUK_USE_EXTSTR_FREE duk_extstr_free
+//#define DUK_USE_VOLUNTARY_GC
+#undef DUK_USE_VOLUNTARY_GC
+
 /*
  *  Intermediate helper defines
  */
@@ -2854,8 +2876,8 @@ typedef struct duk_hthread duk_context;
 #define DUK_USE_EXEC_REGCONST_OPTIMIZE
 #undef DUK_USE_EXEC_TIMEOUT_CHECK
 #undef DUK_USE_EXPLICIT_NULL_INIT
-#undef DUK_USE_EXTSTR_FREE
-#undef DUK_USE_EXTSTR_INTERN_CHECK
+//#undef DUK_USE_EXTSTR_FREE
+//#undef DUK_USE_EXTSTR_INTERN_CHECK
 #undef DUK_USE_FASTINT
 #define DUK_USE_FAST_REFCOUNT_DEFAULT
 #undef DUK_USE_FATAL_HANDLER
@@ -2888,7 +2910,7 @@ typedef struct duk_hthread duk_context;
 #define DUK_USE_HOBJECT_HASH_PROP_LIMIT 8
 #define DUK_USE_HSTRING_ARRIDX
 #define DUK_USE_HSTRING_CLEN
-#undef DUK_USE_HSTRING_EXTDATA
+#define DUK_USE_HSTRING_EXTDATA
 #define DUK_USE_HSTRING_LAZY_CLEN
 #define DUK_USE_HTML_COMMENTS
 #define DUK_USE_IDCHAR_FASTPATH
@@ -2975,7 +2997,6 @@ typedef struct duk_hthread duk_context;
 #undef DUK_USE_VALSTACK_UNSAFE
 #define DUK_USE_VERBOSE_ERRORS
 #define DUK_USE_VERBOSE_EXECUTOR_ERRORS
-#define DUK_USE_VOLUNTARY_GC
 #define DUK_USE_ZERO_BUFFER_DATA
 
 /*

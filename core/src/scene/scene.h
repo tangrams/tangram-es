@@ -37,6 +37,12 @@ class ZipArchive;
 // Delimiter used in sceneloader for style params and layer-sublayer naming
 const std::string DELIMITER = ":";
 
+struct SceneFunctions {
+    int add(const std::string&);
+    size_t size() const { return functions.size(); }
+    std::vector<std::string> functions;
+};
+
 /* Singleton container of <Style> information
  *
  * Scene is a singleton containing the styles, lighting, and interactions defining a map scene
@@ -186,7 +192,8 @@ private:
     // integer indices into this container to represent strings
     std::vector<std::string> m_names;
 
-    std::vector<std::string> m_jsFunctions;
+    SceneFunctions m_jsFunctions;
+
     std::list<Stops> m_stops;
 
     Color m_background;

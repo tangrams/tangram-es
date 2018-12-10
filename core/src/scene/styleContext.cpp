@@ -1,208 +1,158 @@
-#include "scene/styleContext.h"
+#include "styleContext.h"
 
 #include "data/propertyItem.h"
 #include "data/tileData.h"
-#include "js/JavaScript.h"
 #include "log.h"
 #include "platform.h"
 #include "scene/filters.h"
 #include "scene/scene.h"
-#include "util/mapProjection.h"
+#include "scene/styleParam.h"
 #include "util/builders.h"
+#include "util/fastmap.h"
+#include "util/mapProjection.h"
 #include "util/yamlUtil.h"
+#include "yaml-cpp/yaml.h"
+
+#include "js/JavaScript.h"
+
+#include <array>
+#include <functional>
+#include <memory>
+#include <string>
+#include <unordered_map>
 
 namespace Tangram {
 
-static const std::string key_geom("$geometry");
-static const std::string key_zoom("$zoom");
+template<class JSContext>
+struct StyleContextImpl : public StyleContext::StyleContextImpl {
+    using JSValue = typename JSContext::Value;
+    using Scope = JavaScriptScope<JSContext>;
 
-static const std::vector<std::string> s_geometryStrings = {
-    "", // unknown
-    "point",
-    "line",
-    "polygon",
-};
+    int32_t m_sceneId = -1;
 
-StyleContext::StyleContext() {
-    m_jsContext = std::make_unique<JSContext>();
-}
+    int m_functionCount = 0;
 
-StyleContext::~StyleContext() = default;
+    JSContext m_jsContext;
 
-// Convert a scalar node to a boolean, double, or string (in that order)
-// and for the first conversion that works, push it to the top of the JS stack.
-JSValue pushYamlScalarAsJsPrimitive(JSScope& jsScope, const YAML::Node& node) {
-    bool booleanValue = false;
-    double numberValue = 0.;
-    if (YamlUtil::getBool(node, booleanValue)) {
-        return jsScope.newBoolean(booleanValue);
-    } else if (YamlUtil::getDouble(node, numberValue)) {
-        return jsScope.newNumber(numberValue);
-    } else {
+    StyleContextImpl() {}
+
+    static JSValue pushYamlScalarAsJsPrimitive(Scope& jsScope, const YAML::Node& node) {
+        bool booleanValue = false;
+        double numberValue = 0.;
+        if (YamlUtil::getBool(node, booleanValue)) {
+            return jsScope.newBoolean(booleanValue);
+        } else if (YamlUtil::getDouble(node, numberValue)) {
+            return jsScope.newNumber(numberValue);
+        } else {
+            return jsScope.newString(node.Scalar());
+        }
+    }
+
+    static JSValue pushYamlScalarAsJsFunctionOrString(Scope& jsScope, const YAML::Node& node) {
+        auto value = jsScope.newFunction(node.Scalar());
+        if (value) {
+            return value;
+        }
         return jsScope.newString(node.Scalar());
     }
-}
 
-JSValue pushYamlScalarAsJsFunctionOrString(JSScope& jsScope, const YAML::Node& node) {
-    auto value = jsScope.newFunction(node.Scalar());
-    if (value) {
-        return value;
-    }
-    return jsScope.newString(node.Scalar());
-}
-
-JSValue parseSceneGlobals(JSScope& jsScope, const YAML::Node& node) {
-    switch(node.Type()) {
-    case YAML::NodeType::Scalar: {
-        auto& scalar = node.Scalar();
-        if (scalar.compare(0, 8, "function") == 0) {
-            return pushYamlScalarAsJsFunctionOrString(jsScope, node);
-        }
-        return pushYamlScalarAsJsPrimitive(jsScope, node);
-    }
-    case YAML::NodeType::Sequence: {
-        auto jsArray = jsScope.newArray();
-        for (size_t i = 0; i < node.size(); i++) {
-            jsArray.setValueAtIndex(i, parseSceneGlobals(jsScope, node[i]));
-        }
-        return jsArray;
-    }
-    case YAML::NodeType::Map: {
-        auto jsObject = jsScope.newObject();
-        for (const auto& entry : node) {
-            if (!entry.first.IsScalar()) {
-                continue; // Can't put non-scalar keys in JS objects.
+    static JSValue parseSceneGlobals(Scope& jsScope, const YAML::Node& node) {
+        switch(node.Type()) {
+        case YAML::NodeType::Scalar: {
+            auto& scalar = node.Scalar();
+            if (scalar.compare(0, 8, "function") == 0) {
+                return pushYamlScalarAsJsFunctionOrString(jsScope, node);
             }
-            jsObject.setValueForProperty(entry.first.Scalar(), parseSceneGlobals(jsScope, entry.second));
+            return pushYamlScalarAsJsPrimitive(jsScope, node);
         }
-        return jsObject;
-    }
-    default:
-        return jsScope.newNull();
-    }
-}
-
-void StyleContext::setSceneGlobals(const YAML::Node& sceneGlobals) {
-
-    if (!sceneGlobals) { return; }
-
-    JSScope jsScope(*m_jsContext);
-
-    auto jsValue = parseSceneGlobals(jsScope, sceneGlobals);
-
-    m_jsContext->setGlobalValue("global", std::move(jsValue));
-}
-
-void StyleContext::initFunctions(const Scene& _scene) {
-
-    if (_scene.id == m_sceneId) {
-        return;
-    }
-    m_sceneId = _scene.id;
-
-    setSceneGlobals(_scene.config()["global"]);
-    setFunctions(_scene.functions());
-}
-
-bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {
-    uint32_t id = 0;
-    bool success = true;
-    for (auto& function : _functions) {
-        success &= m_jsContext->setFunction(id++, function);
-    }
-
-    m_functionCount = id;
-
-    return success;
-}
-
-bool StyleContext::addFunction(const std::string& _function) {
-    bool success = m_jsContext->setFunction(m_functionCount++, _function);
-    return success;
-}
-
-void StyleContext::setFeature(const Feature& _feature) {
-
-    m_feature = &_feature;
-
-    if (m_keywordGeom != m_feature->geometryType) {
-        setKeyword(key_geom, s_geometryStrings[m_feature->geometryType]);
-        m_keywordGeom = m_feature->geometryType;
-    }
-
-    m_jsContext->setCurrentFeature(&_feature);
-}
-
-void StyleContext::setKeywordZoom(int _zoom) {
-    if (m_keywordZoom != _zoom) {
-        setKeyword(key_zoom, _zoom);
-        m_keywordZoom = _zoom;
-    }
-}
-
-void StyleContext::setKeyword(const std::string& _key, Value _val) {
-    auto keywordKey = Filter::keywordType(_key);
-    if (keywordKey == FilterKeyword::undefined) {
-        LOG("Undefined Keyword: %s", _key.c_str());
-        return;
-    }
-
-    // Unset shortcuts in case setKeyword was not called by
-    // the helper functions above.
-    if (_key == key_zoom) { m_keywordZoom = -1; }
-    if (_key == key_geom) { m_keywordGeom = -1; }
-
-    Value& entry = m_keywords[static_cast<uint8_t>(keywordKey)];
-    if (entry == _val) { return; }
-
-    {
-        JSScope jsScope(*m_jsContext);
-        JSValue value;
-        if (_val.is<std::string>()) {
-            value = jsScope.newString(_val.get<std::string>());
-        } else if (_val.is<double>()) {
-            value = jsScope.newNumber(_val.get<double>());
+        case YAML::NodeType::Sequence: {
+            auto jsArray = jsScope.newArray();
+            for (size_t i = 0; i < node.size(); i++) {
+                jsArray.setValueAtIndex(i, parseSceneGlobals(jsScope, node[i]));
+            }
+            return jsArray;
         }
-        m_jsContext->setGlobalValue(_key, std::move(value));
+        case YAML::NodeType::Map: {
+            auto jsObject = jsScope.newObject();
+            for (const auto& entry : node) {
+                if (!entry.first.IsScalar()) {
+                    continue; // Can't put non-scalar keys in JS objects.
+                }
+                jsObject.setValueForProperty(entry.first.Scalar(),
+                                             parseSceneGlobals(jsScope, entry.second));
+            }
+            return jsObject;
+        }
+        default:
+            return jsScope.newNull();
+        }
     }
 
+    void setSceneGlobals(const YAML::Node& sceneGlobals) override {
+        if (!sceneGlobals) { return; }
 
-    entry = std::move(_val);
-}
+        Scope jsScope(m_jsContext);
+        auto jsValue = parseSceneGlobals(jsScope, sceneGlobals);
 
-float StyleContext::getPixelAreaScale() {
-    // scale the filter value with pixelsPerMeter
-    // used with `px2` area filtering
-    double metersPerPixel = MapProjection::EARTH_CIRCUMFERENCE_METERS * exp2(-m_keywordZoom) / MapProjection::tileSize();
-    return metersPerPixel * metersPerPixel;
-}
-
-const Value& StyleContext::getKeyword(const std::string& _key) const {
-    return getKeyword(Filter::keywordType(_key));
-}
-
-void StyleContext::clear() {
-    m_jsContext->setCurrentFeature(nullptr);
-}
-
-bool StyleContext::evalFilter(FunctionID _id) {
-    bool result = m_jsContext->evaluateBooleanFunction(_id);
-    return result;
-}
-
-bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) {
-    _val = none_type{};
-
-    JSScope jsScope(*m_jsContext);
-    auto jsValue = jsScope.getFunctionResult(_id);
-    if (!jsValue) {
-        return false;
+        m_jsContext.setGlobalValue("global", std::move(jsValue));
     }
 
-    if (jsValue.isString()) {
-        std::string value = jsValue.toString();
+    void initScene(const Scene& _scene) override {
+        if (_scene.id == m_sceneId) { return; }
+        m_sceneId = _scene.id;
 
-        switch (_key) {
+        setSceneGlobals(_scene.config()["global"]);
+
+        setFunctions(_scene.functions().functions);
+    }
+
+    bool setFunctions(const std::vector<std::string>& _functions) override {
+        uint32_t id = 0;
+        bool success = true;
+        for (auto& function : _functions) {
+            success &= m_jsContext.setFunction(id++, function);
+        }
+        m_functionCount = id;
+
+        return success;
+    }
+
+    bool addFunction(const std::string& _function) override {
+        bool success = m_jsContext.setFunction(m_functionCount++, _function);
+        return success;
+    }
+
+    void setFilterKey(Filter::Key _key, int _val) override {
+        m_jsContext.setFilterKey(_key, _val);
+    }
+
+    void setFeature(const Feature& _feature) override {
+        m_jsContext.setCurrentFeature(&_feature);
+    }
+
+    void clear() override {
+        m_jsContext.setCurrentFeature(nullptr);
+    }
+
+    bool evalFilter(JSFunctionIndex _id) override {
+        return m_jsContext.evaluateBooleanFunction(_id);
+    }
+
+    bool evalStyle(JSFunctionIndex _id, StyleParamKey _key, StyleParam::Value& _val) override {
+
+        Scope jsScope(m_jsContext);
+
+        auto jsValue = jsScope.getFunctionResult(_id);
+        if (!jsValue) { return false; }
+
+        _val = none_type{};
+
+        // TODO check if duk/jscore provide functions to get a typeid and
+        // switch on that instead of calling multiple times into them
+        if (jsValue.isString()) {
+            std::string value = jsValue.toString();
+
+            switch (_key) {
             case StyleParamKey::outline_style:
             case StyleParamKey::repeat_group:
             case StyleParamKey::sprite:
@@ -232,12 +182,12 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
             default:
                 _val = StyleParam::parseString(_key, value);
                 break;
-        }
+            }
 
-    } else if (jsValue.isBoolean()) {
-        bool value = jsValue.toBool();
+        } else if (jsValue.isBoolean()) {
+            bool value = jsValue.toBool();
 
-        switch (_key) {
+            switch (_key) {
             case StyleParamKey::interactive:
             case StyleParamKey::text_interactive:
             case StyleParamKey::visible:
@@ -248,12 +198,12 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
                 break;
             default:
                 break;
-        }
+            }
 
-    } else if (jsValue.isArray()) {
-        auto len = jsValue.getLength();
+        } else if (jsValue.isArray()) {
+            auto len = jsValue.getLength();
 
-        switch (_key) {
+            switch (_key) {
             case StyleParamKey::extrude: {
                 if (len != 2) {
                     LOGW("Wrong array size for extrusion: '%d'.", len);
@@ -286,13 +236,13 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
             }
             default:
                 break;
-        }
-    } else if (jsValue.isNumber()) {
-        double number = jsValue.toDouble();
-        if (std::isnan(number)) {
-            LOGD("duk evaluates JS method to NAN.\n");
-        }
-        switch (_key) {
+            }
+        } else if (jsValue.isNumber()) {
+            double number = jsValue.toDouble();
+            if (std::isnan(number)) {
+                LOGD("duk evaluates JS method to NAN.\n");
+            }
+            switch (_key) {
             case StyleParamKey::text_source:
             case StyleParamKey::text_source_left:
             case StyleParamKey::text_source_right:
@@ -336,15 +286,210 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
             }
             default:
                 break;
+            }
+        } else if (jsValue.isUndefined()) {
+            // Explicitly set value as 'undefined'. This is important for some styling rules.
+            _val = Undefined();
+        } else {
+            LOGW("Unhandled return type from Javascript style function for %d.", _key);
         }
-    } else if (jsValue.isUndefined()) {
-        // Explicitly set value as 'undefined'. This is important for some styling rules.
-        _val = Undefined();
-    } else {
-        LOGW("Unhandled return type from Javascript style function for %d.", _key);
+
+        return !_val.is<none_type>();
+    }
+};
+
+template<class JSContext>
+struct StyleContextRecorder : public StyleContextImpl<JSContext> {
+
+    using Base = StyleContextImpl<JSContext>;
+
+    // TODO record geomtype
+    std::map<JSFunctionIndex, std::vector<const Feature*>> filterCalls;
+    std::map<JSFunctionIndex, std::vector<std::pair<StyleParamKey, const Feature*>>> styleCalls;
+
+    const Feature* feature;
+    std::vector<std::string> functions;
+    const Scene* scene;
+
+    void setFeature(const Feature& _feature) override {
+        feature = &_feature;
+        Base::setFeature(_feature);
+    }
+    void setFilterKey(Filter::Key _key, int _value) override {
+        Base::setFilterKey(_key, _value);
+    }
+    bool evalFilter(JSFunctionIndex _id) override {
+
+        filterCalls[_id].emplace_back(feature);
+
+        return Base::evalFilter(_id);
+    }
+    bool evalStyle(JSFunctionIndex _id, StyleParamKey _key, StyleParam::Value& _value) override {
+        styleCalls[_id].emplace_back(_key, feature);
+        return Base::evalStyle(_id, _key, _value);
+    }
+    void initScene(const Scene& _scene) override {
+        scene = &_scene;
+
+        Base::initScene(_scene);
+    }
+    void clear() override {
+        Base::clear();
+    }
+    bool addFunction(const std::string& _function) override {
+        return Base::addFunction(_function);
+    }
+    void setSceneGlobals(const YAML::Node& _sceneGlobals) override {
+        Base::setSceneGlobals(_sceneGlobals);
+    }
+    bool setFunctions(const std::vector<std::string>& _functions)  override {
+        return Base::setFunctions(_functions);
     }
 
-    return !_val.is<none_type>();
+    void recorderLog(bool printFunctions, bool printFeatures) override {
+        size_t sum = 0;
+        for (auto& entry : filterCalls) {
+            sum += entry.second.size();
+        }
+        printf(">>>>>>>>>>>>>>> [%zu] filter functions calls <<<<<<<<<<<<<<<\n", sum);
+
+        for (auto& entry : filterCalls) {
+            printf("--------------------  fn:[%d] features:[%zu] --------------------\n", entry.first, entry.second.size());
+            if (printFunctions) {
+                printf("%s\n", scene->functions().functions[entry.first].c_str());
+            }
+            if (printFeatures) {
+                for (auto& feature : entry.second) {
+                    printf("F:%d %s\n", entry.first, feature->props.toJson().c_str());
+                }
+            }
+        }
+        sum = 0;
+        for (auto& entry : styleCalls) {
+            sum += entry.second.size();
+        }
+        printf(">>>>>>>>>>>>>>> [%zu] style functions calls <<<<<<<<<<<<<<<\n", sum);
+        for (auto& entry : styleCalls) {
+            printf("--------------------  fn:[%d] features:[%zu] --------------------\n", entry.first, entry.second.size());
+            if (printFunctions) {
+                printf("%s\n", scene->functions().functions[entry.first].c_str());
+            }
+            if (printFeatures) {
+                for (auto& keyFeature : entry.second) {
+                    printf("S:%d %s\n", entry.first, keyFeature.second->props.toJson().c_str());
+                }
+            }
+        }
+    }
+    // Recorder interface
+    void replayFilters() override {
+        for (auto& entry : filterCalls) {
+            for (auto& feature : entry.second) {
+                Base::setFeature(*feature);
+                Base::evalFilter(entry.first);
+            }
+        }
+    }
+    // Recorder interface
+    void replayStyles() override {
+        for (auto& entry : styleCalls) {
+            for (auto& keyFeature : entry.second) {
+                StyleParam::Value value;
+                Base::setFeature(*keyFeature.second);
+                Base::evalStyle(entry.first, keyFeature.first, value);
+            }
+        }
+    }
+};
+
+using DuktapeStyleContext = StyleContextImpl<Duktape::Context>;
+using DuktapeStyleContextRecorder = StyleContextRecorder<Duktape::Context>;
+#ifdef TANGRAM_USE_JSCORE
+using JSCoreStyleContext = StyleContextImpl<JSCore::Context>;
+using JSCoreStyleContextRecorder = StyleContextRecorder<JSCore::Context>;
+#endif
+
+
+StyleContext::StyleContext(bool jscore, bool record) {
+    if (record) {
+#ifdef TANGRAM_USE_JSCORE
+        if (jscore) {
+            LOG(">>>>>>>>  record <<<<<");
+            impl.reset(new JSCoreStyleContextRecorder());
+            return;
+        }
+#endif
+        LOG(">>>>>>>>  record <<<<<");
+        impl.reset(new DuktapeStyleContextRecorder());
+
+    } else {
+#ifdef TANGRAM_USE_JSCORE
+        if (jscore) {
+            impl.reset(new JSCoreStyleContext());
+            return;
+        }
+#endif
+        impl.reset(new DuktapeStyleContext());
+    }
+}
+
+#ifdef TANGRAM_USE_JSCORE
+StyleContext::StyleContext()
+    : impl(std::make_unique<JSCoreStyleContext>()) {}
+#else
+StyleContext::StyleContext()
+    : impl(std::make_unique<DuktapeStyleContext>()) {}
+#endif
+
+StyleContext::~StyleContext() {}
+
+void StyleContext::setFeature(const Feature& _feature) {
+    impl->setFeature(_feature);
+    setFilterKey(Filter::Key::geometry, _feature.geometryType);
+}
+
+void StyleContext::setFilterKey(Filter::Key _key, int _value) {
+    if (_key == Filter::Key::other) { return; }
+
+    if (m_filterKeys[uint8_t(_key)] == _value) {
+        return;
+    }
+    m_filterKeys[uint8_t(_key)] = _value;
+
+    if (_key == Filter::Key::zoom) {
+        m_zoomLevel = _value;
+        // scale the filter value with pixelsPerMeter
+        // used with `px2` area filtering
+        double metersPerPixel = (MapProjection::EARTH_CIRCUMFERENCE_METERS *
+                                 exp2(-_value) / MapProjection::tileSize());
+        m_pixelAreaScale = metersPerPixel * metersPerPixel;
+    }
+    impl->setFilterKey(_key, _value);
+}
+
+int StyleContext::getFilterKey(Filter::Key _key) const {
+    return m_filterKeys[static_cast<uint8_t>(_key)];
+}
+bool StyleContext::evalFilter(JSFunctionIndex _id) {
+    return impl->evalFilter(_id);
+}
+bool StyleContext::evalStyle(JSFunctionIndex _id, StyleParamKey _key, StyleParam::Value& _value) {
+    return impl->evalStyle(_id, _key, _value);
+}
+void StyleContext::initScene(const Scene& _scene) {
+    impl->initScene(_scene);
+}
+void StyleContext::clear() {
+    impl->clear();
+}
+bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {
+    return impl->setFunctions(_functions);
+}
+bool StyleContext::addFunction(const std::string& _function) {
+    return impl->addFunction(_function);
+}
+void StyleContext::setSceneGlobals(const YAML::Node& _sceneGlobals) {
+    impl->setSceneGlobals(_sceneGlobals);
 }
 
 } // namespace Tangram

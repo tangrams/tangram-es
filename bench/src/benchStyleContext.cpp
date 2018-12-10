@@ -7,6 +7,7 @@
 #include "mockPlatform.h"
 #include "log.h"
 #include "data/tileSource.h"
+#include "scene/filters.h"
 #include "scene/importer.h"
 #include "scene/scene.h"
 #include "scene/dataLayer.h"
@@ -19,14 +20,54 @@
 
 #include <functional>
 
+#define NUM_ITERATIONS 0
+
+#if NUM_ITERATIONS
+#define ITERATIONS ->Iterations(NUM_ITERATIONS)
+#else
+#define ITERATIONS
+#endif
+
 #define RUN(FIXTURE, NAME)                                              \
     BENCHMARK_DEFINE_F(FIXTURE, NAME)(benchmark::State& st) { while (st.KeepRunning()) { run(); } } \
-    BENCHMARK_REGISTER_F(FIXTURE, NAME); //->Iterations(10000);
+    BENCHMARK_REGISTER_F(FIXTURE, NAME) ITERATIONS;
 
 using namespace Tangram;
 
-//const char scene_file[] = "bubble-wrap-style.zip";
-const char scene_file[] = "res/scene.yaml";
+template<class Context>
+class GetPropertyFixtureFixture : public benchmark::Fixture {
+public:
+    Context ctx;
+    Feature feature;
+    void SetUp(const ::benchmark::State& state) override {
+        JavaScriptScope<Context> jsScope(ctx);
+        ctx.setGlobalValue("language", jsScope.newString("en"));
+        feature.props.set("name:en", "Ozymandias");
+        feature.props.set("title", "King of Kings");
+        feature.props.set("number", 17);
+        ctx.setCurrentFeature(&feature);
+        ctx.setFunction(0, "function () { return (language && feature['name:' + language]) || title; }");
+        ctx.setFunction(1, "function () { return feature.order || feature.number; }");
+    }
+    __attribute__ ((noinline)) void run() {
+        StyleParam::Value value;
+        benchmark::DoNotOptimize(value);
+        JavaScriptScope<Context> jsScope(ctx);
+        value = jsScope.getFunctionResult(0).toString();
+        value = (float)jsScope.getFunctionResult(1).toDouble();
+     }
+};
+
+#ifdef TANGRAM_USE_JSCORE
+using JSCoreGetPropertyFixture = GetPropertyFixtureFixture<JSCore::Context>;
+RUN(JSCoreGetPropertyFixture, JSCoreGetPropertyBench)
+#endif
+
+using DuktapeGetPropertyFixture = GetPropertyFixtureFixture<Duktape::Context>;
+RUN(DuktapeGetPropertyFixture, DuktapeGetPropertyBench)
+
+const char scene_file[] = "bubble-wrap-style.zip";
+//const char scene_file[] = "res/scene.yaml";
 const char tile_file[] = "res/tile.mvt";
 
 std::shared_ptr<Scene> scene;
@@ -72,95 +113,91 @@ void globalSetup() {
     }
 }
 
+__attribute__ ((noinline))
+void filter(StyleContext& ctx, const SceneLayer& layer, const Feature& feature) {
+    StyleParam::Value styleValue;
+    benchmark::DoNotOptimize(styleValue);
 
-template<class Context>
-class JSGetPropertyFixture : public benchmark::Fixture {
-public:
-    Context ctx;
-    Feature feature;
-    void SetUp(const ::benchmark::State& state) override {
-        JavaScriptScope<Context> jsScope(ctx);
-        ctx.setGlobalValue("language", jsScope.newString("en"));
-        feature.props.set("name:en", "Ozymandias");
-        feature.props.set("title", "King of Kings");
-        feature.props.set("number", 17);
-        ctx.setCurrentFeature(&feature);
-        ctx.setFunction(0, "function () { return (language && feature['name:' + language]) || title; }");
-        ctx.setFunction(1, "function () { return feature.order || feature.number; }");
-    }
-    __attribute__ ((noinline)) void run() {
-        StyleParam::Value value;
-        benchmark::DoNotOptimize(value);
-        JavaScriptScope<Context> jsScope(ctx);
-        value = jsScope.getFunctionResult(0).toString();
-        value = (float)jsScope.getFunctionResult(1).toDouble();
-     }
-};
-
-#ifdef TANGRAM_USE_JSCORE
-using JSCoreGetPropertyFixture = JSGetPropertyFixture<JSCoreContext>;
-RUN(JSCoreGetPropertyFixture, JSCoreGetPropertyBench)
-#else
-using DuktapeGetPropertyFixture = JSGetPropertyFixture<DuktapeContext>;
-RUN(DuktapeGetPropertyFixture, DuktapeGetPropertyBench)
-#endif
-
-struct JSTileStyleFnFixture : public benchmark::Fixture {
-    StyleContext ctx;
-    Feature feature;
-    uint32_t numFunctions = 0;
-    uint32_t evalCnt = 0;
-
-    void SetUp(const ::benchmark::State& state) override {
-        globalSetup();
-        ctx.initFunctions(*scene);
-        ctx.setKeywordZoom(10);
-    }
-    void TearDown(const ::benchmark::State& state) override {
-        LOG(">>> %d", evalCnt);
-    }
-    __attribute__ ((noinline)) void run() {
-        StyleParam::Value styleValue;
-        benchmark::DoNotOptimize(styleValue);
-
-        for (const auto& datalayer : scene->layers()) {
-            for (const auto& collection : tileData->layers) {
-                if (!collection.name.empty()) {
-                    const auto& dlc = datalayer.collections();
-                    bool layerContainsCollection =
-                        std::find(dlc.begin(), dlc.end(), collection.name) != dlc.end();
-
-                    if (!layerContainsCollection) { continue; }
-                }
-
-                for (const auto& feat : collection.features) {
-                    ctx.setFeature(feat);
-
-                    std::function<void(const SceneLayer& layer)> filter;
-                    filter = [&](const auto& layer) {
-                        if (layer.filter().eval(feature, ctx)) {
-                            for (auto& r : layer.rules()) {
-                                for (auto& sp : r.parameters) {
-                                    if (sp.function >= 0) {
-                                        evalCnt++;
-                                        ctx.evalStyle(sp.function, sp.key, styleValue);
-                                    }
-                                }
-                            }
-
-                            for (const auto& sublayer : layer.sublayers()) {
-                                filter(sublayer);
-                            }
-                        }
-                    };
-                    filter(datalayer);
+    if (layer.filter().eval(feature, ctx)) {
+        for (auto& r : layer.rules()) {
+            for (auto& sp : r.parameters) {
+                if (sp.function >= 0) {
+                    //evalCnt++;
+                    ctx.evalStyle(sp.function, sp.key, styleValue);
                 }
             }
         }
+        for (const auto& sublayer : layer.sublayers()) {
+            filter(ctx, sublayer, feature);
+        }
+    }
+}
+
+void applyStyling(StyleContext& ctx) {
+    for (const auto& datalayer : scene->layers()) {
+        for (const auto& collection : tileData->layers) {
+            if (!collection.name.empty()) {
+                const auto& dlc = datalayer.collections();
+                bool layerContainsCollection =
+                    std::find(dlc.begin(), dlc.end(), collection.name) != dlc.end();
+
+                if (!layerContainsCollection) { continue; }
+            }
+
+            for (const auto& feature : collection.features) {
+                ctx.setFeature(feature);
+                filter(ctx, datalayer, feature);
+            }
+        }
+    }
+}
+
+template<size_t jsCore>
+struct JSTileStyleFnFixture : public benchmark::Fixture {
+    std::unique_ptr<StyleContext> ctx;
+    void SetUp(const ::benchmark::State& state) override {
+        globalSetup();
+        ctx.reset(new StyleContext(jsCore));
+        ctx->initScene(*scene);
+        ctx->setFilterKey(Filter::Key::zoom, 10);
+    }
+    __attribute__ ((noinline)) void run() {
+        applyStyling(*ctx);
     }
 };
 
-RUN(JSTileStyleFnFixture, TileStyleFnBench);
+#ifdef TANGRAM_USE_JSCORE
+using JSCoreTileStyleFnFixture = JSTileStyleFnFixture<1>;
+RUN(JSCoreTileStyleFnFixture, JSCoreTileStyleFnBench)
+#endif
+using DuktapeTileStyleFnFixture = JSTileStyleFnFixture<0>;
+RUN(DuktapeTileStyleFnFixture, DuktapeTileStyleFnBench)
+
+
+template<size_t jsCore>
+struct JSTileStyleFnReplayFixture : public benchmark::Fixture {
+    std::unique_ptr<StyleContext> ctx;
+    void SetUp(const ::benchmark::State& state) override {
+        globalSetup();
+        ctx.reset(new StyleContext(jsCore, true));
+        ctx->initScene(*scene);
+        ctx->setFilterKey(Filter::Key::zoom, 10);
+        applyStyling(*ctx);
+        ctx->impl->recorderLog();
+    }
+    __attribute__ ((noinline)) void run() {
+        ctx->impl->replayFilters();
+        ctx->impl->replayStyles();
+    }
+};
+
+#ifdef TANGRAM_USE_JSCORE
+using JSCoreTileStyleFnReplayFixture = JSTileStyleFnReplayFixture<1>;
+RUN(JSCoreTileStyleFnReplayFixture, JSCoreTileStyleFnReplayBench)
+#endif
+using DuktapeTileStyleFnReplayFixture = JSTileStyleFnReplayFixture<0>;
+RUN(DuktapeTileStyleFnReplayFixture, DuktapeTileStyleFnReplayBench)
+
 
 class DirectGetPropertyFixture : public benchmark::Fixture {
 public:
@@ -182,6 +219,6 @@ BENCHMARK_DEFINE_F(DirectGetPropertyFixture, DirectGetPropertyBench)(benchmark::
         }
     }
 }
-BENCHMARK_REGISTER_F(DirectGetPropertyFixture, DirectGetPropertyBench);
+BENCHMARK_REGISTER_F(DirectGetPropertyFixture, DirectGetPropertyBench) ITERATIONS;
 
 BENCHMARK_MAIN();

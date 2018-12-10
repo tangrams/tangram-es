@@ -24,8 +24,8 @@ void MarkerManager::setScene(std::shared_ptr<Scene> scene) {
 
     m_scene = scene;
 
-    m_styleContext = std::make_unique<StyleContext>();
-    m_styleContext->initFunctions(*scene);
+    m_styleContext = std::make_unique<StyleContext>(false);
+    m_styleContext->initScene(*scene);
 
     // Initialize StyleBuilders.
     m_styleBuilders.clear();
@@ -402,7 +402,7 @@ bool MarkerManager::buildStyling(Marker& marker) {
     }
     // Compile any new JS functions used for styling.
     for (auto i = jsFnIndex; i < sceneJsFnList.size(); ++i) {
-        m_styleContext->addFunction(sceneJsFnList[i]);
+        m_styleContext->addFunction(sceneJsFnList.functions[i]);
     }
 
     marker.setDrawRuleData(std::make_unique<DrawRuleData>("", 0, std::move(params)));
@@ -433,7 +433,7 @@ bool MarkerManager::buildMesh(Marker& marker, int zoom) {
     // Apply defaul draw rules defined for this style
     styler->style().applyDefaultDrawRules(*rule);
 
-    m_styleContext->setKeywordZoom(zoom);
+    m_styleContext->setFilterKey(Filter::Key::zoom, zoom);
 
     bool valid = marker.evaluateRuleForContext(*m_styleContext);
 
