@@ -139,7 +139,9 @@ target_link_libraries(tangram-core
 # Add JavaScript implementation.
 if(TANGRAM_JSCORE_ENABLED)
   if (TANGRAM_USE_JSCORE_STATIC)
-    target_link_libraries(tangram-core PRIVATE jscore-static)
+    # target_link_libraries(tangram-core PRIVATE jscore-static)
+    pkg_check_modules(JSCORE REQUIRED IMPORTED_TARGET javascriptcoregtk-4.0)
+    target_link_libraries(tangram-core PRIVATE PkgConfig::JSCORE)
   else()
     target_link_libraries(tangram-core PRIVATE "-framework JavaScriptCore")
   endif()
