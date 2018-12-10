@@ -105,6 +105,9 @@ void PointStyleBuilder::setup(const Marker& _marker, int zoom) {
 }
 
 bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
+    if (m_style.defaultTexture()) {
+        return true;
+    }
     // require a color or texture atlas/texture to be valid
     uint32_t color;
     if (_rule.get(StyleParamKey::color, color)) {
@@ -113,10 +116,6 @@ bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
 
     std::string texture;
     if (_rule.get(StyleParamKey::texture, texture) && !texture.empty()) {
-        return true;
-    }
-
-    if (m_style.defaultTexture()) {
         return true;
     }
 
@@ -423,8 +422,8 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& _
         case LabelProperty::Placement::vertex: {
             for (size_t i = 0; i < _line.size() - 1; i++) {
                 auto& p = _line[i];
-                auto& q = _line[i+1];
                 if (params.keepTileEdges || !isOutsideTile(p)) {
+                    auto& q = _line[i+1];
                     if (params.autoAngle) {
                         params.labelOptions.angle = angleBetween(p, q);
                     }
