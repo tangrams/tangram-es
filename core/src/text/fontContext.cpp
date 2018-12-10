@@ -294,6 +294,7 @@ void FontContext::releaseFonts() {
     // those are 'weak' resources (would be automatically reloaded by alfons from
     // its URI or source callback.
     for (auto& font : m_font) {
+        if (!font) { continue; }
         for (auto& face : font->faces()) {
             alfons::InputSource& fontSource = face->descriptor().source;
 
