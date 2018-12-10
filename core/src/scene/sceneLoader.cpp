@@ -604,8 +604,8 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
                         if (!texture->loadImageFromMemory(data, length)) {
                             LOGE("Invalid texture data from URL '%s'", url.string().c_str());
                         }
-                        if (texture->getSpriteAtlas()) {
-                            texture->getSpriteAtlas()->updateSpriteNodes({texture->getWidth(), texture->getHeight()});
+                        if (texture->spriteAtlas()) {
+                            texture->spriteAtlas()->updateSpriteNodes({texture->width(), texture->height()});
                         }
                     }
                 }
@@ -1038,10 +1038,15 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
     rawSources->setCacheSize(CACHE_SIZE);
 
     if (isMBTilesFile) {
+#ifdef TANGRAM_MBTILES_DATASOURCE
         // If we have MBTiles, we know the source is tiled.
         tiled = true;
         // Create an MBTiles data source from the file at the url and add it to the source chain.
         rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, url, ""));
+#else
+        LOGE("MBTiles support is disabled. This source will be ignored: %s", name.c_str());
+        return;
+#endif
     } else if (tiled) {
         rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url, std::move(subdomains), isTms));
     }

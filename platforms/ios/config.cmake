@@ -15,10 +15,10 @@ set(NEXTZEN_API_KEY $ENV{NEXTZEN_API_KEY})
 configure_file(${PROJECT_SOURCE_DIR}/platforms/ios/demo/Info.plist.in ${PROJECT_BINARY_DIR}/Info.plist)
 
 # Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
+set(SQLITECPP_INTERNAL_SQLITE OFF CACHE BOOL "")
 if (IOS_SDK_VERSION VERSION_LESS 11.0)
   set(SQLITE_USE_LEGACY_STRUCT ON CACHE BOOL "")
 endif()
-set(SQLITECPP_INTERNAL_SQLITE OFF CACHE BOOL "")
 
 # Headers must be absolute paths for the copy_if_different command on the
 # static library target, relative paths cause it to fail with an error.
@@ -142,7 +142,6 @@ target_include_directories(tangram-static PRIVATE
 # delimits with semicolons. Xcode expects a space-delimited list.
 set(TANGRAM_STATIC_DEPENDENCIES "\
   $<TARGET_FILE:tangram-core>
-  $<TARGET_FILE:duktape>
   $<TARGET_FILE:css-color-parser-cpp>
   $<TARGET_FILE:yaml-cpp>
   $<TARGET_FILE:alfons>
@@ -150,11 +149,16 @@ set(TANGRAM_STATIC_DEPENDENCIES "\
   $<TARGET_FILE:harfbuzz>
   $<TARGET_FILE:freetype>
   $<TARGET_FILE:icucommon>
-  $<TARGET_FILE:SQLiteCpp>
   $<TARGET_FILE:double-conversion>
   $<TARGET_FILE:miniz>
   "
 )
+if(NOT TANGRAM_USE_JSCORE)
+  set(TANGRAM_STATIC_DEPENDENCIES "${TANGRAM_STATIC_DEPENDENCIES} $<TARGET_FILE:duktape>")
+endif()
+if(TANGRAM_MBTILES_DATASOURCE)
+  set(TANGRAM_STATIC_DEPENDENCIES "${TANGRAM_STATIC_DEPENDENCIES} $<TARGET_FILE:SQLiteCpp>")
+endif()
 
 set_target_properties(tangram-static PROPERTIES
   XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${TANGRAM_FRAMEWORK_VERSION}"

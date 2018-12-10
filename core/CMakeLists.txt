@@ -7,7 +7,6 @@ add_library(tangram-core
   src/map.cpp
   src/platform.cpp
   src/data/clientGeoJsonSource.cpp
-  src/data/mbtilesDataSource.cpp
   src/data/memoryCacheDataSource.cpp
   src/data/networkDataSource.cpp
   src/data/properties.cpp
@@ -20,6 +19,7 @@ add_library(tangram-core
   src/debug/textDisplay.cpp
   src/gl/framebuffer.cpp
   src/gl/glError.cpp
+  src/gl/glyphTexture.cpp
   src/gl/hardware.cpp
   src/gl/mesh.cpp
   src/gl/primitives.cpp
@@ -86,6 +86,7 @@ add_library(tangram-core
   src/util/json.cpp
   src/util/mapProjection.cpp
   src/util/rasterize.cpp
+  src/util/stbImage.cpp
   src/util/url.cpp
   src/util/yamlPath.cpp
   src/util/yamlUtil.cpp
@@ -103,11 +104,11 @@ target_include_directories(tangram-core
   # TODO: These headers shouldn't be public, but Platform classes use them.
   src
   # TODO: This header shouldn't be public, but we use it in propertyItem.h
+  deps/glm
   deps/variant/include
   PRIVATE
   generated
   deps
-  deps/glm
   deps/earcut/include
   deps/isect2d/include
   deps/hash-library
@@ -127,16 +128,34 @@ target_include_directories(tangram-core
 # Link core library dependencies.
 target_link_libraries(tangram-core
   PRIVATE
-  duktape
   css-color-parser-cpp
   yaml-cpp
   alfons
-  SQLiteCpp
-  sqlite3
   double-conversion
   miniz
   z
 )
+
+# Add JavaScript implementation.
+if(TANGRAM_JSCORE_ENABLED)
+  target_sources(tangram-core PRIVATE src/js/JSCoreContext.cpp)
+  if (TANGRAM_USE_JSCORE_STATIC)
+    target_link_libraries(tangram-core PRIVATE jscore-static)
+  else()
+    target_link_libraries(tangram-core PRIVATE "-framework JavaScriptCore")
+  endif()
+  target_compile_definitions(tangram-core PRIVATE TANGRAM_USE_JSCORE=1)
+else()
+  target_sources(tangram-core PRIVATE src/js/DuktapeContext.cpp)
+  target_link_libraries(tangram-core PRIVATE duktape)
+endif()
+
+# Add MBTiles implementation.
+if(TANGRAM_MBTILES_DATASOURCE)
+  target_sources(tangram-core PRIVATE src/data/mbtilesDataSource.cpp)
+  target_link_libraries(tangram-core PRIVATE SQLiteCpp sqlite3)
+  target_compile_definitions(tangram-core PRIVATE TANGRAM_MBTILES_DATASOURCE=1)
+endif()
 
 if(UNIX AND NOT APPLE)
   # SQLite needs dl dynamic library loader when Linux
@@ -144,7 +163,9 @@ if(UNIX AND NOT APPLE)
 endif()
 
 if(TANGRAM_WARN_ON_RULE_CONFLICT)
-  add_definitions(-DTANGRAM_WARN_ON_RULE_CONFLICT)
+  target_compile_definitions(tangram-core
+    PRIVATE
+    TANGRAM_WARN_ON_RULE_CONFLICT)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")

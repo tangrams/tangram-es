@@ -19,9 +19,7 @@ check_unsupported_compiler_version()
 
 add_definitions(-DTANGRAM_LINUX)
 
-get_nextzen_api_key(NEXTZEN_API_KEY)
-add_definitions(-DNEXTZEN_API_KEY="${NEXTZEN_API_KEY}")
-
+set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 
 include(cmake/glfw.cmake)
@@ -74,5 +72,11 @@ target_compile_options(tangram
   -Wtype-limits
   -Wmissing-field-initializers
 )
+
+get_nextzen_api_key(NEXTZEN_API_KEY)
+target_compile_definitions(tangram
+  PRIVATE
+  NEXTZEN_API_KEY="${NEXTZEN_API_KEY}")
+
 
 add_resources(tangram "${PROJECT_SOURCE_DIR}/scenes" "res")

@@ -149,8 +149,7 @@ void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBloc
                 continue;
             }
 
-            texture->update(rs, rs.nextAvailableTextureUnit());
-            texture->bind(rs, rs.currentTextureUnit());
+            texture->bind(rs, rs.nextAvailableTextureUnit());
 
             m_shaderProgram->setUniformi(rs, name, rs.currentTextureUnit());
         } else if (value.is<bool>()) {
@@ -178,8 +177,7 @@ void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBloc
                     continue;
                 }
 
-                texture->update(rs, rs.nextAvailableTextureUnit());
-                texture->bind(rs, rs.currentTextureUnit());
+                texture->bind(rs, rs.nextAvailableTextureUnit());
 
                 textureUniformArray.slots.push_back(rs.currentTextureUnit());
             }
@@ -463,11 +461,10 @@ bool Style::draw(RenderState& rs, const Tile& _tile) {
             if (raster.isValid()) {
                 auto& texture = raster.texture;
                 auto texUnit = rs.nextAvailableTextureUnit();
-                texture->update(rs, texUnit);
                 texture->bind(rs, texUnit);
 
                 textureIndexUniform.slots.push_back(texUnit);
-                rasterSizeUniform.push_back({texture->getWidth(), texture->getHeight()});
+                rasterSizeUniform.push_back({texture->width(), texture->height()});
 
                 if (tileID.z > raster.tileID.z) {
                     float dz = tileID.z - raster.tileID.z;
