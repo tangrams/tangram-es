@@ -1775,6 +1775,9 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, const std::share
             if (data_source.IsScalar()) {
                 source = data_source.Scalar();
                 auto dataSource = scene->getTileSource(source);
+                // Makes sure to set the data source as a primary tile geometry generation source.
+                // A data source is geometry generating source only when its used within a layer's data block
+                // and when the layer is not disabled
                 if (dataSource && sublayer.enabled()) {
                     dataSource->generateGeometry(true);
                 } else {

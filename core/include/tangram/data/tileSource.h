@@ -147,6 +147,7 @@ protected:
     void createSubTasks(std::shared_ptr<TileTask> _task);
 
     // This datasource is used to generate actual tile geometry
+    // Is set true for any source assigned in a Scene Layer and when the layer is not disabled
     bool m_generateGeometry = false;
 
     // Name used to identify this source in the style sheet
