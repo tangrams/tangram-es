@@ -237,7 +237,10 @@ public class MapView extends FrameLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        return mapController.handleGesture(this, ev);
+        if (mapController != null) {
+            return mapController.handleGesture(this, ev);
+        }
+        return false;
     }
 
     protected MapController getMapInstance() {
