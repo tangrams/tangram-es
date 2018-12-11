@@ -243,12 +243,6 @@ bool Map::update(float _dt) {
             impl->platform.setContinuousRendering(animated);
         }
 
-        {
-            std::lock_guard<std::mutex> lock(impl->tilesMutex);
-            for (auto& source : impl->clientTileSources) {
-                scene.tileManager()->addClientTileSource(source);
-            }
-        }
 
         if (impl->oldScene) {
             // Disposing TileWorker is blocking
