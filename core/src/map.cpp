@@ -168,7 +168,7 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
     }
 
     inputHandler.setView(view);
-    tileManager.setTileSources(_scene->tileSources());
+    tileManager.setTileSourcesFromScene(_scene);
     tileWorker.setScene(_scene);
     markerManager.setScene(_scene);
 

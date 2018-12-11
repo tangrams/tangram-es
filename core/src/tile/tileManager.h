@@ -2,6 +2,7 @@
 
 #include "data/tileData.h"
 #include "data/tileSource.h"
+#include "scene/scene.h"
 #include "tile/tile.h"
 #include "tile/tileID.h"
 #include "tile/tileTask.h"
@@ -38,8 +39,8 @@ public:
 
     virtual ~TileManager();
 
-    /* Sets the tile TileSources */
-    void setTileSources(const std::vector<std::shared_ptr<TileSource>>& _sources);
+    /* Sets the tile TileSources from the scene */
+    void setTileSourcesFromScene(const std::shared_ptr<Scene> _scene);
 
     /* Updates visible tile set and load missing tiles */
     void updateTileSets(const View& _view);

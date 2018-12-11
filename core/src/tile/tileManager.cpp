@@ -3,6 +3,7 @@
 #include "data/tileSource.h"
 #include "map.h"
 #include "platform.h"
+#include "scene/dataLayer.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
 #include "util/mapProjection.h"
@@ -159,7 +160,19 @@ TileManager::~TileManager() {
     m_tileSets.clear();
 }
 
-void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>& _sources) {
+static bool enabledForSource(const std::shared_ptr<Scene> scene, const std::shared_ptr<TileSource> _source) {
+      for (const auto& datalayer : scene->layers()) {
+          if (datalayer.enabled()) {
+              if (datalayer.source() == _source->name()) {
+                  return true;
+              }
+          }
+      }
+      return false;
+  }
+
+void TileManager::setTileSourcesFromScene(const std::shared_ptr<Scene> scene) {
+    const std::vector<std::shared_ptr<TileSource>>& _sources = scene->tileSources();
 
     m_tileCache->clear();
 
@@ -168,6 +181,10 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
     auto it = std::remove_if(
         m_tileSets.begin(), m_tileSets.end(),
         [&](auto& tileSet) {
+            if (!enabledForSource(scene, tileSet.source)) {
+                LOGN("Not enabled by layers. Remove source %s", tileSet.source->name().c_str());
+                return true;
+            }
             if (!tileSet.clientTileSource) {
                 LOGN("Remove source %s", tileSet.source->name().c_str());
                 return true;
@@ -181,6 +198,8 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
 
     // add new sources
     for (const auto& source : _sources) {
+
+        if (!enabledForSource(scene, source)) { continue; }
 
         if (!source->generateGeometry()) { continue; }
 
