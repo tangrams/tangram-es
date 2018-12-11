@@ -420,7 +420,7 @@ extern "C" {
                 if (a != 0) {
                     auto alphaInv = 255.f/a;
                     rgba[0] = static_cast<uint8_t>(rgba[0] * alphaInv);
-                    rgba[1] = static_cast<uint8_t>(rgba[1] * alphaInv );
+                    rgba[1] = static_cast<uint8_t>(rgba[1] * alphaInv);
                     rgba[2] = static_cast<uint8_t>(rgba[2] * alphaInv);
                 }
                 pixelOutput[flippedRow + col] = pixel;
