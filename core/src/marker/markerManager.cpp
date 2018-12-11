@@ -87,6 +87,7 @@ bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const un
     m_dirty = true;
 
     TextureOptions options;
+    options.displayScale = 1.f / m_scene->pixelScale();
     auto texture = std::make_unique<Texture>(options);
     texture->setPixelData(width, height, sizeof(GLuint),
                           reinterpret_cast<const GLubyte*>(bitmapData),

@@ -46,6 +46,14 @@ double MapProjection::metersPerTileAtZoom(int zoom) {
     return MapProjection::EARTH_CIRCUMFERENCE_METERS / (1 << zoom);
 }
 
+double MapProjection::metersPerPixelAtZoom(double zoom) {
+    return MapProjection::EARTH_CIRCUMFERENCE_METERS / (exp2(zoom) * tileSize());
+}
+
+double MapProjection::zoomAtMetersPerPixel(double metersPerPixel) {
+    return log2(MapProjection::EARTH_CIRCUMFERENCE_METERS / (metersPerPixel * tileSize()));
+}
+
 BoundingBox MapProjection::mapLngLatBounds() {
     // Reference: https://en.wikipedia.org/wiki/Mercator_projection#Truncation_and_aspect_ratio
     return { glm::dvec2(-180, -MAX_LATITUDE_DEGREES), glm::dvec2(180, MAX_LATITUDE_DEGREES) };
