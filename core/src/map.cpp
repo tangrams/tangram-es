@@ -660,7 +660,7 @@ void Map::setCameraPositionEased(const CameraPosition& _camera, float _duration,
     e.end.pos = MapProjection::lngLatToProjectedMeters({lonEnd, latEnd});
 
     e.start.zoom = getZoom();
-    e.end.zoom = _camera.zoom;
+    e.end.zoom = glm::clamp(_camera.zoom, getMinZoom(), getMaxZoom());
 
     float radiansStart = getRotation();
 
@@ -810,16 +810,18 @@ CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, EdgePadding
 
     // Take the value from the larger dimension to calculate the final zoom.
     double maxMetersPerPixel = std::max(metersPerPixel.x, metersPerPixel.y);
-    double zoom = -std::log2(maxMetersPerPixel * MapProjection::tileSize() / MapProjection::EARTH_CIRCUMFERENCE_METERS);
+    double zoom = MapProjection::zoomAtMetersPerPixel(maxMetersPerPixel);
+    double finalZoom = glm::clamp(zoom, (double)getMinZoom(), (double)getMaxZoom());
+    double finalMetersPerPixel = MapProjection::metersPerPixelAtZoom(finalZoom);
 
     // Adjust the center of the final visible region using the padding converted to Mercator meters.
-    glm::dvec2 paddingMeters = glm::dvec2(_pad.right - _pad.left, _pad.top - _pad.bottom) * maxMetersPerPixel;
+    glm::dvec2 paddingMeters = glm::dvec2(_pad.right - _pad.left, _pad.top - _pad.bottom) * finalMetersPerPixel;
     glm::dvec2 centerMeters = 0.5 * (aMeters + bMeters + paddingMeters);
 
     LngLat centerLngLat = MapProjection::projectedMetersToLngLat(centerMeters);
 
     CameraPosition camera;
-    camera.zoom = static_cast<float>(zoom);
+    camera.zoom = static_cast<float>(finalZoom);
     camera.longitude = centerLngLat.longitude;
     camera.latitude = centerLngLat.latitude;
     return camera;

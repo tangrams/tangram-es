@@ -77,6 +77,10 @@ public:
 
     static double metersPerTileAtZoom(int zoom);
 
+    static double metersPerPixelAtZoom(double zoom);
+
+    static double zoomAtMetersPerPixel(double metersPerPixel);
+
     // Bounds of the map projection in projected meters.
     static BoundingBox mapProjectedMetersBounds();
 
