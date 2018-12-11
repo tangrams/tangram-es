@@ -1,0 +1,13 @@
+import: scene.yaml
+
+sources:
+    invalid-test-source:
+        type: MVT
+        url: https://invalid.tile.source.url/{z}/{x}/{y}.mvt
+
+layers:
+    invalid-test-layer:
+        enabled: false
+        data: { source: invalid-test-source }
+        draw: { polygons: { color: white, order: 1 } }
+

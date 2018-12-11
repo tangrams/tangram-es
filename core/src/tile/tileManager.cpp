@@ -182,6 +182,7 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
     // add new sources
     for (const auto& source : _sources) {
 
+        // ignore sources not used to generate tile geometry
         if (!source->generateGeometry()) { continue; }
 
         if (std::find_if(m_tileSets.begin(), m_tileSets.end(),

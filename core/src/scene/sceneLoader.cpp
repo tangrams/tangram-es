@@ -1768,12 +1768,17 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, const std::share
     std::string source;
     std::vector<std::string> collections;
 
+    auto sublayer = loadSublayer(layer.second, name, scene);
+
     if (Node data = layer.second["data"]) {
         if (Node data_source = data["source"]) {
             if (data_source.IsScalar()) {
                 source = data_source.Scalar();
                 auto dataSource = scene->getTileSource(source);
-                if (dataSource) {
+                // Makes sure to set the data source as a primary tile geometry generation source.
+                // A data source is geometry generating source only when its used within a layer's data block
+                // and when the layer is not disabled
+                if (dataSource && sublayer.enabled()) {
                     dataSource->generateGeometry(true);
                 } else {
                     LOGW("Can't find data source %s for layer %s", source.c_str(), name.c_str());
@@ -1799,7 +1804,6 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, const std::share
         collections.push_back(name);
     }
 
-    auto sublayer = loadSublayer(layer.second, name, scene);
 
     scene->layers().push_back({ std::move(sublayer), source, collections });
 }
