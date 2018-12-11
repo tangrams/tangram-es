@@ -32,3 +32,27 @@ TEST_CASE("MapProjection correctly converts between LngLat and ProjectedMeters",
     CHECK_THAT(convertedLngLat.latitude, Catch::WithinAbs(pair.lngLat.latitude, epsilonDegrees));
 
 }
+
+TEST_CASE("MapProjection correctly converts between zoom and metersPerPixel", "[projection]") {
+
+    double epsilon = 0.00001;
+
+    SECTION("zoom 0") {
+        auto metersPerPixel = MapProjection::metersPerPixelAtZoom(0.0);
+        auto expected = MapProjection::EARTH_CIRCUMFERENCE_METERS / MapProjection::tileSize();
+        CHECK_THAT(metersPerPixel, Catch::WithinAbs(expected, epsilon));
+    }
+
+    SECTION("zoom n + 1") {
+        auto zoom = GENERATE(0.0, 7.0, 16.0, 24.0);
+
+        auto metersPerPixel = MapProjection::metersPerPixelAtZoom(zoom);
+        auto metersPerPixelHalved = metersPerPixel * 0.5;
+        auto metersPerPixelAtNextZoom = MapProjection::metersPerPixelAtZoom(zoom + 1.0);
+        auto convertedZoom = MapProjection::zoomAtMetersPerPixel(metersPerPixel);
+
+        CHECK_THAT(convertedZoom, Catch::WithinAbs(zoom, epsilon));
+        CHECK_THAT(metersPerPixelAtNextZoom, Catch::WithinAbs(metersPerPixelHalved, epsilon));
+    }
+
+}
