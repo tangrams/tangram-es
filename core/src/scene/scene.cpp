@@ -39,8 +39,50 @@ Scene::Scene(Platform& _platform, SceneOptions&& _options) :
 }
 
 Scene::~Scene() {
-    // Blocking until worker threads join
-    m_tileWorker.reset();
+    dispose();
+}
+
+void Scene::dispose() {
+    if (m_state == State::disposed) { return; }
+    m_state = State::disposed;
+
+    cancelTasks();
+
+    if (m_tileManager) {
+        // Cancels all TileTasks
+        LOG("Finish TileManager");
+        m_tileManager.reset();
+
+        // Waits for processing TileTasks to finish
+        LOG("Finish TileWorker");
+        m_tileWorker.reset();
+        LOG("TileWorker stopped");
+    }
+}
+
+void Scene::cancelTasks() {
+    m_state = State::canceled;
+
+    // Cancel pending resources
+    {
+        std::lock_guard<std::mutex> lock(m_taskMutex);
+        for (auto& task : m_pendingTextures) {
+            if (task->requestHandle) { m_platform.cancelUrlRequest(task->requestHandle); }
+        }
+        for (auto& task : m_pendingFonts) {
+            if (task->requestHandle) { m_platform.cancelUrlRequest(task->requestHandle); }
+        }
+        m_taskCondition.notify_one();
+    }
+
+    // Cancels all TileTasks
+    LOG("Clear TileManager tasks");
+    if (m_tileManager) {
+        m_tileManager->cancelTileTasks();
+    }
+    // Clear TileTask queue
+    //LOG("Clear TileWorker tasks");
+    //m_tileWorker.clear();
 }
 
 bool Scene::load() {
@@ -168,31 +210,44 @@ bool Scene::load() {
 
     m_state = State::pending_resources;
 
-    LOGTO("<<<<<< loadScene <<<<<<");
+    while (true) {
+        {
+            std::unique_lock<std::mutex> lock(m_taskMutex);
+            if (m_state != State::pending_resources) {
+                /// We got canceled.
+                break;
+            }
+            int t = 0, f = 0;
+            m_pendingTextures.remove_if([&](auto& task) { t++;  return task->done; });
+            m_pendingFonts.remove_if([&](auto& task) { f++; return task->done; });
 
+            if (m_pendingTextures.empty() && m_pendingFonts.empty()) {
+                /// All done!
+                break;
+            }
+
+            LOGTO("Waiting... fonts:%d textures:%d", f, t);
+            m_taskCondition.wait(lock);
+        }
+    }
+
+    if (m_state == State::pending_resources) {
+        m_state = State::pending_completion;
+    }
+
+    LOGTO("<<<<<< loadScene <<<<<<");
     return true;
 }
 
 bool Scene::complete(View& view) {
     if (m_state == State::ready) { return true; }
-    if (m_state != State::pending_resources) { return false; }
+    if (m_state != State::pending_completion) { return false; }
 
-    // Wait until font and texture resources are fully loaded
-    {
-        std::lock_guard<std::mutex> lock(m_taskMutex);
-        int t = 0, f = 0;
-        m_pendingTextures.remove_if([&](auto& task) { t++;  return task->done; });
-        m_pendingFonts.remove_if([&](auto& task) { f++; return task->done; });
+    ///
+    m_pixelScale = view.pixelScale();
+    m_view->setPixelScale(m_pixelScale);
 
-        if (!m_pendingTextures.empty() || !m_pendingFonts.empty()) {
-            LOGTO("Waiting... fonts:%d textures:%d", f, t);
-            return false;
-        }
-    }
-
-    m_state = State::ready;
-
-    /// Update new scenes view
+    /// Update new scene with current view
     m_view->setSize(view.getWidth(), view.getHeight());
 
     if (!m_options.useScenePosition) {
@@ -207,15 +262,14 @@ bool Scene::complete(View& view) {
     }
     m_fontContext->setPixelScale(m_pixelScale);
 
-    // Tell TileWorker that Scene is ready, so it can check its work-queue
+    /// Tell TileWorker that Scene is ready, so it can check its work-queue
     m_tileWorker->poke();
+    m_state = State::ready;
 
     return true;
 }
 
 void Scene::setPixelScale(float _scale) {
-    LOG("setPixelScale %f", _scale);
-
     if (m_pixelScale == _scale) { return; }
     m_pixelScale = _scale;
 
@@ -239,29 +293,204 @@ void Scene::setPixelScale(float _scale) {
     }
 }
 
-void Scene::cancelTasks() {
-    // Cancels all TileTasks
-    LOG("Clear TileManager tasks");
-    if (m_tileManager) {
-        m_tileManager->cancelTileTasks();
+std::shared_ptr<Texture> Scene::fetchTexture(const std::string& _name, const Url& _url,
+                                             const TextureOptions& _options,
+                                             std::unique_ptr<SpriteAtlas> _atlas) {
+
+    std::shared_ptr<Texture> texture = std::make_shared<Texture>(_options);
+    m_textures.emplace(_name, texture);
+
+    if (_url.hasBase64Data() && _url.mediaType() == "image/png") {
+        auto data = _url.data();
+
+        std::vector<unsigned char> blob;
+
+        try {
+            blob = Base64::decode(data);
+        } catch(const std::runtime_error& e) {
+            LOGE("Can't decode Base64 texture '%s'", e.what());
+        }
+
+        if (blob.empty()) {
+            LOGE("Can't decode Base64 texture");
+
+        } else if (!texture->loadImageFromMemory(blob.data(), blob.size())) {
+            LOGE("Invalid Base64 texture");
+        }
+        return texture;
     }
-    // Clear TileTask queue
-    //LOG("Clear TileWorker tasks");
-    //m_tileWorker.clear();
+
+    texture->setSpriteAtlas(std::move(_atlas));
+
+    auto task = std::make_shared<TextureTask>(m_taskCondition, _url, texture);
+
+    LOGTInit();
+
+    auto cb = [=, t = std::weak_ptr<TextureTask>(task)] (UrlResponse&& response) mutable {
+        auto task = t.lock();
+        if (!task) { return; }
+
+        LOGT("Received texture %s", task->url.string().c_str());
+
+        if (response.error) {
+            LOGE("Error retrieving URL '%s': %s", task->url.string().c_str(), response.error);
+        } else {
+            auto data = reinterpret_cast<const uint8_t*>(response.content.data());
+            auto length = response.content.size();
+            if (!task->texture->loadImageFromMemory(data, length)) {
+                LOGE("Invalid texture data from URL '%s'", task->url.string().c_str());
+            }
+            if (auto& sprites = task->texture->spriteAtlas()) {
+                sprites->updateSpriteNodes({task->texture->width(),
+                                            task->texture->height()});
+            }
+        }
+        task->done = true;
+        // TODO might need to hold shared_ptr<Scene> for this to be safe.
+        task->condition.notify_one();
+    };
+
+    {
+        std::lock_guard<std::mutex> lock(m_taskMutex);
+        m_pendingTextures.push_front(task);
+        if (_url.scheme() == "zip") {
+            task->cb = cb;
+        } else {
+            LOGT("Fetch    texture %s", task->url.string().c_str());
+            task->requestHandle = m_platform.startUrlRequest(_url, std::move(cb));
+        }
+    }
+
+    return texture;
 }
 
-void Scene::dispose() {
-    if (m_tileManager) {
-        // Cancels all TileTasks
-        LOG("Finish TileManager");
-        m_tileManager.reset();
+std::shared_ptr<Texture> Scene::loadTexture(const std::string& _name) {
 
-        // Waits for processing TileTasks to finish
-        LOG("Finish TileWorker");
-        m_tileWorker.reset();
-        LOG("TileWorker stopped");
+    auto entry = m_textures.find(_name);
+    if (entry != m_textures.end()) {
+        return entry->second;
     }
-    m_state = State::disposed;
+
+    // If texture could not be found by name then interpret name as URL
+    TextureOptions options;
+    return fetchTexture(_name, _name, options);
+}
+
+void Scene::loadFont(const std::string& _uri, const std::string& _family,
+                     const std::string& _style, const std::string& _weight) {
+
+    std::string familyNormalized, styleNormalized;
+
+    familyNormalized.resize(_family.size());
+    styleNormalized.resize(_style.size());
+
+    std::transform(_family.begin(), _family.end(), familyNormalized.begin(), ::tolower);
+    std::transform(_style.begin(), _style.end(), styleNormalized.begin(), ::tolower);
+
+    Url url(_uri);
+
+    auto task = std::make_shared<FontTask>(m_taskCondition, url, m_fontContext,
+                                           FontDescription{familyNormalized,styleNormalized, _weight, _uri});
+    LOGTInit();
+
+    auto cb = [=,t = std::weak_ptr<FontTask>(task)] (UrlResponse&& response) mutable {
+         auto task = t.lock();
+         if (!task) { return; }
+
+         LOGT("Received font: %s", task->ft.uri.c_str());
+
+        if (response.error) {
+            LOGE("Error retrieving font '%s' at %s: ", task->ft.alias.c_str(),
+                 task->ft.uri.c_str(), response.error);
+        } else {
+            task->fontContext->addFont(task->ft, alfons::InputSource(std::move(response.content)));
+        }
+        task->done = true;
+        // TODO might need to hold shared_ptr<Scene> for this to be safe.
+        task->condition.notify_one();
+    };
+
+    {
+        std::lock_guard<std::mutex> lock(m_taskMutex);
+        m_pendingFonts.push_front(task);
+
+        if (url.scheme() == "zip") {
+            task->cb = cb;
+        } else {
+            LOGT("Fetch    font %s", task->ft.uri.c_str());
+            task->requestHandle = m_platform.startUrlRequest(url, std::move(cb));
+        }
+    }
+}
+
+std::tuple<bool,bool,bool> Scene::update(const View& _view, float _dt) {
+
+    m_time += _dt;
+
+    bool markersChanged = m_markerManager->update(_view, _dt);
+
+    for (const auto& style : m_styles) {
+        style->onBeginUpdate();
+    }
+
+    m_tileManager->updateTileSets(_view);
+
+    auto& tiles = m_tileManager->getVisibleTiles();
+    auto& markers = m_markerManager->markers();
+
+    if (_view.changedOnLastUpdate() ||
+        m_tileManager->hasTileSetChanged() ||
+        markersChanged) {
+
+        for (const auto& tile : tiles) {
+            tile->update(_dt, _view);
+        }
+        m_labelManager->updateLabelSet(_view.state(), _dt, *this, tiles, markers,
+                                       *m_tileManager);
+    } else {
+        m_labelManager->updateLabels(_view.state(), _dt, m_styles, tiles, markers);
+    }
+
+    return { m_tileManager->hasLoadingTiles(), m_labelManager->needUpdate(), markersChanged };
+}
+
+void Scene::renderBeginFrame(RenderState& _rs) {
+    for (const auto& style : m_styles) {
+        style->onBeginFrame(_rs);
+    }
+}
+
+bool Scene::render(RenderState& _rs, View& _view) {
+
+    bool drawnAnimatedStyle = false;
+    for (const auto& style : m_styles) {
+
+        bool styleDrawn = style->draw(_rs, _view, *this,
+                                      m_tileManager->getVisibleTiles(),
+                                      m_markerManager->markers());
+
+        drawnAnimatedStyle |= (styleDrawn && style->isAnimated());
+    }
+    return drawnAnimatedStyle;
+}
+
+void Scene::renderSelection(RenderState& _rs, View& _view, FrameBuffer& _selectionBuffer,
+                            std::vector<SelectionQuery>& _selectionQueries) {
+
+    for (const auto& style : m_styles) {
+
+        style->drawSelectionFrame(_rs, _view, *this,
+                                  m_tileManager->getVisibleTiles(),
+                                  m_markerManager->markers());
+    }
+
+    std::vector<SelectionColorRead> colorCache;
+    // Resolve feature selection queries
+    for (const auto& selectionQuery : _selectionQueries) {
+        selectionQuery.process(_view, _selectionBuffer,
+                               *m_markerManager, *m_tileManager,
+                               *m_labelManager, colorCache);
+    }
 }
 
 
@@ -339,200 +568,4 @@ std::shared_ptr<TileSource> Scene::getTileSource(const std::string& name) {
     return nullptr;
 }
 
-std::shared_ptr<Texture> Scene::fetchTexture(const std::string& _name, const Url& _url,
-                                             const TextureOptions& _options,
-                                             std::unique_ptr<SpriteAtlas> _atlas) {
-
-    std::shared_ptr<Texture> texture = std::make_shared<Texture>(_options);
-    m_textures.emplace(_name, texture);
-
-    if (_url.hasBase64Data() && _url.mediaType() == "image/png") {
-        auto data = _url.data();
-
-        std::vector<unsigned char> blob;
-
-        try {
-            blob = Base64::decode(data);
-        } catch(const std::runtime_error& e) {
-            LOGE("Can't decode Base64 texture '%s'", e.what());
-        }
-
-        if (blob.empty()) {
-            LOGE("Can't decode Base64 texture");
-
-        } else if (!texture->loadImageFromMemory(blob.data(), blob.size())) {
-            LOGE("Invalid Base64 texture");
-        }
-        return texture;
-    }
-
-    texture->setSpriteAtlas(std::move(_atlas));
-
-    auto task = std::make_shared<TextureTask>(_url, texture);
-
-    LOGTInit();
-
-    auto cb = [=, t = std::weak_ptr<TextureTask>(task)] (UrlResponse&& response) mutable {
-        auto task = t.lock();
-        if (!task) { return; }
-
-        LOGT("Received texture %s", task->url.string().c_str());
-
-        if (response.error) {
-            LOGE("Error retrieving URL '%s': %s", task->url.string().c_str(), response.error);
-        } else {
-            auto data = reinterpret_cast<const uint8_t*>(response.content.data());
-            auto length = response.content.size();
-            if (!task->texture->loadImageFromMemory(data, length)) {
-                LOGE("Invalid texture data from URL '%s'", task->url.string().c_str());
-            }
-            if (auto& sprites = task->texture->spriteAtlas()) {
-                sprites->updateSpriteNodes({task->texture->width(),
-                                            task->texture->height()});
-            }
-        }
-        task->done = true;
-    };
-
-    {
-        std::lock_guard<std::mutex> lock(m_taskMutex);
-        m_pendingTextures.push_front(task);
-        if (_url.scheme() == "zip") {
-            task->cb = cb;
-        } else {
-            LOGT("Fetch    texture %s", task->url.string().c_str());
-            m_platform.startUrlRequest(_url, std::move(cb));
-        }
-    }
-
-    return texture;
-}
-
-std::shared_ptr<Texture> Scene::loadTexture(const std::string& _name) {
-
-    auto entry = m_textures.find(_name);
-    if (entry != m_textures.end()) {
-        return entry->second;
-    }
-
-    // If texture could not be found by name then interpret name as URL
-    TextureOptions options;
-    return fetchTexture(_name, _name, options);
-}
-
-void Scene::loadFont(const std::string& _uri, const std::string& _family,
-                     const std::string& _style, const std::string& _weight) {
-
-    std::string familyNormalized, styleNormalized;
-
-    familyNormalized.resize(_family.size());
-    styleNormalized.resize(_style.size());
-
-    std::transform(_family.begin(), _family.end(), familyNormalized.begin(), ::tolower);
-    std::transform(_style.begin(), _style.end(), styleNormalized.begin(), ::tolower);
-
-    Url url(_uri);
-
-    auto task = std::make_shared<FontTask>(url, FontDescription{familyNormalized,styleNormalized,
-                                                                _weight, _uri}, m_fontContext);
-    LOGTInit();
-
-    auto cb = [=,t = std::weak_ptr<FontTask>(task)] (UrlResponse&& response) mutable {
-         auto task = t.lock();
-         if (!task) { return; }
-
-         LOGT("Received font: %s", task->ft.uri.c_str());
-
-        if (response.error) {
-            LOGE("Error retrieving font '%s' at %s: ", task->ft.alias.c_str(),
-                 task->ft.uri.c_str(), response.error);
-        } else {
-            task->fontContext->addFont(task->ft, alfons::InputSource(std::move(response.content)));
-        }
-        task->done = true;
-    };
-
-    {
-        std::lock_guard<std::mutex> lock(m_taskMutex);
-        m_pendingFonts.push_front(task);
-
-        if (url.scheme() == "zip") {
-            task->cb = cb;
-        } else {
-            LOGT("Fetch    font %s", task->ft.uri.c_str());
-            m_platform.startUrlRequest(url, std::move(cb));
-        }
-    }
-}
-
-std::tuple<bool,bool,bool> Scene::update(const View& _view, float _dt) {
-
-    m_time += _dt;
-
-    bool markersChanged = m_markerManager->update(_view, _dt);
-
-    for (const auto& style : m_styles) {
-        style->onBeginUpdate();
-    }
-
-    m_tileManager->updateTileSets(_view);
-
-    auto& tiles = m_tileManager->getVisibleTiles();
-    auto& markers = m_markerManager->markers();
-
-    if (_view.changedOnLastUpdate() ||
-        m_tileManager->hasTileSetChanged() ||
-        markersChanged) {
-
-        for (const auto& tile : tiles) {
-            tile->update(_dt, _view);
-        }
-        m_labelManager->updateLabelSet(_view.state(), _dt, *this, tiles, markers,
-                                       *m_tileManager);
-    } else {
-        m_labelManager->updateLabels(_view.state(), _dt, m_styles, tiles, markers);
-    }
-
-    return { m_tileManager->hasLoadingTiles(), m_labelManager->needUpdate(), markersChanged };
-}
-
-void Scene::renderBeginFrame(RenderState& _rs) {
-    for (const auto& style : m_styles) {
-        style->onBeginFrame(_rs);
-    }
-}
-
-bool Scene::render(RenderState& _rs, View& _view) {
-
-    bool drawnAnimatedStyle = false;
-    for (const auto& style : m_styles) {
-
-        bool styleDrawn = style->draw(_rs, _view, *this,
-                                      m_tileManager->getVisibleTiles(),
-                                      m_markerManager->markers());
-
-        drawnAnimatedStyle |= (styleDrawn && style->isAnimated());
-    }
-    return drawnAnimatedStyle;
-}
-
-void Scene::renderSelection(RenderState& _rs, View& _view, FrameBuffer& _selectionBuffer,
-                            std::vector<SelectionQuery>& _selectionQueries) {
-
-    for (const auto& style : m_styles) {
-
-        style->drawSelectionFrame(_rs, _view, *this,
-                                  m_tileManager->getVisibleTiles(),
-                                  m_markerManager->markers());
-    }
-
-    std::vector<SelectionColorRead> colorCache;
-    // Resolve feature selection queries
-    for (const auto& selectionQuery : _selectionQueries) {
-        selectionQuery.process(_view, _selectionBuffer,
-                               *m_markerManager, *m_tileManager,
-                               *m_labelManager, colorCache);
-    }
-
-}
 }
