@@ -167,7 +167,12 @@ public:
     float pixelScale() { return m_pixelScale; }
     void setPixelScale(float _scale);
 
-    bool update(const View& _view, float _dt);
+    // Returns:
+    // - hasLoadingTiles
+    // - labelsNeedUpdate
+    // - markersNeedUpdate
+    std::tuple<bool,bool,bool> update(const View& _view, float _dt);
+
     void renderBeginFrame(RenderState& _rs);
     bool render(RenderState& _rs, View& _view);
     void renderSelection(RenderState& _rs, View& _view,
@@ -190,10 +195,14 @@ public:
     const SceneError* errors() const {
         return (m_errors.empty() ? nullptr : &m_errors.front());
     }
-    void initTileManager();
-    void startTileWorker();
 
-    bool complete();
+    // Return true scene-loading could be completed, false when resources for
+    // tile-building and rendering are still pending.
+    // Does the finishing touch when everything is available:
+    // - Copy Scene camera to View
+    // - Update Styles and FontContext to current pixelScale
+    // -...
+    bool complete(View& view);
 
     void cancelTasks();
     void dispose();

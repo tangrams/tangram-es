@@ -213,10 +213,6 @@ void SceneLoader::applyCameras(Scene& _scene) {
     } else {
         view->setMaxPitch(camera.maxTilt);
     }
-
-    LOGE("UPDATE VIEW %fx%f - %f %f %f", view->getWidth(), view->getHeight(), view->getZoom(),
-         view->getCenterCoordinates().longitude, view->getCenterCoordinates().latitude);
-    view->update();
 }
 
 void SceneLoader::loadCameras(Scene& _scene, const Node& _cameras) {

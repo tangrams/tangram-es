@@ -39,14 +39,16 @@ Scene::Scene(Platform& _platform, SceneOptions&& _options) :
 }
 
 Scene::~Scene() {
+    // Blocking until worker threads join
     m_tileWorker.reset();
 }
 
 bool Scene::load() {
-
-    if (m_state != State::initial) { return false; }
+    if (m_state != State::initial) {
+        LOGE("Cannot load() Scene twice!");
+        return false;
+    }
     m_state = State::loading;
-
 
     //m_view->setSize(_sceneOptions.view.width, _sceneOptions.view.height);
     //m_pixelScale  = _sceneOptions.view.pixelScale;
@@ -58,8 +60,10 @@ bool Scene::load() {
     m_importer = std::make_unique<Importer>();
 
     // Wait until all scene-yamls are available and merged.
-    // Importer also holds reference zip archives
-    /// EEEEEEK blocking! - do work instead!
+    // NB: Importer holds reference zip archives for resource loading
+    //
+    // Importer is blocking until all imports are (asynchronously loaded)
+    // TODO: We could do some work instead!
     m_config = m_importer->loadSceneData(m_platform, m_options.url, m_options.yaml);
 
     LOGTO("<<< applyImports AKA load files, parse YAMLS, allocate Document and merge stuff");
@@ -87,13 +91,27 @@ bool Scene::load() {
     SceneLoader::applySources(*this);
     LOGTO("<<< applySources");
 
+    LOGTO(">>> applyCameras");
     SceneLoader::applyCameras(*this);
     LOGTO("<<< applyCameras");
 
-    LOGTO(">>> loadTiles");
+    m_tileWorker = std::make_unique<TileWorker>(m_platform, m_options.numTileWorkers);
+    m_tileManager = std::make_unique<TileManager>(m_platform, *m_tileWorker);
+    m_tileManager->setTileSources(m_tileSources);
+
     // Scene is ready to load tiles for initial view
-    if (m_options.prefetchTiles) { initTileManager(); }
-    LOGTO("<<< loadTiles");
+    if (m_options.prefetchTiles) {
+        LOGTO(">>> loadTiles");
+        LOG("Prefetch tiles for View: %fx%f / zoom:%f lon:%f lat:%f",
+            m_view->getWidth(), m_view->getHeight(), m_view->getZoom(),
+            m_view->getCenterCoordinates().longitude,
+            m_view->getCenterCoordinates().latitude);
+
+        m_view->update();
+        m_tileManager->updateTileSets(*m_view);
+
+        LOGTO("<<< loadTiles");
+    }
 
     LOGTO(">>> textures");
     SceneLoader::applyTextures(*this);
@@ -128,14 +146,13 @@ bool Scene::load() {
     for (auto& style : m_styles) { style->build(*this); }
     LOGTO("<<< buildStyles");
 
-    // Now only waiting for pending fonts and textures:
-    // Let the TileWorker initialize its TileBuilders
-    if (m_options.prefetchTiles) { startTileWorker(); }
+    // Now we are only waiting for pending fonts and textures:
+    // Let's initialize the TileBuilders on TileWorker threads
+    // in the meantime.
+    m_tileWorker->setScene(*this);
 
     m_featureSelection = std::make_unique<FeatureSelection>();
     m_labelManager = std::make_unique<LabelManager>();
-
-    LOGTO("<<<<<< loadScene <<<<<<");
 
     {
         std::lock_guard<std::mutex> lock(m_taskMutex);
@@ -146,14 +163,17 @@ bool Scene::load() {
             if (task->cb) { m_importer->readFromZip(task->url, task->cb); }
         }
     }
+    // Good bye Importer, Good bye ZipArchives!
     m_importer.reset();
 
     m_state = State::pending_resources;
 
+    LOGTO("<<<<<< loadScene <<<<<<");
+
     return true;
 }
 
-bool Scene::complete() {
+bool Scene::complete(View& view) {
     if (m_state == State::ready) { return true; }
     if (m_state != State::pending_resources) { return false; }
 
@@ -172,27 +192,51 @@ bool Scene::complete() {
 
     m_state = State::ready;
 
+    /// Update new scenes view
+    m_view->setSize(view.getWidth(), view.getHeight());
+
+    if (!m_options.useScenePosition) {
+        m_view->setPosition(view.getPosition());
+    }
+
+    /// Copy camera, position, etc from new Scene
+    view = *m_view;
+
     for (auto& style : m_styles) {
         style->setPixelScale(m_pixelScale);
     }
     m_fontContext->setPixelScale(m_pixelScale);
 
-    // Tell the TileWorker Scene is ready so it should check its work-queue
+    // Tell TileWorker that Scene is ready, so it can check its work-queue
     m_tileWorker->poke();
-
 
     return true;
 }
 
-void Scene::initTileManager() {
-    m_tileWorker = std::make_unique<TileWorker>(m_platform, m_options.numTileWorkers);
-    m_tileManager = std::make_unique<TileManager>(m_platform, *m_tileWorker);
+void Scene::setPixelScale(float _scale) {
+    LOG("setPixelScale %f", _scale);
 
-    m_tileManager->setTileSources(m_tileSources);
-    m_tileManager->updateTileSets(*m_view);
-}
-void Scene::startTileWorker() {
-    m_tileWorker->setScene(*this);
+    if (m_pixelScale == _scale) { return; }
+    m_pixelScale = _scale;
+
+    if (m_state != State::ready) {
+        // We update styles pixel scale in 'complete()'.
+        // No need to clear TileSets at this point.
+        return;
+    }
+
+    for (auto& style : m_styles) {
+        style->setPixelScale(_scale);
+    }
+    m_fontContext->setPixelScale(_scale);
+
+    // Tiles must be rebuilt to apply the new pixel scale to labels.
+    m_tileManager->clearTileSets();
+
+    // Markers must be rebuilt to apply the new pixel scale.
+    if (m_markerManager) {
+        m_markerManager->rebuildAll();
+    }
 }
 
 void Scene::cancelTasks() {
@@ -211,12 +255,12 @@ void Scene::dispose() {
         // Cancels all TileTasks
         LOG("Finish TileManager");
         m_tileManager.reset();
+
         // Waits for processing TileTasks to finish
         LOG("Finish TileWorker");
         m_tileWorker.reset();
         LOG("TileWorker stopped");
     }
-
     m_state = State::disposed;
 }
 
@@ -293,28 +337,6 @@ std::shared_ptr<TileSource> Scene::getTileSource(const std::string& name) {
         return *it;
     }
     return nullptr;
-}
-
-void Scene::setPixelScale(float _scale) {
-    LOG("setPixelScale %f", _scale);
-
-    if (m_pixelScale == _scale) { return; }
-    m_pixelScale = _scale;
-
-    if (m_state != State::ready) { return; }
-
-    for (auto& style : m_styles) {
-        style->setPixelScale(_scale);
-    }
-    m_fontContext->setPixelScale(_scale);
-
-    // Tiles must be rebuilt to apply the new pixel scale to labels.
-    m_tileManager->clearTileSets();
-
-    // Markers must be rebuilt to apply the new pixel scale.
-    if (m_markerManager) {
-        m_markerManager->rebuildAll();
-    }
 }
 
 std::shared_ptr<Texture> Scene::fetchTexture(const std::string& _name, const Url& _url,
@@ -443,7 +465,7 @@ void Scene::loadFont(const std::string& _uri, const std::string& _family,
     }
 }
 
-bool Scene::update(const View& _view, float _dt) {
+std::tuple<bool,bool,bool> Scene::update(const View& _view, float _dt) {
 
     m_time += _dt;
 
@@ -471,7 +493,7 @@ bool Scene::update(const View& _view, float _dt) {
         m_labelManager->updateLabels(_view.state(), _dt, m_styles, tiles, markers);
     }
 
-    return m_tileManager->hasLoadingTiles();
+    return { m_tileManager->hasLoadingTiles(), m_labelManager->needUpdate(), markersChanged };
 }
 
 void Scene::renderBeginFrame(RenderState& _rs) {
