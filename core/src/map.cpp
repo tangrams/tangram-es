@@ -218,41 +218,31 @@ void Map::resize(int _newWidth, int _newHeight) {
 }
 
 bool Map::update(float _dt) {
-    // LOGTInit();
 
     impl->jobQueue.runJobs();
 
     auto& scene = *impl->scene;
     auto& view = impl->view;
+
     bool wasReady = scene.isReady();
 
-    if (!scene.complete()) {
+    // Check if the current scene finished loading
+    if (!scene.complete(view)) {
+
         platform->requestRender();
         return false;
 
     } else if (!wasReady) {
-        impl->sceneGotReady = true;
 
         if (impl->onSceneReady) { impl->onSceneReady(scene.id, nullptr); }
 
-        // Update new scenes view
-        scene.view()->setSize(view.getWidth(), view.getHeight());
-        if (!scene.options().useScenePosition) {
-            scene.view()->setPosition(view.getPosition());
-        }
-
-        // Copy camera, position, etc from new Scene
-        view = *scene.view();
-
         bool animated = scene.animated() == Scene::animate::yes;
-
         if (animated != impl->platform.isContinuousRendering()) {
             impl->platform.setContinuousRendering(animated);
         }
 
-
         if (impl->oldScene) {
-            // Disposing TileWorker is blocking
+            /// Disposing TileWorker is blocking
             runAsyncTask([scene = impl->oldScene]() {
                 LOG("START ASYNC DISPOSE OLD SCENE");
                 scene->dispose();
@@ -265,9 +255,8 @@ bool Map::update(float _dt) {
     FrameInfo::beginUpdate();
 
     bool viewComplete = true;
-    bool markersNeedUpdate = false;
-
     bool isEasing = false;
+
     if (impl->ease) {
         auto& ease = *(impl->ease);
         ease.update(_dt);
@@ -288,44 +277,29 @@ bool Map::update(float _dt) {
 
     view.update();
 
-    bool tilesLoading;
+    bool tilesLoading, animateLabels, animateMarkers;
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
-        tilesLoading = scene.update(view, _dt);
-
-        // DEBUG
-        if (impl->framesRendered == 0) {
-            if (scene.tileManager()->getVisibleTiles().size() > 0) {
-                impl->framesRendered = 1;
-            }
-        }
+        std::tie(tilesLoading, animateLabels, animateMarkers) = scene.update(view, _dt);
     }
 
-    FrameInfo::endUpdate();
-
-    bool labelsNeedUpdate = scene.labelManager()->needUpdate();
-
-    if (tilesLoading || labelsNeedUpdate || !scene.isReady()) {
+    if (tilesLoading || animateLabels || animateMarkers) {
         viewComplete = false;
     }
 
     // Request render if labels are in fading states or markers are easing.
-    if (isFlinging || impl->isCameraEasing || labelsNeedUpdate || markersNeedUpdate) {
+    if (impl->isCameraEasing || animateLabels || animateMarkers) {
         platform->requestRender();
     }
 
-    // LOGTO("View complete:%d vc:%d tl:%d easing:%d label:%d maker:%d ",
-    //       viewComplete, viewChanged, tilesLoading,
-    //       impl->isCameraEasing, labelsNeedUpdate, markersNeedUpdate);
-    // if (impl->sceneGotReady) {
-    //     LOGTO("update <<<");
-    // }
+    FrameInfo::endUpdate();
 
     return viewComplete;
 }
 
 bool Map::render() {
 
+    // Render old Scene while new one is loading
     auto& scene = (!impl->scene->isReady() && impl->oldScene) ? *impl->oldScene : *impl->scene;
     auto& view = impl->view;
 
