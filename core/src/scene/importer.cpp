@@ -55,31 +55,27 @@ Node Importer::loadSceneData(Platform& _platform, const Url& _sceneUrl, const st
             m_importedScenes[nextUrlToImport] = Node();
         }
 
+        auto cb = [&, nextUrlToImport](UrlResponse&& response) {
+            std::unique_lock<std::mutex> lock(sceneMutex);
+
+            if (response.error) {
+                LOGE("Unable to retrieve '%s': %s",
+                     nextUrlToImport.string().c_str(), response.error);
+            } else {
+                addSceneData(nextUrlToImport, std::move(response.content));
+            }
+            activeDownloads--;
+            condition.notify_one();
+        };
+
+        activeDownloads++;
+
         if (nextUrlToImport.scheme() == "zip") {
-            readFromZip(nextUrlToImport,
-                [&, nextUrlToImport](UrlResponse&& response) {
-                    std::unique_lock<std::mutex> lock(sceneMutex);
-                    if (response.error) {
-                        LOGE("Unable to retrieve '%s': %s",
-                             nextUrlToImport.string().c_str(), response.error);
-                    } else {
-                        addSceneData(nextUrlToImport, std::move(response.content));
-                    }
-               });
+            // NB: This call is blocking - no need for the activeDownloads/notify
+            // It's just more elegant to use the same cb :)
+            readFromZip(nextUrlToImport, cb);
         } else {
-            activeDownloads++;
-            _platform.startUrlRequest(nextUrlToImport,
-                [&, nextUrlToImport](UrlResponse&& response) {
-                    std::unique_lock<std::mutex> lock(sceneMutex);
-                    if (response.error) {
-                        LOGE("Unable to retrieve '%s': %s",
-                             nextUrlToImport.string().c_str(), response.error);
-                    } else {
-                        addSceneData(nextUrlToImport, std::move(response.content));
-                    }
-                    activeDownloads--;
-                    condition.notify_all();
-               });
+            _platform.startUrlRequest(nextUrlToImport, cb);
         }
     }
 
