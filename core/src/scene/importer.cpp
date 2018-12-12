@@ -51,10 +51,8 @@ Node Importer::loadSceneData(Platform& _platform, const Url& _sceneUrl, const st
                 continue;
             }
 
-            if (m_importedScenes.find(nextUrlToImport) != m_importedScenes.end()) {
-                // This scene URL has already been imported, we're done!
-                continue;
-            }
+            // Mark Url as going-to-be-imported to prevent duplicate work.
+            m_importedScenes[nextUrlToImport] = Node();
         }
 
         if (nextUrlToImport.scheme() == "zip") {
@@ -97,13 +95,7 @@ Node Importer::loadSceneData(Platform& _platform, const Url& _sceneUrl, const st
 }
 
 void Importer::addSceneData(const Url& sceneUrl, std::vector<char>&& sceneData) {
-
     LOGD("Process: '%s'", sceneUrl.string().c_str());
-
-    // Don't load imports twice
-    if (m_importedScenes.find(sceneUrl) != m_importedScenes.end()) {
-        return;
-    }
 
     if (!isZipArchiveUrl(sceneUrl)) {
         addSceneYaml(sceneUrl, sceneData.data(), sceneData.size());
@@ -164,7 +156,8 @@ UrlRequestHandle Importer::readFromZip(const Url& url, UrlCallback callback) {
 void Importer::addSceneYaml(const Url& sceneUrl, const char* sceneYaml, size_t length) {
     LOGTO("Parsing scene config bytes: %d - '%s' ", length, sceneUrl.path().c_str());
 
-    Node sceneNode;
+    Node& sceneNode = m_importedScenes[sceneUrl];
+
     if (Url::getPathExtension(sceneUrl.path()) == "pbf") {
         sceneNode = YAML::Protobuf::Load(sceneYaml, length);
 
@@ -183,10 +176,11 @@ void Importer::addSceneYaml(const Url& sceneUrl, const char* sceneYaml, size_t l
         return;
     }
 
-    m_importedScenes[sceneUrl] = sceneNode;
-
     for (const auto& import : getResolvedImportUrls(sceneNode, sceneUrl)) {
-        m_sceneQueue.push_back(import);
+        // Check if this scene URL has been (or is going to be) imported already
+        if (m_importedScenes.find(import) == m_importedScenes.end()) {
+            m_sceneQueue.push_back(import);
+        }
     }
 }
 
