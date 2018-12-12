@@ -4,10 +4,8 @@
 #include "platform.h"
 #include "util/zipArchive.h"
 
-#include <atomic>
 #include <cassert>
 #include <condition_variable>
-#include <mutex>
 
 #include "yaml-cpp/proto/protobuf.h"
 
@@ -30,37 +28,35 @@ Node Importer::loadSceneData(Platform& _platform, const Url& _sceneUrl, const st
     }
 
     std::atomic_uint activeDownloads(0);
-    std::mutex sceneMutex;
     std::condition_variable condition;
 
     while (true) {
         {
-            std::unique_lock<std::mutex> lock(sceneMutex);
+            std::unique_lock<std::mutex> lock(m_sceneMutex);
 
-            if (m_sceneQueue.empty()) {
+            if (m_sceneQueue.empty() || m_canceled) {
                 if (activeDownloads == 0) {
                     break;
                 }
                 condition.wait(lock);
             }
 
-            if (!m_sceneQueue.empty()) {
-                nextUrlToImport = m_sceneQueue.back();
-                m_sceneQueue.pop_back();
-            } else {
+            if (m_sceneQueue.empty() || m_canceled) {
                 continue;
             }
+
+            nextUrlToImport = m_sceneQueue.back();
+            m_sceneQueue.pop_back();
 
             // Mark Url as going-to-be-imported to prevent duplicate work.
             m_importedScenes[nextUrlToImport] = Node();
         }
 
         auto cb = [&, nextUrlToImport](UrlResponse&& response) {
-            std::unique_lock<std::mutex> lock(sceneMutex);
-
+            std::unique_lock<std::mutex> lock(m_sceneMutex);
             if (response.error) {
-                LOGE("Unable to retrieve '%s': %s",
-                     nextUrlToImport.string().c_str(), response.error);
+                LOGE("Unable to retrieve '%s': %s", nextUrlToImport.string().c_str(),
+                     response.error);
             } else {
                 addSceneData(nextUrlToImport, std::move(response.content));
             }
@@ -75,10 +71,14 @@ Node Importer::loadSceneData(Platform& _platform, const Url& _sceneUrl, const st
             // It's just more elegant to use the same cb :)
             readFromZip(nextUrlToImport, cb);
         } else {
-            _platform.startUrlRequest(nextUrlToImport, cb);
+            auto handle = _platform.startUrlRequest(nextUrlToImport, cb);
+
+            std::unique_lock<std::mutex> lock(m_sceneMutex);
+            m_urlRequests.push_back(handle);
         }
     }
 
+    if (m_canceled) { return Node(); }
 
     LOGD("Processing scene import Stack:");
     std::vector<Url> sceneStack;
@@ -88,6 +88,14 @@ Node Importer::loadSceneData(Platform& _platform, const Url& _sceneUrl, const st
     m_importedScenes.clear();
 
     return root;
+}
+
+void Importer::cancelLoading(Platform& _platform) {
+    std::unique_lock<std::mutex> lock(m_sceneMutex);
+    m_canceled = true;
+    for (auto handle : m_urlRequests) {
+        _platform.cancelUrlRequest(handle);
+    }
 }
 
 void Importer::addSceneData(const Url& sceneUrl, std::vector<char>&& sceneData) {
