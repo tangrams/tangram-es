@@ -14,6 +14,7 @@
 #include <atomic>
 #include <forward_list>
 #include <memory>
+#include <condition_variable>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -238,9 +239,11 @@ private:
 
     enum class State {
         initial,
-        loading,             // set on worker thread at start of Scene::load()
-        pending_resources,   // set on worker thread at end of Scene::load()
-        ready,               // set main thread Scene::complete()
+        loading,             // set at start of Scene::load()
+        pending_resources,   // set while waiting for (async) resource loading tasks
+        pending_completion,  // set end of Scene::load()
+        ready,               // set on main thread when Scene::complete() succeeded
+        canceled,            // should stop any scene- or tile-loading tasks
         disposed
     } m_state = State::initial;
 
@@ -292,24 +295,31 @@ private:
     std::unique_ptr<View> m_view;
 
     struct FontTask {
-        FontTask(Url url, FontDescription ft, std::shared_ptr<FontContext> fontContext)
-            : url(url), ft(ft), fontContext(fontContext) {}
+        FontTask(std::condition_variable& condition, Url url, std::shared_ptr<FontContext> fontContext, FontDescription ft)
+            : condition(condition), url(url), ft(ft), fontContext(fontContext) {}
+        std::condition_variable& condition;
         Url url;
         FontDescription ft;
         std::shared_ptr<FontContext> fontContext;
         bool done = false;
         UrlCallback cb = nullptr;
+        UrlRequestHandle requestHandle = 0;
     };
     struct TextureTask {
-        TextureTask(Url url, std::shared_ptr<Texture> texture)
-            : url(url), texture(texture) {}
+        TextureTask(std::condition_variable& condition, Url url, std::shared_ptr<Texture> texture)
+            : condition(condition), url(url), texture(texture) {}
+        std::condition_variable& condition;
         Url url;
         std::shared_ptr<Texture> texture;
         bool done = false;
         UrlCallback cb = nullptr;
+        UrlRequestHandle requestHandle = 0;
     };
 
+
     std::mutex m_taskMutex;
+    std::condition_variable m_taskCondition;
+
     std::forward_list<std::shared_ptr<FontTask>> m_pendingFonts;
     std::forward_list<std::shared_ptr<TextureTask>> m_pendingTextures;
 };
