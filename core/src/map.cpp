@@ -177,9 +177,10 @@ SceneID Map::loadSceneAsync(SceneOptions&& _sceneOptions) {
             scene->load();
             // => Scene::State::pending_resources
 
-            // Another Scene is in AsyncTask queue already
-            if (scene != impl->scene) {
-                //scene->cancel();
+            if (scene == impl->scene) {
+                impl->jobQueue.add([&](){ scene->complete(impl->view); });
+            } else {
+                // Another Scene is in AsyncTask queue already
                 // => Scene::State::stopped
                 LOG("ASYNC DISPOSE SCENE >>>>");
                 scene->dispose();
