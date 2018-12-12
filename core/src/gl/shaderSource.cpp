@@ -59,13 +59,25 @@ std::string ShaderSource::applySourceBlocks(const std::string& _source, bool _fr
         sourceOut <<  "#define TANGRAM_FEATURE_SELECTION\n";
     }
 
-    std::stringstream sourceIn(_source);
     std::string line;
+    size_t end = 0;
 
-    while (std::getline(sourceIn, line)) {
-        if (line.empty()) {
+    while(end < _source.length()) {
+        size_t pos = end;
+        end = _source.find('\n', pos);
+        if (end == std::string::npos) {
+            end = _source.length();
+        }
+        size_t length = end - pos;
+        if (length > 0 && _source[end-1] == '\r') {
+            length -= 1;
+        }
+        if (length == 0) {
+            end++;
             continue;
         }
+        line = _source.substr(pos, length);
+        end++;
 
         sourceOut << line << '\n';
 
