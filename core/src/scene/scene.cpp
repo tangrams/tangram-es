@@ -48,6 +48,18 @@ void Scene::dispose() {
 
     cancelTasks();
 
+    // TODO: Check TileSources held by NetworkDatasource urlcallbacks
+    // bool waitForTileTasks = true;
+    // while(waitForTileTasks) {
+    //     waitForTileTasks = false;
+    //     for (auto& source : m_tileSources) {
+    //         if (source.use_count() > 1) {
+    //             waitForTileTasks = true;
+    //             break;
+    //         }
+    //     }
+    // }
+
     if (m_tileManager) {
         // Cancels all TileTasks
         LOG("Finish TileManager");
