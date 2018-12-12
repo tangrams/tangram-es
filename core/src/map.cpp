@@ -170,17 +170,24 @@ SceneID Map::loadSceneAsync(SceneOptions&& _sceneOptions) {
 
     *(impl->scene->view().get()) = impl->view;
 
-    runAsyncTask([this, scene = impl->scene]() mutable {
+    runAsyncTask([this, s = std::weak_ptr<Scene>(impl->scene)]() mutable {
             LOG("START ASYNC LOAD");
+
+            // Check if another Scene is in AsyncTask queue already
+            auto scene = s.lock();
+            if (!scene) { return; }
 
             // => Scene::State::initial
             scene->load();
-            // => Scene::State::pending_resources
+            // => Scene::State::ready / canceled
 
-            // Another Scene is in AsyncTask queue already
-            if (scene != impl->scene) {
-                //scene->cancel();
-                // => Scene::State::stopped
+            if (scene == impl->scene) {
+                impl->jobQueue.add([&, scene]() {
+                    scene->complete(impl->view);
+                });
+            } else {
+                // Another Scene is in AsyncTask queue already
+                // => Scene::State::canceled
                 LOG("ASYNC DISPOSE SCENE >>>>");
                 scene->dispose();
                 LOG("ASYNC DISPOSE SCENE <<<");
