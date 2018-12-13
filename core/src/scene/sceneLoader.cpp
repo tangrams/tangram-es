@@ -51,6 +51,9 @@ using YAML::BadConversion;
 
 namespace Tangram {
 
+// ':' Delimiter for style params and layer-sublayer naming
+static const char DELIMITER = ':';
+
 static const std::string GLOBAL_PREFIX = "global.";
 
 bool SceneLoader::applyUpdates(Scene& _scene, const std::vector<SceneUpdate>& _updates) {
