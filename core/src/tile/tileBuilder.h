@@ -19,7 +19,7 @@ class TileBuilder {
 
 public:
 
-    explicit TileBuilder(Scene& _scene);
+    explicit TileBuilder(const Scene& _scene);
 
     StyleBuilder* getStyleBuilder(const std::string& _name);
 
@@ -28,7 +28,7 @@ public:
     const Scene& scene() const { return m_scene; }
 
     // For testing
-    TileBuilder(Scene& _scene, StyleContext* _styleContext);
+    TileBuilder(const Scene& _scene, StyleContext* _styleContext);
 
     void init();
 
@@ -37,7 +37,7 @@ private:
     // Determine and apply DrawRules for a @_feature
     void applyStyling(const Feature& _feature, const SceneLayer& _layer);
 
-    Scene& m_scene;
+    const Scene& m_scene;
 
     std::unique_ptr<StyleContext> m_styleContext;
     DrawRuleMergeSet m_ruleSet;

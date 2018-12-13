@@ -204,7 +204,7 @@ std::shared_ptr<Tile> findProxy(int32_t _sourceID, const TileID& _proxyID,
     return nullptr;
 }
 
-void LabelManager::skipTransitions(Scene& _scene, const std::vector<std::shared_ptr<Tile>>& _tiles,
+void LabelManager::skipTransitions(const Scene& _scene, const std::vector<std::shared_ptr<Tile>>& _tiles,
                              TileManager& _tileManager, float _currentZoom) const {
 
     std::vector<const Style*> styles;
@@ -443,7 +443,7 @@ bool LabelManager::withinRepeatDistance(Label *_label) {
     return false;
 }
 
-void LabelManager::updateLabelSet(const ViewState& _viewState, float _dt, Scene& _scene,
+void LabelManager::updateLabelSet(const ViewState& _viewState, float _dt, const Scene& _scene,
                             const std::vector<std::shared_ptr<Tile>>& _tiles,
                             const std::vector<std::unique_ptr<Marker>>& _markers,
                             TileManager& _tileManager) {

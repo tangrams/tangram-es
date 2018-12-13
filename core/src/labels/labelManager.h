@@ -35,7 +35,7 @@ public:
 
     void drawDebug(RenderState& rs, const View& _view);
 
-    void updateLabelSet(const ViewState& _viewState, float _dt, Scene& _scene,
+    void updateLabelSet(const ViewState& _viewState, float _dt, const Scene& _scene,
                         const std::vector<std::shared_ptr<Tile>>& _tiles,
                         const std::vector<std::unique_ptr<Marker>>& _markers,
                         TileManager& tileManager);
@@ -60,7 +60,7 @@ protected:
     using CollisionPairs = std::vector<isect2d::ISect2D<glm::vec2>::Pair>;
 
 
-    void skipTransitions(Scene& _scene, const std::vector<std::shared_ptr<Tile>>& _tiles,
+    void skipTransitions(const Scene& _scene, const std::vector<std::shared_ptr<Tile>>& _tiles,
                          TileManager& _tileManager, float _currentZoom) const;
 
     void skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const;
