@@ -61,6 +61,7 @@ public:
     Platform();
     virtual ~Platform();
 
+    virtual void shutdown() = 0;
     // Request that a new frame be rendered by the windowing system
     virtual void requestRender() const = 0;
 

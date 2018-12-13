@@ -133,10 +133,16 @@ private:
 public:
     JniThreadBinding(JavaVM* _jvm) : jvm(_jvm) {
         status = jvm->GetEnv((void**)&jniEnv, TANGRAM_JNI_VERSION);
-        if (status == JNI_EDETACHED) { jvm->AttachCurrentThread(&jniEnv, NULL);}
+        if (status == JNI_EDETACHED) {
+            LOG("---------------->>> ATTACH");
+            jvm->AttachCurrentThread(&jniEnv, NULL);
+        }
     }
     ~JniThreadBinding() {
-        if (status == JNI_EDETACHED) { jvm->DetachCurrentThread(); }
+        if (status == JNI_EDETACHED) {
+            LOG("---------------->>> DETACH");
+            jvm->DetachCurrentThread();
+        }
     }
 
     JNIEnv* operator->() const {
@@ -173,8 +179,10 @@ std::string AndroidPlatform::fontPath(const std::string& _family, const std::str
     return resultStr;
 }
 
-AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance) {
-    m_tangramInstance = _jniEnv->NewGlobalRef(_tangramInstance);
+AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance)
+    : m_jniWorker(jvm) {
+
+    m_tangramInstance = _jniEnv->NewWeakGlobalRef(_tangramInstance);
 
     m_assetManager = AAssetManager_fromJava(_jniEnv, _assetManager);
 
@@ -188,34 +196,31 @@ AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject
 #endif
 }
 
-void AndroidPlatform::dispose(JNIEnv* _jniEnv) {
-    _jniEnv->DeleteGlobalRef(m_tangramInstance);
-}
-
 void AndroidPlatform::requestRender() const {
-
-    JniThreadBinding jniEnv(jvm);
-
-    jniEnv->CallVoidMethod(m_tangramInstance, requestRenderMethodID);
-}
-
-std::string AndroidPlatform::fontFallbackPath(int _importance, int _weightHint) const {
-
-    JniThreadBinding jniEnv(jvm);
-
-    jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance, getFontFallbackFilePath, _importance, _weightHint);
-
-    auto resultStr = stringFromJString(jniEnv, returnStr);
-    jniEnv->DeleteLocalRef(returnStr);
-
-    return resultStr;
+    m_jniWorker.enqueue([&](JNIEnv *jniEnv) {
+        jniEnv->CallVoidMethod(m_tangramInstance, requestRenderMethodID);
+    });
 }
 
 std::vector<FontSourceHandle> AndroidPlatform::systemFontFallbacksHandle() const {
+    JniThreadBinding jniEnv(jvm);
+
     std::vector<FontSourceHandle> handles;
 
     int importance = 0;
     int weightHint = 400;
+
+    auto fontFallbackPath = [&](int _importance, int _weightHint) {
+
+        jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance,
+                                                               getFontFallbackFilePath, _importance,
+                                                               _weightHint);
+
+        auto resultStr = stringFromJString(jniEnv, returnStr);
+        jniEnv->DeleteLocalRef(returnStr);
+
+        return resultStr;
+    };
 
     std::string fallbackPath = fontFallbackPath(importance, weightHint);
 
@@ -291,18 +296,17 @@ std::vector<char> AndroidPlatform::bytesFromFile(const Url& url) const {
 
 UrlRequestHandle AndroidPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
 
-    JniThreadBinding jniEnv(jvm);
-
     // Get the current value of the request counter and add one, atomically.
     UrlRequestHandle requestHandle = m_urlRequestCount++;
+    if (!_callback) { return requestHandle; }
 
     // If the requested URL does not use HTTP or HTTPS, retrieve it synchronously.
     if (!_url.hasHttpScheme()) {
-        UrlResponse response;
-        response.content = bytesFromFile(_url);
-        if (_callback) {
-            _callback(std::move(response));
-        }
+        m_fileWorker.enqueue([=](){
+             UrlResponse response;
+             response.content = bytesFromFile(_url);
+             _callback(std::move(response));
+        });
         return requestHandle;
     }
 
@@ -312,26 +316,28 @@ UrlRequestHandle AndroidPlatform::startUrlRequest(Url _url, UrlCallback _callbac
         m_callbacks[requestHandle] = _callback;
     }
 
-    jlong jRequestHandle = static_cast<jlong>(requestHandle);
+    m_jniWorker.enqueue([=](JNIEnv *jniEnv) {
+        jlong jRequestHandle = static_cast<jlong>(requestHandle);
 
-    // Check that it's safe to convert the UrlRequestHandle to a jlong and back.
-    assert(requestHandle == static_cast<UrlRequestHandle>(jRequestHandle));
+        // Check that it's safe to convert the UrlRequestHandle to a jlong and back... cmon :P
+        assert(requestHandle == static_cast<UrlRequestHandle>(jRequestHandle));
 
-    jstring jUrl = jstringFromString(jniEnv, _url.string());
+        jstring jUrl = jstringFromString(jniEnv, _url.string());
 
-    // Call the MapController method to start the URL request.
-    jniEnv->CallVoidMethod(m_tangramInstance, startUrlRequestMID, jUrl, jRequestHandle);
-
+        // Call the MapController method to start the URL request.
+        jniEnv->CallVoidMethod(m_tangramInstance, startUrlRequestMID, jUrl, jRequestHandle);
+    });
     return requestHandle;
 }
 
 void AndroidPlatform::cancelUrlRequest(UrlRequestHandle request) {
 
-    JniThreadBinding jniEnv(jvm);
+    m_jniWorker.enqueue([=](JNIEnv *jniEnv) {
 
-    jlong jRequestHandle = static_cast<jlong>(request);
+        jlong jRequestHandle = static_cast<jlong>(request);
 
-    jniEnv->CallVoidMethod(m_tangramInstance, cancelUrlRequestMID, jRequestHandle);
+        jniEnv->CallVoidMethod(m_tangramInstance, cancelUrlRequestMID, jRequestHandle);
+    });
 
     // We currently don't try to cancel requests for local files.
 }
@@ -355,20 +361,21 @@ void AndroidPlatform::onUrlComplete(JNIEnv* _jniEnv, jlong _jRequestHandle, jbyt
         response.error = error.c_str();
     }
 
-    // Find the callback associated with the request.
-    UrlCallback callback;
-    {
-        std::lock_guard<std::mutex> lock(m_callbackMutex);
-        UrlRequestHandle requestHandle = static_cast<UrlRequestHandle>(_jRequestHandle);
-        auto it = m_callbacks.find(requestHandle);
-        if (it != m_callbacks.end()) {
-            callback = std::move(it->second);
-            m_callbacks.erase(it);
+
+    m_fileWorker.enqueue([this, _jRequestHandle, r = std::move(response)]() mutable {
+        // Find the callback associated with the request.
+        UrlCallback callback;
+        {
+            std::lock_guard<std::mutex> lock(m_callbackMutex);
+            UrlRequestHandle requestHandle = static_cast<UrlRequestHandle>(_jRequestHandle);
+            auto it = m_callbacks.find(requestHandle);
+            if (it != m_callbacks.end()) {
+                callback = std::move(it->second);
+                m_callbacks.erase(it);
+            }
         }
-    }
-    if (callback) {
-        callback(std::move(response));
-    }
+        if (callback) { callback(std::move(r)); }
+    });
 }
 
 void setCurrentThreadPriority(int priority) {

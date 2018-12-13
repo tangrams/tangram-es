@@ -10,6 +10,7 @@ class MockPlatform : public Platform {
 
 public:
 
+    void shutdown() override {}
     void requestRender() const override;
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
     UrlRequestHandle startUrlRequest(Url _url, UrlCallback _callback) override;

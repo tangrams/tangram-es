@@ -1,10 +1,12 @@
 #pragma once
 
 #include "platform.h"
+#include "jniWorker.h"
+#include "util/asyncWorker.h"
+
 
 #include <jni.h>
 #include <android/asset_manager.h>
-
 #include <atomic>
 #include <mutex>
 #include <string>
@@ -29,7 +31,7 @@ class AndroidPlatform : public Platform {
 public:
 
     AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance);
-    void dispose(JNIEnv* _jniEnv);
+    void shutdown() override {}
     void requestRender() const override;
     void setContinuousRendering(bool _isContinuous) override;
     FontSourceHandle systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const override;
@@ -63,6 +65,9 @@ private:
     // m_callbackMutex should be locked any time m_callbacks is accessed.
     std::mutex m_callbackMutex;
     std::unordered_map<UrlRequestHandle, UrlCallback> m_callbacks;
+
+    mutable JniWorker m_jniWorker;  // FIX requestRender const.. Lets use Rust if we want this for real
+    AsyncWorker m_fileWorker;
 
 };
 
