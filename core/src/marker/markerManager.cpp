@@ -18,7 +18,8 @@ namespace Tangram {
 
 // ':' Delimiter for style params and layer-sublayer naming
 static const char DELIMITER = ':';
-MarkerManager::MarkerManager(Scene& _scene) : m_scene(_scene) {}
+
+MarkerManager::MarkerManager(const Scene& _scene) : m_scene(_scene) {}
 
 MarkerManager::~MarkerManager() {}
 
@@ -284,7 +285,7 @@ bool MarkerManager::update(const View& _view, float _dt) {
         m_styleContext = std::make_unique<StyleContext>();
         m_styleContext->initFunctions(m_scene);
 
-        for (auto& style : m_scene.styles()) {
+        for (const auto& style : m_scene.styles()) {
             m_styleBuilders[style->getName()] = style->createBuilder();
         }
     }

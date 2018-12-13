@@ -31,18 +31,18 @@ struct StyleUniform {
 struct SceneLoader {
     using Node = YAML::Node;
 
-    static bool applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates);
-    static void applyGlobals(Scene& scene);
+    static SceneError applyUpdates(Node& config, const std::vector<SceneUpdate>& updates);
+    static void applyGlobals(Node& config);
 
-    static void applyScene(Scene& scene);
-    static void loadBackground(Scene& scene, const Node& background);
+    static void applyScene(const Node& _config, Color& background, Stops& backgroundStops,
+                           Scene::animate& animated);
 
-    static void applyCameras(Scene& scene);
-    static void loadCameras(Scene& scene, const Node& cameras);
-    static void loadCamera(Scene& scene, const Node& camera);
+    static void applyCameras(const Node& config, SceneCamera& camera);
+    static void loadCameras(const Node& camerasNode, SceneCamera& camera);
+    static void loadCamera(const Node& cameraNode, SceneCamera& camera);
 
-    static void applyLights(Scene& scene);
-    static void loadLight(Scene& scene, const std::pair<Node, Node>& light);
+    static void applyLights(const Node& config, Scene::Lights& lights);
+    static std::unique_ptr<Light> loadLight(const std::pair<Node, Node>& light);
     static void parseLightPosition(const Node& positionNode, PointLight& light);
 
     static void applyTextures(Scene& scene);

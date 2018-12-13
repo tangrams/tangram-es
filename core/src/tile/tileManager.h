@@ -65,7 +65,7 @@ public:
 
     bool removeClientTileSource(TileSource& _source);
 
-    std::unique_ptr<TileCache>& getTileCache() { return m_tileCache; }
+    const std::unique_ptr<TileCache>& getTileCache() const { return m_tileCache; }
 
     /* @_cacheSize: Set size of in-memory tile cache in bytes.
      * This cache holds recently used <Tile>s that are ready for rendering.

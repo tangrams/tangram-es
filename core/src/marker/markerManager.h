@@ -21,7 +21,7 @@ class MarkerManager {
 
 public:
 
-    explicit MarkerManager(Scene& scene);
+    explicit MarkerManager(const Scene& scene);
     ~MarkerManager();
 
     // Create a new, empty marker and return its ID. An ID of 0 indicates an invalid marker.
@@ -85,7 +85,7 @@ private:
     bool buildStyling(Marker& marker);
     bool buildMesh(Marker& marker, int zoom);
 
-    Scene& m_scene;
+    const Scene& m_scene;
     // Custom functions and stops from styling strings
     SceneStops m_stops;
     SceneFunctions m_functions;

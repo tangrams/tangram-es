@@ -14,12 +14,12 @@
 
 namespace Tangram {
 
-TileBuilder::TileBuilder(Scene& _scene)
+TileBuilder::TileBuilder(const Scene& _scene)
     : m_scene(_scene),
       m_styleContext(std::make_unique<StyleContext>()) {
 }
 
-TileBuilder::TileBuilder(Scene& _scene, StyleContext* _styleContext)
+TileBuilder::TileBuilder(const Scene& _scene, StyleContext* _styleContext)
     : m_scene(_scene),
       m_styleContext(std::unique_ptr<StyleContext>(_styleContext)) {
 }
@@ -28,7 +28,7 @@ void TileBuilder::init() {
     m_styleContext->initFunctions(m_scene);
 
     // Initialize StyleBuilders
-    for (auto& style : m_scene.styles()) {
+    for (const auto& style : m_scene.styles()) {
         if (auto builder = style->createBuilder()) {
             m_styleBuilder[style->getName()] = std::move(builder);
         }
