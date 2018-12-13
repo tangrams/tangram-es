@@ -86,21 +86,6 @@ public:
 class Scene {
 public:
 
-    struct Camera {
-        CameraType type = CameraType::perspective;
-
-        float maxTilt = 90.f;
-        std::shared_ptr<Stops> maxTiltStops;
-
-        // perspective
-        glm::vec2 vanishingPoint = {0, 0};
-        float fieldOfView = 0.25 * PI;
-        std::shared_ptr<Stops> fovStops;
-
-        // isometric
-        glm::vec2 obliqueAxis = {0, 1};
-    };
-
     enum animate {
         yes, no, none
     };
@@ -114,7 +99,6 @@ public:
 
     const int32_t id;
 
-    auto& view() { return m_view; }
     auto& camera() { return m_camera; }
     auto& config() { return m_config; }
     auto& tileSources() { return m_tileSources; }
@@ -227,6 +211,7 @@ public:
 protected:
     Platform& platform() { return m_platform; }
     void pushError(SceneError&& error) { m_errors.push_back(std::move(error)); }
+    auto& startPosition() { return m_startPosition; }
 
 private:
     Platform& m_platform;
@@ -254,6 +239,7 @@ private:
     YAML::Node m_config;
 
     Camera m_camera;
+    glm::dvec3 m_startPosition;
 
     std::vector<DataLayer> m_layers;
     std::vector<std::shared_ptr<TileSource>> m_tileSources;
@@ -292,7 +278,6 @@ private:
     std::unique_ptr<TileManager> m_tileManager;
     std::unique_ptr<MarkerManager> m_markerManager;
     std::unique_ptr<LabelManager> m_labelManager;
-    std::unique_ptr<View> m_view;
 
     struct FontTask {
         FontTask(std::condition_variable& condition, Url url, std::shared_ptr<FontContext> fontContext, FontDescription ft)
