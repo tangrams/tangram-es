@@ -788,11 +788,11 @@ void SceneLoader::loadSource(Scene& _scene, const std::string& _name, const Node
         }
     }
 
-    _scene.tileSources().push_back(sourcePtr);
-
     if (const Node& rasters = _source["rasters"]) {
         loadSourceRasters(_scene, *sourcePtr, rasters);
     }
+
+    _scene.addTileSource(sourcePtr);
 }
 
 void SceneLoader::loadSourceRasters(Scene& _scene, TileSource& _source, const Node& _rasterNode) {
