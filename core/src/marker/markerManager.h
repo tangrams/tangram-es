@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene/drawRule.h"
+#include "scene/scene.h"
 #include "util/ease.h"
 #include "util/fastmap.h"
 #include "util/types.h"
@@ -12,7 +13,6 @@ namespace Tangram {
 
 class MapProjection;
 class Marker;
-class Scene;
 class StyleBuilder;
 class StyleContext;
 class View;
@@ -86,6 +86,9 @@ private:
     bool buildMesh(Marker& marker, int zoom);
 
     Scene& m_scene;
+    // Custom functions and stops from styling strings
+    SceneStops m_stops;
+    SceneFunctions m_functions;
 
     std::unique_ptr<StyleContext> m_styleContext;
     std::vector<std::unique_ptr<Marker>> m_markers;

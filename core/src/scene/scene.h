@@ -1,7 +1,6 @@
 #pragma once
 
 #include "map.h"
-#include "marker/markerManager.h"
 #include "platform.h"
 #include "stops.h"
 #include "text/fontContext.h" // For FontDescription
@@ -34,6 +33,7 @@ class Importer;
 class LabelManager;
 class Light;
 class MapProjection;
+class MarkerManager;
 class Platform;
 class SceneLayer;
 class SelectionQuery;
@@ -80,6 +80,11 @@ public:
     std::function<void(Scene*)> asyncCallback = nullptr;
 };
 
+struct SceneFunctions : public std::vector<std::string> {
+    int addJsFunction(const std::string& _function);
+};
+
+using SceneStops = std::list<Stops>;
 
 class Scene {
 public:
@@ -131,7 +136,6 @@ public:
     int addIdForName(const std::string& _name);
     int getIdForName(const std::string& _name) const;
 
-    int addJsFunction(const std::string& _function);
 
     void animated(bool animated) { m_animated = animated ? yes : no; }
     animate animated() const { return m_animated; }
@@ -254,8 +258,8 @@ private:
     // integer indices into this container to represent strings
     std::vector<std::string> m_names;
 
-    std::vector<std::string> m_jsFunctions;
-    std::list<Stops> m_stops;
+    SceneFunctions m_jsFunctions;
+    SceneStops m_stops;
 
     Color m_background;
     Stops m_backgroundStops;
