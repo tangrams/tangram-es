@@ -54,6 +54,7 @@ public:
         scene(std::make_shared<Scene>(_platform)) {}
 
     void setPixelScale(float _pixelsPerPoint);
+    SceneID loadSceneAsync(SceneOptions&& _sceneOptions);
 
     std::mutex tilesMutex;
     std::mutex sceneMutex;
@@ -92,6 +93,9 @@ public:
 
     bool sceneGotReady = false;
     int framesRendered = false;
+
+    // TODO MapOption
+    Color background{0xffffffff};
 };
 
 
@@ -133,7 +137,7 @@ SceneID Map::loadSceneAsync(const std::string& _scenePath, bool _useScenePositio
     options.updates =  _sceneUpdates;
     options.useScenePosition = _useScenePosition;
 
-    return loadSceneAsync(std::move(options));
+    return impl->loadSceneAsync(std::move(options));
 }
 
 SceneID Map::loadSceneYamlAsync(const std::string& _yaml, const std::string& _resourceRoot,
@@ -145,61 +149,54 @@ SceneID Map::loadSceneYamlAsync(const std::string& _yaml, const std::string& _re
     options.updates =  _sceneUpdates;
     options.useScenePosition = _useScenePosition;
 
-    return loadSceneAsync(std::move(options));
+    return impl->loadSceneAsync(std::move(options));
 }
 
-SceneID Map::loadSceneAsync(SceneOptions&& _sceneOptions) {
+SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
 
-    impl->framesRendered = 0;
+    framesRendered = 0;
 
-    // Avoid loading old scene and tiles
-    impl->scene->cancelTasks();
+    /// Avoid to keep loading old scene and tiles
+    oldScene = std::move(scene);
+    oldScene->cancelTasks();
 
-    if (impl->scene->isReady()) {
-        // Keep it for rendering while new scene loads
-        impl->oldScene = impl->scene;
-    }
+    /// Add callback for tile prefetching
+    _sceneOptions.asyncCallback = [&](Scene* _scene) {
+         jobQueue.add([&, _scene]() {
+         LOG("ASYNC CALLBACK >>>");
+         if (_scene == scene.get()) {
+            scene->prefetchTiles(view);
+            background = scene->background(view.getIntegerZoom());
+         }});
+         LOG("ASYNC CALLBACK <<<");
+         platform.requestRender();
+    };
 
-    _sceneOptions.view = {
-        uint32_t(impl->view.getWidth()),
-        uint32_t(impl->view.getHeight()),
-        impl->view.pixelScale()
-     };
+    scene = std::make_shared<Scene>(platform, std::move(_sceneOptions));
 
-    impl->scene = std::make_shared<Scene>(*platform, std::move(_sceneOptions));
+    asyncWorker->enqueue([this, newScene = scene]() {
+        LOG("ASYNC LOAD >>>");
+        if (newScene == scene) {
+            /// => Scene::State::initial
+            newScene->load();
+            /// => Scene::State::ready / canceled
+            platform.requestRender();
+        }
 
-    *(impl->scene->view().get()) = impl->view;
+        if (newScene != scene) {
+            /// Another Scene is already queued
+            newScene->dispose();
+        }
+        LOG("ASYNC LOAD <<<");
+    });
 
-    runAsyncTask([this, s = std::weak_ptr<Scene>(impl->scene)]() mutable {
-            LOG("START ASYNC LOAD");
+    /// Disposing TileWorker is blocking: Do this async just in case
+    asyncWorker->enqueue([=]() {
+        LOG("ASYNC DISPOSE OLD SCENE");
+        oldScene->dispose();
+    });
 
-            // Check if another Scene is in AsyncTask queue already
-            auto scene = s.lock();
-            if (!scene) { return; }
-
-            // => Scene::State::initial
-            scene->load();
-            // => Scene::State::ready / canceled
-
-            if (scene == impl->scene) {
-                impl->jobQueue.add([&, scene]() {
-                    scene->complete(impl->view);
-                });
-            } else {
-                // Another Scene is in AsyncTask queue already
-                // => Scene::State::canceled
-                LOG("ASYNC DISPOSE SCENE >>>>");
-                scene->dispose();
-                LOG("ASYNC DISPOSE SCENE <<<");
-                // => Scene::State::disposed
-            }
-
-            platform->requestRender();
-
-            LOG("ASYNC LOAD DONE");
-        });
-
-    return impl->scene->id;
+    return scene->id;
 }
 
 void Map::setSceneReadyListener(SceneReadyCallback _onSceneReady) {
@@ -234,7 +231,7 @@ bool Map::update(float _dt) {
     bool wasReady = scene.isReady();
 
     // Check if the current scene finished loading
-    if (!scene.complete(view)) {
+    if (!scene.completeView(view)) {
 
         platform->requestRender();
         return false;
@@ -246,16 +243,6 @@ bool Map::update(float _dt) {
         bool animated = scene.animated() == Scene::animate::yes;
         if (animated != impl->platform.isContinuousRendering()) {
             impl->platform.setContinuousRendering(animated);
-        }
-
-        if (impl->oldScene) {
-            /// Disposing TileWorker is blocking
-            runAsyncTask([scene = impl->oldScene]() {
-                LOG("START ASYNC DISPOSE OLD SCENE");
-                scene->dispose();
-                LOG("DONE ASYNC DISPOSE OLD SCENE");
-            });
-            impl->oldScene.reset();
         }
     }
 
@@ -306,15 +293,20 @@ bool Map::update(float _dt) {
 
 bool Map::render() {
 
-    // Render old Scene while new one is loading
-    auto& scene = (!impl->scene->isReady() && impl->oldScene) ? *impl->oldScene : *impl->scene;
+    auto& scene = *impl->scene;
     auto& view = impl->view;
 
     auto& renderState = impl->renderState;
 
-    // Do not render if any texture resources are in process of being downloaded
+    // Do not render while scene is loading
     if (!scene.isReady()) {
-        return impl->isCameraEasing; // ?????
+        // Setup default framebuffer for a new frame
+        glm::vec2 viewport(view.getWidth(), view.getHeight());
+
+        FrameBuffer::apply(renderState, renderState.defaultFrameBuffer(),
+                           viewport, impl->background.toColorF());
+
+        return impl->isCameraEasing;
     }
 
     // LOGTInit();
@@ -331,7 +323,6 @@ bool Map::render() {
     renderState.cacheDefaultFramebuffer();
 
     Primitives::setResolution(renderState, view.getWidth(), view.getHeight());
-
     FrameInfo::beginFrame();
 
     // Invalidate render states for new frame
@@ -358,13 +349,13 @@ bool Map::render() {
     }
 
     // Get background color for frame based on zoom level, if there are stops
-    Color background = scene.background(view.getIntegerZoom());
+    impl->background = scene.background(view.getIntegerZoom());
 
     // Setup default framebuffer for a new frame
     glm::vec2 viewport(view.getWidth(), view.getHeight());
 
     FrameBuffer::apply(renderState, renderState.defaultFrameBuffer(),
-                       viewport, background.toColorF());
+                       viewport, impl->background.toColorF());
 
     if (drawSelectionBuffer) {
         impl->selectionBuffer->drawDebug(renderState, viewport);
@@ -383,7 +374,6 @@ bool Map::render() {
 
         platform->setContinuousRendering(drawnAnimatedStyle);
     }
-
 
     FrameInfo::draw(renderState, view, *scene.tileManager());
 
