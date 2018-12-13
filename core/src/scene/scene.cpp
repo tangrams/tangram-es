@@ -617,4 +617,8 @@ std::shared_ptr<TileSource> Scene::getTileSource(const std::string& name) {
     return nullptr;
 }
 
+void Scene::addLayer(DataLayer&& _layer) {
+    m_layers.push_back(std::move(_layer));
+}
+
 }
