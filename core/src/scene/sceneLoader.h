@@ -59,10 +59,10 @@ struct SceneLoader {
     static void applyStyles(Scene& scene);
     static bool loadStyle(Scene& scene, const std::string& styleName, const Node& config);
     static void loadStyleProps(Scene& scene, Style& style, const Node& styleNode);
-    static void parseStyleParams(Scene& scene, const Node& params, const std::string& propPrefix,
+    static void parseStyleParams(SceneStops& _stops, SceneFunctions& _functions,
+                                 const Node& params, const std::string& propPrefix,
                                  std::vector<StyleParam>& out);
-    static void parseTransition(Scene& scene, const Node& params, std::string prefix,
-                                std::vector<StyleParam>& out);
+    static void parseTransition(const Node& params, std::string prefix, std::vector<StyleParam>& out);
     static void loadShaderConfig(Scene& scene, const Node& shaders, Style& style);
     static bool parseStyleUniforms(Scene& scene, const Node& value, StyleUniform& styleUniform);
     static void loadMaterial(Scene& scene, const Node& matNode, Material& material, Style& style);
