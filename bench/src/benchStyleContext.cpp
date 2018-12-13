@@ -32,21 +32,20 @@ const char tile_file[] = "res/tile.mvt";
 std::shared_ptr<Scene> scene;
 std::shared_ptr<TileSource> source;
 std::shared_ptr<TileData> tileData;
-
-std::unique_ptr<MockPlatform> platform = std::make_unique<MockPlatform>();
+MockPlatform platform;
 
 void globalSetup() {
     static std::atomic<bool> initialized{false};
     if (initialized.exchange(true)) { return; }
 
     Url sceneUrl(scene_file);
-    platform->putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
+    platform.putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
 
-    SceneOptions sceneOptions(sceneUrl);
+    SceneOptions sceneOptions{sceneUrl};
     sceneOptions.prefetchTiles = false;
 
-    scene = std::make_shared<Scene>(*platform);
-    scene->load(std::move(sceneOptions));
+    scene = std::make_shared<Scene>(platform, std::move(sceneOptions));
+    if (!scene->load()) { exit(-1); }
 
     for (auto& s : scene->tileSources()) {
         source = s;

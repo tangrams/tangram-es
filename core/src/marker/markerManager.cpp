@@ -16,18 +16,10 @@
 
 namespace Tangram {
 
-MarkerManager::MarkerManager(Scene& _scene) : m_scene(_scene){
-    m_styleContext = std::make_unique<StyleContext>();
-    m_styleContext->initFunctions(m_scene);
-
-    // Initialize StyleBuilders.
-    m_styleBuilders.clear();
-    for (auto& style : m_scene.styles()) {
-        m_styleBuilders[style->getName()] = style->createBuilder();
-    }
-}
+MarkerManager::MarkerManager(Scene& _scene) : m_scene(_scene) {}
 
 MarkerManager::~MarkerManager() {}
+
 
 MarkerID MarkerManager::add() {
     m_dirty = true;
@@ -57,6 +49,8 @@ bool MarkerManager::remove(MarkerID markerID) {
 }
 
 bool MarkerManager::setStyling(MarkerID markerID, const char* styling, bool isPath) {
+    if (!m_scene.isReady()) { return false; }
+
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
@@ -74,6 +68,8 @@ bool MarkerManager::setStyling(MarkerID markerID, const char* styling, bool isPa
 }
 
 bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, float density, const unsigned int* bitmapData) {
+    if (!m_scene.isReady()) { return false; }
+
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
@@ -119,6 +115,7 @@ bool MarkerManager::setDrawOrder(MarkerID markerID, int drawOrder) {
 }
 
 bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
+    if (!m_scene.isReady()) { return false; }
 
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
@@ -144,6 +141,7 @@ bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
 }
 
 bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float duration, EaseType ease) {
+    if (!m_scene.isReady()) { return false; }
 
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
@@ -162,6 +160,7 @@ bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float durati
 }
 
 bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int count) {
+    if (!m_scene.isReady()) { return false; }
 
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
@@ -211,6 +210,7 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
 }
 
 bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* counts, int rings) {
+    if (!m_scene.isReady()) { return false; }
 
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
@@ -274,6 +274,18 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
 }
 
 bool MarkerManager::update(const View& _view, float _dt) {
+    if (!m_scene.isReady()) { return false; }
+
+    if (!m_styleContext) {
+        // First call to update after scene became ready
+        //Initialize Stylecontext and StyleBuilders.
+        m_styleContext = std::make_unique<StyleContext>();
+        m_styleContext->initFunctions(m_scene);
+
+        for (auto& style : m_scene.styles()) {
+            m_styleBuilders[style->getName()] = style->createBuilder();
+        }
+    }
 
     m_zoom = _view.getZoom();
 
@@ -305,12 +317,12 @@ void MarkerManager::removeAll() {
 
 void MarkerManager::rebuildAll() {
     m_dirty = true;
+    if (m_scene.isReady()) { return; }
 
     for (auto& entry : m_markers) {
         buildStyling(*entry);
         buildMesh(*entry, m_zoom);
     }
-
 }
 
 const std::vector<std::unique_ptr<Marker>>& MarkerManager::markers() const {
@@ -318,6 +330,7 @@ const std::vector<std::unique_ptr<Marker>>& MarkerManager::markers() const {
 }
 
 bool MarkerManager::buildStyling(Marker& marker) {
+    if (!m_scene.isReady()) { return false; }
 
     const auto& markerStyling = marker.styling();
 
