@@ -35,7 +35,6 @@ Scene::Scene(Platform& _platform, SceneOptions&& _options) :
     m_options(std::move(_options)) {
 
     m_markerManager = std::make_unique<MarkerManager>(*this);
-    m_view = std::make_unique<View>();
 }
 
 Scene::~Scene() {
@@ -165,6 +164,7 @@ bool Scene::load() {
     SceneLoader::applyCameras(*this);
     LOGTO("<<< applyCameras");
 
+
     m_tileWorker = std::make_unique<TileWorker>(m_platform, m_options.numTileWorkers);
     m_tileManager = std::make_unique<TileManager>(m_platform, *m_tileWorker);
     m_tileManager->setTileSources(m_tileSources);
@@ -272,42 +272,37 @@ bool Scene::load() {
     return true;
 }
 
-void Scene::prefetchTiles(const View& view) {
+void Scene::prefetchTiles(const View& _view) {
 
-    //*m_view = view;
+    View view = _view;
 
-    m_pixelScale = view.pixelScale();
-    m_view->setPixelScale(m_pixelScale);
+    view.setCamera(m_camera);
 
-    /// Update new scene with current view
-    m_view->setSize(view.getWidth(), view.getHeight());
-
-    if (!m_options.useScenePosition) {
-         m_view->setPosition(view.getPosition());
+    if (m_options.useScenePosition) {
+        view.setPosition(m_startPosition);
     }
 
     if (m_options.prefetchTiles) {
         LOGTO(">>> loadTiles");
         LOG("Prefetch tiles for View: %fx%f / zoom:%f lon:%f lat:%f",
-            m_view->getWidth(), m_view->getHeight(), m_view->getZoom(),
-            m_view->getCenterCoordinates().longitude,
-            m_view->getCenterCoordinates().latitude);
-        m_view->update();
-        m_tileManager->updateTileSets(*m_view);
+            view.getWidth(), view.getHeight(), view.getZoom(),
+            view.getCenterCoordinates().longitude,
+            view.getCenterCoordinates().latitude);
+        view.update();
+        m_tileManager->updateTileSets(view);
         LOGTO("<<< loadTiles");
     }
 }
 
-bool Scene::completeView(View& view) {
+bool Scene::completeView(View& _view) {
     if (m_state == State::ready) { return true; }
     if (m_state != State::pending_completion) { return false; }
 
-    if (!m_options.useScenePosition) {
-        m_view->setPosition(view.getPosition());
+    if (m_options.useScenePosition) {
+        _view.setPosition(m_startPosition);
     }
 
-    /// Copy camera, position, etc from new Scene
-    view = *m_view;
+    _view.setCamera(m_camera);
 
     for (auto& style : m_styles) {
         style->setPixelScale(m_pixelScale);
