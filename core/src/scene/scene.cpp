@@ -159,7 +159,7 @@ bool Scene::load() {
     LOGTO("<<< applyGlobals");
 
     LOGTO(">>> applySources");
-    SceneLoader::applySources(*this);
+    SceneLoader::applySources(m_config, m_tileSources, m_options, m_platform);
     LOGTO("<<< applySources");
 
     LOGTO(">>> applyCameras");
