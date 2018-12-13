@@ -125,6 +125,8 @@ Map::~Map() {
     // In any case after shutdown Platform may not call back into Map!
     platform->shutdown();
 
+    impl->tileManager.clearTileSets();
+
     // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
     impl->tileWorker.stop();
     impl->asyncWorker.reset();
