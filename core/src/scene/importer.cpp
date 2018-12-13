@@ -2,8 +2,8 @@
 
 #include "log.h"
 #include "platform.h"
+#include "util/asyncWorker.h"
 #include "util/zipArchive.h"
-
 #include <cassert>
 #include <condition_variable>
 
@@ -14,6 +14,8 @@ using YAML::NodeType;
 
 namespace Tangram {
 
+Importer::Importer() {}
+Importer::~Importer() {}
 
 Node Importer::loadSceneData(Platform& _platform, const Url& _sceneUrl, const std::string& _sceneYaml) {
 
@@ -67,8 +69,6 @@ Node Importer::loadSceneData(Platform& _platform, const Url& _sceneUrl, const st
         activeDownloads++;
 
         if (nextUrlToImport.scheme() == "zip") {
-            // NB: This call is blocking - no need for the activeDownloads/notify
-            // It's just more elegant to use the same cb :)
             readFromZip(nextUrlToImport, cb);
         } else {
             auto handle = _platform.startUrlRequest(nextUrlToImport, cb);
@@ -105,7 +105,8 @@ void Importer::addSceneData(const Url& sceneUrl, std::vector<char>&& sceneData) 
         addSceneYaml(sceneUrl, sceneData.data(), sceneData.size());
         return;
     }
-    // We're loading a scene from a zip archive!
+
+    // We're loading a scene from a zip archive
     // First, create an archive from the data.
     auto zipArchive = std::make_shared<ZipArchive>();
     zipArchive->loadFromMemory(std::move(sceneData));
@@ -131,29 +132,37 @@ void Importer::addSceneData(const Url& sceneUrl, std::vector<char>&& sceneData) 
 }
 
 UrlRequestHandle Importer::readFromZip(const Url& url, UrlCallback callback) {
-    UrlResponse response;
-    // URL for a file in a zip archive, get the encoded source URL.
-    auto source = Importer::getArchiveUrlForZipEntry(url);
-    // Search for the source URL in our archive map.
-    auto it = m_zipArchives.find(source);
-    if (it != m_zipArchives.end()) {
-        auto& archive = it->second;
-        // Found the archive! Now create a response for the request.
-        auto zipEntryPath = url.path().substr(1);
-        auto entry = archive->findEntry(zipEntryPath);
-        if (entry) {
-            response.content.resize(entry->uncompressedSize);
-            bool success = archive->decompressEntry(entry, response.content.data());
-            if (!success) {
-                response.error = "Unable to decompress zip archive file.";
+
+    if (!m_zipWorker) {
+        m_zipWorker = std::make_unique<AsyncWorker>();
+        m_zipWorker->waitForCompletion();
+    }
+
+    m_zipWorker->enqueue([=](){
+        UrlResponse response;
+        // URL for a file in a zip archive, get the encoded source URL.
+        auto source = Importer::getArchiveUrlForZipEntry(url);
+        // Search for the source URL in our archive map.
+        auto it = m_zipArchives.find(source);
+        if (it != m_zipArchives.end()) {
+            auto& archive = it->second;
+            // Found the archive! Now create a response for the request.
+            auto zipEntryPath = url.path().substr(1);
+            auto entry = archive->findEntry(zipEntryPath);
+            if (entry) {
+                response.content.resize(entry->uncompressedSize);
+                bool success = archive->decompressEntry(entry, response.content.data());
+                if (!success) {
+                    response.error = "Unable to decompress zip archive file.";
+                }
+            } else {
+                response.error = "Did not find zip archive entry.";
             }
         } else {
-            response.error = "Did not find zip archive entry.";
+            response.error = "Could not find zip archive.";
         }
-    } else {
-        response.error = "Could not find zip archive.";
-    }
-    callback(std::move(response));
+        callback(std::move(response));
+    });
     return 0;
 }
 
