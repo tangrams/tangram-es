@@ -42,12 +42,6 @@ class Texture;
 class TileSource;
 struct SceneLoader;
 
-
-/* Container of <Style> information
- *
- * Scene is a singleton containing the styles, lighting, and interactions defining a map scene
- */
-
 class SceneOptions {
 public:
     explicit SceneOptions(const Url& _url) : url(_url) {}
@@ -86,14 +80,14 @@ struct SceneFunctions : public std::vector<std::string> {
 
 using SceneStops = std::list<Stops>;
 
+struct SceneCamera : public Camera {
+    glm::dvec3 startPosition;
+};
+
 class Scene {
 public:
 
-    enum animate {
-        yes, no, none
-    };
-
-    explicit Scene(Platform& platform, SceneOptions&& = SceneOptions{""});
+    Scene(Platform& platform, SceneOptions&& = SceneOptions{""});
 
     Scene(const Scene& _other) = delete;
     Scene(Scene&& _other) = delete;
@@ -102,33 +96,19 @@ public:
 
     const int32_t id;
 
-    auto& camera() { return m_camera; }
-    auto& config() { return m_config; }
-    auto& tileSources() { return m_tileSources; }
-    auto& layers() { return m_layers; }
-    auto& styles() { return m_styles; }
-    auto& lights() { return m_lights; }
-    auto& lightBlocks() { return m_lightShaderBlocks; }
-    auto& textures() { return m_textures; }
-    auto& functions() { return m_jsFunctions; }
-    auto& stops() { return m_stops; }
-    auto& background() { return m_background; }
-    auto& backgroundStops() { return m_backgroundStops; }
-    auto& fontContext() { return m_fontContext; }
-    auto& featureSelection() { return m_featureSelection; }
-    Style* findStyle(const std::string& _name);
+    auto& tileSources() const { return m_tileSources; }
+    auto& featureSelection() const { return m_featureSelection; }
+    auto& fontContext() const { return m_fontContext; }
 
     const auto& config() const { return m_config; }
-    const auto& tileSources() const { return m_tileSources; }
-    const auto& styles() const { return m_styles; }
-    const auto& lights() const { return m_lights; }
-    const auto& lightBlocks() const { return m_lightShaderBlocks; }
     const auto& functions() const { return m_jsFunctions; }
-    const auto& fontContext() const { return m_fontContext; }
-    const auto& featureSelection() const { return m_featureSelection; }
+    const auto& layers() const { return m_layers; }
+    const auto& lightBlocks() const { return m_lightShaderBlocks; }
+    const auto& lights() const { return m_lights; }
+    const auto& options() const { return m_options; }
+    const auto& styles() const { return m_styles; }
 
     const Style* findStyle(const std::string& _name) const;
-
     const Light* findLight(const std::string& _name) const;
 
     float time() const { return m_time; }
@@ -136,22 +116,22 @@ public:
     int addIdForName(const std::string& _name);
     int getIdForName(const std::string& _name) const;
 
+    enum animate { yes, no, none };
 
-    void animated(bool animated) { m_animated = animated ? yes : no; }
     animate animated() const { return m_animated; }
 
-    std::shared_ptr<TileSource> getTileSource(int32_t id);
-    std::shared_ptr<TileSource> getTileSource(const std::string& name);
+    std::shared_ptr<TileSource> getTileSource(int32_t id) const;
+    std::shared_ptr<TileSource> getTileSource(const std::string& name) const;
 
     std::shared_ptr<Texture> getTexture(const std::string& name) const;
 
-    float pixelScale() { return m_pixelScale; }
+    float pixelScale() const { return m_pixelScale; }
     void setPixelScale(float _scale);
 
-    // Returns:
-    // - hasLoadingTiles
-    // - labelsNeedUpdate
-    // - markersNeedUpdate
+    /// Update TileManager, Labels and Markers for current View, returns:
+    /// - hasLoadingTiles
+    /// - labelsNeedUpdate
+    /// - markersNeedUpdate
     std::tuple<bool,bool,bool> update(const View& _view, float _dt);
 
     void renderBeginFrame(RenderState& _rs);
@@ -160,16 +140,16 @@ public:
                          FrameBuffer& _selectionBuffer,
                          std::vector<SelectionQuery>& _selectionQueries);
 
-    Color background(int _zoom) {
+    Color background(int _zoom) const {
         if (m_backgroundStops.frames.size() > 0) {
             return m_backgroundStops.evalColor(_zoom);
         }
         return m_background;
     }
 
-    TileManager* tileManager() { return m_tileManager.get(); }
-    MarkerManager* markerManager() { return m_markerManager.get(); }
-    LabelManager* labelManager() { return m_labelManager.get(); }
+    TileManager* tileManager() const { return m_tileManager.get(); }
+    MarkerManager* markerManager() const { return m_markerManager.get(); }
+    LabelManager* labelManager() const { return m_labelManager.get(); }
 
     bool load();
 
@@ -177,16 +157,17 @@ public:
         return (m_errors.empty() ? nullptr : &m_errors.front());
     }
 
-    // - Copy current View width,height,pixelscale and position (unless useScenePosition)
-    // - Start tile-loading for this View.
+    /// - Copy current View width,height,pixelscale and position
+    ///   (unless options.useScenePosition is set)
+    /// - Start tile-loading for this View.
     void prefetchTiles(const View& view);
 
-    // Return true scene-loading could be completed, false when resources for
-    // tile-building and rendering are still pending.
-    // Does the finishing touch when everything is available:
-    // - Copy Scene camera to View
-    // - Update Styles and FontContext to current pixelScale
-    // -...
+    /// Returns true when scene-loading could be completed,
+    /// false when resources for tile-building and rendering
+    /// are still pending.
+    /// Does the finishing touch when everything is available:
+    /// - Sets Scene camera to View
+    /// - Update Styles and FontContext to current pixelScale
     bool completeView(View& view);
 
     void cancelTasks();
@@ -206,15 +187,26 @@ public:
     friend struct SceneLoader;
     friend class Importer;
 
-    const SceneOptions& options() const { return m_options; }
+    auto& styles() { return m_styles; }
 
-protected:
+//protected:
+    using Lights = std::vector<std::unique_ptr<Light>>;
+
     Platform& platform() { return m_platform; }
     void pushError(SceneError&& error) { m_errors.push_back(std::move(error)); }
-    auto& startPosition() { return m_startPosition; }
+    auto& camera() { return m_camera; }
+    auto& config() { return m_config; }
+    auto& lights() { return m_lights; }
+    auto& lightBlocks() { return m_lightShaderBlocks; }
+    auto& textures() { return m_textures; }
+    auto& functions() { return m_jsFunctions; }
+    auto& stops() { return m_stops; }
+    auto& background() { return m_background; }
+    auto& backgroundStops() { return m_backgroundStops; }
 
     void addLayer(DataLayer&& _layer);
-    void addTileSource(std::shared_ptr<TileSource>& _source);
+    void addTileSource(std::shared_ptr<TileSource> _source);
+    void addStyle(std::unique_ptr<Style> _style);
 
 private:
     Platform& m_platform;
@@ -241,14 +233,13 @@ private:
     // The root node of the YAML scene configuration
     YAML::Node m_config;
 
-    Camera m_camera;
-    glm::dvec3 m_startPosition;
+    SceneCamera m_camera;
 
     std::vector<DataLayer> m_layers;
     std::vector<std::shared_ptr<TileSource>> m_tileSources;
     std::vector<std::unique_ptr<Style>> m_styles;
 
-    std::vector<std::unique_ptr<Light>> m_lights;
+    Lights m_lights;
     std::map<std::string, std::string> m_lightShaderBlocks;
 
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;

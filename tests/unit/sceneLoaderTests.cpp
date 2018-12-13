@@ -26,8 +26,8 @@ TEST_CASE("Correctly instantiate a style from a YAML configuration") {
     MockPlatform platform;
     Scene scene{platform};
 
-    scene.styles().emplace_back(new PolygonStyle("polygons"));
-    scene.styles().emplace_back(new PolylineStyle("lines"));
+    scene.addStyle(std::make_unique<PolygonStyle>("polygons"));
+    scene.addStyle(std::make_unique<PolylineStyle>("lines"));
 
     YAML::Node node = YAML::Load(R"END(
         animated: true
