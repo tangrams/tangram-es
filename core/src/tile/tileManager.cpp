@@ -133,7 +133,19 @@ struct TileManager::TileEntry {
 TileManager::TileSet::TileSet(std::shared_ptr<TileSource> _source, bool _clientSource) :
     source(_source), clientTileSource(_clientSource) {}
 
-TileManager::TileSet::~TileSet() {}
+TileManager::TileSet::~TileSet() {
+    cancelTasks();
+}
+
+void TileManager::TileSet::cancelTasks() {
+    for (auto& tile : tiles) {
+        auto& entry = tile.second;
+        if (entry.isInProgress()) {
+            source->cancelLoadingTile(*entry.task);
+        }
+        entry.clearTask();
+    }
+}
 
 TileManager::TileManager(std::shared_ptr<Platform> platform, TileTaskQueue& _tileWorker) :
     m_workers(_tileWorker) {
@@ -225,7 +237,10 @@ bool TileManager::removeClientTileSource(TileSource& _tileSource) {
 }
 
 void TileManager::clearTileSets(bool clearSourceCaches) {
+
     for (auto& tileSet : m_tileSets) {
+        tileSet.cancelTasks();
+
         tileSet.tiles.clear();
 
         if (clearSourceCaches) {
@@ -239,6 +254,14 @@ void TileManager::clearTileSets(bool clearSourceCaches) {
 void TileManager::clearTileSet(int32_t _sourceId) {
     for (auto& tileSet : m_tileSets) {
         if (tileSet.source->id() != _sourceId) { continue; }
+
+        for (auto& tile : tileSet.tiles) {
+            auto& entry = tile.second;
+            if (entry.isInProgress()) {
+                tileSet.source->cancelLoadingTile(*entry.task);
+            }
+        }
+
         tileSet.tiles.clear();
     }
 

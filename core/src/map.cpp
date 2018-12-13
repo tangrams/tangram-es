@@ -118,6 +118,9 @@ Map::Map(std::shared_ptr<Platform> _platform) : platform(_platform) {
 }
 
 Map::~Map() {
+
+    impl->tileManager.clearTileSets();
+
     // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
     impl->tileWorker.stop();
     impl->asyncWorker.reset();

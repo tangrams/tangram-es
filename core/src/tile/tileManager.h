@@ -78,6 +78,7 @@ protected:
     struct TileSet {
         TileSet(std::shared_ptr<TileSource> _source, bool _clientSource);
         ~TileSet();
+        void cancelTasks();
 
         std::shared_ptr<TileSource> source;
 
