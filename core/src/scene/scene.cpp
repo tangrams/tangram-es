@@ -4,6 +4,7 @@
 #include "gl/framebuffer.h"
 #include "gl/shaderProgram.h"
 #include "labels/labelManager.h"
+#include "marker/markerManager.h"
 #include "scene/dataLayer.h"
 #include "scene/importer.h"
 #include "scene/light.h"
@@ -576,14 +577,6 @@ int Scene::getIdForName(const std::string& _name) const {
     return it - m_names.begin();
 }
 
-int Scene::addJsFunction(const std::string& _function) {
-    for (size_t i = 0; i < m_jsFunctions.size(); i++) {
-        if (m_jsFunctions[i] == _function) { return i; }
-    }
-    m_jsFunctions.push_back(_function);
-    return m_jsFunctions.size()-1;
-}
-
 const Light* Scene::findLight(const std::string &_name) const {
     for (auto& light : m_lights) {
         if (light->getInstanceName() == _name) { return light.get(); }
@@ -623,6 +616,14 @@ void Scene::addLayer(DataLayer&& _layer) {
 
 void Scene::addTileSource(std::shared_ptr<TileSource>& _source) {
     m_tileSources.push_back(_source);
+}
+
+int SceneFunctions::addJsFunction(const std::string& _function) {
+    for (size_t i = 0; i <size(); i++) {
+        if (at(i) == _function) { return i; }
+    }
+    push_back(_function);
+    return size()-1;
 }
 
 }
