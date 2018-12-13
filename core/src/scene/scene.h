@@ -210,6 +210,8 @@ protected:
     auto& startPosition() { return m_startPosition; }
 
     void addLayer(DataLayer&& _layer);
+    void addTileSource(std::shared_ptr<TileSource>& _source);
+
 private:
     Platform& m_platform;
 
