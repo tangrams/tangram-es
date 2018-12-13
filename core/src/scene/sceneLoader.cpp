@@ -582,29 +582,70 @@ void SceneLoader::loadFontDescription(Scene& _scene, const Node& _node, const st
     _scene.loadFont(uri, _family, style, weight);
 }
 
-void SceneLoader::applySources(Scene& _scene) {
-    const Node& config = _scene.config();
-    const Node& sources = config["sources"];
+void SceneLoader::applySources(const Node& _config, Scene::TileSources& _tileSources,
+                               const SceneOptions& _options, Platform& _platform) {
+
+    const Node& sources = _config["sources"];
     if (!sources) {
         LOGW("No source defined in the yaml scene configuration.");
         return;
     }
     for (const auto& source : sources) {
         std::string srcName = source.first.Scalar();
-        try { loadSource( _scene, srcName, source.second); }
+        if (!source.second.IsMap()) {
+            // LOG(Invalid);
+            continue;
+        }
+
+        try {
+            if (auto tileSource = loadSource(source.second, srcName, _options, _platform)) {
+                _tileSources.push_back(std::move(tileSource));
+            }
+        }
         catch (const YAML::RepresentationException& e) {
             LOGNode("Parsing sources: '%s'", source, e.what());
         }
     }
 
-    if (const Node& layers = config["layers"]) {
+    auto getTileSource = [&](const std::string& name) -> std::shared_ptr<TileSource> {
+        auto it = std::find_if(_tileSources.begin(), _tileSources.end(),
+                           [&](auto& s){ return s->name() == name; });
+        if (it != _tileSources.end()) { return *it; }
+        return nullptr;
+    };
+
+    // Add Raster subsources
+    for (const auto& source : sources) {
+        std::string srcName = source.first.Scalar();
+        auto tileSource = getTileSource(srcName);
+        if (!tileSource) { continue; }
+
+        if (const Node& rasters = source.second["rasters"]) {
+            if (!rasters.IsSequence()) {
+                // LOG(Invalid);
+                continue;
+            }
+            for (const auto& raster : rasters) {
+                if (!raster.IsScalar()) {
+                    // LOG(Invalid);
+                    continue;
+                }
+                if (auto rasterSource = getTileSource(raster.Scalar())) {
+                    tileSource->addRasterSource(rasterSource);
+                } else {
+                    // LOG(Missing raster);
+                }
+            }
+         }
+    }
+
+    if (const Node& layers = _config["layers"]) {
         for (const auto& layer : layers) {
             if (const Node& data = layer.second["data"]) {
                 if (const Node& data_source = data["source"]) {
                     if (data_source.IsScalar()) {
                         auto source = data_source.Scalar();
-                        auto dataSource = _scene.getTileSource(source);
-                        if (dataSource) {
+                        if (auto dataSource = getTileSource(source)) {
                             dataSource->generateGeometry(true);
                         } else {
                             LOGW("Can't find data source %s for layer %s",
@@ -617,11 +658,8 @@ void SceneLoader::applySources(Scene& _scene) {
     }
 }
 
-void SceneLoader::loadSource(Scene& _scene, const std::string& _name, const Node& _source) {
-    if (_scene.getTileSource(_name)) {
-        LOGW("Duplicate TileSource: %s", _name.c_str());
-        return;
-    }
+std::shared_ptr<TileSource> SceneLoader::loadSource(const Node& _source, const std::string& _name,
+                                                    const SceneOptions& _options, Platform& _platform) {
 
     std::string type;
     std::string url;
@@ -734,17 +772,17 @@ void SceneLoader::loadSource(Scene& _scene, const std::string& _name, const Node
         rawSources = std::make_unique<MBTilesDataSource>(_scene.platform(), _name, url, "");
 #else
         LOGE("MBTiles support is disabled. This source will be ignored: %s", _name.c_str());
-        return;
+        return nullptr;
 #endif
     } else if (tiled) {
-        auto cacheSize = _scene.options().memoryTileCacheSize;
+        auto cacheSize = _options.memoryTileCacheSize;
         if (cacheSize > 0) {
             auto cache = std::make_unique<MemoryCacheDataSource>();
             cache->setCacheSize(cacheSize);
             rawSources = std::move(cache);
         }
 
-        auto s = std::make_unique<NetworkDataSource>(_scene.platform(), url, std::move(subdomains), isTms);
+        auto s = std::make_unique<NetworkDataSource>(_platform, url, std::move(subdomains), isTms);
         if (rawSources) {
             rawSources->next = std::move(s);
         } else {
@@ -760,7 +798,7 @@ void SceneLoader::loadSource(Scene& _scene, const std::string& _name, const Node
         if (auto genLabelCentroidsNode = _source["generate_label_centroids"]) {
             generateCentroids = true;
         }
-        sourcePtr = std::make_shared<ClientGeoJsonSource>(_scene.platform(), _name, url,
+        sourcePtr = std::make_shared<ClientGeoJsonSource>(_platform, _name, url,
                                                           generateCentroids, zoomOptions);
     } else if (type == "Raster") {
         TextureOptions options;
@@ -783,31 +821,11 @@ void SceneLoader::loadSource(Scene& _scene, const std::string& _name, const Node
             LOGE("Source '%s' does not have a valid type. " \
                  "Valid types are 'GeoJSON', 'TopoJSON', and 'MVT'. " \
                  "This source will be ignored.", _name.c_str());
-            return;
+            return nullptr;
         }
     }
 
-    if (const Node& rasters = _source["rasters"]) {
-        loadSourceRasters(_scene, *sourcePtr, rasters);
-    }
-
-    _scene.addTileSource(sourcePtr);
-}
-
-void SceneLoader::loadSourceRasters(Scene& _scene, TileSource& _source, const Node& _rasterNode) {
-    if (!_rasterNode.IsSequence()) { return; }
-    const Node& sources = _scene.config()["sources"];
-
-    for (const auto& raster : _rasterNode) {
-        std::string srcName = raster.Scalar();
-        try {
-            loadSource(_scene, srcName, sources[srcName]);
-        } catch (const YAML::RepresentationException& e) {
-            LOGNode("Error parsing sources: '%s'", sources[srcName], e.what());
-            return;
-        }
-        _source.addRasterSource(_scene.getTileSource(srcName));
-    }
+    return sourcePtr;
 }
 
 void SceneLoader::applyStyles(Scene& _scene) {

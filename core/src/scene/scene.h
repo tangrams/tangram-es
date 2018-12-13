@@ -191,6 +191,7 @@ public:
 
 //protected:
     using Lights = std::vector<std::unique_ptr<Light>>;
+    using TileSources = std::vector<std::shared_ptr<TileSource>>;
 
     Platform& platform() { return m_platform; }
     void pushError(SceneError&& error) { m_errors.push_back(std::move(error)); }
@@ -236,7 +237,7 @@ private:
     SceneCamera m_camera;
 
     std::vector<DataLayer> m_layers;
-    std::vector<std::shared_ptr<TileSource>> m_tileSources;
+    TileSources m_tileSources;
     std::vector<std::unique_ptr<Style>> m_styles;
 
     Lights m_lights;
