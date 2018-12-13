@@ -56,8 +56,7 @@ static const char DELIMITER = ':';
 
 static const std::string GLOBAL_PREFIX = "global.";
 
-bool SceneLoader::applyUpdates(Scene& _scene, const std::vector<SceneUpdate>& _updates) {
-    auto& root = _scene.config();
+SceneError SceneLoader::applyUpdates(Node& _config, const std::vector<SceneUpdate>& _updates) {
 
     for (const auto& update : _updates) {
         Node value;
@@ -66,26 +65,21 @@ bool SceneLoader::applyUpdates(Scene& _scene, const std::vector<SceneUpdate>& _u
             value = YAML::Load(update.value);
         } catch (const YAML::ParserException& e) {
             LOGE("Parsing scene update string failed. '%s'", e.what());
-            _scene.pushError({update, Error::scene_update_value_yaml_syntax_error});
-            return false;
+            return {update, Error::scene_update_value_yaml_syntax_error};
         }
 
         if (value) {
-
             Node node;
-            bool pathIsValid = YamlPath(update.path).get(root, node);
+            bool pathIsValid = YamlPath(update.path).get(_config, node);
             if (pathIsValid) {
                 node = value;
             } else {
-                LOGW("Update: %s - %s", update.path.c_str(), update.value.c_str());
-                LOGNode("", root);
-
-                _scene.pushError({update, Error::scene_update_path_not_found});
-                return false;
+                LOGE("Update: %s - %s", update.path.c_str(), update.value.c_str());
+                return {update, Error::scene_update_path_not_found};
             }
         }
     }
-    return true;
+    return {};
 }
 
 void createGlobalRefs(std::vector<std::pair<YamlPath, YamlPath>>& _globalRefs,
@@ -121,9 +115,9 @@ void createGlobalRefs(std::vector<std::pair<YamlPath, YamlPath>>& _globalRefs,
     }
 }
 
-void SceneLoader::applyGlobals(Scene& _scene) {
-    const Node& config = _scene.config();
-    const Node& globals = config["global"];
+void SceneLoader::applyGlobals(Node& _config) {
+    const Node& config = _config;
+    const Node& globals = _config["global"];
     if (!globals) { return; }
 
     // Records the YAML Nodes for which global values have been swapped; keys are
@@ -150,66 +144,70 @@ void SceneLoader::applyGlobals(Scene& _scene) {
     }
 }
 
-void SceneLoader::applyScene(Scene& _scene) {
-    const Node& config = _scene.config();
+void SceneLoader::applyScene(const Node& _config, Color& backgroundColor,
+                             Stops& backgroundStops, Scene::animate& animated) {
 
-    if (const Node& sceneNode = config["scene"]) {
-        loadBackground(_scene, sceneNode["background"]);
+    const Node& sceneNode = _config["scene"];
+    if (!sceneNode) { return; }
 
-        if (Node animated = sceneNode["animated"]) {
-            _scene.animated(YamlUtil::getBoolOrDefault(animated, false));
-        }
-    }
-}
+    if (const Node& background = sceneNode["background"]) {
+        if (const Node& colorNode = background["color"]) {
+            if (!StyleParam::parseColor(colorNode, backgroundColor)) {
 
-void SceneLoader::loadBackground(Scene& _scene, const Node& _background) {
-    if (!_background) { return; }
-
-    if (const Node& colorNode = _background["color"]) {
-        Color colorResult;
-        if (StyleParam::parseColor(colorNode, colorResult)) {
-            _scene.background() = colorResult;
-        } else {
-            Stops stopsResult = Stops::Colors(colorNode);
-            if (stopsResult.frames.size() > 0) {
-                _scene.backgroundStops() = stopsResult;
-            } else {
-                LOGW("Cannot parse color: %s", Dump(colorNode).c_str());
+                Stops stopsResult = Stops::Colors(colorNode);
+                if (stopsResult.frames.size() > 0) {
+                    backgroundStops = stopsResult;
+                } else {
+                    LOGW("Cannot parse color: %s", Dump(colorNode).c_str());
+                }
             }
         }
     }
+
+    if (const Node& animatedNode = sceneNode["animated"]) {
+        if (YamlUtil::getBoolOrDefault(animatedNode, false)) {
+            // TODO enum class
+            animated = Scene::yes;
+        } else {
+            animated = Scene::no;
+        }
+    }
 }
 
-void SceneLoader::applyCameras(Scene& _scene) {
-    const Node& config = _scene.config();
+void SceneLoader::applyCameras(const Node& _config, SceneCamera& _sceneCamera) {
 
-    if (const Node& camera = config["camera"]) {
-        try { loadCamera(_scene, camera); }
+    if (const Node& camera = _config["camera"]) {
+        try {
+            loadCamera(camera, _sceneCamera);
+        }
         catch (const YAML::RepresentationException& e) {
             LOGNode("Parsing camera: '%s'", camera, e.what());
         }
 
-    } else if (const Node& cameras = config["cameras"]) {
-        try { loadCameras(_scene, cameras); }
+    } else if (const Node& cameras = _config["cameras"]) {
+        try {
+            if (cameras.size() > 0) {
+                loadCamera(cameras[cameras.size()-1], _sceneCamera); }
+        }
         catch (const YAML::RepresentationException& e) {
             LOGNode("Parsing cameras: '%s'", cameras, e.what());
         }
     }
 }
 
-void SceneLoader::loadCameras(Scene& _scene, const Node& _cameras) {
+void SceneLoader::loadCameras(const Node& _cameras, SceneCamera& _sceneCamera) {
     // To correctly match the behavior of the webGL library we'll need a place
     // to store multiple view instances.  Since we only have one global view
     // right now, we'll just apply the settings from the first active camera we
     // find.
 
     for (const auto& entry : _cameras) {
-        loadCamera(_scene, entry.second);
+        loadCamera(entry.second, _sceneCamera);
     }
 }
 
-void SceneLoader::loadCamera(Scene& _scene, const Node& _camera) {
-    auto& camera = _scene.camera();
+void SceneLoader::loadCamera(const Node& _camera, SceneCamera& _sceneCamera) {
+    auto& camera = _sceneCamera;
 
     if (const Node& active = _camera["active"]) {
         if (!YamlUtil::getBoolOrDefault(active, false)) {
@@ -288,38 +286,39 @@ void SceneLoader::loadCamera(Scene& _scene, const Node& _camera) {
     }
 
     auto meters = MapProjection::lngLatToProjectedMeters({x, y});
-    _scene.startPosition() = glm::dvec3{meters.x, meters.y, z};
+    camera.startPosition = glm::dvec3{meters.x, meters.y, z};
 }
 
-void SceneLoader::applyLights(Scene& _scene) {
-    const Node& config = _scene.config();
+void SceneLoader::applyLights(const Node& _config, Scene::Lights& _lights) {
 
-    if (const Node& lights = config["lights"]) {
+    if (const Node& lights = _config["lights"]) {
         for (const auto& light : lights) {
-            try { loadLight(_scene, light); }
+            try {
+                if (auto sceneLight = loadLight(light)) {
+                    _lights.push_back(std::move(sceneLight));
+                }
+            }
             catch (const YAML::RepresentationException& e) {
                 LOGNode("Parsing light: '%s'", light, e.what());
             }
         }
     }
-    if (_scene.lights().empty()) {
+    if (_lights.empty()) {
         // Add an ambient light if nothing else is specified
         std::unique_ptr<AmbientLight> amb(new AmbientLight("defaultLight"));
         amb->setAmbientColor({ 1.f, 1.f, 1.f, 1.f });
-        _scene.lights().push_back(std::move(amb));
+        _lights.push_back(std::move(amb));
     }
-
-    _scene.lightBlocks() = Light::assembleLights(_scene.lights());
 }
 
-void SceneLoader::loadLight(Scene& _scene, const std::pair<Node, Node>& _node) {
+std::unique_ptr<Light> SceneLoader::loadLight(const std::pair<Node, Node>& _node) {
     const Node& light = _node.second;
     const std::string& name = _node.first.Scalar();
     const std::string& type = light["type"].Scalar();
 
     if (const Node& visible = light["visible"]) {
         // If 'visible' is false, skip loading this light.
-        if (!YamlUtil::getBoolOrDefault(visible, true)) { return; }
+        if (!YamlUtil::getBoolOrDefault(visible, true)) { return nullptr; }
     }
 
     std::unique_ptr<Light> sceneLight;
@@ -421,7 +420,7 @@ void SceneLoader::loadLight(Scene& _scene, const std::pair<Node, Node>& _node) {
             }
         }
     }
-    _scene.lights().push_back(std::move(sceneLight));
+    return sceneLight;
 }
 
 void SceneLoader::parseLightPosition(const Node& _positionNode, PointLight& _light) {

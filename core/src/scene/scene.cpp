@@ -144,8 +144,9 @@ bool Scene::load() {
     }
 
     LOGTO(">>> applyUpdates");
-    // TODO dont need to pass in Scene, just config and return errors
-    if (!SceneLoader::applyUpdates(*this, m_options.updates)) {
+    auto result = SceneLoader::applyUpdates(m_config, m_options.updates);
+    if (result.error != Error::none) {
+        m_errors.push_back(result);
         LOGE("Applying SceneUpdates failed!");
         return false;
     }
@@ -154,7 +155,7 @@ bool Scene::load() {
     Importer::resolveSceneUrls(m_config, m_options.url);
 
     LOGTO(">>> applyGlobals");
-    SceneLoader::applyGlobals(*this);
+    SceneLoader::applyGlobals(m_config);
     LOGTO("<<< applyGlobals");
 
     LOGTO(">>> applySources");
@@ -162,7 +163,7 @@ bool Scene::load() {
     LOGTO("<<< applySources");
 
     LOGTO(">>> applyCameras");
-    SceneLoader::applyCameras(*this);
+    SceneLoader::applyCameras(m_config, m_camera);
     LOGTO("<<< applyCameras");
 
 
@@ -197,11 +198,12 @@ bool Scene::load() {
     LOGTO("<<< applyLayers");
 
     LOGTO(">>> applyLights");
-    SceneLoader::applyLights(*this);
+    SceneLoader::applyLights(m_config, m_lights);
+    m_lightShaderBlocks = Light::assembleLights(m_lights);
     LOGTO("<<< applyLights");
 
     LOGTO(">>> applyScene");
-    SceneLoader::applyScene(*this);
+    SceneLoader::applyScene(m_config, m_background, m_backgroundStops, m_animated);
     LOGTO("<<< applyScene");
 
     LOGTO(">>> buildStyles");
@@ -274,13 +276,12 @@ bool Scene::load() {
 }
 
 void Scene::prefetchTiles(const View& _view) {
-
     View view = _view;
 
     view.setCamera(m_camera);
 
     if (m_options.useScenePosition) {
-        view.setPosition(m_startPosition);
+        view.setPosition(m_camera.startPosition);
     }
 
     if (m_options.prefetchTiles) {
@@ -299,11 +300,11 @@ bool Scene::completeView(View& _view) {
     if (m_state == State::ready) { return true; }
     if (m_state != State::pending_completion) { return false; }
 
-    if (m_options.useScenePosition) {
-        _view.setPosition(m_startPosition);
-    }
-
     _view.setCamera(m_camera);
+
+    if (m_options.useScenePosition) {
+        _view.setPosition(m_camera.startPosition);
+    }
 
     for (auto& style : m_styles) {
         style->setPixelScale(m_pixelScale);
@@ -551,13 +552,6 @@ const Style* Scene::findStyle(const std::string& _name) const {
     return nullptr;
 }
 
-Style* Scene::findStyle(const std::string& _name) {
-
-    for (auto& style : m_styles) {
-        if (style->getName() == _name) { return style.get(); }
-    }
-    return nullptr;
-}
 
 int Scene::addIdForName(const std::string& _name) {
     int id = getIdForName(_name);
@@ -592,7 +586,7 @@ std::shared_ptr<Texture> Scene::getTexture(const std::string& textureName) const
     return texIt->second;
 }
 
-std::shared_ptr<TileSource> Scene::getTileSource(int32_t id) {
+std::shared_ptr<TileSource> Scene::getTileSource(int32_t id) const {
     auto it = std::find_if(m_tileSources.begin(), m_tileSources.end(),
                            [&](auto& s){ return s->id() == id; });
     if (it != m_tileSources.end()) {
@@ -601,7 +595,7 @@ std::shared_ptr<TileSource> Scene::getTileSource(int32_t id) {
     return nullptr;
 }
 
-std::shared_ptr<TileSource> Scene::getTileSource(const std::string& name) {
+std::shared_ptr<TileSource> Scene::getTileSource(const std::string& name) const {
     auto it = std::find_if(m_tileSources.begin(), m_tileSources.end(),
                            [&](auto& s){ return s->name() == name; });
     if (it != m_tileSources.end()) {
@@ -614,9 +608,14 @@ void Scene::addLayer(DataLayer&& _layer) {
     m_layers.push_back(std::move(_layer));
 }
 
-void Scene::addTileSource(std::shared_ptr<TileSource>& _source) {
-    m_tileSources.push_back(_source);
+void Scene::addTileSource(std::shared_ptr<TileSource> _source) {
+    m_tileSources.push_back(std::move(_source));
 }
+
+void Scene::addStyle(std::unique_ptr<Style> _style) {
+    m_styles.push_back(std::move(_style));
+}
+
 
 int SceneFunctions::addJsFunction(const std::string& _function) {
     for (size_t i = 0; i <size(); i++) {
