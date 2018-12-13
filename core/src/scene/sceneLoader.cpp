@@ -1530,7 +1530,7 @@ SceneLayer SceneLoader::loadSublayer(Scene& _scene, const Node& _layer, const st
                 rules.push_back({ ruleName, ruleId, std::move(params) });
             }
         } else if (key == "filter") {
-            filter = generateFilter(_scene, member.second);
+            filter = generateFilter(_scene.functions(), member.second);
             if (!filter.isValid()) {
                 LOGNode("Invalid 'filter' in layer '%s'", member.second, _layerName.c_str());
                 return { _layerName, {}, {}, {}, false };
@@ -1558,18 +1558,18 @@ void printFilters(const SceneLayer& layer, int indent){
     }
 };
 
-Filter SceneLoader::generateFilter(Scene& _scene, const Node& _filter) {
+Filter SceneLoader::generateFilter(SceneFunctions& _functions, const Node& _filter) {
     switch (_filter.Type()) {
     case NodeType::Scalar: {
 
         const std::string& val = _filter.Scalar();
         if (val.compare(0, 8, "function") == 0) {
-            return Filter::MatchFunction(_scene.functions().addJsFunction(val));
+            return Filter::MatchFunction(_functions.addJsFunction(val));
         }
         return Filter();
     }
     case NodeType::Sequence: {
-        return generateAnyFilter(_scene, _filter);
+        return generateAnyFilter(_functions, _filter);
     }
     case NodeType::Map: {
         std::vector<Filter> filters;
@@ -1578,13 +1578,13 @@ Filter SceneLoader::generateFilter(Scene& _scene, const Node& _filter) {
             const Node& node = _filter[key];
             Filter f;
             if (key == "none") {
-                f = generateNoneFilter(_scene, node);
+                f = generateNoneFilter(_functions, node);
             } else if (key == "not") {
-                f = generateNoneFilter(_scene, node);
+                f = generateNoneFilter(_functions, node);
             } else if (key == "any") {
-                f = generateAnyFilter(_scene, node);
+                f = generateAnyFilter(_functions, node);
             } else if (key == "all") {
-                f = generateAllFilter(_scene, node);
+                f = generateAllFilter(_functions, node);
             } else {
                 f = generatePredicate(node, key);
             }
@@ -1604,12 +1604,12 @@ Filter SceneLoader::generateFilter(Scene& _scene, const Node& _filter) {
     }
 }
 
-Filter SceneLoader::generateAnyFilter(Scene& _scene, const Node& _filter) {
+Filter SceneLoader::generateAnyFilter(SceneFunctions& _functions, const Node& _filter) {
     if (_filter.IsSequence()) {
         std::vector<Filter> filters;
 
         for (const auto& filt : _filter) {
-            if (Filter f = generateFilter(_scene, filt)) {
+            if (Filter f = generateFilter(_functions, filt)) {
                 filters.push_back(std::move(f));
             } else { return Filter(); }
         }
@@ -1618,12 +1618,12 @@ Filter SceneLoader::generateAnyFilter(Scene& _scene, const Node& _filter) {
     return Filter();
 }
 
-Filter SceneLoader::generateAllFilter(Scene& _scene, const Node& _filter) {
+Filter SceneLoader::generateAllFilter(SceneFunctions& _functions, const Node& _filter) {
     if (_filter.IsSequence()) {
         std::vector<Filter> filters;
 
         for (const auto& filt : _filter) {
-            if (Filter f = generateFilter(_scene, filt)) {
+            if (Filter f = generateFilter(_functions, filt)) {
                 filters.push_back(std::move(f));
             } else { return Filter(); }
         }
@@ -1632,12 +1632,12 @@ Filter SceneLoader::generateAllFilter(Scene& _scene, const Node& _filter) {
     return Filter();
 }
 
-Filter SceneLoader::generateNoneFilter(Scene& _scene, const Node& _filter) {
+Filter SceneLoader::generateNoneFilter(SceneFunctions& _functions, const Node& _filter) {
     if (_filter.IsSequence()) {
         std::vector<Filter> filters;
 
         for (const auto& filt : _filter) {
-            if (Filter f = generateFilter(_scene, filt)) {
+            if (Filter f = generateFilter(_functions, filt)) {
                 filters.push_back(std::move(f));
             } else { return Filter(); }
         }
@@ -1645,7 +1645,7 @@ Filter SceneLoader::generateNoneFilter(Scene& _scene, const Node& _filter) {
 
     } else if (_filter.IsMap() || _filter.IsScalar()) {
         // 'not' case
-        if (Filter f = generateFilter(_scene, _filter)) {
+        if (Filter f = generateFilter(_functions, _filter)) {
             return Filter::MatchNone({std::move(f)});
         }
     }

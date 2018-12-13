@@ -71,10 +71,10 @@ struct SceneLoader {
     static void applyLayers(Scene& scene);
     static void loadLayer(Scene& scene, const std::pair<Node, Node>& layer);
     static SceneLayer loadSublayer(Scene& scene, const Node& layer, const std::string& name);
-    static Filter generateFilter(Scene& scene, const Node& filter);
-    static Filter generateAnyFilter(Scene& scene, const Node& filter);
-    static Filter generateAllFilter(Scene& scene, const Node& filter);
-    static Filter generateNoneFilter(Scene& scene, const Node& filter);
+    static Filter generateFilter(SceneFunctions& functions, const Node& filter);
+    static Filter generateAnyFilter(SceneFunctions& functions, const Node& filter);
+    static Filter generateAllFilter(SceneFunctions& functions, const Node& filter);
+    static Filter generateNoneFilter(SceneFunctions& functions, const Node& filter);
     static Filter generatePredicate(const Node& filter, std::string key);
     static bool getFilterRangeValue(const Node& node, double& val, bool& hasPixelArea);
 
