@@ -74,42 +74,54 @@ void Scene::dispose() {
 
 void Scene::cancelTasks() {
     m_state = State::canceled;
-
-    // Cancel pending resources
     {
         std::lock_guard<std::mutex> lock(m_taskMutex);
-        for (auto& task : m_pendingTextures) {
-            if (task->requestHandle) { m_platform.cancelUrlRequest(task->requestHandle); }
-        }
-        for (auto& task : m_pendingFonts) {
-            if (task->requestHandle) { m_platform.cancelUrlRequest(task->requestHandle); }
-        }
-        m_taskCondition.notify_one();
-    }
 
-    // Cancels all TileTasks
-    LOG("Clear TileManager tasks");
-    if (m_tileManager) {
-        m_tileManager->cancelTileTasks();
+        /// Cancel loading Scene data
+        if (m_importer) {
+            LOG("Cancel Importer tasks");
+            m_importer->cancelLoading(m_platform);
+        }
+
+        /// Cancel pending texture resources
+        if (!m_pendingTextures.empty()) {
+            LOG("Cancel texture resource tasks");
+            for (auto& task : m_pendingTextures) {
+                if (task->requestHandle) {
+                    m_platform.cancelUrlRequest(task->requestHandle);
+                }
+            }
+            m_taskCondition.notify_one();
+        }
+
+        /// Cancel pending font resources
+        if (!m_pendingFonts.empty()) {
+            LOG("Cancel font resource tasks");
+            for (auto& task : m_pendingFonts) {
+                if (task->requestHandle) {
+                    m_platform.cancelUrlRequest(task->requestHandle);
+                }
+            }
+            m_taskCondition.notify_one();
+        }
+
+        /// Cancels all TileTasks
+        if (m_tileManager) {
+            LOG("Cancel TileManager tasks");
+            m_tileManager->cancelTileTasks();
+        }
     }
-    // Clear TileTask queue
-    //LOG("Clear TileWorker tasks");
-    //m_tileWorker.clear();
 }
 
 bool Scene::load() {
+    LOGTOInit();
+    LOGTO(">>>>>> loadScene >>>>>>");
+
     if (m_state != State::initial) {
         LOGE("Cannot load() Scene twice!");
         return false;
     }
     m_state = State::loading;
-
-    //m_view->setSize(_sceneOptions.view.width, _sceneOptions.view.height);
-    //m_pixelScale  = _sceneOptions.view.pixelScale;
-    //m_view->setPixelScale(m_pixelScale);
-
-    LOGTOInit();
-    LOGTO(">>>>>> loadScene >>>>>>");
 
     m_importer = std::make_unique<Importer>();
 
@@ -119,6 +131,10 @@ bool Scene::load() {
     // Importer is blocking until all imports are (asynchronously loaded)
     // TODO: We could do some work instead!
     m_config = m_importer->loadSceneData(m_platform, m_options.url, m_options.yaml);
+    if (m_state != State::loading) {
+        LOG("Scene got Canceled 1");
+        return false;
+    }
 
     LOGTO("<<< applyImports AKA load files, parse YAMLS, allocate Document and merge stuff");
 
@@ -200,6 +216,11 @@ bool Scene::load() {
     for (auto& style : m_styles) { style->build(*this); }
     LOGTO("<<< buildStyles");
 
+    if (m_state != State::loading) {
+        LOG("Scene got Canceled 2");
+        return false;
+    }
+
     // Now we are only waiting for pending fonts and textures:
     // Let's initialize the TileBuilders on TileWorker threads
     // in the meantime.
@@ -208,6 +229,7 @@ bool Scene::load() {
     m_featureSelection = std::make_unique<FeatureSelection>();
     m_labelManager = std::make_unique<LabelManager>();
 
+    /// Get resources from Zips
     {
         std::lock_guard<std::mutex> lock(m_taskMutex);
         for (auto& task : m_pendingTextures) {
@@ -216,12 +238,17 @@ bool Scene::load() {
         for (auto& task : m_pendingFonts) {
             if (task->cb) { m_importer->readFromZip(task->url, task->cb); }
         }
+
+        /// We got everything needed from Importer
+        m_importer.reset();
     }
-    // Good bye Importer, Good bye ZipArchives!
-    m_importer.reset();
+
+    if (m_state != State::loading) {
+        LOG("Scene got Canceled 3");
+        return false;
+    }
 
     m_state = State::pending_resources;
-
     while (true) {
         {
             std::unique_lock<std::mutex> lock(m_taskMutex);
@@ -245,6 +272,9 @@ bool Scene::load() {
 
     if (m_state == State::pending_resources) {
         m_state = State::pending_completion;
+    } else {
+        LOG("Scene got Canceled 4");
+        return false;
     }
 
     LOGTO("<<<<<< loadScene <<<<<<");
