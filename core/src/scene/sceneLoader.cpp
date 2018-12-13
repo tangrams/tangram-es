@@ -186,33 +186,6 @@ void SceneLoader::applyCameras(Scene& _scene) {
             LOGNode("Parsing cameras: '%s'", cameras, e.what());
         }
     }
-
-    auto& camera = _scene.camera();
-    auto& view = _scene.view();
-
-    view->setCameraType(camera.type);
-
-    switch (camera.type) {
-    case CameraType::perspective:
-        view->setVanishingPoint(camera.vanishingPoint.x, camera.vanishingPoint.y);
-        if (camera.fovStops) {
-            view->setFieldOfViewStops(camera.fovStops);
-        } else {
-            view->setFieldOfView(camera.fieldOfView);
-        }
-        break;
-    case CameraType::isometric:
-        view->setObliqueAxis(camera.obliqueAxis.x, camera.obliqueAxis.y);
-        break;
-    case CameraType::flat:
-        break;
-    }
-
-    if (camera.maxTiltStops) {
-        view->setMaxPitchStops(camera.maxTiltStops);
-    } else {
-        view->setMaxPitch(camera.maxTilt);
-    }
 }
 
 void SceneLoader::loadCameras(Scene& _scene, const Node& _cameras) {
@@ -305,10 +278,8 @@ void SceneLoader::loadCamera(Scene& _scene, const Node& _camera) {
         }
     }
 
-    if (_scene.options().useScenePosition) {
-        _scene.view()->setCenterCoordinates({x, y});
-        _scene.view()->setZoom(z);
-    }
+    auto meters = MapProjection::lngLatToProjectedMeters({x, y});
+    _scene.startPosition() = glm::dvec3{meters.x, meters.y, z};
 }
 
 void SceneLoader::applyLights(Scene& _scene) {

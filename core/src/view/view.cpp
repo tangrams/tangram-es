@@ -41,6 +41,32 @@ void View::setPixelScale(float _pixelsPerPoint) {
 
 }
 
+void View::setCamera(const Camera& _camera) {
+    setCameraType(_camera.type);
+
+    switch (_camera.type) {
+    case CameraType::perspective:
+        setVanishingPoint(_camera.vanishingPoint.x, _camera.vanishingPoint.y);
+        if (_camera.fovStops) {
+            setFieldOfViewStops(_camera.fovStops);
+        } else {
+            setFieldOfView(_camera.fieldOfView);
+        }
+        break;
+    case CameraType::isometric:
+        setObliqueAxis(_camera.obliqueAxis.x, _camera.obliqueAxis.y);
+        break;
+    case CameraType::flat:
+        break;
+    }
+
+    if (_camera.maxTiltStops) {
+        setMaxPitchStops(_camera.maxTiltStops);
+    } else {
+        setMaxPitch(_camera.maxTilt);
+    }
+}
+
 void View::setCameraType(CameraType _type) {
 
     m_type = _type;

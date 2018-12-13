@@ -21,6 +21,21 @@ enum class CameraType : uint8_t {
 
 struct Stops;
 
+struct Camera {
+    CameraType type = CameraType::perspective;
+
+    float maxTilt = 90.f;
+    std::shared_ptr<Stops> maxTiltStops;
+
+    // perspective
+    glm::vec2 vanishingPoint = {0, 0};
+    float fieldOfView = 0.25 * PI;
+    std::shared_ptr<Stops> fovStops;
+
+    // isometric
+    glm::vec2 obliqueAxis = {0, 1};
+};
+
 struct ViewState {
     bool changedOnLastUpdate;
     glm::dvec2 center;
@@ -42,6 +57,8 @@ class View {
 public:
 
     View(int _width = 800, int _height = 600);
+
+    void setCamera(const Camera& _camera);
 
     void setCameraType(CameraType _type);
     auto cameraType() const { return m_type; }
