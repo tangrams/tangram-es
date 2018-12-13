@@ -110,7 +110,6 @@ public:
     auto& background() { return m_background; }
     auto& backgroundStops() { return m_backgroundStops; }
     auto& fontContext() { return m_fontContext; }
-    auto& globalRefs() { return m_globalRefs; }
     auto& featureSelection() { return m_featureSelection; }
     Style* findStyle(const std::string& _name);
 
@@ -121,7 +120,6 @@ public:
     const auto& lightBlocks() const { return m_lightShaderBlocks; }
     const auto& functions() const { return m_jsFunctions; }
     const auto& fontContext() const { return m_fontContext; }
-    const auto& globalRefs() const { return m_globalRefs; }
     const auto& featureSelection() const { return m_featureSelection; }
 
     const Style* findStyle(const std::string& _name) const;
@@ -248,10 +246,6 @@ private:
     std::map<std::string, std::string> m_lightShaderBlocks;
 
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
-
-    // Records the YAML Nodes for which global values have been swapped; keys are
-    // nodes that referenced globals, values are nodes of globals themselves.
-    std::vector<std::pair<YamlPath, YamlPath>> m_globalRefs;
 
     // Container of all strings used in styling rules; these need to be
     // copied and compared frequently when applying styling, so rules use
