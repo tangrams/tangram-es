@@ -52,9 +52,11 @@ struct SceneLoader {
     static void applyFonts(Scene& scene);
     static void loadFontDescription(Scene& scene, const Node& node, const std::string& family);
 
-    static void applySources(Scene& scene);
-    static void loadSource(Scene& scene, const std::string& name, const Node& source);
-    static void loadSourceRasters(Scene& scene, TileSource& source, const Node& rasterNode);
+    static void applySources(const Node& config, Scene::TileSources& tileSources,
+                             const SceneOptions& options, Platform& platform);
+
+    static std::shared_ptr<TileSource> loadSource(const Node& source, const std::string& name,
+                                                  const SceneOptions& options, Platform& platform);
 
     static void applyStyles(Scene& scene);
     static bool loadStyle(Scene& scene, const std::string& styleName, const Node& config);
