@@ -621,4 +621,8 @@ void Scene::addLayer(DataLayer&& _layer) {
     m_layers.push_back(std::move(_layer));
 }
 
+void Scene::addTileSource(std::shared_ptr<TileSource>& _source) {
+    m_tileSources.push_back(_source);
+}
+
 }
