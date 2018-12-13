@@ -45,9 +45,6 @@ struct SceneLoader;
 // 16MB default in-memory DataSource cache
 constexpr size_t CACHE_SIZE = 16 * (1024 * 102);
 
-// Delimiter used in sceneloader for style params and layer-sublayer naming
-const std::string DELIMITER = ":";
-
 /* Container of <Style> information
  *
  * Scene is a singleton containing the styles, lighting, and interactions defining a map scene

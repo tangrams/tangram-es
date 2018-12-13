@@ -16,6 +16,8 @@
 
 namespace Tangram {
 
+// ':' Delimiter for style params and layer-sublayer naming
+static const char DELIMITER = ':';
 MarkerManager::MarkerManager(Scene& _scene) : m_scene(_scene) {}
 
 MarkerManager::~MarkerManager() {}
@@ -338,10 +340,10 @@ bool MarkerManager::buildStyling(Marker& marker) {
     if (markerStyling.isPath) {
         auto path = markerStyling.string;
         // The DELIMITER used by layers is currently ":", but Marker paths use "." (scene.h).
-        std::replace(path.begin(), path.end(), '.', DELIMITER[0]);
+        std::replace(path.begin(), path.end(), '.', DELIMITER);
         // Start iterating over the delimited path components.
         size_t start = 0, end = 0;
-        end = path.find(DELIMITER[0], start);
+        end = path.find(DELIMITER, start);
         if (path.compare(start, end - start, "layers") != 0) {
             // If the path doesn't begin with 'layers' it isn't a layer heirarchy.
             return false;
@@ -350,7 +352,7 @@ bool MarkerManager::buildStyling(Marker& marker) {
         const SceneLayer* currentLayer = nullptr;
         size_t layerStart = end + 1;
         start = end + 1;
-        end = path.find(DELIMITER[0], start);
+        end = path.find(DELIMITER, start);
         for (const auto& layer : m_scene.layers()) {
             if (path.compare(layerStart, end - layerStart, layer.name()) == 0) {
                 currentLayer = &layer;
@@ -361,7 +363,7 @@ bool MarkerManager::buildStyling(Marker& marker) {
         // Search sublayers recursively until we can't find another token or layer.
         while (end != std::string::npos && currentLayer != nullptr) {
             start = end + 1;
-            end = path.find(DELIMITER[0], start);
+            end = path.find(DELIMITER, start);
             const auto& layers = currentLayer->sublayers();
             currentLayer = nullptr;
             for (const auto& layer : layers) {
@@ -378,7 +380,7 @@ bool MarkerManager::buildStyling(Marker& marker) {
         }
         // The draw group name should come next.
         start = end + 1;
-        end = path.find(DELIMITER[0], start);
+        end = path.find(DELIMITER, start);
         // Find the rule in the merged set whose name matches the final token.
         return marker.finalizeRuleMergingForName(path.substr(start, end - start));
     }
