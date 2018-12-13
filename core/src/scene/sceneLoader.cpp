@@ -88,20 +88,22 @@ bool SceneLoader::applyUpdates(Scene& _scene, const std::vector<SceneUpdate>& _u
     return true;
 }
 
-void createGlobalRefs(Scene& _scene, const Node& _node, YamlPathBuffer& _path) {
+void createGlobalRefs(std::vector<std::pair<YamlPath, YamlPath>>& _globalRefs,
+                      const Node& _node, YamlPathBuffer& _path) {
+
     switch(_node.Type()) {
     case NodeType::Scalar: {
         const auto& value = _node.Scalar();
         if (value.length() > 7 && value.compare(0, 7, GLOBAL_PREFIX) == 0) {
-            _scene.globalRefs().emplace_back(_path.toYamlPath(),
-                                            YamlPath(value.substr(GLOBAL_PREFIX.length())));
+            _globalRefs.emplace_back(_path.toYamlPath(),
+                                    YamlPath(value.substr(GLOBAL_PREFIX.length())));
         }
     }
         break;
     case NodeType::Sequence: {
         _path.pushSequence();
         for (const auto& entry : _node) {
-            createGlobalRefs(_scene, entry, _path);
+            createGlobalRefs(_globalRefs, entry, _path);
             _path.increment();
         }
         _path.pop();
@@ -110,7 +112,7 @@ void createGlobalRefs(Scene& _scene, const Node& _node, YamlPathBuffer& _path) {
     case NodeType::Map:
         for (const auto& entry : _node) {
             _path.pushMap(&entry.first.Scalar());
-            createGlobalRefs(_scene, entry.second, _path);
+            createGlobalRefs(_globalRefs, entry.second, _path);
             _path.pop();
         }
         break;
@@ -124,13 +126,17 @@ void SceneLoader::applyGlobals(Scene& _scene) {
     const Node& globals = config["global"];
     if (!globals) { return; }
 
+    // Records the YAML Nodes for which global values have been swapped; keys are
+    // nodes that referenced globals, values are nodes of globals themselves.
+    std::vector<std::pair<YamlPath, YamlPath>> globalRefs;
+
     YamlPathBuffer path;
-    createGlobalRefs(_scene, config, path);
-    if (!_scene.globalRefs().empty() && !globals.IsMap()) {
+    createGlobalRefs(globalRefs, config, path);
+    if (!globalRefs.empty() && !globals.IsMap()) {
         LOGW("Missing global references");
     }
 
-    for (auto& globalRef : _scene.globalRefs()) {
+    for (auto& globalRef : globalRefs) {
         Node target, global;
         bool targetPathIsValid = globalRef.first.get(config, target);
         bool globalPathIsValid = globalRef.second.get(globals, global);
