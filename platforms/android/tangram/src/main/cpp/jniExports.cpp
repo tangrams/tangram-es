@@ -152,18 +152,6 @@ extern "C" {
         delete reinterpret_cast<Tangram::Map*>(mapPtr);
     }
 
-    JNIEXPORT jint JNICALL Java_com_mapzen_tangram_MapController_nativeLoadScene(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring path, jobjectArray updateStrings) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto cPath = stringFromJString(jniEnv, path);
-
-        auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
-        Url sceneUrl = Url(cPath).resolved("asset:///");
-        jint sceneId = map->loadScene(sceneUrl.string(), false, sceneUpdates);
-
-        return sceneId;
-    }
-
     JNIEXPORT jint JNICALL Java_com_mapzen_tangram_MapController_nativeLoadSceneAsync(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring path, jobjectArray updateStrings) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
@@ -172,21 +160,6 @@ extern "C" {
         auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
         Url sceneUrl = Url(cPath).resolved("asset:///");
         jint sceneId = map->loadSceneAsync(sceneUrl.string(), false, sceneUpdates);
-
-        return sceneId;
-
-
-    }
-
-    JNIEXPORT jint JNICALL Java_com_mapzen_tangram_MapController_nativeLoadSceneYaml(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring yaml, jstring path, jobjectArray updateStrings) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto cYaml = stringFromJString(jniEnv, yaml);
-        auto cPath = stringFromJString(jniEnv, path);
-
-        auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
-        Url sceneUrl = Url(cPath).resolved("asset:///");
-        jint sceneId = map->loadSceneYaml(cYaml, sceneUrl.string(), false, sceneUpdates);
 
         return sceneId;
     }

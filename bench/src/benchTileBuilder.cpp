@@ -38,18 +38,14 @@ void globalSetup() {
     static std::atomic<bool> initialized{false};
     if (initialized.exchange(true)) { return; }
 
-    MockPlatform platform;
-
     Url sceneUrl(scene_file);
     platform.putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
 
     SceneOptions sceneOptions{sceneUrl};
     sceneOptions.prefetchTiles = false;
 
-    scene = std::make_shared<Scene>(platform);
-    if (!scene->load(std::move(sceneOptions))) {
-        exit(-1);
-    }
+    scene = std::make_shared<Scene>(platform, std::move(sceneOptions));
+    if (!scene->load()) { exit(-1); }
 
     for (auto& s : scene->tileSources()) {
         source = s;
@@ -75,7 +71,7 @@ public:
     std::shared_ptr<Tile> result;
     void SetUp(const ::benchmark::State& state) override {
         globalSetup();
-        tileBuilder = std::make_unique<TileBuilder>(scene, new StyleContext());
+        tileBuilder = std::make_unique<TileBuilder>(*scene, new StyleContext());
         tileBuilder->init();
     }
     void TearDown(const ::benchmark::State& state) override {

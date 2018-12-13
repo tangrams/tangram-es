@@ -225,7 +225,20 @@ bool TileManager::removeClientTileSource(TileSource& _tileSource) {
     return removed;
 }
 
+void TileManager::cancelTileTasks() {
+
+    for (auto& tileSet : m_tileSets) {
+        for (auto& tile : tileSet.tiles) {
+            tile.second.clearTask();
+        }
+        tileSet.source->clearData();
+    }
+
+    m_tileCache->clear();
+}
+
 void TileManager::clearTileSets(bool clearSourceCaches) {
+
     for (auto& tileSet : m_tileSets) {
         tileSet.tiles.clear();
 

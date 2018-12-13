@@ -48,6 +48,8 @@ public:
 
     void clearTileSet(int32_t _sourceId);
 
+    void cancelTileTasks();
+
     /* Returns the set of currently visible tiles */
     const auto& getVisibleTiles() const { return m_tiles; }
 
