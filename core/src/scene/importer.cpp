@@ -14,6 +14,8 @@ using YAML::NodeType;
 
 namespace Tangram {
 
+Importer::Importer() {}
+Importer::~Importer() {}
 
 Node Importer::loadSceneData(Platform& _platform, const Url& _sceneUrl, const std::string& _sceneYaml) {
 

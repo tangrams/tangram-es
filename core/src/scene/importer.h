@@ -23,6 +23,9 @@ public:
 
     using Node = YAML::Node;
 
+    Importer();
+    ~Importer();
+
     // Loads the main scene with deep merging dependent imported scenes.
     Node loadSceneData(Platform& platform, const Url& sceneUrl, const std::string& sceneYaml = "");
 
