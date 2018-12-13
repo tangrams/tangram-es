@@ -264,18 +264,6 @@ public class MapController {
     }
 
     /**
-     * Load a new scene file synchronously.
-     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
-     * ready.
-     * @param path Location of the YAML scene file within the application assets
-     * @return Scene ID An identifier for the scene being loaded, the same value will be passed to
-     * {@link SceneLoadListener#onSceneReady(int sceneId, SceneError sceneError)} when loading is complete.
-     */
-    public int loadSceneFile(final String path) {
-        return loadSceneFile(path, null);
-    }
-
-    /**
      * Load a new scene file asynchronously.
      * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
      * ready.
@@ -285,25 +273,6 @@ public class MapController {
      */
     public int loadSceneFileAsync(final String path) {
         return loadSceneFileAsync(path, null);
-    }
-
-    /**
-     * Load a new scene file synchronously.
-     * If scene updates triggers an error, they won't be applied.
-     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
-     * ready.
-     * @param path Location of the YAML scene file within the application assets
-     * @param sceneUpdates List of {@code SceneUpdate}
-     * @return Scene ID An identifier for the scene being loaded, the same value will be passed to
-     * {@link SceneLoadListener#onSceneReady(int sceneId, SceneError sceneError)} when loading is complete.
-     */
-    public int loadSceneFile(final String path, @Nullable final List<SceneUpdate> sceneUpdates) {
-        checkPointer(mapPointer);
-        final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        final int sceneId = nativeLoadScene(mapPointer, path, updateStrings);
-        removeAllMarkers();
-        requestRender();
-        return sceneId;
     }
 
     /**
@@ -1384,9 +1353,7 @@ public class MapController {
     private synchronized native long nativeInit(AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
     private synchronized native void nativeShutdown(long mapPtr);
-    private synchronized native int nativeLoadScene(long mapPtr, String path, String[] updateStrings);
     private synchronized native int nativeLoadSceneAsync(long mapPtr, String path, String[] updateStrings);
-    private synchronized native int nativeLoadSceneYaml(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
     private synchronized native int nativeLoadSceneYamlAsync(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
 
     private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);

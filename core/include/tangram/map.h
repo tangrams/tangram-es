@@ -151,19 +151,11 @@ public:
                            bool _useScenePosition = false,
                            const std::vector<SceneUpdate>& _sceneUpdates = {});
 
-    // Load the scene provided an explicit yaml scene string
-    SceneID loadSceneYaml(const std::string& _yaml, const std::string& _resourceRoot,
-                          bool _useScenePosition = false,
-                          const std::vector<SceneUpdate>& _sceneUpdates = {});
 
     SceneID loadSceneYamlAsync(const std::string& _yaml, const std::string& _resourceRoot,
                                bool _useScenePosition = false,
                                const std::vector<SceneUpdate>& _sceneUpdates = {});
 
-    // Load the scene at the given absolute file path synchronously
-    SceneID loadScene(const std::string& _scenePath,
-                      bool _useScenePosition = false,
-                      const std::vector<SceneUpdate>& sceneUpdates = {});
 
     // Set listener for scene load events. The callback receives the SceneID
     // of the loaded scene and SceneError in case loading was not successful.
@@ -417,7 +409,6 @@ protected:
 
     SceneID loadSceneAsync(SceneOptions&& _sceneOptions);
 
-    SceneID loadScene(SceneOptions&& _sceneOptions);
 
 private:
 

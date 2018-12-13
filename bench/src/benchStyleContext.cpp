@@ -32,29 +32,21 @@ const char tile_file[] = "res/tile.mvt";
 std::shared_ptr<Scene> scene;
 std::shared_ptr<TileSource> source;
 std::shared_ptr<TileData> tileData;
+MockPlatform platform;
 
 void globalSetup() {
     static std::atomic<bool> initialized{false};
     if (initialized.exchange(true)) { return; }
 
-    std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
     Url sceneUrl(scene_file);
-    platform->putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
-    scene = std::make_shared<Scene>(platform, sceneUrl);
-    Importer importer(scene);
-    try {
-        scene->config() = importer.applySceneImports(platform);
-    }
-    catch (const YAML::ParserException& e) {
-        LOGE("Parsing scene config '%s'", e.what());
-        exit(-1);
-    }
-    if (!scene->config()) {
-        LOGE("Invalid scene file '%s'", scene_file);
-        exit(-1);
-    }
-    SceneLoader::applyConfig(platform, scene);
-    scene->fontContext()->loadFonts();
+    platform.putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
+
+    SceneOptions sceneOptions{sceneUrl};
+    sceneOptions.prefetchTiles = false;
+
+    scene = std::make_shared<Scene>(platform, std::move(sceneOptions));
+    if (!scene->load()) { exit(-1); }
+
     for (auto& s : scene->tileSources()) {
         source = s;
         if (source->generateGeometry()) { break; }

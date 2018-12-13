@@ -108,7 +108,7 @@ public:
         yes, no, none
     };
 
-    explicit Scene(Platform& platform);
+    explicit Scene(Platform& platform, SceneOptions&& = SceneOptions{""});
 
     Scene(const Scene& _other) = delete;
     Scene(Scene&& _other) = delete;
@@ -137,7 +137,6 @@ public:
 
     const auto& config() const { return m_config; }
     const auto& tileSources() const { return m_tileSources; }
-    //const auto& layers() const { return m_layers; }
     const auto& styles() const { return m_styles; }
     const auto& lights() const { return m_lights; }
     const auto& lightBlocks() const { return m_lightShaderBlocks; }
@@ -186,17 +185,20 @@ public:
     MarkerManager* markerManager() { return m_markerManager.get(); }
     LabelManager* labelManager() { return m_labelManager.get(); }
 
-    bool load(SceneOptions&& _sceneOptions);
+    bool load();
 
     const SceneError* errors() const {
         return (m_errors.empty() ? nullptr : &m_errors.front());
     }
     void initTileManager();
     void startTileWorker();
-    void stopTileWorker();
 
     bool complete();
-    bool isReady() const { return m_ready; };
+
+    void cancelTasks();
+    void dispose();
+
+    bool isReady() const { return m_state == State::ready; };
 
     std::shared_ptr<Texture> fetchTexture(const std::string& name, const Url& url,
                                           const TextureOptions& options,
@@ -210,9 +212,10 @@ public:
     friend struct SceneLoader;
     friend class Importer;
 
+    const SceneOptions& options() const { return m_options; }
+
 protected:
     Platform& platform() { return m_platform; }
-    const SceneOptions& options() { return m_options; }
     void pushError(SceneError&& error) { m_errors.push_back(std::move(error)); }
 
 private:
@@ -224,8 +227,13 @@ private:
     // Only SceneUpdate errors for now
     std::vector<SceneError> m_errors;
 
-    bool m_ready = false;
-    bool m_loading = false;
+    enum class State {
+        initial,
+        loading,             // set on worker thread at start of Scene::load()
+        pending_resources,   // set on worker thread at end of Scene::load()
+        ready,               // set main thread Scene::complete()
+        disposed
+    } m_state = State::initial;
 
     // ---------------------------------------------------------------//
     // Loaded Scene Data

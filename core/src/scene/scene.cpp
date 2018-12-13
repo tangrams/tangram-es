@@ -29,33 +29,39 @@ namespace Tangram {
 static std::atomic<int32_t> s_serial;
 
 
-Scene::Scene(Platform& _platform) : id(s_serial++), m_platform(_platform) {}
+Scene::Scene(Platform& _platform, SceneOptions&& _options) :
+    id(s_serial++),
+    m_platform(_platform),
+    m_options(std::move(_options)) {
+
+    m_markerManager = std::make_unique<MarkerManager>(*this);
+    m_view = std::make_unique<View>();
+}
 
 Scene::~Scene() {
     m_tileWorker.reset();
 }
 
+bool Scene::load() {
 
-bool Scene::load(SceneOptions&& _sceneOptions) {
+    if (m_state != State::initial) { return false; }
+    m_state = State::loading;
 
-    if (m_loading || m_ready) { return false; }
 
-    m_options = std::move(_sceneOptions);
-    m_view = std::make_unique<View>();
-    m_view->setSize(_sceneOptions.view.width, _sceneOptions.view.height);
-
-    m_pixelScale  = _sceneOptions.view.pixelScale;
-    m_view->setPixelScale(m_pixelScale);
+    //m_view->setSize(_sceneOptions.view.width, _sceneOptions.view.height);
+    //m_pixelScale  = _sceneOptions.view.pixelScale;
+    //m_view->setPixelScale(m_pixelScale);
 
     LOGTOInit();
     LOGTO(">>>>>> loadScene >>>>>>");
-    m_loading = true;
 
     m_importer = std::make_unique<Importer>();
 
     // Wait until all scene-yamls are available and merged.
     // Importer also holds reference zip archives
+    /// EEEEEEK blocking! - do work instead!
     m_config = m_importer->loadSceneData(m_platform, m_options.url, m_options.yaml);
+
     LOGTO("<<< applyImports AKA load files, parse YAMLS, allocate Document and merge stuff");
 
     if (!m_config) {
@@ -64,11 +70,13 @@ bool Scene::load(SceneOptions&& _sceneOptions) {
     }
 
     LOGTO(">>> applyUpdates");
+    // TODO dont need to pass in Scene, just config and return errors
     if (!SceneLoader::applyUpdates(*this, m_options.updates)) {
         LOGE("Applying SceneUpdates failed!");
         return false;
     }
     LOGTO("<<< applyUpdates");
+
     Importer::resolveSceneUrls(m_config, m_options.url);
 
     LOGTO(">>> applyGlobals");
@@ -140,6 +148,39 @@ bool Scene::load(SceneOptions&& _sceneOptions) {
     }
     m_importer.reset();
 
+    m_state = State::pending_resources;
+
+    return true;
+}
+
+bool Scene::complete() {
+    if (m_state == State::ready) { return true; }
+    if (m_state != State::pending_resources) { return false; }
+
+    // Wait until font and texture resources are fully loaded
+    {
+        std::lock_guard<std::mutex> lock(m_taskMutex);
+        int t = 0, f = 0;
+        m_pendingTextures.remove_if([&](auto& task) { t++;  return task->done; });
+        m_pendingFonts.remove_if([&](auto& task) { f++; return task->done; });
+
+        if (!m_pendingTextures.empty() || !m_pendingFonts.empty()) {
+            LOGTO("Waiting... fonts:%d textures:%d", f, t);
+            return false;
+        }
+    }
+
+    m_state = State::ready;
+
+    for (auto& style : m_styles) {
+        style->setPixelScale(m_pixelScale);
+    }
+    m_fontContext->setPixelScale(m_pixelScale);
+
+    // Tell the TileWorker Scene is ready so it should check its work-queue
+    m_tileWorker->poke();
+
+
     return true;
 }
 
@@ -154,10 +195,31 @@ void Scene::startTileWorker() {
     m_tileWorker->setScene(*this);
 }
 
-void Scene::stopTileWorker() {
-    m_ready = false;
-    m_tileWorker.reset();
+void Scene::cancelTasks() {
+    // Cancels all TileTasks
+    LOG("Clear TileManager tasks");
+    if (m_tileManager) {
+        m_tileManager->cancelTileTasks();
+    }
+    // Clear TileTask queue
+    //LOG("Clear TileWorker tasks");
+    //m_tileWorker.clear();
 }
+
+void Scene::dispose() {
+    if (m_tileManager) {
+        // Cancels all TileTasks
+        LOG("Finish TileManager");
+        m_tileManager.reset();
+        // Waits for processing TileTasks to finish
+        LOG("Finish TileWorker");
+        m_tileWorker.reset();
+        LOG("TileWorker stopped");
+    }
+
+    m_state = State::disposed;
+}
+
 
 const Style* Scene::findStyle(const std::string& _name) const {
     for (auto& style : m_styles) {
@@ -234,12 +296,12 @@ std::shared_ptr<TileSource> Scene::getTileSource(const std::string& name) {
 }
 
 void Scene::setPixelScale(float _scale) {
-    if (m_pixelScale == _scale) { return; }
-    LOGD("setPixelScale %f", _scale);
+    LOG("setPixelScale %f", _scale);
 
+    if (m_pixelScale == _scale) { return; }
     m_pixelScale = _scale;
 
-    if (!m_ready) { return; }
+    if (m_state != State::ready) { return; }
 
     for (auto& style : m_styles) {
         style->setPixelScale(_scale);
@@ -379,39 +441,6 @@ void Scene::loadFont(const std::string& _uri, const std::string& _family,
             m_platform.startUrlRequest(url, std::move(cb));
         }
     }
-}
-
-bool Scene::complete() {
-    if (m_ready) { return true; }
-    if (!m_loading) { return false; }
-
-    // Wait until font and texture resources are fully loaded
-    {
-        std::lock_guard<std::mutex> lock(m_taskMutex);
-        int t = 0, f = 0;
-        m_pendingTextures.remove_if([&](auto& task) { t++;  return task->done; });
-        m_pendingFonts.remove_if([&](auto& task) { f++; return task->done; });
-
-        if (!m_pendingTextures.empty() || !m_pendingFonts.empty()) {
-            LOGTO("Waiting... fonts:%d textures:%d", f, t);
-            return false;
-        }
-    }
-
-    m_ready = true;
-    m_loading = false;
-
-    for (auto& style : m_styles) {
-        style->setPixelScale(m_pixelScale);
-    }
-    m_fontContext->setPixelScale(m_pixelScale);
-
-    // Tell the TileWorker Scene is ready so it should check its work-queue
-    m_tileWorker->poke();
-
-    m_markerManager = std::make_unique<MarkerManager>(*this);
-
-    return true;
 }
 
 bool Scene::update(const View& _view, float _dt) {
