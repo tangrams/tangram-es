@@ -388,20 +388,23 @@ bool MarkerManager::buildStyling(Marker& marker) {
     std::vector<StyleParam> params;
 
     // If the styling is not a path, try to load it as a string of YAML.
-    const auto& sceneJsFnList = m_scene.functions();
-    auto jsFnIndex = sceneJsFnList.size();
+    size_t start = m_functions.size();
 
     try {
         YAML::Node node = YAML::Load(markerStyling.string);
-        // Parse style parameters from the YAML node.
-        SceneLoader::parseStyleParams(m_scene, node, "", params);
+        SceneLoader::parseStyleParams(m_stops, m_functions, node, "", params);
     } catch (const YAML::Exception& e) {
         LOG("Invalid marker styling '%s', %s", markerStyling.string.c_str(), e.what());
         return false;
     }
+
+    size_t offset = start + m_scene.functions().size();
+    for (auto& p : params) {
+        if (p.function >= 0) { p.function += offset; }
+    }
     // Compile any new JS functions used for styling.
-    for (auto i = jsFnIndex; i < sceneJsFnList.size(); ++i) {
-        m_styleContext->addFunction(sceneJsFnList[i]);
+    for (auto i = start; i < m_functions.size(); ++i) {
+        m_styleContext->addFunction(m_functions[i]);
     }
 
     marker.setDrawRuleData(std::make_unique<DrawRuleData>("", 0, std::move(params)));
