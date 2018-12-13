@@ -407,9 +407,6 @@ protected:
 
     std::unique_ptr<Platform> platform;
 
-    SceneID loadSceneAsync(SceneOptions&& _sceneOptions);
-
-
 private:
 
     class Impl;

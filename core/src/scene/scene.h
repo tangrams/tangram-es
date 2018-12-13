@@ -80,11 +80,7 @@ public:
 
     size_t memoryTileCacheSize = CACHE_SIZE;
 
-    struct {
-        uint32_t width = 0;
-        uint32_t height = 0;
-        float pixelScale = 1.f;
-    } view;
+    std::function<void(Scene*)> asyncCallback = nullptr;
 };
 
 class Scene {
@@ -197,13 +193,17 @@ public:
         return (m_errors.empty() ? nullptr : &m_errors.front());
     }
 
+    // - Copy current View width,height,pixelscale and position (unless useScenePosition)
+    // - Start tile-loading for this View.
+    void prefetchTiles(const View& view);
+
     // Return true scene-loading could be completed, false when resources for
     // tile-building and rendering are still pending.
     // Does the finishing touch when everything is available:
     // - Copy Scene camera to View
     // - Update Styles and FontContext to current pixelScale
     // -...
-    bool complete(View& view);
+    bool completeView(View& view);
 
     void cancelTasks();
     void dispose();

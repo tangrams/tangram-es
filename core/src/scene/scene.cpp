@@ -170,17 +170,8 @@ bool Scene::load() {
     m_tileManager->setTileSources(m_tileSources);
 
     // Scene is ready to load tiles for initial view
-    if (m_options.prefetchTiles) {
-        LOGTO(">>> loadTiles");
-        LOG("Prefetch tiles for View: %fx%f / zoom:%f lon:%f lat:%f",
-            m_view->getWidth(), m_view->getHeight(), m_view->getZoom(),
-            m_view->getCenterCoordinates().longitude,
-            m_view->getCenterCoordinates().latitude);
-
-        m_view->update();
-        m_tileManager->updateTileSets(*m_view);
-
-        LOGTO("<<< loadTiles");
+    if (m_options.asyncCallback) {
+        m_options.asyncCallback(this);
     }
 
     LOGTO(">>> textures");
@@ -281,16 +272,35 @@ bool Scene::load() {
     return true;
 }
 
-bool Scene::complete(View& view) {
-    if (m_state == State::ready) { return true; }
-    if (m_state != State::pending_completion) { return false; }
+void Scene::prefetchTiles(const View& view) {
 
-    ///
+    //*m_view = view;
+
     m_pixelScale = view.pixelScale();
     m_view->setPixelScale(m_pixelScale);
 
     /// Update new scene with current view
     m_view->setSize(view.getWidth(), view.getHeight());
+
+    if (!m_options.useScenePosition) {
+         m_view->setPosition(view.getPosition());
+    }
+
+    if (m_options.prefetchTiles) {
+        LOGTO(">>> loadTiles");
+        LOG("Prefetch tiles for View: %fx%f / zoom:%f lon:%f lat:%f",
+            m_view->getWidth(), m_view->getHeight(), m_view->getZoom(),
+            m_view->getCenterCoordinates().longitude,
+            m_view->getCenterCoordinates().latitude);
+        m_view->update();
+        m_tileManager->updateTileSets(*m_view);
+        LOGTO("<<< loadTiles");
+    }
+}
+
+bool Scene::completeView(View& view) {
+    if (m_state == State::ready) { return true; }
+    if (m_state != State::pending_completion) { return false; }
 
     if (!m_options.useScenePosition) {
         m_view->setPosition(view.getPosition());
@@ -302,11 +312,13 @@ bool Scene::complete(View& view) {
     for (auto& style : m_styles) {
         style->setPixelScale(m_pixelScale);
     }
+
     m_fontContext->setPixelScale(m_pixelScale);
+
+    m_state = State::ready;
 
     /// Tell TileWorker that Scene is ready, so it can check its work-queue
     m_tileWorker->poke();
-    m_state = State::ready;
 
     return true;
 }
