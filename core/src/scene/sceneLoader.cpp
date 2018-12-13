@@ -1496,7 +1496,7 @@ void SceneLoader::loadLayer(Scene& _scene, const std::pair<Node, Node>& _layer) 
     if (collections.empty()) {
         collections.push_back(name);
     }
-    _scene.layers().push_back({ std::move(sublayer), source, collections });
+    _scene.addLayer({ std::move(sublayer), source, collections });
 }
 
 SceneLayer SceneLoader::loadSublayer(Scene& _scene, const Node& _layer, const std::string& _layerName) {
