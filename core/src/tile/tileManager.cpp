@@ -229,15 +229,18 @@ void TileManager::cancelTileTasks() {
 
     for (auto& tileSet : m_tileSets) {
         for (auto& tile : tileSet.tiles) {
-            tile.second.clearTask();
+            auto& entry = tile.second;
+            if (entry.isInProgress()) {
+                tileSet.source->cancelLoadingTile(*entry.task);
+            }
+            entry.clearTask();
         }
-        tileSet.source->clearData();
     }
-
-    m_tileCache->clear();
 }
 
 void TileManager::clearTileSets(bool clearSourceCaches) {
+
+    cancelTileTasks();
 
     for (auto& tileSet : m_tileSets) {
         tileSet.tiles.clear();
@@ -253,6 +256,14 @@ void TileManager::clearTileSets(bool clearSourceCaches) {
 void TileManager::clearTileSet(int32_t _sourceId) {
     for (auto& tileSet : m_tileSets) {
         if (tileSet.source->id() != _sourceId) { continue; }
+
+        for (auto& tile : tileSet.tiles) {
+            auto& entry = tile.second;
+            if (entry.isInProgress()) {
+                tileSet.source->cancelLoadingTile(*entry.task);
+            }
+        }
+
         tileSet.tiles.clear();
     }
 
