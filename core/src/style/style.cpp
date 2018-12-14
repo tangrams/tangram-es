@@ -156,15 +156,9 @@ void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBloc
         const auto& name = uniformPair.first;
         auto& value = uniformPair.second;
 
-        if (value.is<std::string>()) {
-            std::string textureName = value.get<std::string>();
-            std::shared_ptr<Texture> texture = _scene.getTexture(textureName);
-
-            if (!texture) {
-                LOGN("Texture with texture name %s is not available to be sent as uniform",
-                    textureName.c_str());
-                continue;
-            }
+        if (value.is<UniformTexture>()) {
+            auto& texture  = value.get<UniformTexture>();
+            if (!texture) { continue; }
 
             texture->bind(rs, rs.nextAvailableTextureUnit());
 
@@ -185,14 +179,8 @@ void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBloc
             UniformTextureArray& textureUniformArray = value.get<UniformTextureArray>();
             textureUniformArray.slots.clear();
 
-            for (const auto& textureName : textureUniformArray.names) {
-                std::shared_ptr<Texture> texture = _scene.getTexture(textureName);
-
-                if (!texture) {
-                    LOGN("Texture with texture name %s is not available to be sent as uniform",
-                         textureName.c_str());
-                    continue;
-                }
+            for (const auto& texture : textureUniformArray.textures) {
+                if (!texture) { continue; }
 
                 texture->bind(rs, rs.nextAvailableTextureUnit());
 

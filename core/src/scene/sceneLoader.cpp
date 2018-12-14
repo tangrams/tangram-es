@@ -1248,7 +1248,7 @@ void SceneLoader::loadShaderConfig(const Node& _shaders, Style& _style, SceneTex
                 } else if(styleUniform.value.is<UniformTextureArray>()) {
                     UniformTextureArray& textureArray = styleUniform.value.get<UniformTextureArray>();
                     shader.addSourceBlock("uniforms", "uniform " + styleUniform.type + " " + name +
-                        "[" + std::to_string(textureArray.names.size()) + "];");
+                        "[" + std::to_string(textureArray.textures.size()) + "];");
                 } else {
                     shader.addSourceBlock("uniforms", "uniform " + styleUniform.type + " " + name + ";");
                 }
@@ -1289,11 +1289,9 @@ bool SceneLoader::parseStyleUniforms(const Node& _value, StyleUniform& _styleUni
             _styleUniform.type = "bool";
             _styleUniform.value = (bool)bValue;
         } else {
-            const std::string& strVal = _value.Scalar();
+            const auto& strVal = _value.Scalar();
             _styleUniform.type = "sampler2D";
-            _styleUniform.value = strVal;
-
-            _textures.get(strVal);
+            _styleUniform.value = _textures.get(strVal);
         }
     } else if (_value.IsSequence()) {
         size_t size = _value.size();
@@ -1346,14 +1344,12 @@ bool SceneLoader::parseStyleUniforms(const Node& _value, StyleUniform& _styleUni
         if (!parsed) {
             // array of strings (textures)
             UniformTextureArray textureArrayUniform;
-            textureArrayUniform.names.reserve(size);
+            textureArrayUniform.textures.reserve(size);
             _styleUniform.type = "sampler2D";
 
             for (const auto& strVal : _value) {
-                const std::string& textureName = strVal.Scalar();
-                textureArrayUniform.names.push_back(textureName);
-
-                _textures.get(textureName);
+                const auto& textureName = strVal.Scalar();
+                textureArrayUniform.textures.push_back(_textures.get(textureName));
             }
 
             _styleUniform.value = std::move(textureArrayUniform);
