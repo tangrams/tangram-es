@@ -64,8 +64,8 @@ void PointStyle::onBeginFrame(RenderState& rs) {
     m_textStyle->onBeginFrame(rs);
 }
 
-void PointStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
-    Style::onBeginDrawFrame(rs, _view, _scene);
+void PointStyle::onBeginDrawFrame(RenderState& rs, const View& _view) {
+    Style::onBeginDrawFrame(rs, _view);
 
     auto texUnit = rs.nextAvailableTextureUnit();
 
@@ -89,22 +89,22 @@ void PointStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _sc
         vertexPos += batch.vertexCount;
     }
 
-    m_textStyle->onBeginDrawFrame(rs, _view, _scene);
+    m_textStyle->onBeginDrawFrame(rs, _view);
 }
 
-void PointStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) {
+void PointStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view) {
     if (!m_selection) { return; }
 
     m_mesh->upload(rs);
 
-    Style::onBeginDrawSelectionFrame(rs, _view, _scene);
+    Style::onBeginDrawSelectionFrame(rs, _view);
 
     m_selectionProgram->setUniformMatrix4f(rs, m_selectionUniforms.uOrtho,
                                            _view.getOrthoViewportMatrix());
 
     m_mesh->draw(rs, *m_selectionProgram, false);
 
-    m_textStyle->onBeginDrawSelectionFrame(rs, _view, _scene);
+    m_textStyle->onBeginDrawSelectionFrame(rs, _view);
 }
 
 std::unique_ptr<StyleBuilder> PointStyle::createBuilder() const {

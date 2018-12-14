@@ -87,9 +87,9 @@ public:
      * - First pass if signed distance field is on, draw outlines
      * - Second pass, draw the inner glyph pixels
      */
-    virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
+    virtual void onBeginDrawFrame(RenderState& rs, const View& _view) override;
 
-    virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) override;
+    virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view) override;
 
     virtual bool draw(RenderState& rs, const Tile& _tile) override { return false; }
 

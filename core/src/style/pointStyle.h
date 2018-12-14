@@ -27,9 +27,9 @@ public:
     virtual ~PointStyle();
 
     virtual void onBeginUpdate() override;
-    virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
+    virtual void onBeginDrawFrame(RenderState& rs, const View& _view) override;
     virtual void onBeginFrame(RenderState& rs) override;
-    virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) override;
+    virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view) override;
     virtual bool draw(RenderState& rs, const Tile& _tile) override { return false; }
     virtual bool draw(RenderState& rs, const Marker& _marker) override { return false; }
 
