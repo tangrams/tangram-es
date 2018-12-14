@@ -1006,7 +1006,7 @@ bool Map::markerSetStylingFromPath(MarkerID _marker, const char* _path) {
 }
 
 bool Map::markerSetBitmap(MarkerID _marker, int _width, int _height, const unsigned int* _data) {
-    bool success = impl->markerManager.setBitmap(_marker, _width, _height, _data);
+    bool success = impl->markerManager.setBitmap(_marker, _width, _height, impl->view.pixelScale(), _data);
     platform->requestRender();
     return success;
 }

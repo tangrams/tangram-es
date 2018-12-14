@@ -42,7 +42,7 @@ public:
         return setStyling(markerID, path, true);
     }
 
-    bool setBitmap(MarkerID markerID, int width, int height, const unsigned int* bitmapData);
+    bool setBitmap(MarkerID markerID, int width, int height, float density, const unsigned int* bitmapData);
 
     // Set whether a marker should be visible; returns true if the marker was found and updated.
     bool setVisible(MarkerID markerID, bool visible);
