@@ -173,11 +173,14 @@ SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
         LOG("ASYNC LOAD >>>");
         if (newScene == scene) {
             /// => Scene::State::initial
-            newScene->load();
+            bool ready = newScene->load();
             /// => Scene::State::ready / canceled
+
+            if (!ready && onSceneReady) {
+                onSceneReady(scene->id, scene->errors());
+            }
             platform.requestRender();
         }
-
         if (newScene != scene) {
             /// Another Scene is already queued
             newScene->dispose();
