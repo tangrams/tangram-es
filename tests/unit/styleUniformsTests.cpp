@@ -19,24 +19,20 @@ using namespace Tangram;
 using YAML::Node;
 
 TEST_CASE( "Style Uniforms Parsing and Injection Test: Float uniform value", "[StyleUniforms][core][yaml]") {
-    MockPlatform platform;
-    Scene scene{platform};
 
     Node node = YAML::Load(R"END(
         u_float: 0.5
         )END");
 
     StyleUniform uniformValues;
-
-    REQUIRE(SceneLoader::parseStyleUniforms(scene, node["u_float"], uniformValues));
+    SceneTextures textures;
+    REQUIRE(SceneLoader::parseStyleUniforms(node["u_float"], uniformValues, textures));
     REQUIRE(uniformValues.value.is<float>());
     REQUIRE(uniformValues.value.get<float>() == 0.5);
     REQUIRE(uniformValues.type == "float");
 }
 
 TEST_CASE( "Style Uniforms Parsing and Injection Test: Boolean uniform value", "[StyleUniforms][core][yaml]") {
-    MockPlatform platform;
-    Scene scene{platform};
 
     Node node = YAML::Load(R"END(
         u_true: true
@@ -44,21 +40,19 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: Boolean uniform value", "
         )END");
 
     StyleUniform uniformValues;
-
-    REQUIRE(SceneLoader::parseStyleUniforms(scene, node["u_true"], uniformValues));
+    SceneTextures textures;
+    REQUIRE(SceneLoader::parseStyleUniforms(node["u_true"], uniformValues, textures));
     REQUIRE(uniformValues.value.is<bool>());
     REQUIRE(uniformValues.value.get<bool>() == 1);
     REQUIRE(uniformValues.type == "bool");
 
-    REQUIRE(SceneLoader::parseStyleUniforms(scene, node["u_false"], uniformValues));
+    REQUIRE(SceneLoader::parseStyleUniforms(node["u_false"], uniformValues, textures));
     REQUIRE(uniformValues.value.is<bool>());
     REQUIRE(uniformValues.value.get<bool>() == 0);
     REQUIRE(uniformValues.type == "bool");
 }
 
 TEST_CASE( "Style Uniforms Parsing and Injection Test: vec2, vec3, vec4 uniform value", "[StyleUniforms][core][yaml]") {
-    MockPlatform platform;
-    Scene scene{platform};
 
     Node node = YAML::Load(R"END(
         u_vec2: [0.1, 0.2]
@@ -68,21 +62,22 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: vec2, vec3, vec4 uniform 
         )END");
 
     StyleUniform uniformValues;
+    SceneTextures textures;
 
-    REQUIRE(SceneLoader::parseStyleUniforms(scene, node["u_vec2"], uniformValues));
+    REQUIRE(SceneLoader::parseStyleUniforms(node["u_vec2"], uniformValues, textures));
     REQUIRE(uniformValues.value.is<glm::vec2>());
     REQUIRE(uniformValues.value.get<glm::vec2>().x == 0.1f);
     REQUIRE(uniformValues.value.get<glm::vec2>().y == 0.2f);
     REQUIRE(uniformValues.type == "vec2");
 
-    REQUIRE(SceneLoader::parseStyleUniforms(scene, node["u_vec3"], uniformValues));
+    REQUIRE(SceneLoader::parseStyleUniforms(node["u_vec3"], uniformValues, textures));
     REQUIRE(uniformValues.value.is<glm::vec3>());
     REQUIRE(uniformValues.value.get<glm::vec3>().x == 0.1f);
     REQUIRE(uniformValues.value.get<glm::vec3>().y == 0.2f);
     REQUIRE(uniformValues.value.get<glm::vec3>().z == 0.3f);
     REQUIRE(uniformValues.type == "vec3");
 
-    REQUIRE(SceneLoader::parseStyleUniforms(scene, node["u_vec4"], uniformValues));
+    REQUIRE(SceneLoader::parseStyleUniforms(node["u_vec4"], uniformValues, textures));
     REQUIRE(uniformValues.value.is<glm::vec4>());
     REQUIRE(uniformValues.value.get<glm::vec4>().x == 0.1f);
     REQUIRE(uniformValues.value.get<glm::vec4>().y == 0.2f);
@@ -90,7 +85,7 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: vec2, vec3, vec4 uniform 
     REQUIRE(uniformValues.value.get<glm::vec4>().w == 0.4f);
     REQUIRE(uniformValues.type == "vec4");
 
-    REQUIRE(SceneLoader::parseStyleUniforms(scene, node["u_array"], uniformValues));
+    REQUIRE(SceneLoader::parseStyleUniforms(node["u_array"], uniformValues, textures));
     REQUIRE(uniformValues.value.is<UniformArray1f>());
     REQUIRE(uniformValues.value.get<UniformArray1f>()[0] == 0.1f);
     REQUIRE(uniformValues.value.get<UniformArray1f>()[1] == 0.2f);
@@ -100,9 +95,6 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: vec2, vec3, vec4 uniform 
 }
 
 TEST_CASE( "Style Uniforms Parsing and Injection Test: textures uniform value", "[StyleUniforms][core][yaml]") {
-    std::unordered_map<Url, std::string> testScenes;
-    MockPlatform platform;
-    Scene scene{platform};
 
     Node node = YAML::Load(R"END(
         u_tex: img/cross.png
@@ -110,13 +102,14 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: textures uniform value", 
     )END");
 
     StyleUniform uniformValues;
+    SceneTextures textures;
 
-    REQUIRE(SceneLoader::parseStyleUniforms(scene, node["u_tex"], uniformValues));
+    REQUIRE(SceneLoader::parseStyleUniforms(node["u_tex"], uniformValues, textures));
     REQUIRE(uniformValues.value.is<std::string>());
     REQUIRE(uniformValues.value.get<std::string>() == "img/cross.png");
     REQUIRE(uniformValues.type == "sampler2D");
 
-    REQUIRE(SceneLoader::parseStyleUniforms(scene, node["u_tex2"], uniformValues));
+    REQUIRE(SceneLoader::parseStyleUniforms(node["u_tex2"], uniformValues, textures));
     REQUIRE(uniformValues.value.is<UniformTextureArray>());
     REQUIRE(uniformValues.value.get<UniformTextureArray>().names.size() == 3);
     REQUIRE(uniformValues.value.get<UniformTextureArray>().names[0] == "img/cross.png");
