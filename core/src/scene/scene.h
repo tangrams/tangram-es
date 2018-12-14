@@ -295,7 +295,7 @@ protected:
     float m_pixelScale = 1.0f;
     float m_time = 0.0;
 
-    std::shared_ptr<FontContext> m_fontContext;
+    std::unique_ptr<FontContext> m_fontContext;
     std::unique_ptr<FeatureSelection> m_featureSelection;
     std::unique_ptr<TileWorker> m_tileWorker;
     std::unique_ptr<TileManager> m_tileManager;

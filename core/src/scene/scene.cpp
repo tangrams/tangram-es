@@ -177,7 +177,7 @@ bool Scene::load() {
     runTextureTasks();
     LOGTO("<<< textures");
 
-    m_fontContext = std::make_shared<FontContext>(m_platform);
+    m_fontContext = std::make_unique<FontContext>(m_platform);
     m_fontContext->loadFonts();
     LOGTO("<<< initFonts");
 
