@@ -91,9 +91,6 @@ public:
 
     std::vector<std::shared_ptr<TileSource>> clientTileSources;
 
-    bool sceneGotReady = false;
-    int framesRendered = false;
-
     // TODO MapOption
     Color background{0xffffffff};
 };
@@ -153,8 +150,6 @@ SceneID Map::loadSceneYamlAsync(const std::string& _yaml, const std::string& _re
 }
 
 SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
-
-    framesRendered = 0;
 
     /// Avoid to keep loading old scene and tiles
     oldScene = std::move(scene);
@@ -295,45 +290,34 @@ bool Map::render() {
 
     auto& scene = *impl->scene;
     auto& view = impl->view;
-
     auto& renderState = impl->renderState;
 
-    // Do not render while scene is loading
-    if (!scene.isReady()) {
-        // Setup default framebuffer for a new frame
-        glm::vec2 viewport(view.getWidth(), view.getHeight());
-
-        FrameBuffer::apply(renderState, renderState.defaultFrameBuffer(),
-                           viewport, impl->background.toColorF());
-
-        return impl->isCameraEasing;
-    }
-
-    // LOGTInit();
-    // if (impl->sceneGotReady) {
-    //     LOGTO("Render: Scene ready >>>");
-    // }
-    // if (impl->framesRendered && impl->framesRendered < 100) {
-    //     LOGTO("Render: Tiles ready >>> %d", impl->framesRendered);
-    // }
-
-    bool drawSelectionBuffer = getDebugFlag(DebugFlags::selection_buffer);
-
-    // Cache default framebuffer handle used for rendering
-    renderState.cacheDefaultFramebuffer();
-
-    Primitives::setResolution(renderState, view.getWidth(), view.getHeight());
-    FrameInfo::beginFrame();
+    // Delete batch of gl resources
+    renderState.flushResourceDeletion();
 
     // Invalidate render states for new frame
     if (!impl->cacheGlState) {
         renderState.invalidateStates();
     }
 
-    // Delete batch of gl resources
-    renderState.flushResourceDeletion();
+    // Cache default framebuffer handle used for rendering
+    renderState.cacheDefaultFramebuffer();
+
+    // Do not render while scene is loading
+    if (!scene.isReady()) {
+        glm::vec2 viewport(view.getWidth(), view.getHeight());
+        FrameBuffer::apply(renderState, renderState.defaultFrameBuffer(),
+                           viewport, impl->background.toColorF());
+
+        return impl->isCameraEasing;
+    }
+
+    Primitives::setResolution(renderState, view.getWidth(), view.getHeight());
+    FrameInfo::beginFrame();
 
     scene.renderBeginFrame(renderState);
+
+    bool drawSelectionBuffer = getDebugFlag(DebugFlags::selection_buffer);
 
     // Render feature selection pass to offscreen framebuffer
     if (impl->selectionQueries.size() > 0 || drawSelectionBuffer) {
@@ -363,6 +347,7 @@ bool Map::render() {
         return impl->isCameraEasing;
     }
 
+    // Render scene
     bool drawnAnimatedStyle = false;
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
@@ -371,21 +356,10 @@ bool Map::render() {
 
     if (scene.animated() != Scene::animate::no &&
         drawnAnimatedStyle != platform->isContinuousRendering()) {
-
         platform->setContinuousRendering(drawnAnimatedStyle);
     }
 
     FrameInfo::draw(renderState, view, *scene.tileManager());
-
-    // if (impl->sceneGotReady) {
-    //     impl->sceneGotReady = false;
-    //     LOGTO("Render: Scene ready <<<");
-    // }
-    // if (impl->framesRendered && impl->framesRendered++ < 100) {
-    //     LOGT("Render: Tiles ready <<< %d", impl->framesRendered);
-    // } else {
-    //     impl->framesRendered = 0;
-    // }
 
     return impl->isCameraEasing;
 }
