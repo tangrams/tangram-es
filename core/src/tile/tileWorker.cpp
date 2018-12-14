@@ -90,9 +90,8 @@ void TileWorker::run(Worker* instance) {
             m_queue.erase(it);
         }
 
-        if (task->isCanceled()) {
-            continue;
-        }
+        if (task->isCanceled()) { continue; }
+
         LOGTInit(">>> process %s", task->tileId().toString().c_str());
         task->process(*builder);
         LOGT("<<< process %s", task->tileId().toString().c_str());

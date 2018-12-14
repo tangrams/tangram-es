@@ -205,7 +205,7 @@ std::shared_ptr<Tile> findProxy(int32_t _sourceID, const TileID& _proxyID,
 }
 
 void LabelManager::skipTransitions(const Scene& _scene, const std::vector<std::shared_ptr<Tile>>& _tiles,
-                             TileManager& _tileManager, float _currentZoom) const {
+                                   TileManager& _tileManager, float _currentZoom) const {
 
     std::vector<const Style*> styles;
 
