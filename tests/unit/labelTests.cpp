@@ -15,7 +15,7 @@
 using namespace Tangram;
 
 glm::vec2 screenSize(500.f, 500.f);
-TextStyle dummyStyle("textStyle", nullptr);
+TextStyle dummyStyle("textStyle");
 TextLabels dummy(dummyStyle);
 Label::AABB bounds(0.f, 0.f, 500.f, 500.f);
 

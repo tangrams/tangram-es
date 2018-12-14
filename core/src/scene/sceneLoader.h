@@ -32,47 +32,77 @@ struct SceneLoader {
     using Node = YAML::Node;
 
     static SceneError applyUpdates(Node& config, const std::vector<SceneUpdate>& updates);
+
+
+    /// Global
     static void applyGlobals(Node& config);
 
-    static void applyScene(const Node& _config, Color& background, Stops& backgroundStops,
-                           Scene::animate& animated);
 
+    /// Scene
+    static void applyScene(const Node& sceneNode, Color& background, Stops& backgroundStops,
+
+                           Scene::animate& animated);
+    /// Cameras
     static void applyCameras(const Node& config, SceneCamera& camera);
     static void loadCameras(const Node& camerasNode, SceneCamera& camera);
     static void loadCamera(const Node& cameraNode, SceneCamera& camera);
 
-    static void applyLights(const Node& config, Scene::Lights& lights);
+
+    /// Lights
+    static Scene::Lights applyLights(const Node& lightsNode);
     static std::unique_ptr<Light> loadLight(const std::pair<Node, Node>& light);
     static void parseLightPosition(const Node& positionNode, PointLight& light);
 
-    static void applyTextures(Scene& scene);
-    static void loadTexture(Scene& scene, const std::pair<Node, Node>& texture);
+
+    /// Textures
+    static void applyTextures(const Node& texturesNode, SceneTextures& textures);
+    static void loadTexture(const std::pair<Node, Node>& texture, SceneTextures& textures);
     static bool parseTexFiltering(const Node& filteringNode, TextureOptions& options);
 
-    static void applyFonts(Scene& scene);
-    static void loadFontDescription(Scene& scene, const Node& node, const std::string& family);
 
-    static void applySources(const Node& config, Scene::TileSources& tileSources,
-                             const SceneOptions& options, Platform& platform);
+    /// Fonts
+    static void applyFonts(const Node& fontsNode, SceneFonts& fonts);
+    static void loadFontDescription(const Node& font, const std::string& family, SceneFonts& fonts);
+
+
+    /// Sources
+    static Scene::TileSources applySources(const Node& config, const SceneOptions& options, Platform& platform);
 
     static std::shared_ptr<TileSource> loadSource(const Node& source, const std::string& name,
                                                   const SceneOptions& options, Platform& platform);
 
-    static void applyStyles(Scene& scene);
-    static bool loadStyle(Scene& scene, const std::string& styleName, const Node& config);
-    static void loadStyleProps(Scene& scene, Style& style, const Node& styleNode);
-    static void parseStyleParams(SceneStops& _stops, SceneFunctions& _functions,
-                                 const Node& params, const std::string& propPrefix,
-                                 std::vector<StyleParam>& out);
-    static void parseTransition(const Node& params, std::string prefix, std::vector<StyleParam>& out);
-    static void loadShaderConfig(Scene& scene, const Node& shaders, Style& style);
-    static bool parseStyleUniforms(Scene& scene, const Node& value, StyleUniform& styleUniform);
-    static void loadMaterial(Scene& scene, const Node& matNode, Material& material, Style& style);
-    static MaterialTexture loadMaterialTexture(Scene& scene, const Node& matCompNode, Style& style);
+    /// Styles
+    static Scene::Styles applyStyles(const Node& stylesNode, SceneTextures& textures, SceneFunctions& functions,
+                                     SceneStops& stops, DrawRuleNames& ruleNames);
 
-    static void applyLayers(Scene& scene);
-    static void loadLayer(Scene& scene, const std::pair<Node, Node>& layer);
-    static SceneLayer loadSublayer(Scene& scene, const Node& layer, const std::string& name);
+    static std::unique_ptr<Style> loadStyle(const std::string& styleName, const Node& styleConfig);
+    static void loadStyleProps(const Node& styleConfig, Style& style, SceneTextures& textures);
+
+    /// - StyleParams
+    static std::vector<StyleParam> parseStyleParams(const Node& params, SceneStops& stops,
+                                                    SceneFunctions& functions);
+    static void parseStyleParams(const Node& _params, const std::string& _prefix, SceneStops& _stops,
+                                 SceneFunctions& _functions, std::vector<StyleParam>& _out);
+
+    static void parseTransition(const Node& params, std::string prefix, std::vector<StyleParam>& out);
+
+    /// - Shader
+    static void loadShaderConfig(const Node& shaders, Style& style, SceneTextures& textures);
+    static bool parseStyleUniforms(const Node& value, StyleUniform& styleUniform, SceneTextures& textures);
+    static void loadMaterial(const Node& matNode, Material& material, Style& style, SceneTextures& textures);
+    static MaterialTexture loadMaterialTexture(const Node& matCompNode, Style& style, SceneTextures& textures);
+
+
+    /// Layers
+    static Scene::Layers applyLayers(const Node& layersNode, SceneFunctions& functions, SceneStops& stops,
+                                     DrawRuleNames& ruleNames);
+
+    static void loadLayer(const std::pair<Node, Node>& layer, SceneFunctions& functions, SceneStops& stops,
+                          DrawRuleNames& ruleNames);
+
+    static SceneLayer loadSublayer(const Node& layer, const std::string& name, SceneFunctions& functions,
+                                   SceneStops& stops, DrawRuleNames& ruleNames);
+    /// - Filter
     static Filter generateFilter(SceneFunctions& functions, const Node& filter);
     static Filter generateAnyFilter(SceneFunctions& functions, const Node& filter);
     static Filter generateAllFilter(SceneFunctions& functions, const Node& filter);

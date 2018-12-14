@@ -74,27 +74,83 @@ public:
     std::function<void(Scene*)> asyncCallback = nullptr;
 };
 
-struct SceneFunctions : public std::vector<std::string> {
-    int addJsFunction(const std::string& _function);
-};
-
-using SceneStops = std::list<Stops>;
-
 struct SceneCamera : public Camera {
     glm::dvec3 startPosition;
 };
 
+struct SceneFunctions : public std::vector<std::string> {
+    int add(const std::string& _function);
+};
+
+using SceneStops = std::list<Stops>;
+
+struct DrawRuleNames : std::vector<std::string> {
+    int add(const std::string& _name) {
+        int id = getId(_name);
+        if (id < 0) {
+            push_back(_name);
+            return size() - 1;
+        }
+        return id;
+    }
+    int getId(const std::string& _name) const {
+        auto it = std::find(begin(), end(), _name);
+        if (it == end()) {
+            return -1;
+        }
+        return it - begin();
+    }
+};
+
+struct SceneTextures {
+    struct Task {
+        Task(Url url, std::shared_ptr<Texture> texture) : url(url), texture(texture) {}
+        bool done = false;
+        Url url;
+        std::shared_ptr<Texture> texture;
+        UrlRequestHandle requestHandle = 0;
+        std::condition_variable* condition = nullptr;
+    };
+
+    std::unordered_map<std::string, std::shared_ptr<Texture>> textures;
+
+    std::forward_list<std::shared_ptr<Task>> tasks;
+
+    std::shared_ptr<Texture> add(const std::string& name, const Url& url,
+                                 const TextureOptions& options,
+                                 std::unique_ptr<SpriteAtlas> _atlas = nullptr);
+
+    std::shared_ptr<Texture> get(const std::string& name);
+};
+
+struct SceneFonts {
+    struct Task {
+        Task(Url url, FontDescription ft) : url(url), ft(ft) {}
+        bool done = false;
+        Url url;
+        FontDescription ft;
+        UrlRequestHandle requestHandle = 0;
+        UrlResponse response;
+        std::condition_variable* condition = nullptr;
+    };
+    std::forward_list<std::shared_ptr<Task>> tasks;
+
+    void add(const std::string& _uri, const std::string& _family,
+             const std::string& _style, const std::string& _weight);
+};
+
 class Scene {
 public:
+    enum animate { yes, no, none };
 
     Scene(Platform& platform, SceneOptions&& = SceneOptions{""});
+    ~Scene();
 
     Scene(const Scene& _other) = delete;
     Scene(Scene&& _other) = delete;
 
-    ~Scene();
-
-    const int32_t id;
+    /// Load the whole Scene
+    bool load();
 
     auto& tileSources() const { return m_tileSources; }
     auto& featureSelection() const { return m_featureSelection; }
@@ -107,23 +163,13 @@ public:
     const auto& lights() const { return m_lights; }
     const auto& options() const { return m_options; }
     const auto& styles() const { return m_styles; }
-
-    const Style* findStyle(const std::string& _name) const;
-    const Light* findLight(const std::string& _name) const;
-
-    float time() const { return m_time; }
-
-    int addIdForName(const std::string& _name);
-    int getIdForName(const std::string& _name) const;
-
-    enum animate { yes, no, none };
-
-    animate animated() const { return m_animated; }
+    const auto& textures() const { return m_textures.textures; }
 
     std::shared_ptr<TileSource> getTileSource(int32_t id) const;
-    std::shared_ptr<TileSource> getTileSource(const std::string& name) const;
-
     std::shared_ptr<Texture> getTexture(const std::string& name) const;
+
+    float time() const { return m_time; }
+    animate animated() const { return m_animated; }
 
     float pixelScale() const { return m_pixelScale; }
     void setPixelScale(float _scale);
@@ -140,23 +186,19 @@ public:
                          FrameBuffer& _selectionBuffer,
                          std::vector<SelectionQuery>& _selectionQueries);
 
-    Color background(int _zoom) const {
-        if (m_backgroundStops.frames.size() > 0) {
-            return m_backgroundStops.evalColor(_zoom);
-        }
-        return m_background;
-    }
+    Color backgroundColor(int _zoom) const;
 
+    /// Used for FrameInfo debug
     TileManager* tileManager() const { return m_tileManager.get(); }
-    MarkerManager* markerManager() const { return m_markerManager.get(); }
-    LabelManager* labelManager() const { return m_labelManager.get(); }
 
-    bool load();
+    MarkerManager* markerManager() const { return m_markerManager.get(); }
 
     const SceneError* errors() const {
         return (m_errors.empty() ? nullptr : &m_errors.front());
     }
 
+    /// When Scene is async loading this function can be run from
+    /// main-thread to start loading tiles for the current view.
     /// - Copy current View width,height,pixelscale and position
     ///   (unless options.useScenePosition is set)
     /// - Start tile-loading for this View.
@@ -168,54 +210,42 @@ public:
     /// Does the finishing touch when everything is available:
     /// - Sets Scene camera to View
     /// - Update Styles and FontContext to current pixelScale
-    bool completeView(View& view);
+    /// - Sets platform continuousRendering mode
+    bool completeScene(View& view);
 
+    /// Cancel scene loading and all TileManager tasks
     void cancelTasks();
+
+    /// Cancel all scene tasks and wait for TileWorker thread to join
     void dispose();
 
+    /// Returns true when scene finished loading and completeScene() suceeded.
     bool isReady() const { return m_state == State::ready; };
 
-    std::shared_ptr<Texture> fetchTexture(const std::string& name, const Url& url,
-                                          const TextureOptions& options,
-                                          std::unique_ptr<SpriteAtlas> _atlas = nullptr);
-
-    std::shared_ptr<Texture> loadTexture(const std::string& name);
-
-    void loadFont(const std::string& _uri, const std::string& _family,
-                  const std::string& _style, const std::string& _weight);
+    /// Scene ID
+    const int32_t id;
 
     friend struct SceneLoader;
     friend class Importer;
+    friend class Map;
 
-    auto& styles() { return m_styles; }
-
-//protected:
     using Lights = std::vector<std::unique_ptr<Light>>;
+    using LightShaderBlocks = std::map<std::string, std::string>;
     using TileSources = std::vector<std::shared_ptr<TileSource>>;
+    using Styles = std::vector<std::unique_ptr<Style>>;
+    using Layers = std::vector<DataLayer>;
+
+protected:
 
     Platform& platform() { return m_platform; }
     void pushError(SceneError&& error) { m_errors.push_back(std::move(error)); }
-    auto& camera() { return m_camera; }
-    auto& config() { return m_config; }
-    auto& lights() { return m_lights; }
-    auto& lightBlocks() { return m_lightShaderBlocks; }
-    auto& textures() { return m_textures; }
-    auto& functions() { return m_jsFunctions; }
-    auto& stops() { return m_stops; }
-    auto& background() { return m_background; }
-    auto& backgroundStops() { return m_backgroundStops; }
 
-    void addLayer(DataLayer&& _layer);
-    void addTileSource(std::shared_ptr<TileSource> _source);
-    void addStyle(std::unique_ptr<Style> _style);
-
-private:
     Platform& m_platform;
 
     SceneOptions m_options;
     std::unique_ptr<Importer> m_importer;
 
-    // Only SceneUpdate errors for now
+    /// Only SceneUpdate errors for now
     std::vector<SceneError> m_errors;
 
     enum class State {
@@ -228,27 +258,30 @@ private:
         disposed
     } m_state = State::initial;
 
-    // ---------------------------------------------------------------//
-    // Loaded Scene Data
-
-    // The root node of the YAML scene configuration
+    /// ---------------------------------------------------------------///
+    /// Loaded Scene Data
+    /// The root node of the YAML scene configuration
     YAML::Node m_config;
 
     SceneCamera m_camera;
 
-    std::vector<DataLayer> m_layers;
+    Layers m_layers;
     TileSources m_tileSources;
-    std::vector<std::unique_ptr<Style>> m_styles;
+    Styles m_styles;
 
     Lights m_lights;
-    std::map<std::string, std::string> m_lightShaderBlocks;
+    LightShaderBlocks m_lightShaderBlocks;
 
-    std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
+    void runTextureTasks();
+    SceneTextures m_textures;
 
-    // Container of all strings used in styling rules; these need to be
-    // copied and compared frequently when applying styling, so rules use
-    // integer indices into this container to represent strings
-    std::vector<std::string> m_names;
+    void runFontTasks();
+    SceneFonts m_fonts;
+
+    /// Container of all strings used in styling rules; these need to be
+    /// copied and compared frequently when applying styling, so rules use
+    /// integer indices into this container to represent strings
+    DrawRuleNames m_names;
 
     SceneFunctions m_jsFunctions;
     SceneStops m_stops;
@@ -257,9 +290,8 @@ private:
     Stops m_backgroundStops;
     animate m_animated = none;
 
-    // ---------------------------------------------------------------//
-    // Runtime Data
-
+    /// ---------------------------------------------------------------///
+    /// Runtime Data
     float m_pixelScale = 1.0f;
     float m_time = 0.0;
 
@@ -270,34 +302,8 @@ private:
     std::unique_ptr<MarkerManager> m_markerManager;
     std::unique_ptr<LabelManager> m_labelManager;
 
-    struct FontTask {
-        FontTask(std::condition_variable& condition, Url url, std::shared_ptr<FontContext> fontContext, FontDescription ft)
-            : condition(condition), url(url), ft(ft), fontContext(fontContext) {}
-        std::condition_variable& condition;
-        Url url;
-        FontDescription ft;
-        std::shared_ptr<FontContext> fontContext;
-        bool done = false;
-        UrlCallback cb = nullptr;
-        UrlRequestHandle requestHandle = 0;
-    };
-    struct TextureTask {
-        TextureTask(std::condition_variable& condition, Url url, std::shared_ptr<Texture> texture)
-            : condition(condition), url(url), texture(texture) {}
-        std::condition_variable& condition;
-        Url url;
-        std::shared_ptr<Texture> texture;
-        bool done = false;
-        UrlCallback cb = nullptr;
-        UrlRequestHandle requestHandle = 0;
-    };
-
-
     std::mutex m_taskMutex;
     std::condition_variable m_taskCondition;
-
-    std::forward_list<std::shared_ptr<FontTask>> m_pendingFonts;
-    std::forward_list<std::shared_ptr<TextureTask>> m_pendingTextures;
 };
 
 }

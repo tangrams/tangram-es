@@ -15,7 +15,7 @@
 
 namespace Tangram {
 
-TextStyle dummyStyle("textStyle", nullptr);
+TextStyle dummyStyle("textStyle");
 TextLabels dummy(dummyStyle);
 Label::AABB* bounds = nullptr;
 

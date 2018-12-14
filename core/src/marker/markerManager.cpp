@@ -386,14 +386,14 @@ bool MarkerManager::buildStyling(Marker& marker) {
         return marker.finalizeRuleMergingForName(path.substr(start, end - start));
     }
 
-    std::vector<StyleParam> params;
 
     // If the styling is not a path, try to load it as a string of YAML.
     size_t start = m_functions.size();
 
+    std::vector<StyleParam> params;
     try {
         YAML::Node node = YAML::Load(markerStyling.string);
-        SceneLoader::parseStyleParams(m_stops, m_functions, node, "", params);
+        params = SceneLoader::parseStyleParams(node, m_stops, m_functions);
     } catch (const YAML::Exception& e) {
         LOG("Invalid marker styling '%s', %s", markerStyling.string.c_str(), e.what());
         return false;
