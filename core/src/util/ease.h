@@ -33,8 +33,13 @@ struct Ease {
     bool finished() const { return t >= d; }
 
     void update(float _dt) {
-        t = t < 0 ? 0 : std::fmin(t + _dt, d);
-        cb(std::fmin(1, t / d));
+        if (d > 0.f) {
+            t = t < 0 ? 0 : std::fmin(t + _dt, d);
+            cb(std::fmin(1, t / d));
+        } else {
+            t = d;
+            cb(1.f);
+        }
     }
 
 };
