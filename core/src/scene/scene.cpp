@@ -119,10 +119,15 @@ bool Scene::load() {
     LOGTOInit();
     LOGTO(">>>>>> loadScene >>>>>>");
 
-    if (m_state != State::initial) {
-        LOGE("Cannot load() Scene twice!");
-        return false;
-    }
+    auto isCanceled = [&](Scene::State test){
+        if (m_state == test) { return false; }
+        LOG("Scene got Canceled: %d %d", m_state, test);
+        m_errors.emplace_back(SceneError{{}, Error::no_valid_scene});
+        return true;
+    };
+
+    if (isCanceled(State::initial)) { return false; }
+
     m_state = State::loading;
 
     /// Wait until all scene-yamls are available and merged.
@@ -131,14 +136,13 @@ bool Scene::load() {
     /// Importer is blocking until all imports are loaded
     m_importer = std::make_unique<Importer>();
     m_config = m_importer->loadSceneData(m_platform, m_options.url, m_options.yaml);
-    if (m_state != State::loading) {
-        LOG("Scene got Canceled 1");
-        return false;
-    }
     LOGTO("<<< applyImports");
+
+    if (isCanceled(State::loading)) { return false; }
 
     if (!m_config) {
         LOGE("Scene loading failed: No config!");
+        m_errors.emplace_back(SceneError{{}, Error::no_valid_scene});
         return false;
     }
 
@@ -220,10 +224,7 @@ bool Scene::load() {
     for (auto& style : m_styles) { style->build(*this); }
     LOGTO("<<< buildStyles");
 
-    if (m_state != State::loading) {
-        LOG("Scene got Canceled 2");
-        return false;
-    }
+    if (isCanceled(State::loading)) { return false; }
 
     /// Now we are only waiting for pending fonts and textures:
     /// Let's initialize the TileBuilders on TileWorker threads
@@ -266,11 +267,10 @@ bool Scene::load() {
     /// We got everything needed from Importer
     m_importer.reset();
 
+    if (isCanceled(State::pending_resources)) { return false; }
+
     if (m_state == State::pending_resources) {
         m_state = State::pending_completion;
-    } else {
-        LOG("Scene got Canceled 4");
-        return false;
     }
 
     LOGTO("<<<<<< loadScene <<<<<<");
