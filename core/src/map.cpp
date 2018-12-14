@@ -154,7 +154,7 @@ SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
          LOG("ASYNC CALLBACK >>>");
          if (_scene == scene.get()) {
             scene->prefetchTiles(view);
-            background = scene->background(view.getIntegerZoom());
+            background = scene->backgroundColor(view.getIntegerZoom());
          }});
          LOG("ASYNC CALLBACK <<<");
          platform.requestRender();
@@ -219,19 +219,12 @@ bool Map::update(float _dt) {
     bool wasReady = scene.isReady();
 
     // Check if the current scene finished loading
-    if (!scene.completeView(view)) {
-
+    if (!scene.completeScene(view)) {
         platform->requestRender();
         return false;
 
     } else if (!wasReady) {
-
         if (impl->onSceneReady) { impl->onSceneReady(scene.id, nullptr); }
-
-        bool animated = scene.animated() == Scene::animate::yes;
-        if (animated != impl->platform.isContinuousRendering()) {
-            impl->platform.setContinuousRendering(animated);
-        }
     }
 
     FrameInfo::beginUpdate();
@@ -325,11 +318,11 @@ bool Map::render() {
         impl->selectionQueries.clear();
     }
 
-    // Get background color for frame based on zoom level, if there are stops
-    impl->background = scene.background(view.getIntegerZoom());
-
     // Setup default framebuffer for a new frame
     glm::vec2 viewport(view.getWidth(), view.getHeight());
+
+    // Get background color for frame based on zoom level, if there are stops
+    impl->background = scene.backgroundColor(view.getIntegerZoom());
 
     FrameBuffer::apply(renderState, renderState.defaultFrameBuffer(),
                        viewport, impl->background.toColorF());

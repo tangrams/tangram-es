@@ -53,7 +53,7 @@ protected:
 
     bool m_sdf;
 
-    std::shared_ptr<FontContext> m_context;
+    FontContext* m_context;
 
     struct UniformBlock {
         UniformLocation uTexScaleFactor{"u_uv_scale_factor"};
@@ -67,8 +67,8 @@ protected:
 
 public:
 
-    TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext, bool _sdf = false,
-              Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES, bool _selection = true);
+    TextStyle(std::string _name, bool _sdf = false, Blending _blendMode = Blending::overlay,
+              GLenum _drawMode = GL_TRIANGLES, bool _selection = true);
 
     void constructVertexLayout() override;
     void constructShaderProgram() override;
@@ -104,6 +104,10 @@ public:
     virtual size_t dynamicMeshSize() const override;
 
     virtual ~TextStyle() override;
+
+    void setFontContext(FontContext& _fontContext) {
+        m_context = &_fontContext;
+    }
 
 private:
 

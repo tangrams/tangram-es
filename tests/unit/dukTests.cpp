@@ -290,9 +290,8 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
                 cap: function() { return 'round'; }
             )");
 
-    std::vector<StyleParam> styles;
 
-    SceneLoader::parseStyleParams(stops, fns, n0["draw"], "", styles);
+    auto params = SceneLoader::parseStyleParams(n0["draw"], stops, fns);
 
     REQUIRE(fns.size() == 3);
 
@@ -303,7 +302,7 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
     StyleContext ctx;
     ctx.setFunctions(fns);
 
-    for (auto& style : styles) {
+    for (auto& style : params) {
         //logMsg("S: %d - '%s' %d\n", style.key, style.toString().c_str(), style.function);
 
         if (style.key == StyleParamKey::color) {
@@ -345,18 +344,17 @@ TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
                 text_source: function() { return global.mapNode.test; }
             )");
 
-    std::vector<StyleParam> styles;
-
     SceneStops stops;
     SceneFunctions fns;
-    SceneLoader::parseStyleParams(stops, fns, n0["draw"], "", styles);
+    auto params = SceneLoader::parseStyleParams(n0["draw"], stops, fns);
 
     REQUIRE(fns.size() == 4);
 
     StyleContext ctx;
+    ctx.setSceneGlobals(n0["global"]);
     ctx.setFunctions(fns);
 
-    for (auto& style : styles) {
+    for (auto& style : params) {
         if (style.key == StyleParamKey::color) {
             StyleParam::Value value;
             REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
