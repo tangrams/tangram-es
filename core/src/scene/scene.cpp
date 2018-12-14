@@ -563,6 +563,8 @@ std::tuple<bool,bool,bool> Scene::update(const View& _view, float _dt) {
 }
 
 void Scene::renderBeginFrame(RenderState& _rs) {
+    _rs.setFrameTime(m_time);
+
     for (const auto& style : m_styles) {
         style->onBeginFrame(_rs);
     }
@@ -573,7 +575,7 @@ bool Scene::render(RenderState& _rs, View& _view) {
     bool drawnAnimatedStyle = false;
     for (const auto& style : m_styles) {
 
-        bool styleDrawn = style->draw(_rs, _view, *this,
+        bool styleDrawn = style->draw(_rs, _view,
                                       m_tileManager->getVisibleTiles(),
                                       m_markerManager->markers());
 
@@ -587,7 +589,7 @@ void Scene::renderSelection(RenderState& _rs, View& _view, FrameBuffer& _selecti
 
     for (const auto& style : m_styles) {
 
-        style->drawSelectionFrame(_rs, _view, *this,
+        style->drawSelectionFrame(_rs, _view,
                                   m_tileManager->getVisibleTiles(),
                                   m_markerManager->markers());
     }

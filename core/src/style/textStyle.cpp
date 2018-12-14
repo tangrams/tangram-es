@@ -69,9 +69,9 @@ void TextStyle::onBeginFrame(RenderState& rs) {
     }
 }
 
-void TextStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
+void TextStyle::onBeginDrawFrame(RenderState& rs, const View& _view) {
 
-    Style::onBeginDrawFrame(rs, _view, _scene);
+    Style::onBeginDrawFrame(rs, _view);
 
     auto texUnit = rs.nextAvailableTextureUnit();
 
@@ -103,12 +103,12 @@ void TextStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _sce
     }
 }
 
-void TextStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) {
+void TextStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view) {
     if (!m_selection) { return; }
 
     for (auto& mesh : m_meshes) { mesh->upload(rs); }
 
-    Style::onBeginDrawSelectionFrame(rs, _view, _scene);
+    Style::onBeginDrawSelectionFrame(rs, _view);
 
     m_selectionProgram->setUniformMatrix4f(rs, m_selectionUniforms.uOrtho,
                                            _view.getOrthoViewportMatrix());

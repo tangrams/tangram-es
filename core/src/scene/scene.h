@@ -143,7 +143,6 @@ public:
     std::shared_ptr<TileSource> getTileSource(int32_t id) const;
     std::shared_ptr<Texture> getTexture(const std::string& name) const;
 
-    float time() const { return m_time; }
     animate animated() const { return m_animated; }
 
     float pixelScale() const { return m_pixelScale; }
