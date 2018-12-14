@@ -68,15 +68,12 @@ std::string ShaderSource::applySourceBlocks(const std::string& _source, bool _fr
         if (end == std::string::npos) {
             end = _source.length();
         }
-        size_t length = end - pos;
-        if (length > 0 && _source[end-1] == '\r') {
-            length -= 1;
-        }
-        if (length == 0) {
+        // Skip empty lines
+        if (end == pos) {
             end++;
             continue;
         }
-        line = _source.substr(pos, length);
+        line = _source.substr(pos, end - pos);
         end++;
 
         sourceOut << line << '\n';
