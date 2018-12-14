@@ -857,10 +857,11 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     Tangram::EaseType ease = TGConvertTGEaseTypeToCoreEaseType(easeType);
     if (duration > 0) {
         [self setMapRegionChangeState:TGMapRegionAnimating];
+        self.map->setCameraPositionEased(camera, duration, ease);
     } else {
         [self setMapRegionChangeState:TGMapRegionJumping];
+        self.map->setCameraPosition(camera);
     }
-    self.map->setCameraPositionEased(camera, duration, ease);
     self.cameraAnimationCallback = callback;
 }
 
