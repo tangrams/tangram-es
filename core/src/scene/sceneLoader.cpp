@@ -44,7 +44,7 @@ using YAML::Node;
 using YAML::NodeType;
 using YAML::BadConversion;
 
-#define LOGNode(fmt, node, ...) LOGW(fmt ":\n'%s'\n", ## __VA_ARGS__, Dump(node).c_str())
+#define LOGNode(fmt, node, ...) LOGW(fmt ":\nLine:%d Col:%d\n'%s'\n", ## __VA_ARGS__, node.Mark().line, node.Mark().column, Dump(node).c_str())
 
 
 namespace Tangram {
