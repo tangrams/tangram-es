@@ -21,6 +21,8 @@ PointStyle::PointStyle(std::string _name, std::shared_ptr<FontContext> _fontCont
     : Style(_name, _blendMode, _drawMode, _selection) {
 
     m_type = StyleType::point;
+    m_lightingType = LightingType::none;
+
     m_textStyle = std::make_unique<TextStyle>(_name, _fontContext, true, _blendMode, _drawMode);
 }
 

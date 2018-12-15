@@ -161,8 +161,6 @@ protected:
 
     StyleType m_type = StyleType::none;
 
-private:
-
     struct UniformBlock {
         UniformLocation uTime{"u_time"};
         // View uniforms

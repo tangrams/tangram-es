@@ -24,9 +24,7 @@ Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode, bool _sel
     m_shaderSource(std::make_unique<ShaderSource>()),
     m_blend(_blendMode),
     m_drawMode(_drawMode),
-    m_selection(_selection) {
-    m_material.material = std::make_shared<Material>();
-}
+    m_selection(_selection) {}
 
 Style::~Style() {}
 

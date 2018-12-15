@@ -116,6 +116,7 @@ std::string ShaderSource::applySourceBlocks(const std::string& _source, bool _fr
         }
     }
 
+    // printf("overalloc'd: %d\n",  shaderLength - int(out.length()));
     // for (auto& block : m_sourceBlocks) {
     //     if (pragmas.find(block.first) == pragmas.end()) {
     //         logMsg("Warning: expected pragma '%s' in shader source\n",
