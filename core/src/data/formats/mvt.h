@@ -45,7 +45,7 @@ enum GeomCmd {
     closePath = 7
 };
 
-Geometry getGeometry(ParserContext& _ctx, protobuf::message _geomIn);
+void getGeometry(ParserContext& _ctx, protobuf::message _geomIn);
 
 Feature getFeature(ParserContext& _ctx, protobuf::message _featureIn);
 

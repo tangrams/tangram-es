@@ -24,9 +24,12 @@
 
 namespace Tangram {
 
-Mvt::Geometry Mvt::getGeometry(ParserContext& _ctx, protobuf::message _geomIn) {
 
-    Geometry geometry;
+void Mvt::getGeometry(ParserContext& _ctx, protobuf::message _geomIn) {
+
+    auto& geometry = _ctx.geometry;
+    geometry.coordinates.clear();
+    geometry.sizes.clear();
 
     GeomCmd cmd = GeomCmd::moveTo;
     uint32_t cmdRepeat = 0;
@@ -81,8 +84,6 @@ Mvt::Geometry Mvt::getGeometry(ParserContext& _ctx, protobuf::message _geomIn) {
     if (numCoordinates > 0) {
         geometry.sizes.push_back(numCoordinates);
     }
-
-    return geometry;
 }
 
 Feature Mvt::getFeature(ParserContext& _ctx, protobuf::message _featureIn) {
@@ -134,7 +135,7 @@ Feature Mvt::getFeature(ParserContext& _ctx, protobuf::message _featureIn) {
                 break;
             // Actual geometry data
             case FEATURE_GEOM:
-                _ctx.geometry = getGeometry(_ctx, _featureIn.getMessage());
+                getGeometry(_ctx, _featureIn.getMessage());
                 break;
 
             default:
@@ -154,17 +155,19 @@ Feature Mvt::getFeature(ParserContext& _ctx, protobuf::message _featureIn) {
     }
     feature.props.setSorted(std::move(properties));
 
+    auto& geometry = _ctx.geometry;
+
     switch(feature.geometryType) {
         case GeometryType::points:
-            feature.points.insert(feature.points.begin(),
-                                  _ctx.geometry.coordinates.begin(),
-                                  _ctx.geometry.coordinates.end());
+            feature.points.insert(feature.points.end(),
+                                  geometry.coordinates.begin(),
+                                  geometry.coordinates.end());
             break;
 
         case GeometryType::lines:
         {
-            auto pos = _ctx.geometry.coordinates.begin();
-            for (int length : _ctx.geometry.sizes) {
+            auto pos = geometry.coordinates.begin();
+            for (int length : geometry.sizes) {
                 if (length == 0) { continue; }
                 Line line;
                 line.reserve(length);
@@ -176,9 +179,9 @@ Feature Mvt::getFeature(ParserContext& _ctx, protobuf::message _featureIn) {
         }
         case GeometryType::polygons:
         {
-            auto pos = _ctx.geometry.coordinates.begin();
-            auto rpos = _ctx.geometry.coordinates.rend();
-            for (int length : _ctx.geometry.sizes) {
+            auto pos = geometry.coordinates.begin();
+            auto rpos = geometry.coordinates.rend();
+            for (int length : geometry.sizes) {
                 if (length == 0) { continue; }
                 float area = signedArea(pos, pos + length);
                 if (area == 0) {
