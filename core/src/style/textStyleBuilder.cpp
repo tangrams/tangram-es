@@ -182,14 +182,14 @@ bool getTextSource(const StyleParamKey _key, const DrawRule& _rule, const Proper
     return true;
 }
 
-void TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule& _rule,
+bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule& _rule,
                                            const TextStyle::Parameters& _params) {
 
-    if (_feat.geometryType != GeometryType::lines) { return; }
+    if (_feat.geometryType != GeometryType::lines) { return false; }
 
     LabelAttributes leftAttribs, rightAttribs;
-    std::string lText = std::move(_params.textLeft);
-    std::string rText = std::move(_params.textRight);
+    std::string textLeft = std::move(_params.textLeft);
+    std::string textRight = std::move(_params.textRight);
 
     TextStyle::Parameters rightParams = _params;
     TextStyle::Parameters leftParams = _params;
@@ -199,27 +199,29 @@ void TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
     leftParams.labelOptions.offset.x = 0.0f;
 
     bool hasLeftLabel = false;
-    if (!lText.empty()) {
-        leftParams.text = std::move(lText);
+    if (!textLeft.empty()) {
+        leftParams.text = std::move(textLeft);
         leftParams.labelOptions.optional = true;
         leftParams.labelOptions.anchors = {LabelProperty::Anchor::top};
         leftParams.labelOptions.buffer = glm::vec2(0);
-
         hash_combine(leftParams.labelOptions.repeatGroup, leftParams.text);
 
         hasLeftLabel = prepareLabel(leftParams, Label::Type::line, leftAttribs);
     }
 
     bool hasRightLabel = false;
-    if (!rText.empty()) {
-        rightParams.text = std::move(rText);
+    if (!textRight.empty()) {
+        rightParams.text = std::move(textRight);
         rightParams.labelOptions.optional = true;
         rightParams.labelOptions.anchors = {LabelProperty::Anchor::bottom};
         rightParams.labelOptions.buffer = glm::vec2(0);
-
         hash_combine(rightParams.labelOptions.repeatGroup, rightParams.text);
 
         hasRightLabel = prepareLabel(rightParams, Label::Type::line, rightAttribs);
+    }
+
+    if (!hasLeftLabel && !hasRightLabel) {
+        return false;
     }
 
     float labelWidth = std::max(leftAttribs.width, rightAttribs.width);
@@ -239,9 +241,12 @@ void TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
         }
     };
 
+    bool added = false;
     for (auto& line : _feat.lines) {
-        addStraightTextLabels(line, labelWidth, onAddLabel);
+        added |= addStraightTextLabels(line, labelWidth, onAddLabel);
     }
+
+    return added;
 }
 
 bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
@@ -258,13 +263,12 @@ bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     } else {
         labelType = Label::Type::point;
     }
-
     // Keep start position of new quads
     size_t quadsStart = m_quads.size();
     size_t numLabels = m_labels.size();
 
     if (!params.textLeft.empty() || !params.textRight.empty()) {
-        handleBoundaryLabel(_feat, _rule, params);
+        if (!handleBoundaryLabel(_feat, _rule, params)) { return false; }
 
     } else {
         LabelAttributes attrib;
