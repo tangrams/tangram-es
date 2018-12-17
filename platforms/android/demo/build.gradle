@@ -30,7 +30,7 @@ android {
 }
 
 dependencies {
-  compile 'com.squareup.okio:okio:2.1.0'
+  implementation 'com.squareup.okio:okio:2.1.0'
   implementation project(path: ':tangram')
   implementation 'com.android.support:design:27.1.1'
 }

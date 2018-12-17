@@ -184,16 +184,13 @@ bool getTextSource(const StyleParamKey _key, const DrawRule& _rule, const Proper
 
 bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule& _rule,
                                            const TextStyle::Parameters& _params) {
-    std::string leftText, rightText;
 
-    bool hasLeftSource = getTextSource(StyleParamKey::text_source_left, _rule, _feat.props, leftText);
-    bool hasRightSource = getTextSource(StyleParamKey::text_source_right, _rule, _feat.props, rightText);
-
-    if (!(hasLeftSource || hasRightSource)) { return false; }
-
-    if (_feat.geometryType != GeometryType::lines) { return true; }
+    if (_feat.geometryType != GeometryType::lines) { return false; }
 
     LabelAttributes leftAttribs, rightAttribs;
+    std::string textLeft = std::move(_params.textLeft);
+    std::string textRight = std::move(_params.textRight);
+
     TextStyle::Parameters rightParams = _params;
     TextStyle::Parameters leftParams = _params;
 
@@ -202,27 +199,29 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
     leftParams.labelOptions.offset.x = 0.0f;
 
     bool hasLeftLabel = false;
-    if (hasLeftSource && !leftText.empty()) {
-        leftParams.text = leftText;
+    if (!textLeft.empty()) {
+        leftParams.text = std::move(textLeft);
         leftParams.labelOptions.optional = true;
         leftParams.labelOptions.anchors = {LabelProperty::Anchor::top};
         leftParams.labelOptions.buffer = glm::vec2(0);
-
-        hash_combine(leftParams.labelOptions.repeatGroup, leftText);
+        hash_combine(leftParams.labelOptions.repeatGroup, leftParams.text);
 
         hasLeftLabel = prepareLabel(leftParams, Label::Type::line, leftAttribs);
     }
 
     bool hasRightLabel = false;
-    if (hasRightSource && !rightText.empty()) {
-        rightParams.text = rightText;
+    if (!textRight.empty()) {
+        rightParams.text = std::move(textRight);
         rightParams.labelOptions.optional = true;
         rightParams.labelOptions.anchors = {LabelProperty::Anchor::bottom};
         rightParams.labelOptions.buffer = glm::vec2(0);
-
-        hash_combine(rightParams.labelOptions.repeatGroup, rightText);
+        hash_combine(rightParams.labelOptions.repeatGroup, rightParams.text);
 
         hasRightLabel = prepareLabel(rightParams, Label::Type::line, rightAttribs);
+    }
+
+    if (!hasLeftLabel && !hasRightLabel) {
+        return false;
     }
 
     float labelWidth = std::max(leftAttribs.width, rightAttribs.width);
@@ -242,11 +241,12 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
         }
     };
 
+    bool added = false;
     for (auto& line : _feat.lines) {
-        addStraightTextLabels(line, labelWidth, onAddLabel);
+        added |= addStraightTextLabels(line, labelWidth, onAddLabel);
     }
 
-    return true;
+    return added;
 }
 
 bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
@@ -254,6 +254,7 @@ bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     if (!checkRule(_rule)) { return false; }
 
     TextStyle::Parameters params = applyRule(_rule, _feat.props, false);
+    if (!params.font) { return false; }
 
     Label::Type labelType;
     if (_feat.geometryType == GeometryType::lines) {
@@ -262,13 +263,14 @@ bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     } else {
         labelType = Label::Type::point;
     }
-
     // Keep start position of new quads
     size_t quadsStart = m_quads.size();
     size_t numLabels = m_labels.size();
 
-    if (!handleBoundaryLabel(_feat, _rule, params)) {
+    if (!params.textLeft.empty() || !params.textRight.empty()) {
+        if (!handleBoundaryLabel(_feat, _rule, params)) { return false; }
 
+    } else {
         LabelAttributes attrib;
         if (!prepareLabel(params, labelType, attrib)) { return false; }
 
@@ -573,13 +575,19 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     TextStyle::Parameters p;
 
-    if (!getTextSource(StyleParamKey::text_source, _rule, _props, p.text)) {
-        // Use default key
-        p.text = _props.getString(key_name);
+    bool hasLeft = getTextSource(StyleParamKey::text_source_left, _rule, _props, p.textLeft);
+    bool hasRight = getTextSource(StyleParamKey::text_source_right, _rule, _props, p.textRight);
+
+    if (!hasLeft && !hasRight) {
+        if (!getTextSource(StyleParamKey::text_source, _rule, _props, p.text)) {
+            // Use default key
+            p.text = _props.getString(key_name);
+        }
     }
 
-
-    if (p.text.empty()) { return p; }
+    if (p.text.empty() && p.textLeft.empty() && p.textRight.empty()) {
+        return p;
+    }
 
     auto fontFamily = _rule.get<std::string>(StyleParamKey::text_font_family);
     fontFamily = (!fontFamily) ? &defaultFamily : fontFamily;
@@ -594,7 +602,10 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     p.fontSize *= m_style.pixelScale();
 
     p.font = m_style.context()->getFont(*fontFamily, *fontStyle, *fontWeight, p.fontSize);
-
+    if (!p.font) {
+        LOGW("Missing font for %s / %s / %s / %d", fontFamily->c_str(), fontStyle->c_str(), fontWeight->c_str(), p.fontSize);
+        return p;
+    }
     _rule.get(StyleParamKey::text_font_fill, p.fill);
 
     _rule.get(StyleParamKey::text_font_stroke_color, p.strokeColor);
