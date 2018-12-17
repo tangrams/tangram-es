@@ -34,8 +34,8 @@ struct Ease {
 
     void update(float _dt) {
         if (d > 0.f) {
-            t = t < 0 ? 0 : std::fmin(t + _dt, d);
-            cb(std::fmin(1, t / d));
+            t = t < 0.f ? 0.f : std::fmin(t + _dt, d);
+            cb(std::fmin(1.f, t / d));
         } else {
             t = d;
             cb(1.f);
