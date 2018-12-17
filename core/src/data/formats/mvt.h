@@ -32,6 +32,10 @@ struct ParserContext {
     Geometry geometry;
     // Map Key ID -> Tag values
     std::vector<int> featureTags;
+
+    std::vector<std::pair<std::vector<int>, size_t>> featureMap;
+    size_t featureMerged = 0, featureSum = 0;
+
     // Key IDs sorted by Property key ordering
     std::vector<int> orderedKeys;
 
@@ -47,7 +51,7 @@ enum GeomCmd {
 
 void getGeometry(ParserContext& _ctx, protobuf::message _geomIn);
 
-Feature getFeature(ParserContext& _ctx, protobuf::message _featureIn);
+void getFeature(ParserContext& _ctx, std::vector<Feature>& features, protobuf::message _featureIn);
 
 Layer getLayer(ParserContext& _ctx, protobuf::message _layerIn,
                const TileSource::PropertyFilter& filter);
