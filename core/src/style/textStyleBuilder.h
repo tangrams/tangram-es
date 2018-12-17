@@ -54,7 +54,7 @@ public:
     void addCurvedTextLabels(const Line& _feature, const TextStyle::Parameters& _params,
                              const LabelAttributes& _attributes, const DrawRule& _rule);
 
-    bool handleBoundaryLabel(const Feature& _feat, const DrawRule& _rule,
+    void handleBoundaryLabel(const Feature& _feat, const DrawRule& _rule,
                              const TextStyle::Parameters& _params);
 
     bool checkRule(const DrawRule& _rule) const override;

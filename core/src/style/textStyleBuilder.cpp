@@ -182,18 +182,15 @@ bool getTextSource(const StyleParamKey _key, const DrawRule& _rule, const Proper
     return true;
 }
 
-bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule& _rule,
+void TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule& _rule,
                                            const TextStyle::Parameters& _params) {
-    std::string leftText, rightText;
 
-    bool hasLeftSource = getTextSource(StyleParamKey::text_source_left, _rule, _feat.props, leftText);
-    bool hasRightSource = getTextSource(StyleParamKey::text_source_right, _rule, _feat.props, rightText);
-
-    if (!(hasLeftSource || hasRightSource)) { return false; }
-
-    if (_feat.geometryType != GeometryType::lines) { return true; }
+    if (_feat.geometryType != GeometryType::lines) { return; }
 
     LabelAttributes leftAttribs, rightAttribs;
+    std::string lText = std::move(_params.textLeft);
+    std::string rText = std::move(_params.textRight);
+
     TextStyle::Parameters rightParams = _params;
     TextStyle::Parameters leftParams = _params;
 
@@ -202,25 +199,25 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
     leftParams.labelOptions.offset.x = 0.0f;
 
     bool hasLeftLabel = false;
-    if (hasLeftSource && !leftText.empty()) {
-        leftParams.text = leftText;
+    if (!lText.empty()) {
+        leftParams.text = std::move(lText);
         leftParams.labelOptions.optional = true;
         leftParams.labelOptions.anchors = {LabelProperty::Anchor::top};
         leftParams.labelOptions.buffer = glm::vec2(0);
 
-        hash_combine(leftParams.labelOptions.repeatGroup, leftText);
+        hash_combine(leftParams.labelOptions.repeatGroup, leftParams.text);
 
         hasLeftLabel = prepareLabel(leftParams, Label::Type::line, leftAttribs);
     }
 
     bool hasRightLabel = false;
-    if (hasRightSource && !rightText.empty()) {
-        rightParams.text = rightText;
+    if (!rText.empty()) {
+        rightParams.text = std::move(rText);
         rightParams.labelOptions.optional = true;
         rightParams.labelOptions.anchors = {LabelProperty::Anchor::bottom};
         rightParams.labelOptions.buffer = glm::vec2(0);
 
-        hash_combine(rightParams.labelOptions.repeatGroup, rightText);
+        hash_combine(rightParams.labelOptions.repeatGroup, rightParams.text);
 
         hasRightLabel = prepareLabel(rightParams, Label::Type::line, rightAttribs);
     }
@@ -245,8 +242,6 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
     for (auto& line : _feat.lines) {
         addStraightTextLabels(line, labelWidth, onAddLabel);
     }
-
-    return true;
 }
 
 bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
@@ -268,8 +263,10 @@ bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     size_t quadsStart = m_quads.size();
     size_t numLabels = m_labels.size();
 
-    if (!handleBoundaryLabel(_feat, _rule, params)) {
+    if (!params.textLeft.empty() || !params.textRight.empty()) {
+        handleBoundaryLabel(_feat, _rule, params);
 
+    } else {
         LabelAttributes attrib;
         if (!prepareLabel(params, labelType, attrib)) { return false; }
 
@@ -574,9 +571,18 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     TextStyle::Parameters p;
 
-    if (!getTextSource(StyleParamKey::text_source, _rule, _props, p.text)) {
-        // Use default key
-        p.text = _props.getString(key_name);
+    bool hasLeft = getTextSource(StyleParamKey::text_source_left, _rule, _props, p.textLeft);
+    bool hasRight = getTextSource(StyleParamKey::text_source_right, _rule, _props, p.textRight);
+
+    if (!hasLeft && !hasRight) {
+        if (!getTextSource(StyleParamKey::text_source, _rule, _props, p.text)) {
+            // Use default key
+            p.text = _props.getString(key_name);
+        }
+    }
+
+    if (p.text.empty() && p.textLeft.empty() && p.textRight.empty()) {
+        return p;
     }
 
     auto fontFamily = _rule.get<std::string>(StyleParamKey::text_font_family);
