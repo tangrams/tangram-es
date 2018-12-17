@@ -34,6 +34,9 @@ struct ParserContext {
     std::vector<int> featureTags;
 
     std::vector<std::pair<std::vector<int>, size_t>> featureMap;
+    size_t lastFound = 0;
+    bool mergeFeatures = false;
+    // dbg
     size_t featureMerged = 0, featureSum = 0;
 
     // Key IDs sorted by Property key ordering

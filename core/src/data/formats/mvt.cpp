@@ -145,28 +145,56 @@ void Mvt::getFeature(ParserContext& _ctx, std::vector<Feature>& features, protob
         }
     }
 
-    auto& featureMap = _ctx.featureMap;
-
     int id = -1;
-    for (auto& f : featureMap) {
-        if (f.first == featureTags &&
-            features[f.second].geometryType == geometryType) {
-            id = f.second;
-            break;
+    bool newFeature = true;
+
+    if (_ctx.mergeFeatures && !_ctx.featureMap.empty()) {
+        // Check the previous added feature first
+        auto& prev = _ctx.featureMap.back();
+        if (prev.first == featureTags &&
+            features[prev.second].geometryType == geometryType) {
+            id = prev.second;
+            newFeature = false;
+            LOG("HIT 1");
+        }
+        if (newFeature) {
+            auto& prev = _ctx.featureMap[_ctx.lastFound];
+            if (prev.first == featureTags &&
+                features[prev.second].geometryType == geometryType) {
+                id = prev.second;
+                newFeature = false;
+                LOG("HIT 2");
+            }
+        }
+        if (newFeature) {
+            size_t l = 0;
+            for (auto& f : _ctx.featureMap) {
+                if (f.first == featureTags &&
+                    features[f.second].geometryType == geometryType) {
+                    id = f.second;
+                    _ctx.lastFound = l;
+                    newFeature = false;
+                    break;
+                }
+                l++;
+            }
         }
     }
-
-
-    bool newFeature = (id == -1);
     if (newFeature) {
         id = features.size();
-        featureMap.emplace_back(featureTags, id);
-
         features.emplace_back(_ctx.sourceId);
+
+        if (_ctx.mergeFeatures) {
+            _ctx.featureMap.emplace_back(featureTags, id);
+        }
+
+        //LOGE("ADD %d", id);
     } else {
+        LOGE("USE SAME PROPS / %d %d / %d", id, _ctx.featureMap.size()-1, _ctx.featureMap.size()-1-id);
         _ctx.featureMerged++;
 
     }
+
     _ctx.featureSum++;
 
     auto& feature = features[id];
@@ -252,11 +280,11 @@ Layer Mvt::getLayer(ParserContext& _ctx, protobuf::message _layerIn,
                     const TileSource::PropertyFilter& filter) {
 
     Layer layer("");
-
     _ctx.keys.clear();
     _ctx.values.clear();
     _ctx.featureMsgs.clear();
     _ctx.featureMap.clear();
+    _ctx.mergeFeatures = !filter.drop.empty();
 
     bool lastWasFeature = false;
     size_t numFeatures = 0;
@@ -296,11 +324,11 @@ Layer Mvt::getLayer(ParserContext& _ctx, protobuf::message _layerIn,
 
                         LOG("drop key: %s", key.c_str());
                         key = "";
-                        //} else {
-                        //LOG("keep key: %s", key.c_str());
+                        } else {
+                        LOG(">>> keep key: %s", key.c_str());
                     }
-                    //} else {
-                    //LOG("keep key: %s", key.c_str());
+                    } else {
+                    LOG(">>> keep key: %s", key.c_str());
                 }
                 _ctx.keys.emplace_back(std::move(key));
                 break;
@@ -349,6 +377,7 @@ Layer Mvt::getLayer(ParserContext& _ctx, protobuf::message _layerIn,
         }
         lastWasFeature = false;
     }
+    LOG(">>>>>>>>>>>>>>>>>>>>>>>>>>>>> layer: %s", layer.name.c_str());
 
     if (_ctx.featureMsgs.empty()) { return layer; }
 
