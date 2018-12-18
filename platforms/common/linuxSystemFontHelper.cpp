@@ -43,8 +43,10 @@ std::vector<std::string> systemFallbackFonts(FcConfig* fcConfig) {
         if (FcPatternGetInteger(font, FC_SLANT, 0, &w) != FcResultMatch ||
             (w != FC_SLANT_ROMAN)) { continue; }
 
+#ifdef FC_COLOR
         if (FcPatternGetBool(font, FC_COLOR, 0, &w) != FcResultMatch ||
             (w != FcFalse)) { continue; }
+#endif
 
         if (FcPatternGetBool(font, FC_SCALABLE, 0, &w) != FcResultMatch ||
             (w != FcTrue)) { continue; }
