@@ -324,7 +324,7 @@ public:
     // Set a bitmap to use as the image for a point marker; _data is a buffer of RGBA pixel data with
     // length of _width * _height; pixels are in row-major order beginning from the bottom-left of the
     // image; returns true if the marker ID was found and successfully updated, otherwise returns false.
-    bool markerSetBitmap(MarkerID _marker, int _width, int _height, const unsigned int* _data);
+    bool markerSetBitmap(MarkerID _marker, int _width, int _height, const unsigned int* _data, float _density = 1.f);
 
     // Set the geometry of a marker to a point at the given coordinates; markers can have their
     // geometry set multiple times with possibly different geometry types; returns true if the
