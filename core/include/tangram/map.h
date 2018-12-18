@@ -2,6 +2,7 @@
 
 #include "data/properties.h"
 #include "util/types.h"
+#include "sceneOptions.h"
 
 #include <array>
 #include <functional>
@@ -58,13 +59,6 @@ struct MarkerPickResult {
 
 // Returns a pointer to the selected marker pick result or null, only valid on the callback scope
 using MarkerPickCallback = std::function<void(const MarkerPickResult*)>;
-
-struct SceneUpdate {
-    std::string path;
-    std::string value;
-    SceneUpdate(std::string p, std::string v) : path(p), value(v) {}
-    SceneUpdate() {}
-};
 
 enum Error {
     none,
@@ -146,16 +140,37 @@ public:
     explicit Map(std::unique_ptr<Platform> _platform);
     ~Map();
 
+
+    // Load the scene with the given SceneOptions
+    SceneID loadScene(SceneOptions&& _sceneOptions, bool _async = true);
+
+
+    // Load the scene at the given absolute file path synchronously
+    SceneID loadScene(const std::string& _scenePath, bool _useScenePosition = false,
+                      const std::vector<SceneUpdate>& _sceneUpdates = {}) {
+        return loadScene(SceneOptions{Url(_scenePath), _useScenePosition, _sceneUpdates}, false);
+
+    }
+
     // Load the scene at the given absolute file path asynchronously.
-    SceneID loadSceneAsync(const std::string& _scenePath,
-                           bool _useScenePosition = false,
-                           const std::vector<SceneUpdate>& _sceneUpdates = {});
+    SceneID loadSceneAsync(const std::string& _scenePath, bool _useScenePosition = false,
+                      const std::vector<SceneUpdate>& _sceneUpdates = {}) {
+        return loadScene(SceneOptions{Url(_scenePath), _useScenePosition, _sceneUpdates}, true);
+    }
 
+    // Load the scene provided an explicit yaml scene string
+    SceneID loadSceneYaml(const std::string& _yaml, const std::string& _resourceRoot,
+                          bool _useScenePosition = false,
+                          const std::vector<SceneUpdate>& _sceneUpdates = {}) {
+        return loadScene(SceneOptions{_yaml, Url(_resourceRoot), _useScenePosition, _sceneUpdates}, false);
+    }
 
+    // Load the scene provided an explicit yaml scene string
     SceneID loadSceneYamlAsync(const std::string& _yaml, const std::string& _resourceRoot,
-                               bool _useScenePosition = false,
-                               const std::vector<SceneUpdate>& _sceneUpdates = {});
-
+                          bool _useScenePosition = false,
+                          const std::vector<SceneUpdate>& _sceneUpdates = {}) {
+        return loadScene(SceneOptions{_yaml, Url(_resourceRoot), _useScenePosition, _sceneUpdates}, true);
+    }
 
     // Set listener for scene load events. The callback receives the SceneID
     // of the loaded scene and SceneError in case loading was not successful.

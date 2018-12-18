@@ -62,6 +62,7 @@ double last_y_velocity = 0.0;
 
 bool wireframe_mode = false;
 bool show_gui = true;
+bool load_async = true;
 
 Tangram::MarkerID marker = 0;
 Tangram::MarkerID poiMarker = 0;
@@ -83,10 +84,18 @@ void loadSceneFile(bool setPosition = false, std::vector<SceneUpdate> updates = 
         if (!found) { sceneUpdates.push_back(update); }
     }
 
-    if (!sceneYaml.empty()) {
-        map->loadSceneYamlAsync(sceneYaml, sceneFile, setPosition, sceneUpdates);
+    if (load_async) {
+        if (!sceneYaml.empty()) {
+            map->loadSceneYamlAsync(sceneYaml, sceneFile, setPosition, sceneUpdates);
+        } else {
+            map->loadSceneAsync(sceneFile, setPosition, sceneUpdates);
+        }
     } else {
-        map->loadSceneAsync(sceneFile, setPosition, sceneUpdates);
+        if (!sceneYaml.empty()) {
+            map->loadSceneYaml(sceneYaml, sceneFile, setPosition, sceneUpdates);
+        } else {
+            map->loadScene(sceneFile, setPosition, sceneUpdates);
+        }
     }
 }
 
@@ -416,6 +425,10 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
     if (action == GLFW_PRESS) {
         switch (key) {
+            case GLFW_KEY_A:
+                load_async = !load_async;
+                LOG("Toggle async load: %d", load_async);
+                break;
             case GLFW_KEY_D:
                 show_gui = !show_gui;
                 break;
