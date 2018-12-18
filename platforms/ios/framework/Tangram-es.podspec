@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
   s.homepage          = 'https://github.com/tangrams/tangram-es'
   s.license           = { :type => 'MIT', :file => 'LICENSE' }
   s.author            = 'Mapzen'
-  s.documentation_url = 'http://tangrams.github.io/tangram-docs/docs/API-Reference/ios-framework/0.9.0/'
+  s.documentation_url = 'https://tangrams.readthedocs.io/en/latest/API-Reference/ios-framework/0.10.0/index.html'
 
   s.source = {
     :http => "https://dl.bintray.com/tangrams/cocoapods/#{s.version}-release.zip"
