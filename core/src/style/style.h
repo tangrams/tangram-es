@@ -315,8 +315,6 @@ public:
 
     virtual bool hasRasters() const { return m_rasterType != RasterType::none; }
 
-    void setupRasters(const std::vector<std::shared_ptr<TileSource>>& _sources);
-
     std::vector<StyleUniform>& styleUniforms() { return m_mainUniforms.styleUniforms; }
 
     void setDefaultDrawRule(std::unique_ptr<DrawRuleData>&& _rule);
