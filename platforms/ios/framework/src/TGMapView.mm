@@ -104,17 +104,15 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
 
 - (void)dealloc
 {
+    [self validateContext];
     if (_map) {
         delete _map;
-    }
-
-    if ([EAGLContext currentContext] == _context) {
-        [EAGLContext setCurrentContext:nil];
     }
 
     if (_displayLink) {
         [_displayLink invalidate];
     }
+    [self invalidateContext];
 }
 
 - (void)setup
@@ -192,6 +190,20 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
     _displayLink.paused = NO;
 }
 
+- (void)validateContext
+{
+    if (![[EAGLContext currentContext] isEqual:_context]) {
+        [EAGLContext setCurrentContext:_context];
+    }
+}
+
+- (void)invalidateContext
+{
+    if ([[EAGLContext currentContext] isEqual:_context]) {
+        [EAGLContext setCurrentContext:nil];
+    }
+}
+
 - (void)setupGL
 {
     _context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
@@ -211,8 +223,8 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
     _glView.delegate = self;
     _glView.autoresizingMask = self.autoresizingMask;
 
+    [self validateContext];
 
-    [EAGLContext setCurrentContext:self.context];
     [_glView bindDrawable];
 
     [self insertSubview:_glView atIndex:0];
