@@ -24,9 +24,7 @@ Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode, bool _sel
     m_shaderSource(std::make_unique<ShaderSource>()),
     m_blend(_blendMode),
     m_drawMode(_drawMode),
-    m_selection(_selection) {
-    m_material.material = std::make_shared<Material>();
-}
+    m_selection(_selection) {}
 
 Style::~Style() {}
 
@@ -77,7 +75,26 @@ void Style::build(const Scene& _scene) {
         }
     }
 
-    setupRasters(_scene.tileSources());
+    if (m_rasterType != RasterType::none) {
+        int numRasterSource = 0;
+        for (const auto& source : _scene.tileSources()) {
+            if (source->isRaster()) { numRasterSource++; }
+        }
+        if (numRasterSource > 0) {
+            // Inject shader defines for raster sampling and uniforms
+            if (m_rasterType == RasterType::normal) {
+                m_shaderSource->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_NORMAL\n", false);
+            } else if (m_rasterType == RasterType::color) {
+                m_shaderSource->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_COLOR\n", false);
+            }
+
+            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_NUM_RASTER_SOURCES "
+                                           + std::to_string(numRasterSource) + "\n", false);
+            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
+
+            m_shaderSource->addSourceBlock("raster", rasters_glsl);
+        }
+    }
 
     const auto& blocks = m_shaderSource->getSourceBlocks();
     if (blocks.find("color") != blocks.end() ||
@@ -186,37 +203,6 @@ void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBloc
         }
     }
 }
-
-void Style::setupRasters(const std::vector<std::shared_ptr<TileSource>>& _sources) {
-    if (!hasRasters()) {
-        return;
-    }
-
-    int numRasterSource = 0;
-    for (const auto& source : _sources) {
-        if (source->isRaster()) {
-            numRasterSource++;
-        }
-    }
-
-    if (numRasterSource == 0) {
-        return;
-    }
-
-    // Inject shader defines for raster sampling and uniforms
-    if (m_rasterType == RasterType::normal) {
-        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_NORMAL\n", false);
-    } else if (m_rasterType == RasterType::color) {
-        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_COLOR\n", false);
-    }
-
-    m_shaderSource->addSourceBlock("defines", "#define TANGRAM_NUM_RASTER_SOURCES "
-            + std::to_string(numRasterSource) + "\n", false);
-    m_shaderSource->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
-
-    m_shaderSource->addSourceBlock("raster", rasters_glsl);
-}
-
 
 void Style::setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view,
                                 Scene& _scene, UniformBlock& _uniforms) {

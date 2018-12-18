@@ -19,7 +19,11 @@ namespace Tangram {
 TextStyle::TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
                      bool _sdf, Blending _blendMode, GLenum _drawMode, bool _selection)
     : Style(_name, _blendMode, _drawMode, _selection), m_sdf(_sdf),
-      m_context(_fontContext) {}
+      m_context(_fontContext) {
+
+    m_type = StyleType::text;
+    m_lightingType = LightingType::none;
+}
 
 TextStyle::~TextStyle() {}
 
