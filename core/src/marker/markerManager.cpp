@@ -80,14 +80,14 @@ bool MarkerManager::setStyling(MarkerID markerID, const char* styling, bool isPa
     return true;
 }
 
-bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const unsigned int* bitmapData) {
+bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, float density, const unsigned int* bitmapData) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
     m_dirty = true;
 
     TextureOptions options;
-    options.displayScale = 1.f / m_scene->pixelScale();
+    options.displayScale = 1.f / density;
     auto texture = std::make_unique<Texture>(options);
     texture->setPixelData(width, height, sizeof(GLuint),
                           reinterpret_cast<const GLubyte*>(bitmapData),
