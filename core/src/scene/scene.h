@@ -3,6 +3,7 @@
 #include "map.h"
 #include "platform.h"
 #include "stops.h"
+#include "sceneOptions.h"
 #include "text/fontContext.h" // For FontDescription
 #include "tile/tileManager.h"
 #include "util/color.h"
@@ -12,6 +13,7 @@
 
 #include <atomic>
 #include <forward_list>
+#include <functional>
 #include <memory>
 #include <condition_variable>
 #include <mutex>
@@ -41,38 +43,6 @@ class Style;
 class Texture;
 class TileSource;
 struct SceneLoader;
-
-class SceneOptions {
-public:
-    explicit SceneOptions(const Url& _url) : url(_url) {}
-
-    explicit SceneOptions(const std::string& _yaml, const Url& _resources)
-        : yaml(_yaml), url(_resources) {}
-
-    SceneOptions() {}
-
-    std::string yaml;
-    /// The URL from which this scene was loaded
-    Url url;
-    /// SceneUpdates to apply to the scene
-    std::vector<SceneUpdate> updates;
-    /// Set the view to the position provided by the scene
-    bool useScenePosition = true;
-    /// Add styles toggled by DebguFlags
-    bool debugStyles = false;
-
-    /// Start loading tiles as soon as possible
-    bool prefetchTiles = true;
-
-    /// Start loading tiles as soon as possible
-    uint32_t numTileWorkers = 2;
-
-    /// 16MB default in-memory DataSource cache
-    static constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
-    size_t memoryTileCacheSize = CACHE_SIZE;
-
-    std::function<void(Scene*)> asyncCallback = nullptr;
-};
 
 struct SceneCamera : public Camera {
     glm::dvec3 startPosition;
@@ -221,6 +191,7 @@ public:
 
     /// Returns true when scene finished loading and completeScene() suceeded.
     bool isReady() const { return m_state == State::ready; };
+    bool isPendingCompletion() const { return m_state == State::pending_completion; };
 
     /// Scene ID
     const int32_t id;

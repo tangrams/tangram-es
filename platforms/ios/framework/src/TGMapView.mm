@@ -535,6 +535,16 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     };
 }
 
+- (int)loadSceneFromURL:(NSURL *)url withUpdates:(nullable NSArray<TGSceneUpdate *> *)updates
+{
+    if (!self.map) { return -1; }
+
+    auto sceneUpdates = unpackSceneUpdates(updates);
+
+    self.map->setSceneReadyListener([self sceneReadyListener]);
+    return self.map->loadScene([[url absoluteString] UTF8String], false, sceneUpdates);
+}
+
 - (int)loadSceneAsyncFromURL:(NSURL *)url withUpdates:(nullable NSArray<TGSceneUpdate *> *)updates
 {
     if (!self.map) { return -1; }
@@ -543,6 +553,16 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
     self.map->setSceneReadyListener([self sceneReadyListener]);
     return self.map->loadSceneAsync([[url absoluteString] UTF8String], false, sceneUpdates);
+}
+
+- (int)loadSceneFromYAML:(NSString *)yaml relativeToURL:(NSURL *)url withUpdates:(nullable NSArray<TGSceneUpdate *> *)updates
+{
+    if (!self.map) { return -1; }
+
+    auto sceneUpdates = unpackSceneUpdates(updates);
+
+    self.map->setSceneReadyListener([self sceneReadyListener]);
+    return self.map->loadSceneYaml([yaml UTF8String], [[url absoluteString] UTF8String], false, sceneUpdates);
 }
 
 - (int)loadSceneAsyncFromYAML:(NSString *)yaml relativeToURL:(NSURL *)url withUpdates:(nullable NSArray<TGSceneUpdate *> *)updates

@@ -54,7 +54,7 @@ public:
         scene(std::make_shared<Scene>(_platform)) {}
 
     void setPixelScale(float _pixelsPerPoint);
-    SceneID loadSceneAsync(SceneOptions&& _sceneOptions);
+    SceneID loadScene(SceneOptions&& _sceneOptions, bool _async);
 
     std::mutex tilesMutex;
     std::mutex sceneMutex;
@@ -70,6 +70,7 @@ public:
     std::unique_ptr<Ease> ease;
 
     std::shared_ptr<Scene> scene;
+    std::condition_variable blockUntilSceneReady;
 
     // Keep previous scene for rendering while new scene loads
     // TODO Render one time to texture and use that as placeholder when requested
@@ -116,6 +117,7 @@ Map::~Map() {
 
     impl->oldScene.reset();
     impl->scene.reset();
+    impl->blockUntilSceneReady.notify_all();
 
     // Make sure other threads are stopped before calling stop()!
     // All jobs will be executed immediately on add() afterwards.
@@ -125,65 +127,49 @@ Map::~Map() {
     Primitives::deinit();
 }
 
-SceneID Map::loadSceneAsync(const std::string& _scenePath, bool _useScenePosition,
-                            const std::vector<SceneUpdate>& _sceneUpdates) {
 
-    LOG("Loading scene file (async): %s", _scenePath.c_str());
-
-    SceneOptions options{Url(_scenePath)};
-    options.updates =  _sceneUpdates;
-    options.useScenePosition = _useScenePosition;
-
-    return impl->loadSceneAsync(std::move(options));
+SceneID Map::loadScene(SceneOptions&& _sceneOptions, bool _async) {
+    return impl->loadScene(std::move(_sceneOptions), _async);
 }
 
-SceneID Map::loadSceneYamlAsync(const std::string& _yaml, const std::string& _resourceRoot,
-                                bool _useScenePosition, const std::vector<SceneUpdate>& _sceneUpdates) {
-
-    LOG("Loading scene string (async)");
-
-    SceneOptions options{_yaml, Url(_resourceRoot)};
-    options.updates =  _sceneUpdates;
-    options.useScenePosition = _useScenePosition;
-
-    return impl->loadSceneAsync(std::move(options));
-}
-
-SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
+SceneID Map::Impl::loadScene(SceneOptions&& _sceneOptions, bool _async) {
 
     /// Avoid to keep loading old scene and tiles
     oldScene = std::move(scene);
     oldScene->cancelTasks();
 
-    /// Add callback for tile prefetching
-    _sceneOptions.asyncCallback = [&](Scene* _scene) {
-         jobQueue.add([&, _scene]() {
-         LOG("ASYNC CALLBACK >>>");
-         if (_scene == scene.get()) {
-            scene->prefetchTiles(view);
-            background = scene->backgroundColor(view.getIntegerZoom());
-         }});
-         LOG("ASYNC CALLBACK <<<");
-         platform.requestRender();
-    };
+    if (_async) {
+        /// Add callback for tile prefetching
+        _sceneOptions.asyncCallback = [&](Scene* _scene) {
+            jobQueue.add([&, _scene]() {
+                if (_scene == scene.get()) {
+                    scene->prefetchTiles(view);
+                    background = scene->backgroundColor(view.getIntegerZoom());
+                }});
+            platform.requestRender();
+        };
+    }
 
     scene = std::make_shared<Scene>(platform, std::move(_sceneOptions));
 
-    asyncWorker->enqueue([this, newScene = scene]() {
+    asyncWorker->enqueue([this, _async, newScene = scene]() {
         LOG("ASYNC LOAD >>>");
-        if (newScene == scene) {
-            /// => Scene::State::initial
-            bool ready = newScene->load();
-            /// => Scene::State::ready / canceled
 
-            if (!ready && onSceneReady) {
-                onSceneReady(scene->id, scene->errors());
-            }
-            platform.requestRender();
+        newScene->load();
+
+        platform.requestRender();
+
+        if (onSceneReady) {
+            onSceneReady(newScene->id, newScene->errors());
         }
+
+        /// Check if another Scene is already queued
         if (newScene != scene) {
-            /// Another Scene is already queued
             newScene->dispose();
+        }
+
+        if (!_async) {
+            blockUntilSceneReady.notify_all();
         }
         LOG("ASYNC LOAD <<<");
     });
@@ -193,6 +179,21 @@ SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
         LOG("ASYNC DISPOSE OLD SCENE");
         oldScene->dispose();
     });
+
+    /// Block until Scene is ready
+    if (!_async) {
+        auto newScene = scene;
+        do {
+            // Check if Scene loading is done or has failed
+            if (newScene->isPendingCompletion() || bool(newScene->errors())) {
+                break;
+            }
+
+            std::unique_lock<std::mutex> lock(sceneMutex);
+            blockUntilSceneReady.wait(lock);
+
+         } while (newScene == scene);
+    }
 
     return scene->id;
 }
@@ -226,15 +227,10 @@ bool Map::update(float _dt) {
     auto& scene = *impl->scene;
     auto& view = impl->view;
 
-    bool wasReady = scene.isReady();
-
     // Check if the current scene finished loading
     if (!scene.completeScene(view)) {
         platform->requestRender();
         return false;
-
-    } else if (!wasReady) {
-        if (impl->onSceneReady) { impl->onSceneReady(scene.id, nullptr); }
     }
 
     FrameInfo::beginUpdate();
