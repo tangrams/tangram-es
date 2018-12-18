@@ -3,6 +3,7 @@
 
 #include <set>
 #include <sstream>
+#include <tuple>
 
 #include "selection_fs.h"
 
@@ -42,45 +43,53 @@ void ShaderSource::addSourceBlock(const std::string& _tagName, const std::string
 
 std::string ShaderSource::applySourceBlocks(const std::string& _source, bool _fragShader, bool _selection) const {
 
-    std::stringstream sourceOut;
+    std::string out;
     std::set<std::string> pragmas;
 
-    sourceOut << "#define TANGRAM_EPSILON 0.00001\n";
-    sourceOut << "#define TANGRAM_WORLD_POSITION_WRAP 100000.\n";
+    out.append("#define TANGRAM_EPSILON 0.00001\n");
+    out.append("#define TANGRAM_WORLD_POSITION_WRAP 100000.\n");
 
     if (_fragShader) {
-        sourceOut << "#define TANGRAM_FRAGMENT_SHADER\n";
+        out.append("#define TANGRAM_FRAGMENT_SHADER\n");
     } else {
-        sourceOut << "#define TANGRAM_DEPTH_DELTA 0.00003052\n"; // 2^-15
-        sourceOut << "#define TANGRAM_VERTEX_SHADER\n";
+        out.append("#define TANGRAM_DEPTH_DELTA 0.00003052\n"); // 2^-15
+        out.append("#define TANGRAM_VERTEX_SHADER\n");
     }
-
     if (_selection) {
-        sourceOut <<  "#define TANGRAM_FEATURE_SELECTION\n";
+        out.append("#define TANGRAM_FEATURE_SELECTION\n");
     }
 
-    std::string line;
+    size_t shaderLength = out.length() + _source.length();
+    for (auto& block : m_sourceBlocks) {
+        for (auto& s : block.second) {
+            shaderLength += s.length() + 1;
+        }
+        shaderLength += 1;
+    }
+    out.reserve(shaderLength);
+
     size_t end = 0;
+    size_t start = 0;
+    size_t pos = 0;
+    const char* str = _source.c_str();
 
     while(end < _source.length()) {
-        size_t pos = end;
-        end = _source.find('\n', pos);
+        auto pragma = _source.find("#pragma ", pos);
+        if (pragma == std::string::npos) {
+            // Write appendix and done
+            out.append(str + start);
+            break;
+        }
+
+        // find end of #pragma line
+        end = _source.find('\n', pragma);
         if (end == std::string::npos) {
             end = _source.length();
         }
-        // Skip empty lines
-        if (end == pos) {
-            end++;
-            continue;
-        }
-        line = _source.substr(pos, end - pos);
-        end++;
-
-        sourceOut << line << '\n';
+        pos = end;
 
         char pragmaName[128];
-        // NB: The initial whitespace is to skip any number of whitespace chars
-        if (sscanf(line.c_str(), " #pragma tangram:%127s", pragmaName) == 0) {
+        if (sscanf(str + pragma + 8, " tangram:%127s", pragmaName) == 0) {
             continue;
         }
 
@@ -95,19 +104,26 @@ std::string ShaderSource::applySourceBlocks(const std::string& _source, bool _fr
             continue;
         }
 
+        // Write everything to end of #pragma tangram line
+        out.append(str + start, end - start);
+        out.append("\n");
+        start = end;
+
         // insert blocks
         for (auto& s : block->second) {
-            sourceOut << s << '\n';
+            out.append(s);
+            out.append("\n");
         }
     }
 
+    // printf("overalloc'd: %d\n",  shaderLength - int(out.length()));
     // for (auto& block : m_sourceBlocks) {
     //     if (pragmas.find(block.first) == pragmas.end()) {
     //         logMsg("Warning: expected pragma '%s' in shader source\n",
     //                block.first.c_str());
     //     }
     // }
-    return sourceOut.str();
+    return out;
 }
 
 void ShaderSource::addExtensionDeclaration(const std::string& _extension) {

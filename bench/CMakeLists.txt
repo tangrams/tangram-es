@@ -49,8 +49,8 @@ foreach(_src_file_path ${BENCH_SOURCES})
 
   add_custom_command(TARGET ${EXECUTABLE_NAME}
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/scenes ${CMAKE_BINARY_DIR}/bench/res
-    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/bench/test_tile_10_301_384.mvt ${CMAKE_BINARY_DIR}/bench/res/tile.mvt
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/scenes ${CMAKE_BINARY_DIR}/res
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/bench/test_tile_10_301_384.mvt ${CMAKE_BINARY_DIR}/res/tile.mvt
   )
 
 endforeach()
