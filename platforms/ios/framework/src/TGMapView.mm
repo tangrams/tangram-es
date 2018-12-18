@@ -381,8 +381,6 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
         return;
     }
 
-    [self validateContext];
-
     BOOL cameraEasing = self.map->render();
     if (cameraEasing) {
         [self setMapRegionChangeState:TGMapRegionAnimating];
