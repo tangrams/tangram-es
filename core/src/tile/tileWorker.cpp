@@ -101,10 +101,13 @@ void TileWorker::run(Worker* instance) {
 }
 
 void TileWorker::setScene(Scene& _scene) {
-    for (auto& worker : m_workers) {
-        worker->tileBuilder = std::make_unique<TileBuilder>(_scene);
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        for (auto& worker : m_workers) {
+            worker->tileBuilder = std::make_unique<TileBuilder>(_scene);
+        }
+        m_condition.notify_all();
     }
-    m_condition.notify_all();
 }
 
 void TileWorker::enqueue(std::shared_ptr<TileTask> task) {
@@ -113,8 +116,9 @@ void TileWorker::enqueue(std::shared_ptr<TileTask> task) {
         if (!m_running) { return; }
         LOGTO("--- %d enqueue %s", m_queue.size()+1, task->tileId().toString().c_str());
         m_queue.push_back(std::move(task));
+
+        m_condition.notify_all();
     }
-    m_condition.notify_one();
 }
 
 void TileWorker::startJobs() {
@@ -124,17 +128,17 @@ void TileWorker::startJobs() {
 
         LOGTO("Poking TileWorker - enqueued %d", m_queue.size());
         if (!m_running || m_queue.empty()) { return; }
+
+        m_condition.notify_all();
     }
-    m_condition.notify_all();
 }
 
 void TileWorker::stop() {
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         m_running = false;
+        m_condition.notify_all();
     }
-
-    m_condition.notify_all();
 
     for (auto& worker : m_workers) {
         worker->thread.join();
