@@ -211,31 +211,35 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
     }
 }
 
-std::shared_ptr<TileSource> TileManager::getClientTileSource(int32_t sourceID) {
-    for (const auto& tileSet : m_tileSets) {
-        if (tileSet.clientTileSource && tileSet.source->id() == sourceID) {
-            return tileSet.source;
-        }
+std::shared_ptr<TileSource> TileManager::getClientTileSource(int32_t _sourceId) {
+    auto it = std::find_if(m_tileSets.begin(), m_tileSets.end(),
+         [&](auto& ts) { return ts.source->id() == _sourceId; });
+
+    if (it != m_tileSets.end()) {
+        return it->source;
     }
     return nullptr;
 }
 
 void TileManager::addClientTileSource(std::shared_ptr<TileSource> _tileSource) {
-    m_tileSets.push_back({ _tileSource, true });
+    auto it = std::find_if(m_tileSets.begin(), m_tileSets.end(),
+        [&](auto& ts) { return ts.source->id() == _tileSource->id(); });
+
+    if (it == m_tileSets.end()) {
+        m_tileSets.emplace_back(_tileSource, true);
+    }
 }
 
-bool TileManager::removeClientTileSource(TileSource& _tileSource) {
-    bool removed = false;
-    for (auto it = m_tileSets.begin(); it != m_tileSets.end();) {
-        if (it->source.get() == &_tileSource) {
-            // Remove the tile set associated with this tile source
-            it = m_tileSets.erase(it);
-            removed = true;
-        } else {
-            ++it;
-        }
+bool TileManager::removeClientTileSource(int32_t _sourceId) {
+
+    auto it = std::find_if(m_tileSets.begin(), m_tileSets.end(),
+                           [&](auto& ts) { return ts.source->id() == _sourceId; });
+
+    if (it != m_tileSets.end()) {
+        m_tileSets.erase(it);
+        return true;
     }
-    return removed;
+    return false;
 }
 
 void TileManager::cancelTileTasks() {
