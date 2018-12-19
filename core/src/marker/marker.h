@@ -146,7 +146,7 @@ protected:
 
     uint32_t m_styleId = 0;
 
-    int m_builtZoomLevel = 0;
+    int m_builtZoomLevel = -1;
 
     uint32_t m_selectionColor = 0;
 

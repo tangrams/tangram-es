@@ -117,7 +117,17 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         map = mapController;
         String sceneUrl = sceneSelector.getCurrentString();
         map.setSceneLoadListener(this);
-        map.loadSceneFile(sceneUrl, sceneUpdates);
+
+        LngLat startPoint = new LngLat(-74.00976419448854, 40.70532700869127);
+        map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(startPoint, 16));
+        Log.d("Tangram", "START SCENE LOAD");
+        map.loadSceneFileAsync(sceneUrl, sceneUpdates);
+
+        Marker p = map.addMarker();
+        p.setStylingFromPath(pointStylingPath);
+        p.setPoint(startPoint);
+        pointMarkers.add(p);
+        lastTappedPoint = startPoint;
 
         TouchInput touchInput = map.getTouchInput();
         touchInput.setTapResponder(this);

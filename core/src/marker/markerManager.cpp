@@ -36,7 +36,6 @@ MarkerID MarkerManager::add() {
 
     // Return a handle for the marker.
     return id;
-
 }
 
 bool MarkerManager::remove(MarkerID markerID) {
@@ -52,31 +51,20 @@ bool MarkerManager::remove(MarkerID markerID) {
 }
 
 bool MarkerManager::setStyling(MarkerID markerID, const char* styling, bool isPath) {
-    if (!m_scene.isReady()) { return false; }
-
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
-    m_dirty = true;
-
     marker->setStyling(std::string(styling), isPath);
-
-    // Create a draw rule from the styling string.
-    if (!buildStyling(*marker)) { return false; }
-
-    // Build the feature mesh for the marker's current geometry.
-    buildMesh(*marker, m_zoom);
+    m_dirty = true;
 
     return true;
 }
 
 bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, float density, const unsigned int* bitmapData) {
-    if (!m_scene.isReady()) { return false; }
-
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
-    m_dirty = true;
+    marker->clearMesh();
 
     TextureOptions options;
     options.displayScale = 1.f / density;
@@ -84,12 +72,8 @@ bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, float de
     texture->setPixelData(width, height, sizeof(GLuint),
                           reinterpret_cast<const GLubyte*>(bitmapData),
                           width * height * sizeof(GLuint));
-
     marker->setTexture(std::move(texture));
-
-    // The geometry is unchanged, but the mesh must be rebuilt because DynamicQuadMesh contains
-    // texture batches as part of its data.
-    buildMesh(*marker, m_zoom);
+    m_dirty = true;
 
     return true;
 }
@@ -98,9 +82,9 @@ bool MarkerManager::setVisible(MarkerID markerID, bool visible) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
+    marker->setVisible(visible);
     m_dirty = true;
 
-    marker->setVisible(visible);
     return true;
 }
 
@@ -108,51 +92,46 @@ bool MarkerManager::setDrawOrder(MarkerID markerID, int drawOrder) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
-    m_dirty = true;
-
     marker->setDrawOrder(drawOrder);
-
     // Sort the marker list by draw order.
     std::stable_sort(m_markers.begin(), m_markers.end(), Marker::compareByDrawOrder);
+
+    m_dirty = true;
+
     return true;
 }
 
 bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
-    if (!m_scene.isReady()) { return false; }
-
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
-
-    m_dirty = true;
 
     marker->clearMesh();
 
     // If the marker does not have a 'point' feature mesh built, build it.
-    if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
+    if (!marker->feature() || marker->feature()->geometryType != GeometryType::points) {
         auto feature = std::make_unique<Feature>();
         feature->geometryType = GeometryType::points;
         feature->points.emplace_back();
         marker->setFeature(std::move(feature));
-        buildMesh(*marker, m_zoom);
     }
 
     // Update the marker's bounds to the given coordinates.
     auto origin = MapProjection::lngLatToProjectedMeters({lngLat.longitude, lngLat.latitude});
     marker->setBounds({ origin, origin });
 
+    m_dirty = true;
+
     return true;
 }
 
 bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float duration, EaseType ease) {
-    if (!m_scene.isReady()) { return false; }
-
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
     m_dirty = true;
 
     // If the marker does not have a 'point' feature built, set that point immediately.
-    if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
+    if (!marker->feature() || marker->feature()->geometryType != GeometryType::points) {
         return setPoint(markerID, lngLat);
     }
 
@@ -163,13 +142,10 @@ bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float durati
 }
 
 bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int count) {
-    if (!m_scene.isReady()) { return false; }
-
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
     m_dirty = true;
-
     marker->clearMesh();
 
     if (!coordinates || count < 2) { return false; }
@@ -206,9 +182,6 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
     // Update the feature data for the marker.
     marker->setFeature(std::move(feature));
 
-    // Build a new mesh for the marker.
-    buildMesh(*marker, m_zoom);
-
     return true;
 }
 
@@ -219,7 +192,6 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
     if (!marker) { return false; }
 
     m_dirty = true;
-
     marker->clearMesh();
 
     if (!coordinates || !counts || rings < 1) { return false; }
@@ -270,9 +242,6 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
     // Update the feature data for the marker.
     marker->setFeature(std::move(feature));
 
-    // Build a new mesh for the marker.
-    buildMesh(*marker, m_zoom);
-
     return true;
 }
 
@@ -281,10 +250,9 @@ bool MarkerManager::update(const View& _view, float _dt) {
 
     if (!m_styleContext) {
         // First call to update after scene became ready
-        //Initialize Stylecontext and StyleBuilders.
+        // Initialize Stylecontext and StyleBuilders.
         m_styleContext = std::make_unique<StyleContext>();
         m_styleContext->initFunctions(m_scene);
-
         for (const auto& style : m_scene.styles()) {
             m_styleBuilders[style->getName()] = style->createBuilder();
         }
@@ -298,8 +266,11 @@ bool MarkerManager::update(const View& _view, float _dt) {
     m_dirty = false;
 
     for (auto& marker : m_markers) {
+        int builtZoom = marker->builtZoomLevel();
 
-        if (m_zoom != marker->builtZoomLevel()) {
+        if (m_zoom != builtZoom || !marker->mesh()) {
+            if (builtZoom < 0) { buildStyling(*marker); }
+
             buildMesh(*marker, m_zoom);
             rebuilt = true;
         }
@@ -313,14 +284,11 @@ bool MarkerManager::update(const View& _view, float _dt) {
 
 void MarkerManager::removeAll() {
     m_dirty = true;
-
     m_markers.clear();
-
 }
 
 void MarkerManager::rebuildAll() {
     m_dirty = true;
-    if (m_scene.isReady()) { return; }
 
     for (auto& entry : m_markers) {
         buildStyling(*entry);
@@ -333,7 +301,6 @@ const std::vector<std::unique_ptr<Marker>>& MarkerManager::markers() const {
 }
 
 bool MarkerManager::buildStyling(Marker& marker) {
-    if (!m_scene.isReady()) { return false; }
 
     const auto& markerStyling = marker.styling();
 
