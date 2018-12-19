@@ -87,8 +87,7 @@ struct SceneTextures {
     std::forward_list<std::shared_ptr<Task>> tasks;
 
     std::shared_ptr<Texture> add(const std::string& name, const Url& url,
-                                 const TextureOptions& options,
-                                 std::unique_ptr<SpriteAtlas> _atlas = nullptr);
+                                 const TextureOptions& options);
 
     std::shared_ptr<Texture> get(const std::string& name);
 };
@@ -265,6 +264,9 @@ protected:
     /// Runtime Data
     float m_pixelScale = 1.0f;
     float m_time = 0.0;
+
+    /// Set true when all resources for TileBuilder are available
+    bool m_readyToBuildTiles = false;
 
     std::unique_ptr<FontContext> m_fontContext;
     std::unique_ptr<FeatureSelection> m_featureSelection;
