@@ -347,9 +347,7 @@ void Scene::setPixelScale(float _scale) {
     m_tileManager->clearTileSets();
 
     /// Markers must be rebuilt to apply the new pixel scale.
-    if (m_markerManager) {
-        m_markerManager->rebuildAll();
-    }
+    m_markerManager->rebuildAll();
 }
 
 std::shared_ptr<Texture> SceneTextures::add(const std::string& _name, const Url& _url,

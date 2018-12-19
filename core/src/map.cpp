@@ -892,7 +892,7 @@ void Map::setupGL() {
     impl->renderState.invalidate();
 
     //impl->scene->tileManager()->clearTileSets();
-    //impl->scene->markerManager()->rebuildAll();
+    impl->scene->markerManager()->rebuildAll();
 
     if (impl->selectionBuffer->valid()) {
         impl->selectionBuffer = std::make_unique<FrameBuffer>(impl->selectionBuffer->getWidth(),
