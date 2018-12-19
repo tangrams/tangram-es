@@ -75,11 +75,11 @@ struct DrawRuleNames : std::vector<std::string> {
 struct SceneTextures {
     struct Task {
         Task(Url url, std::shared_ptr<Texture> texture) : url(url), texture(texture) {}
+        bool started = false;
         bool done = false;
         Url url;
         std::shared_ptr<Texture> texture;
         UrlRequestHandle requestHandle = 0;
-        std::condition_variable* condition = nullptr;
     };
 
     std::unordered_map<std::string, std::shared_ptr<Texture>> textures;
@@ -95,12 +95,12 @@ struct SceneTextures {
 struct SceneFonts {
     struct Task {
         Task(Url url, FontDescription ft) : url(url), ft(ft) {}
+        bool started = false;
         bool done = false;
         Url url;
         FontDescription ft;
         UrlRequestHandle requestHandle = 0;
         UrlResponse response;
-        std::condition_variable* condition = nullptr;
     };
     std::forward_list<std::shared_ptr<Task>> tasks;
 
