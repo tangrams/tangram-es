@@ -58,7 +58,7 @@ void TileWorker::run(Worker* instance) {
                 break;
             }
 
-            if (!builder || !builder->scene().isReady()) {
+            if (!builder || !m_sceneComplete) {
                 if (builder) LOGTO("Waiting for Scene to become ready");
                 continue;
             }
@@ -117,11 +117,12 @@ void TileWorker::enqueue(std::shared_ptr<TileTask> task) {
     m_condition.notify_one();
 }
 
-void TileWorker::poke() {
+void TileWorker::startJobs() {
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        LOGTO("Poking TileWorker - enqueued %d", m_queue.size());
+        m_sceneComplete = true;
 
+        LOGTO("Poking TileWorker - enqueued %d", m_queue.size());
         if (!m_running || m_queue.empty()) { return; }
     }
     m_condition.notify_all();

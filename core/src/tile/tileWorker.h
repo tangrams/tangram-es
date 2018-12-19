@@ -27,14 +27,15 @@ public:
 
     virtual void enqueue(std::shared_ptr<TileTask> task) override;
 
-    // Trigger when scene is completed and TileBuilder can do its job.
-    void poke();
-
     void stop();
 
     bool isRunning() const { return m_running; }
 
+    /// Set Scene and initialize TileBuilders
     void setScene(Scene& _scene);
+
+    /// Start jobs when scene is complete.
+    void startJobs();
 
 private:
 
@@ -46,6 +47,9 @@ private:
     void run(Worker* instance);
 
     bool m_running;
+
+    /// Set true by startJobs()
+    bool m_sceneComplete = false;
 
     std::vector<std::unique_ptr<Worker>> m_workers;
 
