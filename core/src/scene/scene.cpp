@@ -245,8 +245,11 @@ bool Scene::load() {
 
         /// Don't need to wait for textures when their size is known
         bool canBuildTiles = true;
+        int f = 0;
+        int t = 0;
 
         m_textures.tasks.remove_if([&](auto& task) {
+           if (!task->done) { t++; }
            if (!task->done && task->texture->width() == 0) {
                canBuildTiles = false;
            }
@@ -254,6 +257,7 @@ bool Scene::load() {
         });
 
         m_fonts.tasks.remove_if([&](auto& task) {
+            if (!task->done) { f++; }
             if (!task->done) {
                 canBuildTiles = false;
                 return false;
@@ -422,17 +426,15 @@ void Scene::runTextureTasks() {
     std::lock_guard<std::mutex> lock(m_taskMutex);
 
     for (auto& task : m_textures.tasks) {
-        /// Check if the task is already started..
-        if (task->condition) { continue; }
-        task->condition = &m_taskCondition;
+        if (task->started) { continue; }
+        task->started = true;
 
-        LOGTInit();
-        LOGT("Fetch texture %s", task->url.string().c_str());
+        LOG("Fetch texture %s", task->url.string().c_str());
 
-        auto cb = [=, t = std::weak_ptr<SceneTextures::Task>(task)](UrlResponse&& response) mutable {
+        auto cb = [this, t = std::weak_ptr<SceneTextures::Task>(task)](UrlResponse&& response) {
             auto task = t.lock();
             if (!task) { return; }
-            LOGT("Received texture %s", task->url.string().c_str());
+            LOG("Received texture %s", task->url.string().c_str());
             if (response.error) {
                 LOGE("Error retrieving URL '%s': %s", task->url.string().c_str(), response.error);
             } else {
@@ -447,7 +449,9 @@ void Scene::runTextureTasks() {
                 }
             }
             task->done = true;
-            task->condition->notify_one();
+
+            std::lock_guard<std::mutex> lock(m_taskMutex);
+            m_taskCondition.notify_one();
         };
 
         if (task->url.scheme() == "zip") {
@@ -476,20 +480,20 @@ void Scene::runFontTasks() {
     std::lock_guard<std::mutex> lock(m_taskMutex);
 
     for (auto& task : m_fonts.tasks) {
-        /// Check if the task is already started..
-        if (task->condition) { continue; }
-        task->condition = &m_taskCondition;
+        if (task->started) { continue; }
+        task->started = true;
 
-        LOGTInit();
-        LOGT("Fetch font %s", task->ft.uri.c_str());
+        LOG("Fetch font %s", task->ft.uri.c_str());
 
-        auto cb = [=,t = std::weak_ptr<SceneFonts::Task>(task)](UrlResponse&& response) mutable {
+        auto cb = [this, t = std::weak_ptr<SceneFonts::Task>(task)](UrlResponse&& response) {
              auto task = t.lock();
              if (!task) { return; }
-             LOGT("Received font: %s", task->ft.uri.c_str());
+             LOG("Received font: %s", task->ft.uri.c_str());
              task->response = std::move(response);
              task->done = true;
-             task->condition->notify_one();
+
+             std::lock_guard<std::mutex> lock(m_taskMutex);
+             m_taskCondition.notify_one();
         };
 
         if (task->url.scheme() == "zip") {
