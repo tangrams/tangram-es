@@ -173,13 +173,9 @@ bool Scene::load() {
     m_tileManager->setTileSources(m_tileSources);
 
     /// Scene is ready to load tiles for initial view
-    if (m_options.asyncCallback) {
+    if (m_options.prefetchTiles && m_options.asyncCallback) {
         m_options.asyncCallback(this);
     }
-
-    SceneLoader::applyTextures(m_config["textures"], m_textures);
-    runTextureTasks();
-    LOGTO("<<< textures");
 
     m_fontContext = std::make_unique<FontContext>(m_platform);
     m_fontContext->loadFonts();
@@ -188,6 +184,10 @@ bool Scene::load() {
     SceneLoader::applyFonts(m_config["fonts"], m_fonts);
     runFontTasks();
     LOGTO("<<< applyFonts");
+
+    SceneLoader::applyTextures(m_config["textures"], m_textures);
+    runTextureTasks();
+    LOGTO("<<< textures");
 
     m_styles = SceneLoader::applyStyles(m_config["styles"], m_textures,
                                         m_jsFunctions, m_stops, m_names);
@@ -235,18 +235,29 @@ bool Scene::load() {
     m_labelManager = std::make_unique<LabelManager>();
 
     m_state = State::pending_resources;
+
+    bool startTileWorker = m_options.prefetchTiles;
     while (true) {
         std::unique_lock<std::mutex> lock(m_taskMutex);
 
         /// Check if scene-loading was canceled
         if (m_state != State::pending_resources) { break; }
 
+        /// Don't need to wait for textures when their size is known
+        bool canBuildTiles = true;
+
         m_textures.tasks.remove_if([&](auto& task) {
+           if (!task->done && task->texture->width() == 0) {
+               canBuildTiles = false;
+           }
            return task->done;
         });
 
         m_fonts.tasks.remove_if([&](auto& task) {
-            if (!task->done) { return false; }
+            if (!task->done) {
+                canBuildTiles = false;
+                return false;
+            }
             if (task->response.error) {
                 LOGE("Error retrieving font '%s' at %s: ",
                      task->ft.uri.c_str(), task->response.error);
@@ -257,8 +268,17 @@ bool Scene::load() {
             return true;
         });
 
+        /// Ready to build tiles?
+        if (startTileWorker && canBuildTiles && m_options.asyncCallback) {
+            m_readyToBuildTiles = true;
+            m_options.asyncCallback(this);
+        }
+
         /// All done?
-        if (m_textures.tasks.empty() && m_fonts.tasks.empty()) { break; }
+        if (m_textures.tasks.empty() && m_fonts.tasks.empty()) {
+            m_readyToBuildTiles = true;
+            break;
+        }
 
         LOGTO("Waiting for fonts and textures");
         m_taskCondition.wait(lock);
@@ -286,16 +306,25 @@ void Scene::prefetchTiles(const View& _view) {
         view.setPosition(m_camera.startPosition);
     }
 
-    if (m_options.prefetchTiles) {
-        LOGTO(">>> loadTiles");
-        LOG("Prefetch tiles for View: %fx%f / zoom:%f lon:%f lat:%f",
-            view.getWidth(), view.getHeight(), view.getZoom(),
-            view.getCenterCoordinates().longitude,
-            view.getCenterCoordinates().latitude);
-        view.update();
-        m_tileManager->updateTileSets(view);
-        LOGTO("<<< loadTiles");
+    LOGTO(">>> loadTiles");
+    LOG("Prefetch tiles for View: %fx%f / zoom:%f lon:%f lat:%f",
+        view.getWidth(), view.getHeight(), view.getZoom(),
+        view.getCenterCoordinates().longitude,
+        view.getCenterCoordinates().latitude);
+
+    view.update();
+    m_tileManager->updateTileSets(view);
+
+    if (m_readyToBuildTiles) {
+        m_pixelScale = _view.pixelScale();
+        for (auto& style : m_styles) {
+            style->setPixelScale(m_pixelScale);
+        }
+        m_fontContext->setPixelScale(m_pixelScale);
+
+        m_tileWorker->startJobs();
     }
+    LOGTO("<<< loadTiles");
 }
 
 bool Scene::completeScene(View& _view) {
@@ -323,7 +352,7 @@ bool Scene::completeScene(View& _view) {
     m_state = State::ready;
 
     /// Tell TileWorker that Scene is ready, so it can check its work-queue
-    m_tileWorker->poke();
+    m_tileWorker->startJobs();
 
     return true;
 }
@@ -351,8 +380,7 @@ void Scene::setPixelScale(float _scale) {
 }
 
 std::shared_ptr<Texture> SceneTextures::add(const std::string& _name, const Url& _url,
-                                            const TextureOptions& _options,
-                                            std::unique_ptr<SpriteAtlas> _atlas) {
+                                            const TextureOptions& _options) {
 
     std::shared_ptr<Texture> texture = std::make_shared<Texture>(_options);
     textures.emplace(_name, texture);
@@ -374,7 +402,7 @@ std::shared_ptr<Texture> SceneTextures::add(const std::string& _name, const Url&
         }
         return texture;
     }
-    texture->setSpriteAtlas(std::move(_atlas));
+
     tasks.push_front(std::make_shared<SceneTextures::Task>(_url, texture));
 
     return texture;

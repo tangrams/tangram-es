@@ -487,10 +487,10 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& _node, SceneTextures&
         options.displayScale = 1.f / YamlUtil::getFloatOrDefault(density, 1.f);
     }
 
-    std::unique_ptr<SpriteAtlas> atlas;
-    if (const Node& sprites = textureConfig["sprites"]) {
-        atlas = std::make_unique<SpriteAtlas>();
+    auto texture = _textures.add(name, Url(url), options);
 
+    if (const Node& sprites = textureConfig["sprites"]) {
+        auto atlas = std::make_unique<SpriteAtlas>();
         for (auto it = sprites.begin(); it != sprites.end(); ++it) {
 
             const Node& sprite = it->second;
@@ -505,8 +505,18 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& _node, SceneTextures&
                 atlas->addSpriteNode(spriteName, pos, size);
             }
         }
+        texture->setSpriteAtlas(std::move(atlas));
     }
-    _textures.add(name, Url(url), options, std::move(atlas));
+
+    if (const Node& sizeNode = textureConfig["size"]) {
+        glm::vec2 size;
+        if (YamlUtil::parseVec<glm::vec2>(sizeNode, size)) {
+            texture->resize(size.x, size.y);
+            if (texture->spriteAtlas()) {
+                texture->spriteAtlas()->updateSpriteNodes(size);
+            }
+        }
+    }
 }
 
 bool SceneLoader::parseTexFiltering(const Node& _filteringNode, TextureOptions& _options) {
