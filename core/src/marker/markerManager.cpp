@@ -246,6 +246,8 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
 }
 
 bool MarkerManager::update(const View& _view, float _dt) {
+    if (!m_dirty && m_markers.empty()) { return false; }
+
     if (!m_scene.isReady()) { return false; }
 
     if (!m_styleContext) {
@@ -288,6 +290,8 @@ void MarkerManager::removeAll() {
 }
 
 void MarkerManager::rebuildAll() {
+    if (m_markers.empty()) { return; }
+
     m_dirty = true;
 
     for (auto& entry : m_markers) {
