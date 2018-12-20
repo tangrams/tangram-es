@@ -131,7 +131,7 @@ extern "C" {
         return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeInit(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
+    JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeInit(JNIEnv* jniEnv, jobject tangramInstance, jobject assetManager) {
         auto platform = std::make_shared<Tangram::AndroidPlatform>(jniEnv, assetManager, tangramInstance);
         auto map = new Tangram::Map(platform);
         map->setSceneReadyListener([platform](Tangram::SceneID id, const Tangram::SceneError* error) {
