@@ -327,6 +327,8 @@ endforeach()
 add_custom_target(shader-headers DEPENDS ${SHADER_OUTPUT_FILES})
 add_dependencies(tangram-core shader-headers)
 
-# Create source groups for Xcode.
-get_target_property(TANGRAM_CORE_SOURCES tangram-core SOURCES)
-source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${TANGRAM_CORE_SOURCES})
+if(CMAKE_VERSION VERSION_GREATER "3.8")
+  # Create source groups for Xcode - this source_group syntax requires version >=3.8
+  get_target_property(TANGRAM_CORE_SOURCES tangram-core SOURCES)
+  source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${TANGRAM_CORE_SOURCES})
+endif()
