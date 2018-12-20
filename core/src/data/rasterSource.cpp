@@ -4,7 +4,7 @@
 #include "tile/tile.h"
 #include "tile/tileTask.h"
 #include "util/mapProjection.h"
-#include "platform.h"
+#include "log.h"
 
 namespace Tangram {
 
@@ -77,7 +77,6 @@ RasterSource::RasterSource(const std::string& _name, std::unique_ptr<DataSource>
                            TextureOptions _options, TileSource::ZoomOptions _zoomOptions)
     : TileSource(_name, std::move(_sources), _zoomOptions),
       m_texOptions(_options) {
-    m_textures = std::make_shared<Cache>();
 
     m_emptyTexture = std::make_shared<Texture>(m_texOptions);
 }
@@ -90,13 +89,7 @@ std::shared_ptr<Texture> RasterSource::createTexture(TileID _tile, const std::ve
     auto data = reinterpret_cast<const uint8_t*>(_rawTileData.data());
     auto length = _rawTileData.size();
 
-    std::shared_ptr<Texture> texture(new Texture(data, length, m_texOptions),
-                                     [c = std::weak_ptr<Cache>(m_textures), _tile](auto t) {
-                                         if (auto cache = c.lock()) { cache->erase(_tile); }
-                                         delete t;
-                                     });
-
-    return texture;
+    return std::make_shared<Texture>(data, length, m_texOptions);
 }
 
 void RasterSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
@@ -143,9 +136,9 @@ std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask)
     // First try existing textures cache
     TileID id(_tileId.x, _tileId.y, _tileId.z);
 
-    auto texIt = m_textures->find(id);
-    if (texIt != m_textures->end()) {
-        task->m_texture = texIt->second.lock();
+    auto texIt = m_textures.find(id);
+    if (texIt != m_textures.end()) {
+        task->m_texture = texIt->second;
 
         if (task->m_texture) {
             // No more loading needed.
@@ -157,20 +150,25 @@ std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask)
     return task;
 }
 
-Raster RasterSource::getRaster(const TileTask& _task) {
-    const auto& taskTileID = _task.tileId();
-    TileID id(taskTileID.x, taskTileID.y, taskTileID.z);
+Raster RasterSource::getRaster(const RasterTileTask& _task) {
+    const auto& tileId = _task.tileId();
+    TileID id(tileId.x, tileId.y, tileId.z);
 
-    auto texIt = m_textures->find(id);
-    if (texIt != m_textures->end()) {
-        auto&& texture = texIt->second.lock();
-        return { id,  texture };
+    auto entry = m_textures.emplace(id, _task.m_texture);
+    std::shared_ptr<Texture> texture = entry.first->second;
+    LOGD("Cache: add %d/%d/%d - reused: %d", id.x, id.y, id.z, !entry.second);
+
+    // Remove textures that are only held by cache
+    for(auto it = m_textures.begin(), end = m_textures.end(); it != end; ) {
+        if (it->second.use_count() == 1) {
+            LOGD("Cache: remove %d/%d/%d", it->first.x, it->first.y, it->first.z);
+            it = m_textures.erase(it);
+        } else {
+            ++it;
+        }
     }
 
-    auto& task = static_cast<const RasterTileTask&>(_task);
-    m_textures->emplace(id, task.m_texture);
-
-    return { id, task.m_texture };
+    return Raster{id, texture};
 }
 
 }
