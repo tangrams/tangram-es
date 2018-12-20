@@ -154,6 +154,10 @@ Raster RasterSource::getRaster(const RasterTileTask& _task) {
     const auto& tileId = _task.tileId();
     TileID id(tileId.x, tileId.y, tileId.z);
 
+    if (_task.m_texture == m_emptyTexture) {
+        return Raster{id, m_emptyTexture};
+    }
+
     auto entry = m_textures.emplace(id, _task.m_texture);
     std::shared_ptr<Texture> texture = entry.first->second;
     LOGD("Cache: add %d/%d/%d - reused: %d", id.x, id.y, id.z, !entry.second);
