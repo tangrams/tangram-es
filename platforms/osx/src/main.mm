@@ -12,20 +12,12 @@ using namespace Tangram;
 
 @interface TGPreferences : NSObject
 + (void)setup;
-+ (void)shutdown;
 @end
 
 @implementation TGPreferences
 
 + (void)setup
 {
-    // If an API key has been stored in defaults already, set it in the app.
-    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    NSString* storedApiKey = [defaults stringForKey:[self apiKeyDefaultsName]];
-    if (storedApiKey != nil) {
-        GlfwApp::apiKey = std::string([storedApiKey UTF8String]);
-    }
-
     // Set up menu shortcuts.
     NSMenu *mainMenu = [[NSApplication sharedApplication] mainMenu];
 
@@ -45,14 +37,6 @@ using namespace Tangram;
     [fileMenu addItemWithTitle:@"Reload Scene"
                        action:@selector(startFileReload)
                 keyEquivalent:@"r"].target = self;
-}
-
-+ (void)shutdown
-{
-    // Save API key in user defaults
-    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    NSString* apiKeyString = [NSString stringWithUTF8String:GlfwApp::apiKey.data()];
-    [defaults setValue:apiKeyString forKey:[self apiKeyDefaultsName]];
 }
 
 + (void)startFileOpen
@@ -83,11 +67,6 @@ using namespace Tangram;
 + (void)startFileReload
 {
     GlfwApp::loadSceneFile();
-}
-
-+ (NSString*)apiKeyDefaultsName
-{
-    return @"apiKey";
 }
 @end
 
@@ -126,6 +105,4 @@ int main(int argc, char* argv[]) {
 
     // Clean up.
     GlfwApp::destroy();
-
-    [TGPreferences shutdown];
 }
