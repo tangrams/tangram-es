@@ -69,12 +69,12 @@ std::string ShaderSource::applySourceBlocks(const std::string& _source, bool _fr
     out.reserve(shaderLength);
 
     size_t end = 0;
-    size_t start = 0;
-    size_t pos = 0;
     const char* str = _source.c_str();
 
-    while(end < _source.length()) {
-        auto pragma = _source.find("#pragma ", pos);
+    while (true) {
+        size_t start = end;
+
+        auto pragma = _source.find("#pragma ", start);
         if (pragma == std::string::npos) {
             // Write appendix and done
             out.append(str + start);
@@ -86,7 +86,10 @@ std::string ShaderSource::applySourceBlocks(const std::string& _source, bool _fr
         if (end == std::string::npos) {
             end = _source.length();
         }
-        pos = end;
+
+        // Write everything to end of #pragma line
+        out.append(str + start, end - start);
+        if (out.back() != '\n') { out.append("\n"); }
 
         char pragmaName[128];
         if (sscanf(str + pragma + 8, " tangram:%127s", pragmaName) == 0) {
@@ -104,15 +107,13 @@ std::string ShaderSource::applySourceBlocks(const std::string& _source, bool _fr
             continue;
         }
 
-        // Write everything to end of #pragma tangram line
-        out.append(str + start, end - start);
-        out.append("\n");
-        start = end;
-
         // insert blocks
         for (auto& s : block->second) {
+            if (s.empty()) { continue; }
+
             out.append(s);
-            out.append("\n");
+
+            if (out.back() != '\n') { out.append("\n"); }
         }
     }
 
