@@ -146,6 +146,7 @@ extern "C" {
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeDispose(JNIEnv* jniEnv, jobject tangramInstance, jlong mapPtr) {
         assert(mapPtr > 0);
+
         delete reinterpret_cast<Tangram::Map*>(mapPtr);
     }
 

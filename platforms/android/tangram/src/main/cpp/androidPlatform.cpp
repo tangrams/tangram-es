@@ -109,6 +109,22 @@ void AndroidPlatform::jniOnUnload(JavaVM *javaVM) {
     jvm = nullptr;
 }
 
+void AndroidPlatform::shutdown() {
+    m_shutdown = true;
+
+    std::lock_guard<std::mutex> lock(m_callbackMutex);
+
+    UrlResponse response;
+    response.error = "Shutting down";
+
+    for (auto& entry : m_callbacks) {
+        if (auto& cb = entry.second) {
+            cb(std::move(response));
+        }
+    }
+    m_callbacks.clear();
+}
+
 std::string stringFromJString(JNIEnv* jniEnv, jstring string) {
     auto length = jniEnv->GetStringLength(string);
     std::u16string chars(length, char16_t());
@@ -295,6 +311,13 @@ std::vector<char> AndroidPlatform::bytesFromFile(const Url& url) const {
 }
 
 UrlRequestHandle AndroidPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
+    if (m_shutdown) {
+        UrlResponse response;
+        response.error = "Shutting down";
+        if (_callback) {
+            _callback(std::move(response));
+        }
+    }
 
     // Get the current value of the request counter and add one, atomically.
     UrlRequestHandle requestHandle = m_urlRequestCount++;
