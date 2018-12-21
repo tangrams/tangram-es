@@ -46,6 +46,11 @@ std::string ShaderSource::applySourceBlocks(const std::string& _source, bool _fr
     std::string out;
     std::set<std::string> pragmas;
 
+#ifdef TANGRAM_DESKTOP_GL
+    // Use GLES 2.0 features specifcally
+    out.append("#version 120\n");
+#endif
+
     out.append("#define TANGRAM_EPSILON 0.00001\n");
     out.append("#define TANGRAM_WORLD_POSITION_WRAP 100000.\n");
 

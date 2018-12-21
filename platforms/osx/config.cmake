@@ -1,6 +1,7 @@
 check_unsupported_compiler_version()
 
 add_definitions(-DTANGRAM_OSX)
+add_definitions(-DTANGRAM_DESKTOP_GL)
 
 find_package(OpenGL REQUIRED)
 

@@ -18,6 +18,7 @@ endif()
 check_unsupported_compiler_version()
 
 add_definitions(-DTANGRAM_LINUX)
+add_definitions(-DTANGRAM_DESKTOP_GL)
 
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
