@@ -118,6 +118,13 @@ Map::Map(std::shared_ptr<Platform> _platform) : platform(_platform) {
 }
 
 Map::~Map() {
+    // Let the platform stop all outstanding tasks:
+    // Send cancel to UrlRequests so any thread blocking on a response can join,
+    // and discard incoming UrlRequest directly.
+    //
+    // In any case after shutdown Platform may not call back into Map!
+    platform->shutdown();
+
     // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
     impl->tileWorker.stop();
     impl->asyncWorker.reset();
