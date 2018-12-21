@@ -300,7 +300,7 @@ UrlRequestHandle AndroidPlatform::startUrlRequest(Url _url, UrlCallback _callbac
     UrlRequestHandle requestHandle = m_urlRequestCount++;
     if (!_callback) { return requestHandle; }
 
-    // If the requested URL does not use HTTP or HTTPS, retrieve it synchronously.
+    // If the requested URL does not use HTTP or HTTPS, retrieve it asynchronously.
     if (!_url.hasHttpScheme()) {
         m_fileWorker.enqueue([=](){
              UrlResponse response;
@@ -319,8 +319,12 @@ UrlRequestHandle AndroidPlatform::startUrlRequest(Url _url, UrlCallback _callbac
     m_jniWorker.enqueue([=](JNIEnv *jniEnv) {
         jlong jRequestHandle = static_cast<jlong>(requestHandle);
 
-        // Check that it's safe to convert the UrlRequestHandle to a jlong and back... cmon :P
-        assert(requestHandle == static_cast<UrlRequestHandle>(jRequestHandle));
+        // Make sure no one changed UrlRequestHandle from being uint64_t,
+        // so that it's safe to convert to jlong and back.
+        static_assert(sizeof(jlong) == sizeof(UrlRequestHandle), "Who changed UrlRequestHandle?!");
+        static_assert(static_cast<jlong>(std::numeric_limits<uint64_t>::max()) ==
+                      static_cast<UrlRequestHandle>(std::numeric_limits<uint64_t>::max()),
+                      "Cannot convert jlong to UrlRequestHandle!");
 
         jstring jUrl = jstringFromString(jniEnv, _url.string());
 
@@ -361,7 +365,8 @@ void AndroidPlatform::onUrlComplete(JNIEnv* _jniEnv, jlong _jRequestHandle, jbyt
         response.error = error.c_str();
     }
 
-
+    // Handle callbacks on worker thread to not block Java side.
+    // (The calling thread has probably also other work to do)
     m_fileWorker.enqueue([this, _jRequestHandle, r = std::move(response)]() mutable {
         // Find the callback associated with the request.
         UrlCallback callback;
