@@ -15,14 +15,6 @@ namespace Tangram {
 // This is the handle which Platform uses to identify an UrlRequest.
 using UrlRequestHandle = uint64_t;
 
-// Platform specific id for URL requests. This id is interpreted differently for
-// each platform type, so do not perform any application logic with its value.
-//
-// It's purpose is to be able to cancel UrlRequests
-using UrlRequestId = uint64_t;
-
-constexpr UrlRequestId UrlRequestNotCancelable = 0;
-
 // Result of a URL request. If the request could not be completed or if the
 // host returned an HTTP status code >= 400, a non-null error string will be
 // present. This error string is only valid in the scope of the UrlCallback
@@ -99,6 +91,15 @@ public:
     virtual std::vector<FontSourceHandle> systemFontFallbacksHandle() const;
 
 protected:
+    // Platform implementation specific id for URL requests. This id is
+    // interpreted differently for each platform type, so do not perform any
+    // application logic with its value.
+    // It's purpose is to be able to cancel UrlRequests
+    using UrlRequestId = uint64_t;
+
+    // TODO is this safe on ios/osx that task identifier are never 0?
+    // Wouldn't hur too much if we don't cancel one request though
+    static constexpr UrlRequestId UrlRequestNotCancelable = 0;
 
     // To be called by implementations to pass UrlResponse
     void onUrlResponse(UrlRequestHandle _request, UrlResponse&& _response);

@@ -138,7 +138,7 @@ FontSourceHandle iOSPlatform::systemFont(const std::string& _name, const std::st
     return FontSourceHandle(std::string(font.fontName.UTF8String));
 }
 
-UrlRequestId iOSPlatform::startUrlRequest(Url _url, UrlRequestHandle _request) {
+Platform::UrlRequestId iOSPlatform::startUrlRequest(Url _url, UrlRequestHandle _request) {
     __strong TGMapView* mapView = m_mapView;
 
     UrlResponse errorResponse;
@@ -201,7 +201,7 @@ UrlRequestId iOSPlatform::startUrlRequest(Url _url, UrlRequestHandle _request) {
     return taskIdentifier;
 }
 
-void iOSPlatform::urlRequestCanceled(UrlRequestId _id) {
+void iOSPlatform::urlRequestCanceled(Platform::UrlRequestId _id) {
     __strong TGMapView* mapView = m_mapView;
 
     if (!mapView) {

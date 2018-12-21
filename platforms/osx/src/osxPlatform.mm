@@ -138,7 +138,7 @@ FontSourceHandle OSXPlatform::systemFont(const std::string& _name, const std::st
     return FontSourceHandle(std::string(font.fontName.UTF8String));
 }
 
-UrlRequestId OSXPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) {
+Platform::UrlRequestId OSXPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) {
 
     void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
 
@@ -181,7 +181,7 @@ UrlRequestId OSXPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) {
 
 }
 
-void OSXPlatform::cancelUrlRequest(UrlRequestId id) {
+void OSXPlatform::cancelUrlRequest(Platform::UrlRequestId id) {
 
     [m_urlSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
         for (NSURLSessionTask* task in dataTasks) {

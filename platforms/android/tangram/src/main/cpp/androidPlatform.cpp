@@ -294,7 +294,7 @@ std::vector<char> AndroidPlatform::bytesFromFile(const Url& url) const {
     return data;
 }
 
-UrlRequestId AndroidPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) {
+Platform::UrlRequestId AndroidPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) {
 
     // If the requested URL does not use HTTP or HTTPS, retrieve it asynchronously.
     if (!_url.hasHttpScheme()) {
@@ -324,7 +324,7 @@ UrlRequestId AndroidPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle
     return _handle;
 }
 
-void AndroidPlatform::urlRequestCanceled(UrlRequestId _id) {
+void AndroidPlatform::urlRequestCanceled(Platform::UrlRequestId _id) {
 
     m_jniWorker.enqueue([=](JNIEnv *jniEnv) {
 

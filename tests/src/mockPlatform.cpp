@@ -31,7 +31,7 @@ std::vector<FontSourceHandle> MockPlatform::systemFontFallbacksHandle() const {
     return handles;
 }
 
-UrlRequestId MockPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) {
+Platform::UrlRequestId MockPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) {
 
     UrlResponse response;
 
@@ -47,7 +47,7 @@ UrlRequestId MockPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) {
     return 0;
 }
 
-void MockPlatform::urlRequestCanceled(UrlRequestId _id) {}
+void MockPlatform::urlRequestCanceled(Platform::UrlRequestId _id) {}
 
 void MockPlatform::putMockUrlContents(Url url, std::string contents) {
     m_files[url].assign(contents.begin(), contents.end());

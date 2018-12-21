@@ -53,7 +53,7 @@ UrlClient::~UrlClient() {
     }
 }
 
-UrlRequestId UrlClient::addRequest(const std::string& url, Callback onComplete) {
+UrlClient::RequestId UrlClient::addRequest(const std::string& url, Callback onComplete) {
     // Create a new request.
     auto id = ++m_requestCount;
     Request request = {url, onComplete, id, false};
@@ -68,7 +68,7 @@ UrlRequestId UrlClient::addRequest(const std::string& url, Callback onComplete) 
     return id;
 }
 
-void UrlClient::cancelRequest(UrlRequestId id) {
+void UrlClient::cancelRequest(UrlClient::RequestId id) {
     Callback callback;
     // First check the pending request list.
     {

@@ -79,7 +79,7 @@ FontSourceHandle LinuxPlatform::systemFont(const std::string& _name,
     return FontSourceHandle(Url(fontFile));
 }
 
-UrlRequestId LinuxPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) {
+Platform::UrlRequestId LinuxPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) {
     UrlRequestId id = UrlRequestNotCancelable;
 
     if (_url.hasHttpScheme()) {
@@ -104,7 +104,7 @@ UrlRequestId LinuxPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) 
     return id;
 }
 
-void LinuxPlatform::urlRequestCanceled(UrlRequestId _id) {
+void LinuxPlatform::urlRequestCanceled(Platform::UrlRequestId _id) {
     m_urlClient->cancelRequest(_id);
 }
 
