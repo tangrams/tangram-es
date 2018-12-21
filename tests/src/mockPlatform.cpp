@@ -31,7 +31,7 @@ std::vector<FontSourceHandle> MockPlatform::systemFontFallbacksHandle() const {
     return handles;
 }
 
-UrlRequestHandle MockPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
+UrlRequestId MockPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) {
 
     UrlResponse response;
 
@@ -42,12 +42,12 @@ UrlRequestHandle MockPlatform::startUrlRequest(Url _url, UrlCallback _callback) 
         response.error = "Url contents could not be found!";
     }
 
-    _callback(std::move(response));
+    onUrlResponse(_handle, std::move(response));
 
     return 0;
 }
 
-void MockPlatform::cancelUrlRequest(UrlRequestHandle _request) {}
+void MockPlatform::urlRequestCanceled(UrlRequestId _id) {}
 
 void MockPlatform::putMockUrlContents(Url url, std::string contents) {
     m_files[url].assign(contents.begin(), contents.end());

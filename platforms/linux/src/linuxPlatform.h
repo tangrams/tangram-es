@@ -19,14 +19,16 @@ public:
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
     FontSourceHandle systemFont(const std::string& _name, const std::string& _weight,
                                 const std::string& _face) const override;
-    UrlRequestHandle startUrlRequest(Url _url, UrlCallback _callback) override;
-    void cancelUrlRequest(UrlRequestHandle _request) override;
+
+    UrlRequestId startUrlRequest(Url _url, UrlRequestHandle _handle) override;
+    void urlRequestCanceled(UrlRequestId _id) override;
 
 protected:
     FcConfig* m_fcConfig = nullptr;
     std::unique_ptr<UrlClient> m_urlClient;
     AsyncWorker m_fileWorker;
-    std::atomic<bool> m_shutdown{false};
+    std::atomic_int_fast64_t m_urlRequestCount = {0};
+
 };
 
 } // namespace Tangram

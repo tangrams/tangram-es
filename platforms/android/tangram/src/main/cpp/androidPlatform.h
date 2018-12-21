@@ -31,13 +31,12 @@ class AndroidPlatform : public Platform {
 public:
 
     AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance);
-    void shutdown() override;
     void requestRender() const override;
     void setContinuousRendering(bool _isContinuous) override;
     FontSourceHandle systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const override;
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
-    UrlRequestHandle startUrlRequest(Url _url, UrlCallback _callback) override;
-    void cancelUrlRequest(UrlRequestHandle _request) override;
+    UrlRequestId startUrlRequest(Url _url, UrlRequestHandle _request) override;
+    void urlRequestCanceled(UrlRequestId _id) override;
     void sceneReadyCallback(SceneID id, const SceneError* error);
     void cameraAnimationCallback(bool finished);
     void featurePickCallback(const FeaturePickResult* featurePickResult);
@@ -60,16 +59,10 @@ private:
     jobject m_tangramInstance;
     AAssetManager* m_assetManager;
 
-    std::atomic_uint_fast64_t m_urlRequestCount;
 
-    // m_callbackMutex should be locked any time m_callbacks is accessed.
-    std::mutex m_callbackMutex;
-    std::unordered_map<UrlRequestHandle, UrlCallback> m_callbacks;
 
     mutable JniWorker m_jniWorker;  // FIX requestRender const.. Lets use Rust if we want this for real
     AsyncWorker m_fileWorker;
-
-    bool m_shutdown = false;
 };
 
 } // namespace Tangram

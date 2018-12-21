@@ -41,8 +41,9 @@ LinuxPlatform::~LinuxPlatform() {
 
 void LinuxPlatform::shutdown() {
     // Stop all UrlWorker threads
-    m_shutdown = true;
     m_urlClient.reset();
+
+    Platform::shutdown();
 }
 
 void LinuxPlatform::requestRender() const {
@@ -78,16 +79,18 @@ FontSourceHandle LinuxPlatform::systemFont(const std::string& _name,
     return FontSourceHandle(Url(fontFile));
 }
 
-UrlRequestHandle LinuxPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
-    if (m_shutdown) { return 0; }
+UrlRequestId LinuxPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) {
+    UrlRequestId id = UrlRequestNotCancelable;
+
     if (_url.hasHttpScheme()) {
-        return m_urlClient->addRequest(_url.string(),
-                                       [this, cb = _callback](UrlResponse&& r) {
-                                           cb(std::move(r));
-                                           requestRender();
-                                       });
+        id = m_urlClient->addRequest(_url.string(),
+             [this, _handle](UrlResponse&& response) {
+                 onUrlResponse(_handle, std::move(response));
+             });
     } else {
-        m_fileWorker.enqueue([path = _url.path(), _callback](){
+        //UrlRequestId id = static_cast<UrlRequestHandle>(--m_urlRequestCount);
+
+        m_fileWorker.enqueue([this, path = _url.path(), _handle](){
              UrlResponse response;
              auto allocator = [&](size_t size) {
                  response.content.resize(size);
@@ -95,17 +98,14 @@ UrlRequestHandle LinuxPlatform::startUrlRequest(Url _url, UrlCallback _callback)
              };
 
              Platform::bytesFromFileSystem(path.c_str(), allocator);
-             _callback(std::move(response));
+             onUrlResponse(_handle, std::move(response));
         });
-        return std::numeric_limits<uint64_t>::max();
     }
+    return id;
 }
 
-void LinuxPlatform::cancelUrlRequest(UrlRequestHandle _request) {
-    if (m_shutdown) { return; }
-    if (_request == std::numeric_limits<uint64_t>::max()) { return; }
-
-    m_urlClient->cancelRequest(_request);
+void LinuxPlatform::urlRequestCanceled(UrlRequestId _id) {
+    m_urlClient->cancelRequest(_id);
 }
 
 void setCurrentThreadPriority(int priority) {

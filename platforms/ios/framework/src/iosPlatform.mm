@@ -138,22 +138,22 @@ FontSourceHandle iOSPlatform::systemFont(const std::string& _name, const std::st
     return FontSourceHandle(std::string(font.fontName.UTF8String));
 }
 
-UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
+UrlRequestId iOSPlatform::startUrlRequest(Url _url, UrlRequestHandle _request) {
     __strong TGMapView* mapView = m_mapView;
 
     UrlResponse errorResponse;
     if (!mapView) {
         errorResponse.error = "MapView not initialized.";
-        _callback(std::move(errorResponse));
-        return 0;
+        onUrlResponse(_request, std::move(errorResponse));
+        return UrlRequestNotCancelable;
     }
 
     id<TGURLHandler> urlHandler = mapView.urlHandler;
 
     if (!urlHandler) {
         errorResponse.error = "urlHandler not set in MapView";
-        _callback(std::move(errorResponse));
-        return 0;
+        onUrlResponse(_request, std::move(errorResponse));
+        return UrlRequestNotCancelable;
     }
 
     TGDownloadCompletionHandler handler = ^void (NSData* data, NSURLResponse* response, NSError* error) {
@@ -191,9 +191,7 @@ UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
         }];
 
         // Run the callback from the requester.
-        if (_callback) {
-            _callback(std::move(urlResponse));
-        }
+        onUrlResponse(_request, std::move(urlResponse));
     };
 
     NSString* urlAsString = [NSString stringWithUTF8String:_url.string().c_str()];
@@ -203,7 +201,7 @@ UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
     return taskIdentifier;
 }
 
-void iOSPlatform::cancelUrlRequest(UrlRequestHandle _request) {
+void iOSPlatform::urlRequestCanceled(UrlRequestId _id) {
     __strong TGMapView* mapView = m_mapView;
 
     if (!mapView) {
@@ -216,7 +214,7 @@ void iOSPlatform::cancelUrlRequest(UrlRequestHandle _request) {
         return;
     }
 
-    [urlHandler cancelDownloadRequestAsync:_request];
+    [urlHandler cancelDownloadRequestAsync:_id];
 }
 
 } // namespace Tangram

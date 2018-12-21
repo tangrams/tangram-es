@@ -102,7 +102,7 @@ UrlRequestHandle Scene::startUrlRequest(std::shared_ptr<Platform> platform, Url 
     }
 
     // For non-zip URLs, send it to the platform.
-    return platform->startUrlRequest(url, callback);
+    return platform->startUrlRequest(url, std::move(callback));
 }
 
 void Scene::addZipArchive(Url url, std::shared_ptr<ZipArchive> zipArchive) {

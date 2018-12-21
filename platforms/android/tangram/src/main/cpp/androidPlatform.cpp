@@ -109,22 +109,6 @@ void AndroidPlatform::jniOnUnload(JavaVM *javaVM) {
     jvm = nullptr;
 }
 
-void AndroidPlatform::shutdown() {
-    m_shutdown = true;
-
-    std::lock_guard<std::mutex> lock(m_callbackMutex);
-
-    UrlResponse response;
-    response.error = "Shutting down";
-
-    for (auto& entry : m_callbacks) {
-        if (auto& cb = entry.second) {
-            cb(std::move(response));
-        }
-    }
-    m_callbacks.clear();
-}
-
 std::string stringFromJString(JNIEnv* jniEnv, jstring string) {
     auto length = jniEnv->GetStringLength(string);
     std::u16string chars(length, char16_t());
@@ -310,37 +294,20 @@ std::vector<char> AndroidPlatform::bytesFromFile(const Url& url) const {
     return data;
 }
 
-UrlRequestHandle AndroidPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
-    if (m_shutdown) {
-        UrlResponse response;
-        response.error = "Shutting down";
-        if (_callback) {
-            _callback(std::move(response));
-        }
-    }
-
-    // Get the current value of the request counter and add one, atomically.
-    UrlRequestHandle requestHandle = m_urlRequestCount++;
-    if (!_callback) { return requestHandle; }
+UrlRequestId AndroidPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) {
 
     // If the requested URL does not use HTTP or HTTPS, retrieve it asynchronously.
     if (!_url.hasHttpScheme()) {
         m_fileWorker.enqueue([=](){
              UrlResponse response;
              response.content = bytesFromFile(_url);
-             _callback(std::move(response));
+             onUrlResponse(_handle, std::move(response));
         });
-        return requestHandle;
-    }
-
-    // Store our callback, associated with the request handle.
-    {
-        std::lock_guard<std::mutex> lock(m_callbackMutex);
-        m_callbacks[requestHandle] = _callback;
+        return 0;
     }
 
     m_jniWorker.enqueue([=](JNIEnv *jniEnv) {
-        jlong jRequestHandle = static_cast<jlong>(requestHandle);
+        jlong jRequestHandle = static_cast<jlong>(_handle);
 
         // Make sure no one changed UrlRequestHandle from being uint64_t,
         // so that it's safe to convert to jlong and back.
@@ -354,19 +321,17 @@ UrlRequestHandle AndroidPlatform::startUrlRequest(Url _url, UrlCallback _callbac
         // Call the MapController method to start the URL request.
         jniEnv->CallVoidMethod(m_tangramInstance, startUrlRequestMID, jUrl, jRequestHandle);
     });
-    return requestHandle;
+    return _handle;
 }
 
-void AndroidPlatform::cancelUrlRequest(UrlRequestHandle request) {
+void AndroidPlatform::urlRequestCanceled(UrlRequestId _id) {
 
     m_jniWorker.enqueue([=](JNIEnv *jniEnv) {
 
-        jlong jRequestHandle = static_cast<jlong>(request);
+        jlong jRequestHandle = static_cast<jlong>(_id);
 
         jniEnv->CallVoidMethod(m_tangramInstance, cancelUrlRequestMID, jRequestHandle);
     });
-
-    // We currently don't try to cancel requests for local files.
 }
 
 void AndroidPlatform::onUrlComplete(JNIEnv* _jniEnv, jlong _jRequestHandle, jbyteArray _jBytes, jstring _jError) {
@@ -391,18 +356,9 @@ void AndroidPlatform::onUrlComplete(JNIEnv* _jniEnv, jlong _jRequestHandle, jbyt
     // Handle callbacks on worker thread to not block Java side.
     // (The calling thread has probably also other work to do)
     m_fileWorker.enqueue([this, _jRequestHandle, r = std::move(response)]() mutable {
-        // Find the callback associated with the request.
-        UrlCallback callback;
-        {
-            std::lock_guard<std::mutex> lock(m_callbackMutex);
-            UrlRequestHandle requestHandle = static_cast<UrlRequestHandle>(_jRequestHandle);
-            auto it = m_callbacks.find(requestHandle);
-            if (it != m_callbacks.end()) {
-                callback = std::move(it->second);
-                m_callbacks.erase(it);
-            }
-        }
-        if (callback) { callback(std::move(r)); }
+        UrlRequestHandle requestHandle = static_cast<UrlRequestHandle>(_jRequestHandle);
+
+        onUrlResponse(requestHandle, std::move(r));
     });
 }
 
