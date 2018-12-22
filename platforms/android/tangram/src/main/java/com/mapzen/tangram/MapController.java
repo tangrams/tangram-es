@@ -17,6 +17,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.LongSparseArray;
 import android.view.MotionEvent;
+import android.view.View;
 
 import com.mapzen.tangram.TouchInput.Gestures;
 import com.mapzen.tangram.viewholder.GLViewHolder;
@@ -38,7 +39,7 @@ import javax.microedition.khronos.opengles.GL10;
 public class MapController implements Renderer {
 
 
-    public boolean handleGesture(MapView mapView, MotionEvent ev) {
+    public boolean handleGesture(View mapView, MotionEvent ev) {
         return touchInput.onTouch(mapView, ev);
     }
 

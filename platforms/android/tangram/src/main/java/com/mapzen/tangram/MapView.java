@@ -7,14 +7,15 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
+import com.mapzen.tangram.networking.DefaultHttpHandler;
+import com.mapzen.tangram.networking.HttpHandler;
 import com.mapzen.tangram.viewholder.GLSurfaceViewHolderFactory;
 import com.mapzen.tangram.viewholder.GLViewHolder;
 import com.mapzen.tangram.viewholder.GLViewHolderFactory;
-import com.mapzen.tangram.networking.DefaultHttpHandler;
-import com.mapzen.tangram.networking.HttpHandler;
 
 import java.lang.ref.WeakReference;
 
@@ -25,7 +26,8 @@ public class MapView extends FrameLayout {
 
     protected MapController mapController;
     protected GLViewHolder viewHolder;
-    protected MapAsyncTask getMapAsyncTask;
+    protected AsyncTask loadLibraryTask;
+    protected static boolean libraryLoaded = false;
 
     /**
      * MapReadyCallback interface
@@ -43,186 +45,196 @@ public class MapView extends FrameLayout {
         super(context, attrs);
     }
 
-    private static class MapAsyncTask extends AsyncTask<Void, Void, MapController> {
-        MapReadyCallback mapReadyCallback;
-        GLViewHolderFactory glViewHolderFactory;
-        HttpHandler httpHandler;
-
-        WeakReference<MapView> mapViewRef;
-
-        MapAsyncTask(@NonNull final MapView mapView, @NonNull final MapReadyCallback callback,
-                     @NonNull final GLViewHolderFactory viewHolderFactory, @Nullable final HttpHandler handler) {
-            mapViewRef = new WeakReference<>(mapView);
-            httpHandler = handler;
-            mapReadyCallback = callback;
-            glViewHolderFactory = viewHolderFactory;
-        }
-
-        @Override
-        protected MapController doInBackground(Void... voids) {
-            MapView view = mapViewRef.get();
-            if (view != null) {
-                return view.mapInitInBackground();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(MapController controller) {
-            MapView view = mapViewRef.get();
-            if (view != null) {
-                view.onMapInitOnUIThread(controller, httpHandler, glViewHolderFactory, mapReadyCallback);
-            }
-        }
-
-        @Override
-        protected void onCancelled(MapController controller) {
-            MapView view = mapViewRef.get();
-            if (view != null) {
-                view.onMapInitCancelled(controller);
-            }
-        }
+    /**
+     * Construct a {@code MapController} in an async thread using {@link GLSurfaceView} as GL rendering interface;
+     * may only be called from the UI thread
+     * Map instance uses {@link DefaultHttpHandler} for retrieving remote map resources
+     * @param readyCallback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
+     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
+     * @return false when getMapAsync was called previously
+     */
+    public boolean getMapAsync(@NonNull final MapReadyCallback readyCallback) {
+        return getMapAsync(readyCallback, new GLSurfaceViewHolderFactory(), null);
     }
 
     /**
-     * Responsible for doing the actual map init. Should be executed from a non-ui thread.
-     * @return new or previously initialized {@link MapController}
+     * Construct a {@code MapController} in an async thread using {@link GLSurfaceView} as GL rendering interface;
+     * may only be called from the UI thread
+     * @param readyCallback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
+     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
+     * @param handler Set the client implemented {@link HttpHandler} for retrieving remote map resources
+     *                when null {@link DefaultHttpHandler} is used
+     * @return false when getMapAsync was called previously
      */
-    protected MapController mapInitInBackground() {
-
-        if (!NativeLibraryLoader.sNativeLibraryLoaded) {
-            android.util.Log.e("Tangram", "Unable to initialize MapController: Failed to initialize native libraries");
-            return null;
-        }
-
-        return getMapInstance();
+    public boolean getMapAsync(@NonNull final MapReadyCallback readyCallback,
+                            @Nullable final HttpHandler handler) {
+        return getMapAsync(readyCallback, new GLSurfaceViewHolderFactory(), handler);
     }
 
     /**
-     * Should be executed from the UI thread
-     * @param controller {@link MapController} created in a background thread
-     * @param handler {@link HttpHandler} required for network handling
-     * @param callback {@link MapReadyCallback}
+     * Construct a {@code MapController} in an async thread using an instance
+     * {@link GLViewHolderFactory}, like {@link GLSurfaceViewHolderFactory} or any client implementation
+     * may only be called from the UI thread
+     * Map instance uses {@link DefaultHttpHandler} for retrieving remote map resources
+     * @param readyCallback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
+     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
+     * @param glViewHolderFactory An instance of {@link GLViewHolderFactory} providing the GL responsibilities
+     * @return false when getMapAsync was called previously
      */
-    protected void onMapInitOnUIThread(@Nullable final MapController controller, @Nullable final HttpHandler handler,
-                                       @NonNull GLViewHolderFactory viewHolderFactory, @NonNull final MapReadyCallback callback) {
+    public boolean getMapAsync(@NonNull final MapReadyCallback readyCallback,
+                            @NonNull final GLViewHolderFactory glViewHolderFactory) {
+        return getMapAsync(readyCallback, glViewHolderFactory, null);
+    }
+    /**
+     * Construct a {@code MapController} in an async thread using an instance
+     * {@link GLViewHolderFactory}, like {@link GLSurfaceViewHolderFactory} or any client implementation
+     * may only be called from the UI thread
+     * @param readyCallback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
+     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
+     * @param glViewHolderFactory An instance of {@link GLViewHolderFactory} providing the GL responsibilities
+     * @param handler Set the client implemented {@link HttpHandler} for retrieving remote map resources
+     *                when null {@link DefaultHttpHandler} is used
+     * @return false when getMapAsync was called previously
+     */
+    public boolean getMapAsync(@NonNull final MapReadyCallback readyCallback,
+                               final GLViewHolderFactory glViewHolderFactory,
+                               @Nullable final HttpHandler handler) {
         if (viewHolder != null) {
-            removeView(viewHolder.getView());
-            viewHolder = null;
+            Log.e("Tangram", "MapView already initialized");
+            return false;
+        }
+
+        final WeakReference mapViewRef = new WeakReference<>(this);
+
+        loadLibraryTask = loadNativeLibraryAsync(new NativeLibraryLoadCb() {
+            @Override
+            public void onLibraryReadyAsync(Boolean ok) {}
+
+            @Override
+            public void onLibraryReady(Boolean ok) {
+                MapView view = (MapView) mapViewRef.get();
+                if (ok && view != null) {
+                    readyCallback.onMapReady(view.initMapController(glViewHolderFactory, handler));
+                } else {
+                    readyCallback.onMapReady(null);
+                }
+            }
+        });
+
+        return true;
+    }
+
+    /**
+     * Construct a {@code MapController}
+     * This may take some time to initialize when {@link MapView#loadNativeLibrary()} was not called previously
+     * @param readyCallback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
+     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
+     * @param handler Set the client implemented {@link HttpHandler} for retrieving remote map resources
+     *                when null {@link DefaultHttpHandler} is used
+     * @return MapController
+     */
+    public MapController initMapController(@NonNull final MapReadyCallback readyCallback,
+                                           @Nullable final HttpHandler handler) {
+        return initMapController(new GLSurfaceViewHolderFactory(), handler);
+    }
+
+    /**
+     * Construct a {@code MapController}
+     * This may take some time to initialize when {@link MapView#loadNativeLibrary()} was not called previously
+     * {@link GLViewHolderFactory}, like {@link GLSurfaceViewHolderFactory} or any client implementation
+     * may only be called from the UI thread
+     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
+     * @param glViewHolderFactory An instance of {@link GLViewHolderFactory} providing the GL responsibilities
+     * @param handler Set the client implemented {@link HttpHandler} for retrieving remote map resources
+     *                when null {@link DefaultHttpHandler} is used
+     * @return MapController
+     */
+    public @Nullable MapController initMapController(final GLViewHolderFactory glViewHolderFactory,
+                                                     @Nullable final HttpHandler handler) {
+        if (!loadNativeLibrary()) {
+            return null;
         }
 
         if (mapController != null) {
-            mapController.dispose();
-            mapController = null;
+            Log.e("Tangram", "MapView already initialized");
+            return mapController;
+        }
+        viewHolder = glViewHolderFactory.build(getContext());
+        if (viewHolder == null) {
+            Log.e("Tangram", "Unable to initialize MapController: Failed to initialize OpenGL view");
+            return null;
         }
 
-        if (controller != null) {
-            viewHolder = viewHolderFactory.build(getContext());
-            if (viewHolder == null) {
-                android.util.Log.e("Tangram", "Unable to initialize MapController: Failed to initialize OpenGL view");
-                controller.dispose();
-            } else {
-                mapController = controller;
-                mapController.UIThreadInit(viewHolder, handler);
-                addView(viewHolder.getView());
+        mapController = getMapInstance(getContext());
+        if (mapController != null) {
+            mapController.UIThreadInit(viewHolder, handler);
+            addView(viewHolder.getView());
+        }
+        return mapController;
+    }
+
+    public MapController getMapController() {
+        if (mapController == null) {
+            Log.e("Tangram", "MapView not initialized");
+        }
+        return mapController;
+    }
+
+    /**
+     * Responsible for doing the native map library loading. Should be executed from a non-ui thread,
+     * see {@link MapView#loadNativeLibraryAsync(NativeLibraryLoadCb)}.
+     * @return true when everything went as expected
+     */
+    public static boolean loadNativeLibrary() {
+        if (NativeLibraryLoader.sNativeLibraryLoaded) {
+            libraryLoaded = true;
+            return true;
+        }
+        android.util.Log.e("Tangram", "Unable to initialize MapController: Failed to initialize native libraries");
+        return false;
+    }
+
+    public interface NativeLibraryLoadCb {
+        void onLibraryReadyAsync(Boolean ok);
+        void onLibraryReady(Boolean ok);
+    }
+
+    /**
+     * Responsible for doing the native map library loading in an AsyncTask.
+     * @return AsyncTask
+     */
+    public static AsyncTask loadNativeLibraryAsync(final @Nullable NativeLibraryLoadCb readyCb) {
+         class InitTask extends AsyncTask<Void, Void, Boolean> {
+            @Override
+            protected Boolean doInBackground(Void... voids) {
+                boolean ok = loadNativeLibrary();
+                if (readyCb != null) {
+                    readyCb.onLibraryReadyAsync(ok);
+                }
+                return ok;
+            }
+            @Override
+            protected void onPostExecute(Boolean ok) {
+                if (readyCb != null) {
+                    readyCb.onLibraryReady(ok);
+                }
+            }
+            @Override
+            protected void onCancelled(Boolean ok) {
+                if (readyCb != null) {
+                    readyCb.onLibraryReady(false);
+                }
             }
         }
-        callback.onMapReady(mapController);
-    }
-
-    /**
-     * To be executed by the async task implementation during cancellation of a mapInit task
-     * @param controller {@link MapController} created by a background task which is no longer required
-     */
-    protected void onMapInitCancelled(@Nullable final MapController controller) {
-        if (controller != null) {
-            controller.dispose();
-        }
-    }
-
-    /**
-     * Responsible for creating and executing an async task to initialize the Map
-     * Note: Can be overridden to support other ways of implementing async tasks (e.g. when using observable with RxJava)
-     * @param callback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
-     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
-     * @param handler Set the client implemented {@link HttpHandler} for retrieving remote map resources
-     *                when null {@link DefaultHttpHandler} is used
-     */
-    protected void executeMapAsyncTask(@NonNull final MapReadyCallback callback,
-                                       @NonNull GLViewHolderFactory viewHolderFactory,
-                                       @Nullable final HttpHandler handler) {
-        getMapAsyncTask = new MapAsyncTask(this, callback, viewHolderFactory, handler);
-        getMapAsyncTask.execute();
-    }
-
-    /**
-     * Responsible to dispose any prior running getMapReadyTask
-     * Note: Can be overriden to support other ways of implementing async tasks (e.g. when using observable with RxJava)
-     */
-    protected void disposeMapReadyTask() {
-        if (getMapAsyncTask != null) {
-            getMapAsyncTask.cancel(true);
-        }
-        getMapAsyncTask = null;
-    }
-
-    /**
-     * Construct a {@code MapController} in an async thread using {@link GLSurfaceView} as GL rendering interface;
-     * may only be called from the UI thread
-     * Map instance uses {@link DefaultHttpHandler} for retrieving remote map resources
-     * @param readyCallback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
-     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
-     */
-    public void getMapAsync(@NonNull final MapReadyCallback readyCallback) {
-        getMapAsync(readyCallback, new GLSurfaceViewHolderFactory(), null);
-    }
-
-    /**
-     * Construct a {@code MapController} in an async thread using {@link GLSurfaceView} as GL rendering interface;
-     * may only be called from the UI thread
-     * @param readyCallback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
-     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
-     * @param handler Set the client implemented {@link HttpHandler} for retrieving remote map resources
-     *                when null {@link DefaultHttpHandler} is used
-     */
-    public void getMapAsync(@NonNull final MapReadyCallback readyCallback,
-                            @Nullable final HttpHandler handler) {
-        getMapAsync(readyCallback, new GLSurfaceViewHolderFactory(), handler);
-    }
-
-    /**
-     * Construct a {@code MapController} in an async thread using an instance
-     * {@link GLViewHolderFactory}, like {@link GLSurfaceViewHolderFactory} or any client implementation
-     * may only be called from the UI thread
-     * Map instance uses {@link DefaultHttpHandler} for retrieving remote map resources
-     * @param readyCallback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
-     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
-     * @param glViewHolderFactory An instance of {@link GLViewHolderFactory} providing the GL responsibilities
-     */
-    public void getMapAsync(@NonNull final MapReadyCallback readyCallback,
-                            @NonNull final GLViewHolderFactory glViewHolderFactory) {
-        getMapAsync(readyCallback, glViewHolderFactory, null);
-    }
-
-    /**
-     * Construct a {@code MapController} in an async thread using an instance
-     * {@link GLViewHolderFactory}, like {@link GLSurfaceViewHolderFactory} or any client implementation
-     * may only be called from the UI thread
-     * @param readyCallback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
-     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
-     * @param glViewHolderFactory An instance of {@link GLViewHolderFactory} providing the GL responsibilities
-     * @param handler Set the client implemented {@link HttpHandler} for retrieving remote map resources
-     *                when null {@link DefaultHttpHandler} is used
-     */
-    public void getMapAsync(@NonNull final MapReadyCallback readyCallback,
-                            GLViewHolderFactory glViewHolderFactory,
-                            @Nullable final HttpHandler handler) {
-        disposeMapReadyTask();
-        executeMapAsyncTask(readyCallback, glViewHolderFactory, handler);
+        return new InitTask().execute();
     }
 
     protected void disposeMap() {
-        disposeMapReadyTask();
+
+        if (loadLibraryTask != null) {
+            loadLibraryTask.cancel(true);
+            loadLibraryTask = null;
+        }
 
         if (viewHolder != null) {
             viewHolder.onPause();
@@ -243,8 +255,8 @@ public class MapView extends FrameLayout {
         return false;
     }
 
-    protected MapController getMapInstance() {
-        return new MapController(this.getContext());
+    protected MapController getMapInstance(Context context) {
+        return new MapController(context);
     }
 
     /**
