@@ -1247,15 +1247,6 @@ public class MapController {
     // Networking methods
     // ==================
 
-    void cancelAllNetworkRequests() {
-        synchronized (httpRequestHandles) {
-            for (Object handle : httpRequestHandles.values()) {
-                httpHandler.cancelRequest(handle);
-            }
-            httpRequestHandles.clear();
-        }
-    }
-
     @Keep
     void cancelUrlRequest(final long requestHandle) {
         Object request = httpRequestHandles.remove(requestHandle);
