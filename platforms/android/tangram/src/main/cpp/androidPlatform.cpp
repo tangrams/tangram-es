@@ -1,5 +1,7 @@
 #include "androidPlatform.h"
 
+#include "jniThreadBinding.h"
+
 #include "data/properties.h"
 #include "data/propertyItem.h"
 #include "log.h"
@@ -127,35 +129,6 @@ jstring jstringFromString(JNIEnv* jniEnv, const std::string& string) {
     return jniEnv->NewString(s, chars.length());
 }
 
-class JniThreadBinding {
-private:
-    JavaVM* jvm;
-    JNIEnv *jniEnv;
-    int status;
-public:
-    JniThreadBinding(JavaVM* _jvm) : jvm(_jvm) {
-        status = jvm->GetEnv((void**)&jniEnv, TANGRAM_JNI_VERSION);
-        if (status == JNI_EDETACHED) {
-            LOG("---------------->>> ATTACH");
-            jvm->AttachCurrentThread(&jniEnv, NULL);
-        }
-    }
-    ~JniThreadBinding() {
-        if (status == JNI_EDETACHED) {
-            LOG("---------------->>> DETACH");
-            jvm->DetachCurrentThread();
-        }
-    }
-
-    JNIEnv* operator->() const {
-        return jniEnv;
-    }
-
-    operator JNIEnv*() const {
-        return jniEnv;
-    }
-};
-
 void logMsg(const char* fmt, ...) {
 
     va_list args;
@@ -164,7 +137,6 @@ void logMsg(const char* fmt, ...) {
     va_end(args);
 
 }
-
 
 
 AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance)
