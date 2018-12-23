@@ -31,6 +31,7 @@ class AndroidPlatform : public Platform {
 public:
 
     AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance);
+    void shutdown() override;
     void requestRender() const override;
     void setContinuousRendering(bool _isContinuous) override;
     FontSourceHandle systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const override;

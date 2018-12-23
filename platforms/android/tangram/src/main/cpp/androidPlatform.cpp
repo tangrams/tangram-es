@@ -196,6 +196,10 @@ AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject
 #endif
 }
 
+void AndroidPlatform::shutdown() {
+    Platform::shutdown();
+    m_jniWorker.stop();
+}
 void AndroidPlatform::requestRender() const {
     m_jniWorker.enqueue([&](JNIEnv *jniEnv) {
         jniEnv->CallVoidMethod(m_tangramInstance, requestRenderMethodID);

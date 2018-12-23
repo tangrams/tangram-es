@@ -17,12 +17,7 @@ public:
     }
 
     ~JniWorker() {
-        {
-            std::unique_lock<std::mutex> lock(m_mutex);
-            m_running = false;
-        }
-        m_condition.notify_all();
-        thread.join();
+       stop();
     }
 
     void enqueue(std::function<void(JNIEnv *jniEnv)> _task) {
@@ -35,6 +30,16 @@ public:
         m_condition.notify_one();
     }
 
+    void stop() {
+        if (!m_running) { return; }
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            m_running = false;
+        }
+        m_condition.notify_all();
+        thread.join();
+    }
+
 private:
 
     void run() {
@@ -45,7 +50,7 @@ private:
             {
                 std::unique_lock<std::mutex> lock(m_mutex);
                 m_condition.wait(lock, [&]{ return !m_running || !m_queue.empty(); });
-                if (!m_running) { break; }
+                if (!m_running && m_queue.empty()) { break; }
 
                 task = std::move(m_queue.front());
                 m_queue.pop_front();
