@@ -48,15 +48,22 @@ public class MapRenderer  implements GLSurfaceView.Renderer {
 
         boolean viewComplete = mapViewComplete && !isPrevMapViewComplete;
 
-        if (viewComplete) {
-            if (map.mapChangeListener != null) {
-                map.mapChangeListener.onViewComplete();
-            }
+        if (viewComplete && map.mapChangeListener != null) {
+            uiThreadHandler.post(viewCompleteRunnable);
         }
+
         if (frameCaptureCallback != null) {
+            final MapController.FrameCaptureCallback cb = frameCaptureCallback;
+            frameCaptureCallback = null;
+
             if (!frameCaptureAwaitCompleteView || viewComplete) {
-                frameCaptureCallback.onCaptured(capture());
-                frameCaptureCallback = null;
+                final Bitmap screenshot = capture();
+                uiThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        cb.onCaptured(screenshot);
+                    }
+                });
             }
         }
 
@@ -139,16 +146,24 @@ public class MapRenderer  implements GLSurfaceView.Renderer {
     private MapController.FrameCaptureCallback frameCaptureCallback;
     private boolean frameCaptureAwaitCompleteView;
 
-    private Runnable setMapRegionAnimatingRunnable = new Runnable() {
+    private final Runnable setMapRegionAnimatingRunnable = new Runnable() {
         @Override
         public void run() {
             map.setMapRegionState(MapController.MapRegionChangeState.ANIMATING);
         }
     };
-    private Runnable setMapRegionIdleRunnable = new Runnable() {
+    private final Runnable setMapRegionIdleRunnable = new Runnable() {
         @Override
         public void run() {
             map.setMapRegionState(MapController.MapRegionChangeState.IDLE);
+        }
+    };
+    private final Runnable viewCompleteRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (map.mapChangeListener != null) {
+                map.mapChangeListener.onViewComplete();
+            }
         }
     };
 }

@@ -127,7 +127,7 @@ public class MapController {
      */
     public interface FrameCaptureCallback {
         /**
-         * Called on the render-thread when a frame was captured.
+         * Called on the ui-thread when a frame was captured.
          */
         void onCaptured(@NonNull final Bitmap bitmap);
     }
@@ -1048,7 +1048,8 @@ public class MapController {
 
     /**
      * Set a listener for map change events
-     * @param listener The {@link MapChangeListener} to call when the map change events occur due to camera updates or user interaction
+     * @param listener The {@link MapChangeListener} to call when the map change events occur
+     *                due to camera updates or user interaction
      */
     public void setMapChangeListener(@Nullable final MapChangeListener listener) {
         mapChangeListener = listener;
