@@ -1,5 +1,6 @@
 #pragma once
 
+#include "map.h"
 #include "platform.h"
 #include "jniWorker.h"
 #include "util/asyncWorker.h"
@@ -26,6 +27,7 @@ using SceneID = int32_t;
 std::string stringFromJString(JNIEnv* jniEnv, jstring string);
 jstring jstringFromString(JNIEnv* jniEnv, const std::string& string);
 
+
 class AndroidPlatform : public Platform {
 
 public:
@@ -38,11 +40,6 @@ public:
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
     UrlRequestId startUrlRequest(Url _url, UrlRequestHandle _request) override;
     void urlRequestCanceled(UrlRequestId _id) override;
-    void sceneReadyCallback(SceneID id, const SceneError* error);
-    void cameraAnimationCallback(bool finished);
-    void featurePickCallback(const FeaturePickResult* featurePickResult);
-    void labelPickCallback(const LabelPickResult* labelPickResult);
-    void markerPickCallback(const MarkerPickResult* markerPickResult);
 
     void onUrlComplete(JNIEnv* jniEnv, jlong jRequestHandle, jbyteArray jBytes, jstring jError);
 
@@ -60,10 +57,20 @@ private:
     jobject m_tangramInstance;
     AAssetManager* m_assetManager;
 
-
-
-    mutable JniWorker m_jniWorker;  // FIX requestRender const.. Lets use Rust if we want this for real
+    mutable JniWorker m_jniWorker;
     AsyncWorker m_fileWorker;
 };
+
+class AndroidMap : public Map {
+public:
+    AndroidMap(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance);
+    void pickFeature(float posX, float posY);
+    void pickMarker(float posX, float posY);
+    void pickLabel(float posX, float posY);
+
+
+    jobject m_tangramInstance;
+};
+
 
 } // namespace Tangram
