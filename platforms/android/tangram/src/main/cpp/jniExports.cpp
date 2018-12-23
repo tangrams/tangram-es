@@ -198,6 +198,12 @@ extern "C" {
         delete reinterpret_cast<Tangram::Map*>(mapPtr);
     }
 
+    JNIEXPORT void MapController(nativeShutdown)(JNIEnv* jniEnv, jobject tangramInstance, jlong mapPtr) {
+        assert(mapPtr > 0);
+
+        reinterpret_cast<Tangram::Map*>(mapPtr)->getPlatform()->shutdown();
+    }
+
     JNIEXPORT jint MapController(nativeLoadScene)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring path,
                                                   jobjectArray updateStrings) {
         assert(mapPtr > 0);

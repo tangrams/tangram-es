@@ -25,6 +25,8 @@ import com.mapzen.tangram.networking.DefaultHttpHandler;
 import com.mapzen.tangram.networking.HttpHandler;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -213,46 +215,49 @@ public class MapController {
      * Responsible to dispose internals of MapController during Map teardown.
      * If client code extends MapController and overrides this method, then it must call super.dispose()
      */
-    protected void dispose() {
+    protected synchronized void dispose() {
+        if (mapPointer == 0) { return; }
 
-        cancelAllNetworkRequests();
-        httpHandler = null;
+        Log.e("TANGRAM", ">>> dispose");
+        nativeShutdown(mapPointer);
+        Log.e("TANGRAM", "<<< http requests: " + httpRequestHandles.size());
 
-        // Prevent any other calls to native functions during dispose
-        synchronized (this) {
-            // Dispose each data sources by first removing it from the Map values and then
-            // calling remove(), so that we don't improperly modify the Map while iterating.
-            for (final Iterator<MapData> it = clientTileSources.values().iterator(); it.hasNext(); ) {
-                final MapData mapData = it.next();
-                it.remove();
-                mapData.remove();
-            }
-            clientTileSources.clear();
-            markers.clear();
-
-            // Dispose all listener and callbacks associated with mapController
-            // This will help prevent leaks of references from the client code, possibly used in these
-            // listener/callbacks
-            touchInput = null;
-            mapChangeListener = null;
-            featurePickListener = null;
-            sceneLoadListener = null;
-            labelPickListener = null;
-            markerPickListener = null;
-            cameraAnimationCallback = null;
-            frameCaptureCallback = null;
-
-            // Prevent any calls to native functions - except dispose.
-            final long pointer = mapPointer;
-            mapPointer = 0;
-
-            // NOTE: It is possible for the MapView held by a ViewGroup to be removed, calling detachFromWindow which
-            // stops the Render Thread associated with GLSurfaceView, possibly resulting in leaks from render thread
-            // queue. Because of the above, destruction lifecycle of the GLSurfaceView will not be triggered.
-            //
-            // To avoid the above senario, nativeDispose is called from the UIThread.
-            nativeDispose(pointer);
+        for (MapData mapData : clientTileSources.values()) {
+            mapData.remove();
         }
+
+        Log.e("TANGRAM", "<<< 1");
+        clientTileSources.clear();
+        Log.e("TANGRAM", "<<< 2");
+        markers.clear();
+        Log.e("TANGRAM", "<<< 3");
+
+        // Dispose all listener and callbacks associated with mapController
+        // This will help prevent leaks of references from the client code, possibly used in these
+        // listener/callbacks
+        touchInput = null;
+        mapChangeListener = null;
+        featurePickListener = null;
+        sceneLoadListener = null;
+        labelPickListener = null;
+        markerPickListener = null;
+        cameraAnimationCallback = null;
+        frameCaptureCallback = null;
+
+        // Prevent any calls to native functions - except dispose.
+        final long pointer = mapPointer;
+        mapPointer = 0;
+
+        // NOTE: It is possible for the MapView held by a ViewGroup to be removed, calling detachFromWindow which
+        // stops the Render Thread associated with GLSurfaceView, possibly resulting in leaks from render thread
+        // queue. Because of the above, destruction lifecycle of the GLSurfaceView will not be triggered.
+        // To avoid the above senario, nativeDispose is called from the UIThread.
+        //
+        // Since all gl resources will be freed when GLSurfaceView is deleted this is safe until
+        // we support sharing gl contexts.
+        nativeDispose(pointer);
+        Log.e("TANGRAM", "<<< disposed");
+
     }
 
     /**
@@ -1340,12 +1345,9 @@ public class MapController {
     // ==================
 
     void cancelAllNetworkRequests() {
-        if (httpHandler == null) {
-            return;
-        }
         synchronized (httpRequestHandles) {
-            for (int i = 0; i < httpRequestHandles.size(); i++) {
-                httpHandler.cancelRequest(httpRequestHandles.valueAt(i));
+            for (Object handle : httpRequestHandles.values()) {
+                httpHandler.cancelRequest(handle);
             }
             httpRequestHandles.clear();
         }
@@ -1353,81 +1355,44 @@ public class MapController {
 
     @Keep
     void cancelUrlRequest(final long requestHandle) {
-        final HttpHandler handler = httpHandler;
-        if (handler == null) {
-            return;
-        }
-
-        Object request;
-        synchronized (httpRequestHandles) {
-            request = httpRequestHandles.get(requestHandle);
-            httpRequestHandles.remove(requestHandle);
-        }
+        Object request = httpRequestHandles.remove(requestHandle);
         if (request != null) {
-            handler.cancelRequest(request);
+            httpHandler.cancelRequest(request);
         }
     }
 
     @Keep
     void startUrlRequest(@NonNull final String url, final long requestHandle) {
-        // TODO
-        // This is still does not ensure that handler.startRequest is not
-        // executed after MapController.dispose() when startUrlRequest is
-        // called from worker threads. At least the result will be ignored
-        final HttpHandler handler = httpHandler;
-        if (handler == null) {
-            return;
-        }
 
         final HttpHandler.Callback callback = new HttpHandler.Callback() {
             @Override
             public void onFailure(@Nullable final IOException e) {
-                if (httpHandler == null) {
-                    Log.w("Tangram", "Network call after disposing MapController - Failure");
-                    return;
-                }
+                if (httpRequestHandles.remove(requestHandle) == null) { return; }
                 String msg = (e == null) ? "" : e.getMessage();
                 nativeOnUrlComplete(mapPointer, requestHandle, null, msg);
-                synchronized(httpRequestHandles) {
-                    httpRequestHandles.remove(requestHandle);
-                }
             }
 
             @Override
             public void onResponse(final int code, @Nullable final byte[] rawDataBytes) {
-                if (httpHandler == null) {
-                    Log.w("Tangram", "Network call after disposing MapController - Response");
-                    return;
-                }
+                if (httpRequestHandles.remove(requestHandle) == null) { return; }
                 if (code >= 200 && code < 300) {
                     nativeOnUrlComplete(mapPointer, requestHandle, rawDataBytes, null);
                 } else {
                     nativeOnUrlComplete(mapPointer, requestHandle, null,
                             "Unexpected response code: " + code + " for URL: " + url);
                 }
-                synchronized(httpRequestHandles) {
-                    httpRequestHandles.remove(requestHandle);
-                }
             }
 
             @Override
             public void onCancel() {
-                if (httpHandler == null) {
-                    Log.w("Tangram", "Network call after disposing MapController - Cancel");
-                    return;
-                }
+                if (httpRequestHandles.remove(requestHandle) == null) { return; }
                 nativeOnUrlComplete(mapPointer, requestHandle, null, null);
-                synchronized(httpRequestHandles) {
-                    httpRequestHandles.remove(requestHandle);
-                }
             }
         };
 
-        Object request = handler.startRequest(url, callback);
+        Object request = httpHandler.startRequest(url, callback);
         if (request != null) {
-            synchronized (httpRequestHandles) {
-                httpRequestHandles.put(requestHandle, request);
-            }
+            httpRequestHandles.put(requestHandle, request);
         }
     }
 
