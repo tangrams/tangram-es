@@ -37,6 +37,8 @@ public class MapData {
      * @param geometry The feature to add
      */
     protected void addFeature(@NonNull final Geometry geometry) {
+        if (map == null) { return; }
+
         map.addFeature(pointer,
                 geometry.getCoordinateArray(),
                 geometry.getRingArray(),
@@ -111,6 +113,8 @@ public class MapData {
      */
     @NonNull
     public MapData addGeoJson(final String data) {
+        if (map == null) { return this; }
+
         map.addGeoJson(pointer, data);
         return this;
     }
@@ -121,6 +125,8 @@ public class MapData {
      */
     @NonNull
     public MapData clear() {
+        if (map == null) { return this; }
+
         map.clearTileSource(pointer);
         return this;
     }
