@@ -36,7 +36,7 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * {@code MapController} is the main class for interacting with a Tangram map.
  */
-public class MapController implements Renderer {
+public class MapController {
 
 
     public boolean handleGesture(View mapView, MotionEvent ev) {
@@ -91,7 +91,7 @@ public class MapController implements Renderer {
         SELECTION_BUFFER,
     }
 
-    private enum MapRegionChangeState {
+    enum MapRegionChangeState {
         IDLE,
         JUMPING,
         ANIMATING,
@@ -136,32 +136,8 @@ public class MapController implements Renderer {
      *                            no ease- or label-animation is running.
      */
     public void captureFrame(@NonNull final FrameCaptureCallback callback, final boolean waitForCompleteView) {
-        frameCaptureCallback = callback;
-        frameCaptureAwaitCompleteView = waitForCompleteView;
+        mapRenderer.captureFrame(callback, waitForCompleteView);
         requestRender();
-    }
-
-    @NonNull
-    private Bitmap capture() {
-        final int w = viewHolder.getView().getWidth();
-        final int h = viewHolder.getView().getHeight();
-
-        final int b[] = new int[w * h];
-        final int bt[] = new int[w * h];
-
-        nativeCaptureSnapshot(mapPointer, b);
-
-        for (int i = 0; i < h; i++) {
-            for (int j = 0; j < w; j++) {
-                final int pix = b[i * w + j];
-                final int pb = (pix >> 16) & 0xff;
-                final int pr = (pix << 16) & 0x00ff0000;
-                final int pix1 = (pix & 0xff00ff00) | pr | pb;
-                bt[(h - i - 1) * w + j] = pix1;
-            }
-        }
-
-        return Bitmap.createBitmap(bt, w, h, Bitmap.Config.ARGB_8888);
     }
 
     /**
@@ -190,6 +166,7 @@ public class MapController implements Renderer {
         if (mapPointer <= 0) {
             throw new RuntimeException("Unable to create a native Map object! There may be insufficient memory available.");
         }
+        nativeSetPixelScale(mapPointer, displayMetrics.density);
     }
 
     /**
@@ -207,13 +184,17 @@ public class MapController implements Renderer {
             httpHandler = handler;
         }
 
+        Context context = viewHolder.getView().getContext();
+
+        uiThreadHandler = new Handler(context.getMainLooper());
+        mapRenderer = new MapRenderer(this, uiThreadHandler);
+
         // Set up MapView
         this.viewHolder = viewHolder;
-        viewHolder.setRenderer(this);
+        viewHolder.setRenderer(mapRenderer);
         isGLRendererSet = true;
         viewHolder.setRenderMode(GLViewHolder.RenderMode.RENDER_WHEN_DIRTY);
 
-        Context context = viewHolder.getView().getContext();
         touchInput = new TouchInput(context);
 
         touchInput.setPanResponder(getPanResponder());
@@ -226,8 +207,6 @@ public class MapController implements Renderer {
         touchInput.setSimultaneousDetectionDisabled(Gestures.SHOVE, Gestures.SCALE);
         touchInput.setSimultaneousDetectionDisabled(Gestures.SHOVE, Gestures.PAN);
         touchInput.setSimultaneousDetectionDisabled(Gestures.SCALE, Gestures.LONG_PRESS);
-
-        uiThreadHandler = new Handler(context.getMainLooper());
     }
 
     /**
@@ -1173,13 +1152,17 @@ public class MapController implements Renderer {
 
     void checkPointer(final long ptr) {
         if (ptr <= 0) {
-            throw new RuntimeException("Tried to perform an operation on an invalid pointer! This means you may have used an object that has been disposed and is no longer valid.");
+            throw new RuntimeException("Tried to perform an operation on an invalid pointer!"
+                    + " This means you may have used an object that has been disposed and is no"
+                    + " longer valid.");
         }
     }
 
     void checkId(final long id) {
         if (id <= 0) {
-            throw new RuntimeException("Tried to perform an operation on an invalid id! This means you may have used an object that has been disposed and is no longer valid.");
+            throw new RuntimeException("Tried to perform an operation on an invalid id!"
+                    + " This means you may have used an object that has been disposed and is no"
+                    + " longer valid.");
         }
     }
 
@@ -1260,14 +1243,12 @@ public class MapController implements Renderer {
     private synchronized native void nativeOnLowMemory(long mapPtr);
     private synchronized native long nativeInit(AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
+    private synchronized native void nativeShutdown(long mapPtr);
     private synchronized native int nativeLoadScene(long mapPtr, String path, String[] updateStrings);
     private synchronized native int nativeLoadSceneAsync(long mapPtr, String path, String[] updateStrings);
     private synchronized native int nativeLoadSceneYaml(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
     private synchronized native int nativeLoadSceneYamlAsync(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
-    private synchronized native void nativeSetupGL(long mapPtr);
-    private synchronized native void nativeResize(long mapPtr, int width, int height);
-    private synchronized native boolean nativeUpdate(long mapPtr, float dt);
-    private synchronized native boolean nativeRender(long mapPtr);
+
     private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
     private synchronized native void nativeUpdateCameraPosition(long mapPtr, int set, double lon, double lat, float zoom, float zoomBy,
                                                                 float rotation, float rotateBy, float tilt, float tiltBy,
@@ -1311,7 +1292,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeMarkerRemoveAll(long mapPtr);
 
     private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
-    private synchronized native void nativeCaptureSnapshot(long mapPtr, int[] buffer);
+
 
     private synchronized native void nativeSetDefaultBackgroundColor(long mapPtr, float r, float g, float b);
 
@@ -1328,8 +1309,9 @@ public class MapController implements Renderer {
     // Private members
     // ===============
 
-    private long mapPointer;
-    private long time = System.nanoTime();
+    long mapPointer;
+    private MapRenderer mapRenderer;
+
     private GLViewHolder viewHolder;
     private MapRegionChangeState currentState = MapRegionChangeState.IDLE;
     private AssetManager assetManager;
@@ -1337,8 +1319,8 @@ public class MapController implements Renderer {
     private FontFileParser fontFileParser;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
-    private final LongSparseArray<Object> httpRequestHandles = new LongSparseArray<>();
-    private MapChangeListener mapChangeListener;
+    private final Map<Long, Object> httpRequestHandles = Collections.synchronizedMap(new HashMap());
+    MapChangeListener mapChangeListener;
     private FeaturePickListener featurePickListener;
     private SceneLoadListener sceneLoadListener;
     private LabelPickListener labelPickListener;
@@ -1352,89 +1334,7 @@ public class MapController implements Renderer {
     private CameraAnimationCallback pendingCameraAnimationCallback;
     private final Object cameraAnimationCallbackLock = new Object();
     private boolean isGLRendererSet = false;
-    private boolean isPrevCameraEasing = false;
-    private boolean isPrevMapViewComplete = false;
-    private Runnable setMapRegionAnimatingRunnable = new Runnable() {
-        @Override
-        public void run() {
-            setMapRegionState(MapRegionChangeState.ANIMATING);
-        }
-    };
-    private Runnable setMapRegionIdleRunnable = new Runnable() {
-        @Override
-        public void run() {
-            setMapRegionState(MapRegionChangeState.IDLE);
-        }
-    };
 
-    // GLSurfaceView.Renderer methods
-    // ==============================
-
-    @Override
-    public void onDrawFrame(final GL10 gl) {
-        final long newTime = System.nanoTime();
-        final float delta = (newTime - time) / 1000000000.0f;
-        time = newTime;
-
-        if (mapPointer <= 0) {
-            // No native instance is initialized, so stop here. This can happen during Activity
-            // shutdown when the map has been disposed but the View hasn't been destroyed yet.
-            return;
-        }
-
-        boolean mapViewComplete;
-        boolean isCameraEasing;
-        synchronized(this) {
-            mapViewComplete = nativeUpdate(mapPointer, delta);
-            isCameraEasing = nativeRender(mapPointer);
-        }
-
-        if (isCameraEasing) {
-            uiThreadHandler.post(setMapRegionAnimatingRunnable);
-        } else if (isPrevCameraEasing) {
-            uiThreadHandler.post(setMapRegionIdleRunnable);
-        }
-
-        boolean viewComplete = mapViewComplete && !isPrevMapViewComplete;
-
-        if (viewComplete) {
-            if (mapChangeListener != null) {
-                mapChangeListener.onViewComplete();
-            }
-        }
-        if (frameCaptureCallback != null) {
-            if (!frameCaptureAwaitCompleteView || viewComplete) {
-                frameCaptureCallback.onCaptured(capture());
-                frameCaptureCallback = null;
-            }
-        }
-
-        isPrevCameraEasing = isCameraEasing;
-        isPrevMapViewComplete = mapViewComplete;
-    }
-
-    @Override
-    public void onSurfaceChanged(final GL10 gl, final int width, final int height) {
-        if (mapPointer <= 0) {
-            // No native instance is initialized, so stop here. This can happen during Activity
-            // shutdown when the map has been disposed but the View hasn't been destroyed yet.
-            return;
-        }
-
-        nativeSetPixelScale(mapPointer, displayMetrics.density);
-        nativeResize(mapPointer, width, height);
-    }
-
-    @Override
-    public void onSurfaceCreated(final GL10 gl, final EGLConfig config) {
-        if (mapPointer <= 0) {
-            // No native instance is initialized, so stop here. This can happen during Activity
-            // shutdown when the map has been disposed but the View hasn't been destroyed yet.
-            return;
-        }
-
-        nativeSetupGL(mapPointer);
-    }
 
     // Networking methods
     // ==================
