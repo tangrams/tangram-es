@@ -1144,17 +1144,6 @@ public class MapController {
         nativeClearTileSource(mapPointer, sourcePtr);
     }
 
-    void addFeature(final long sourcePtr, final double[] coordinates, final int[] rings, final String[] properties) {
-        checkPointer(mapPointer);
-        checkPointer(sourcePtr);
-        nativeAddFeature(mapPointer, sourcePtr, coordinates, rings, properties);
-    }
-
-    void addGeoJson(final long sourcePtr, final String geoJson) {
-        checkPointer(mapPointer);
-        checkPointer(sourcePtr);
-        nativeAddGeoJson(mapPointer, sourcePtr, geoJson);
-    }
 
     void checkPointer(final long ptr) {
         if (ptr <= 0) {
@@ -1474,13 +1463,12 @@ public class MapController {
     private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
     private synchronized native void nativeSetDefaultBackgroundColor(long mapPtr, float r, float g, float b);
 
+    private synchronized native long nativeAddTileSource(long mapPtr, String name, boolean generateCentroid);
+    private synchronized native void nativeRemoveTileSource(long mapPtr, long sourcePtr);
+    private synchronized native void nativeClearTileSource(long mapPtr, long sourcePtr);
+
+    private synchronized native void nativeSetDebugFlag(int flag, boolean on);
+
     private native void nativeOnUrlComplete(long mapPtr, long requestHandle, byte[] rawDataBytes, String errorMessage);
 
-    synchronized native long nativeAddTileSource(long mapPtr, String name, boolean generateCentroid);
-    synchronized native void nativeRemoveTileSource(long mapPtr, long sourcePtr);
-    synchronized native void nativeClearTileSource(long mapPtr, long sourcePtr);
-    synchronized native void nativeAddFeature(long mapPtr, long sourcePtr, double[] coordinates, int[] rings, String[] properties);
-    synchronized native void nativeAddGeoJson(long mapPtr, long sourcePtr, String geoJson);
-
-    native void nativeSetDebugFlag(int flag, boolean on);
 }

@@ -8,8 +8,7 @@
 using namespace Tangram;
 
 #define FUNC(CLASS, NAME) JNICALL Java_com_mapzen_tangram_ ## CLASS ## _ ## NAME
-#define MapController(NAME) FUNC(MapController, NAME)
-#define MapRenderer(NAME) FUNC(MapRenderer, NAME)
+
 #define auto_map(ptr) assert(ptr); auto map = reinterpret_cast<Tangram::AndroidMap*>(mapPtr)
 
 std::vector<Tangram::SceneUpdate> unpackSceneUpdates(JNIEnv* jniEnv, jobjectArray updateStrings) {
@@ -36,7 +35,8 @@ extern "C" {
         AndroidPlatform::jniOnUnload(vm);
     }
 
-    ///////////////// MapRenderer ////////////////
+
+#define MapRenderer(NAME) FUNC(MapRenderer, NAME)
 
     JNIEXPORT jboolean MapRenderer(nativeUpdate)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat dt) {
         auto_map(mapPtr);
@@ -68,7 +68,10 @@ extern "C" {
         jniEnv->ReleaseIntArrayElements(buffer, ptr, JNI_ABORT);
     }
 
-    ///////////////// MapController ////////////////
+#undef MapRenderer
+
+
+#define MapController(NAME) FUNC(MapController, NAME)
 
     JNIEXPORT void MapController(nativeGetCameraPosition)(JNIEnv* jniEnv, jobject obj, jlong mapPtr,
                                                           jdoubleArray lonLat, jfloatArray zoomRotationTilt) {
@@ -511,6 +514,39 @@ extern "C" {
         map->markerRemoveAll();
     }
 
+
+    JNIEXPORT void MapController(nativeSetDebugFlag)(JNIEnv* jniEnv, jobject obj, jint flag, jboolean on) {
+        Tangram::setDebugFlag(static_cast<Tangram::DebugFlags>(flag), on);
+    }
+
+    JNIEXPORT void MapController(nativeUseCachedGlState)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jboolean use) {
+        auto_map(mapPtr);
+
+        map->useCachedGlState(use);
+    }
+
+    JNIEXPORT jint MapController(nativeUpdateScene)(JNIEnv* jniEnv, jobject obj, jlong mapPtr,
+                                                    jobjectArray updateStrings) {
+        auto_map(mapPtr);
+
+        auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
+
+        return map->updateSceneAsync(sceneUpdates);
+    }
+
+    JNIEXPORT void MapController(nativeOnLowMemory)(JNIEnv* jnienv, jobject obj, jlong mapPtr) {
+        auto_map(mapPtr);
+
+        map->onMemoryWarning();
+    }
+
+    JNIEXPORT void MapController(nativeSetDefaultBackgroundColor)(JNIEnv* jnienv, jobject obj, jlong mapPtr,
+                                                                  jfloat r, jfloat g, jfloat b) {
+        auto_map(mapPtr);
+
+        map->setDefaultBackgroundColor(r, g, b);
+    }
+
     JNIEXPORT jlong MapController(nativeAddTileSource)(JNIEnv* jniEnv, jobject obj, jlong mapPtr,
                                                        jstring name, jboolean generateCentroid) {
         auto_map(mapPtr);
@@ -537,10 +573,14 @@ extern "C" {
         map->clearTileSource(*source, true, true);
     }
 
-    JNIEXPORT void MapController(nativeAddFeature)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong sourcePtr,
+#undef MapController
+
+
+#define MapData(NAME) FUNC(MapData, NAME)
+
+    JNIEXPORT void MapData(nativeAddFeature)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr,
         jdoubleArray jcoordinates, jintArray jrings, jobjectArray jproperties) {
 
-        assert(mapPtr > 0);
         assert(sourcePtr > 0);
         auto source = reinterpret_cast<Tangram::ClientGeoJsonSource*>(sourcePtr);
 
@@ -594,44 +634,14 @@ extern "C" {
 
     }
 
-    JNIEXPORT void MapController(nativeAddGeoJson)(JNIEnv* jniEnv, jobject obj, jlong mapPtr,
+    JNIEXPORT void MapData(nativeAddGeoJson)(JNIEnv* jniEnv, jobject obj,
                                                    jlong sourcePtr, jstring geojson) {
-        assert(mapPtr > 0);
         assert(sourcePtr > 0);
         auto source = reinterpret_cast<Tangram::ClientGeoJsonSource*>(sourcePtr);
         auto data = stringFromJString(jniEnv, geojson);
         source->addData(data);
     }
 
-    JNIEXPORT void MapController(nativeSetDebugFlag)(JNIEnv* jniEnv, jobject obj, jint flag, jboolean on) {
-        Tangram::setDebugFlag(static_cast<Tangram::DebugFlags>(flag), on);
-    }
+#undef MapData
 
-    JNIEXPORT void MapController(nativeUseCachedGlState)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jboolean use) {
-        auto_map(mapPtr);
-
-        map->useCachedGlState(use);
-    }
-
-    JNIEXPORT jint MapController(nativeUpdateScene)(JNIEnv* jniEnv, jobject obj, jlong mapPtr,
-                                                    jobjectArray updateStrings) {
-        auto_map(mapPtr);
-
-        auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
-
-        return map->updateSceneAsync(sceneUpdates);
-    }
-
-    JNIEXPORT void MapController(nativeOnLowMemory)(JNIEnv* jnienv, jobject obj, jlong mapPtr) {
-        auto_map(mapPtr);
-
-        map->onMemoryWarning();
-    }
-
-    JNIEXPORT void MapController(nativeSetDefaultBackgroundColor)(JNIEnv* jnienv, jobject obj, jlong mapPtr,
-                                                                  jfloat r, jfloat g, jfloat b) {
-        auto_map(mapPtr);
-
-        map->setDefaultBackgroundColor(r, g, b);
-    }
 }

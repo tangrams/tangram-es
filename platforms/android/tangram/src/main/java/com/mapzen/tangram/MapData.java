@@ -16,9 +16,10 @@ import java.util.Map;
  */
 public class MapData {
 
-    String name;
-    long pointer = 0;
-    MapController map;
+    final String name;
+
+    private MapController mapController;
+   long pointer = 0;
 
     /**
      * For package-internal use only; create a new {@code MapData}
@@ -29,7 +30,7 @@ public class MapData {
     MapData(final String name, final long pointer, @NonNull final MapController map) {
         this.name = name;
         this.pointer = pointer;
-        this.map = map;
+        this.mapController = map;
     }
 
     /**
@@ -37,14 +38,18 @@ public class MapData {
      * @param geometry The feature to add
      */
     protected void addFeature(@NonNull final Geometry geometry) {
-        if (map == null) { return; }
+        final MapController map = mapController;
+        if (map == null) {
+            return;
+        }
 
-        map.addFeature(pointer,
-                geometry.getCoordinateArray(),
-                geometry.getRingArray(),
-                geometry.getPropertyArray());
+        synchronized (map) {
+            nativeAddFeature(pointer,
+                    geometry.getCoordinateArray(),
+                    geometry.getRingArray(),
+                    geometry.getPropertyArray());
+        }
     }
-
     /**
      * Get the name of this {@code MapData}.
      * @return The name.
@@ -59,9 +64,14 @@ public class MapData {
      * on every {@code MapData} associated with a map when its {@code MapController} is destroyed.
      */
     public void remove() {
+        final MapController map = mapController;
+        if (map == null) {
+            return;
+        }
         map.removeDataLayer(this);
+
+        mapController = null;
         pointer = 0;
-        map = null;
     }
 
     /**
@@ -113,9 +123,13 @@ public class MapData {
      */
     @NonNull
     public MapData addGeoJson(final String data) {
-        if (map == null) { return this; }
-
-        map.addGeoJson(pointer, data);
+        final MapController map = mapController;
+        if (map == null) {
+            return this;
+        }
+        synchronized (map) {
+            nativeAddGeoJson(pointer, data);
+        }
         return this;
     }
 
@@ -125,10 +139,14 @@ public class MapData {
      */
     @NonNull
     public MapData clear() {
-        if (map == null) { return this; }
-
+        final MapController map = mapController;
+        if (map == null) {
+            return this;
+        }
         map.clearTileSource(pointer);
         return this;
     }
 
+    private native void nativeAddFeature(long sourcePtr, double[] coordinates, int[] rings, String[] properties);
+    private native void nativeAddGeoJson(long sourcePtr, String geoJson);
 }
