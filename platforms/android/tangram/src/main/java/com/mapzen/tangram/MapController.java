@@ -1242,104 +1242,6 @@ public class MapController {
         return nativeMarkerSetDrawOrder(mapPointer, markerId, drawOrder);
     }
 
-    // Native methods
-    // ==============
-
-    private synchronized native void nativeOnLowMemory(long mapPtr);
-    private synchronized native long nativeInit(AssetManager assetManager);
-    private synchronized native void nativeDispose(long mapPtr);
-    private synchronized native void nativeShutdown(long mapPtr);
-    private synchronized native int nativeLoadScene(long mapPtr, String path, String[] updateStrings);
-    private synchronized native int nativeLoadSceneAsync(long mapPtr, String path, String[] updateStrings);
-    private synchronized native int nativeLoadSceneYaml(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
-    private synchronized native int nativeLoadSceneYamlAsync(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
-
-    private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
-    private synchronized native void nativeUpdateCameraPosition(long mapPtr, int set, double lon, double lat, float zoom, float zoomBy,
-                                                                float rotation, float rotateBy, float tilt, float tiltBy,
-                                                                double b1lon, double b1lat, double b2lon, double b2lat, int[] padding,
-                                                                float duration, int ease);
-    private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
-    private synchronized native void nativeGetEnclosingCameraPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int[] buffer, double[] lngLatZoom);
-    private synchronized native void nativeCancelCameraAnimation(long mapPtr);
-    private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
-    private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates);
-    private synchronized native void nativeSetPixelScale(long mapPtr, float scale);
-    private synchronized native void nativeSetCameraType(long mapPtr, int type);
-    private synchronized native int nativeGetCameraType(long mapPtr);
-    private synchronized native float nativeGetMinZoom(long mapPtr);
-    private synchronized native void nativeSetMinZoom(long mapPtr, float minZoom);
-    private synchronized native float nativeGetMaxZoom(long mapPtr);
-    private synchronized native void nativeSetMaxZoom(long mapPtr, float maxZoom);
-    private synchronized native void nativeHandleTapGesture(long mapPtr, float posX, float posY);
-    private synchronized native void nativeHandleDoubleTapGesture(long mapPtr, float posX, float posY);
-    private synchronized native void nativeHandlePanGesture(long mapPtr, float startX, float startY, float endX, float endY);
-    private synchronized native void nativeHandleFlingGesture(long mapPtr, float posX, float posY, float velocityX, float velocityY);
-    private synchronized native void nativeHandlePinchGesture(long mapPtr, float posX, float posY, float scale, float velocity);
-    private synchronized native void nativeHandleRotateGesture(long mapPtr, float posX, float posY, float rotation);
-    private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
-    private synchronized native int nativeUpdateScene(long mapPtr, String[] updateStrings);
-    private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
-    private synchronized native void nativePickFeature(long mapPtr, float posX, float posY);
-    private synchronized native void nativePickLabel(long mapPtr, float posX, float posY);
-    private synchronized native void nativePickMarker(long mapPtr, float posX, float posY);
-    private synchronized native long nativeMarkerAdd(long mapPtr);
-    private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
-    private synchronized native boolean nativeMarkerSetStylingFromString(long mapPtr, long markerID, String styling);
-    private synchronized native boolean nativeMarkerSetStylingFromPath(long mapPtr, long markerID, String path);
-    private synchronized native boolean nativeMarkerSetBitmap(long mapPtr, long markerID, Bitmap bitmap, float density);
-    private synchronized native boolean nativeMarkerSetPoint(long mapPtr, long markerID, double lng, double lat);
-    private synchronized native boolean nativeMarkerSetPointEased(long mapPtr, long markerID, double lng, double lat, float duration, int ease);
-    private synchronized native boolean nativeMarkerSetPolyline(long mapPtr, long markerID, double[] coordinates, int count);
-    private synchronized native boolean nativeMarkerSetPolygon(long mapPtr, long markerID, double[] coordinates, int[] rings, int count);
-    private synchronized native boolean nativeMarkerSetVisible(long mapPtr, long markerID, boolean visible);
-    private synchronized native boolean nativeMarkerSetDrawOrder(long mapPtr, long markerID, int drawOrder);
-    private synchronized native void nativeMarkerRemoveAll(long mapPtr);
-
-    private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
-
-
-    private synchronized native void nativeSetDefaultBackgroundColor(long mapPtr, float r, float g, float b);
-
-    private native void nativeOnUrlComplete(long mapPtr, long requestHandle, byte[] rawDataBytes, String errorMessage);
-
-    synchronized native long nativeAddTileSource(long mapPtr, String name, boolean generateCentroid);
-    synchronized native void nativeRemoveTileSource(long mapPtr, long sourcePtr);
-    synchronized native void nativeClearTileSource(long mapPtr, long sourcePtr);
-    synchronized native void nativeAddFeature(long mapPtr, long sourcePtr, double[] coordinates, int[] rings, String[] properties);
-    synchronized native void nativeAddGeoJson(long mapPtr, long sourcePtr, String geoJson);
-
-    native void nativeSetDebugFlag(int flag, boolean on);
-
-    // Private members
-    // ===============
-
-    long mapPointer;
-    private MapRenderer mapRenderer;
-
-    private GLViewHolder viewHolder;
-    private MapRegionChangeState currentState = MapRegionChangeState.IDLE;
-    private AssetManager assetManager;
-    private TouchInput touchInput;
-    private FontFileParser fontFileParser;
-    private DisplayMetrics displayMetrics = new DisplayMetrics();
-    private HttpHandler httpHandler;
-    private final Map<Long, Object> httpRequestHandles = Collections.synchronizedMap(new HashMap());
-    MapChangeListener mapChangeListener;
-    private FeaturePickListener featurePickListener;
-    private SceneLoadListener sceneLoadListener;
-    private LabelPickListener labelPickListener;
-    private MarkerPickListener markerPickListener;
-    private FrameCaptureCallback frameCaptureCallback;
-    private boolean frameCaptureAwaitCompleteView;
-    private Map<String, MapData> clientTileSources;
-    private LongSparseArray<Marker> markers;
-    private Handler uiThreadHandler;
-    private CameraAnimationCallback cameraAnimationCallback;
-    private CameraAnimationCallback pendingCameraAnimationCallback;
-    private final Object cameraAnimationCallbackLock = new Object();
-    private boolean isGLRendererSet = false;
-
 
     // Networking methods
     // ==================
@@ -1496,4 +1398,97 @@ public class MapController {
         return fontFileParser.getFontFallback(importance, weightHint);
     }
 
+    // Private members
+    // ===============
+
+    long mapPointer;
+    private MapRenderer mapRenderer;
+    private GLViewHolder viewHolder;
+    private MapRegionChangeState currentState = MapRegionChangeState.IDLE;
+    private AssetManager assetManager;
+    private TouchInput touchInput;
+    private FontFileParser fontFileParser;
+    private DisplayMetrics displayMetrics = new DisplayMetrics();
+    private HttpHandler httpHandler;
+    private final Map<Long, Object> httpRequestHandles = Collections.synchronizedMap(new HashMap());
+    MapChangeListener mapChangeListener;
+    private FeaturePickListener featurePickListener;
+    private SceneLoadListener sceneLoadListener;
+    private LabelPickListener labelPickListener;
+    private MarkerPickListener markerPickListener;
+    private FrameCaptureCallback frameCaptureCallback;
+    private boolean frameCaptureAwaitCompleteView;
+    private Map<String, MapData> clientTileSources;
+    private LongSparseArray<Marker> markers;
+    private Handler uiThreadHandler;
+    private CameraAnimationCallback cameraAnimationCallback;
+    private CameraAnimationCallback pendingCameraAnimationCallback;
+    private final Object cameraAnimationCallbackLock = new Object();
+    private boolean isGLRendererSet = false;
+
+    // Native methods
+    // ==============
+
+    private synchronized native void nativeOnLowMemory(long mapPtr);
+    private synchronized native long nativeInit(AssetManager assetManager);
+    private synchronized native void nativeDispose(long mapPtr);
+    private synchronized native void nativeShutdown(long mapPtr);
+    private synchronized native int nativeLoadScene(long mapPtr, String path, String[] updateStrings);
+    private synchronized native int nativeLoadSceneAsync(long mapPtr, String path, String[] updateStrings);
+    private synchronized native int nativeLoadSceneYaml(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
+    private synchronized native int nativeLoadSceneYamlAsync(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
+
+    private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
+    private synchronized native void nativeUpdateCameraPosition(long mapPtr, int set, double lon, double lat, float zoom, float zoomBy,
+                                                                float rotation, float rotateBy, float tilt, float tiltBy,
+                                                                double b1lon, double b1lat, double b2lon, double b2lat, int[] padding,
+                                                                float duration, int ease);
+    private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
+    private synchronized native void nativeGetEnclosingCameraPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int[] buffer, double[] lngLatZoom);
+    private synchronized native void nativeCancelCameraAnimation(long mapPtr);
+    private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
+    private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates);
+    private synchronized native void nativeSetPixelScale(long mapPtr, float scale);
+    private synchronized native void nativeSetCameraType(long mapPtr, int type);
+    private synchronized native int nativeGetCameraType(long mapPtr);
+    private synchronized native float nativeGetMinZoom(long mapPtr);
+    private synchronized native void nativeSetMinZoom(long mapPtr, float minZoom);
+    private synchronized native float nativeGetMaxZoom(long mapPtr);
+    private synchronized native void nativeSetMaxZoom(long mapPtr, float maxZoom);
+    private synchronized native void nativeHandleTapGesture(long mapPtr, float posX, float posY);
+    private synchronized native void nativeHandleDoubleTapGesture(long mapPtr, float posX, float posY);
+    private synchronized native void nativeHandlePanGesture(long mapPtr, float startX, float startY, float endX, float endY);
+    private synchronized native void nativeHandleFlingGesture(long mapPtr, float posX, float posY, float velocityX, float velocityY);
+    private synchronized native void nativeHandlePinchGesture(long mapPtr, float posX, float posY, float scale, float velocity);
+    private synchronized native void nativeHandleRotateGesture(long mapPtr, float posX, float posY, float rotation);
+    private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
+    private synchronized native int nativeUpdateScene(long mapPtr, String[] updateStrings);
+    private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
+    private synchronized native void nativePickFeature(long mapPtr, float posX, float posY);
+    private synchronized native void nativePickLabel(long mapPtr, float posX, float posY);
+    private synchronized native void nativePickMarker(long mapPtr, float posX, float posY);
+    private synchronized native long nativeMarkerAdd(long mapPtr);
+    private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
+    private synchronized native boolean nativeMarkerSetStylingFromString(long mapPtr, long markerID, String styling);
+    private synchronized native boolean nativeMarkerSetStylingFromPath(long mapPtr, long markerID, String path);
+    private synchronized native boolean nativeMarkerSetBitmap(long mapPtr, long markerID, Bitmap bitmap, float density);
+    private synchronized native boolean nativeMarkerSetPoint(long mapPtr, long markerID, double lng, double lat);
+    private synchronized native boolean nativeMarkerSetPointEased(long mapPtr, long markerID, double lng, double lat, float duration, int ease);
+    private synchronized native boolean nativeMarkerSetPolyline(long mapPtr, long markerID, double[] coordinates, int count);
+    private synchronized native boolean nativeMarkerSetPolygon(long mapPtr, long markerID, double[] coordinates, int[] rings, int count);
+    private synchronized native boolean nativeMarkerSetVisible(long mapPtr, long markerID, boolean visible);
+    private synchronized native boolean nativeMarkerSetDrawOrder(long mapPtr, long markerID, int drawOrder);
+    private synchronized native void nativeMarkerRemoveAll(long mapPtr);
+    private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
+    private synchronized native void nativeSetDefaultBackgroundColor(long mapPtr, float r, float g, float b);
+
+    private native void nativeOnUrlComplete(long mapPtr, long requestHandle, byte[] rawDataBytes, String errorMessage);
+
+    synchronized native long nativeAddTileSource(long mapPtr, String name, boolean generateCentroid);
+    synchronized native void nativeRemoveTileSource(long mapPtr, long sourcePtr);
+    synchronized native void nativeClearTileSource(long mapPtr, long sourcePtr);
+    synchronized native void nativeAddFeature(long mapPtr, long sourcePtr, double[] coordinates, int[] rings, String[] properties);
+    synchronized native void nativeAddGeoJson(long mapPtr, long sourcePtr, String geoJson);
+
+    native void nativeSetDebugFlag(int flag, boolean on);
 }
