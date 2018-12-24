@@ -12,43 +12,43 @@
 using namespace Tangram;
 using namespace YAML;
 
-MockPlatform getPlatformWithImportFiles() {
 
-    MockPlatform platform;
+struct ImportMockPlatform : public MockPlatform {
+    ImportMockPlatform() {
 
-    platform.putMockUrlContents("/root/a.yaml", R"END(
+    putMockUrlContents("/root/a.yaml", R"END(
         import: b.yaml
         value: a
         has_a: true
     )END");
 
-    platform.putMockUrlContents("/root/b.yaml", R"END(
+    putMockUrlContents("/root/b.yaml", R"END(
         value: b
         has_b: true
     )END");
 
-    platform.putMockUrlContents("/root/c.yaml", R"END(
+    putMockUrlContents("/root/c.yaml", R"END(
         import: [a.yaml, b.yaml]
         value: c
         has_c: true
     )END");
 
-    platform.putMockUrlContents("/root/cycle_simple.yaml", R"END(
+    putMockUrlContents("/root/cycle_simple.yaml", R"END(
         import: cycle_simple.yaml
         value: cyclic
     )END");
 
-    platform.putMockUrlContents("/root/cycle_tricky.yaml", R"END(
+    putMockUrlContents("/root/cycle_tricky.yaml", R"END(
         import: imports/cycle_tricky.yaml
         has_cycle_tricky: true
     )END");
 
-    platform.putMockUrlContents("/root/imports/cycle_tricky.yaml", R"END(
+    putMockUrlContents("/root/imports/cycle_tricky.yaml", R"END(
         import: ../cycle_tricky.yaml
         has_imports_cycle_tricky: true
     )END");
 
-    platform.putMockUrlContents("/root/urls.yaml", R"END(
+    putMockUrlContents("/root/urls.yaml", R"END(
         import: imports/urls.yaml
         fonts: { fontA: { url: https://host/font.woff } }
         sources: { sourceA: { url: 'https://host/tiles/{z}/{y}/{x}.mvt' } }
@@ -67,7 +67,7 @@ MockPlatform getPlatformWithImportFiles() {
                         u_float: 0.25
     )END");
 
-    platform.putMockUrlContents("/root/imports/urls.yaml", R"END(
+    putMockUrlContents("/root/imports/urls.yaml", R"END(
         fonts: { fontB: [ { url: fonts/0.ttf }, { url: fonts/1.ttf } ] }
         sources: { sourceB: { url: "tiles/{z}/{y}/{x}.mvt" } }
         textures:
@@ -83,19 +83,18 @@ MockPlatform getPlatformWithImportFiles() {
                         u_tex2: tex2
     )END");
 
-    platform.putMockUrlContents("/root/globals.yaml", R"END(
+    putMockUrlContents("/root/globals.yaml", R"END(
         fonts: { aFont: { url: global.fontUrl } }
         sources: { aSource: { url: global.sourceUrl } }
         textures: { aTexture: { url: global.textureUrl } }
         styles: { aStyle: { texture: global.textureUrl, shaders: { uniforms: { aUniform: global.textureUrl } } } }
     )END");
-
-    return platform;
-}
+    }
+};
 
 
 TEST_CASE("Imported scenes are merged with the parent scene", "[import][core]") {
-    auto platform = getPlatformWithImportFiles();
+    ImportMockPlatform platform;
     Importer importer;
     auto root = importer.loadSceneData(platform, Url("/root/a.yaml"));
 
@@ -105,7 +104,7 @@ TEST_CASE("Imported scenes are merged with the parent scene", "[import][core]") 
 }
 
 TEST_CASE("Nested imports are merged recursively", "[import][core]") {
-    auto platform = getPlatformWithImportFiles();
+    ImportMockPlatform platform;
     Importer importer;
     auto root = importer.loadSceneData(platform, Url("/root/c.yaml"));
 
@@ -116,7 +115,7 @@ TEST_CASE("Nested imports are merged recursively", "[import][core]") {
 }
 
 TEST_CASE("Imports that would start a cycle are ignored", "[import][core]") {
-    auto platform = getPlatformWithImportFiles();
+    ImportMockPlatform platform;
     Importer importer;
     // If import cycles aren't checked for and stopped, this call won't return.
     auto root = importer.loadSceneData(platform, Url("/root/cycle_simple.yaml"));
@@ -126,7 +125,7 @@ TEST_CASE("Imports that would start a cycle are ignored", "[import][core]") {
 }
 
 TEST_CASE("Tricky import cycles are ignored", "[import][core]") {
-    auto platform = getPlatformWithImportFiles();
+    ImportMockPlatform platform;
     Importer importer;
 
     // The nested import should resolve to the same path as the original file,
@@ -139,7 +138,7 @@ TEST_CASE("Tricky import cycles are ignored", "[import][core]") {
 }
 
 TEST_CASE("Scene URLs are resolved against their parent during import", "[import][core]") {
-    auto platform = getPlatformWithImportFiles();
+    ImportMockPlatform platform;
     Importer importer;
     auto root = importer.loadSceneData(platform, Url("/root/urls.yaml"));
 
@@ -194,7 +193,7 @@ TEST_CASE("Scene URLs are resolved against their parent during import", "[import
 }
 
 TEST_CASE("References to globals are not treated like URLs during importing", "[import][core]") {
-    auto platform = getPlatformWithImportFiles();
+    ImportMockPlatform platform;
     Importer importer;
     auto root = importer.loadSceneData(platform, Url("/root/globals.yaml"));
 
@@ -211,7 +210,7 @@ TEST_CASE("References to globals are not treated like URLs during importing", "[
 }
 
 TEST_CASE("Map overwrites sequence", "[import][core]") {
-    auto platform = getPlatformWithImportFiles();
+    ImportMockPlatform platform;
     platform.putMockUrlContents("/base.yaml", R"END(
         import: [roads.yaml, roads-labels.yaml]
     )END");
