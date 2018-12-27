@@ -38,10 +38,8 @@ void globalSetup() {
     static std::atomic<bool> initialized{false};
     if (initialized.exchange(true)) { return; }
 
-    Url sceneUrl(scene_file);
-    platform.putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
-
-    SceneOptions sceneOptions{sceneUrl};
+    SceneOptions sceneOptions{platform.resolveUrl(Url(scene_file))};
+    sceneOptions.numTileWorkers = 0;
     sceneOptions.prefetchTiles = false;
 
     scene = std::make_shared<Scene>(platform, std::move(sceneOptions));
