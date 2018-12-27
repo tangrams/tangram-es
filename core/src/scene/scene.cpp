@@ -47,9 +47,10 @@ Scene::~Scene() {
 
 void Scene::dispose() {
     if (m_state == State::disposed) { return; }
-    m_state = State::disposed;
 
     cancelTasks();
+
+    std::lock_guard<std::mutex> lock(m_sceneLoadMutex);
 
     // TODO: Could check TileSources held by NetworkDatasource urlcallbacks
     // bool waitForTileTasks = true;
@@ -73,38 +74,24 @@ void Scene::dispose() {
         m_tileWorker.reset();
         LOG("TileWorker stopped");
     }
+
+    m_state = State::disposed;
 }
 
 void Scene::cancelTasks() {
     auto state = m_state;
     m_state = State::canceled;
 
-    /// NB: Called from main thread - notify async loader thread.
-    if (state == State::loading || state == State::pending_resources) {
-        std::lock_guard<std::mutex> lock(m_taskMutex);
+    if (state == State::loading) {
         /// Cancel loading Scene data
         if (m_importer) {
             LOG("Cancel Importer tasks");
             m_importer->cancelLoading(m_platform);
         }
-        /// Cancel pending texture resources
-        if (!m_textures.tasks.empty()) {
-            LOG("Cancel texture resource tasks");
-            for (auto& task : m_textures.tasks) {
-                if (task->requestHandle) {
-                    m_platform.cancelUrlRequest(task->requestHandle);
-                }
-            }
-        }
-        /// Cancel pending font resources
-        if (!m_fonts.tasks.empty()) {
-            LOG("Cancel font resource tasks");
-            for (auto& task : m_fonts.tasks) {
-                if (task->requestHandle) {
-                    m_platform.cancelUrlRequest(task->requestHandle);
-                }
-            }
-        }
+    }
+
+    if (state == State::pending_resources) {
+        /// NB: Called from main thread - notify async loader thread.
         m_taskCondition.notify_one();
     }
 
@@ -116,6 +103,9 @@ void Scene::cancelTasks() {
 }
 
 bool Scene::load() {
+    /// Sync with dispose() when loading async.
+    std::lock_guard<std::mutex> sceneLoadLock(m_sceneLoadMutex);
+
     LOGTOInit();
     LOGTO(">>>>>> loadScene >>>>>>");
 
@@ -131,7 +121,7 @@ bool Scene::load() {
     m_state = State::loading;
 
     /// Wait until all scene-yamls are available and merged.
-    /// NB: Importer holds reference zip archives for resource loading
+    /// NB: Importer holds reference to zip archives for resource loading
     ///
     /// Importer is blocking until all imports are loaded
     m_importer = std::make_unique<Importer>();
@@ -238,6 +228,12 @@ bool Scene::load() {
 
     bool startTileWorker = m_options.prefetchTiles;
     while (true) {
+        // NB: Capture completion of tasks until wait(lock)
+        // Otherwise we can loose the notify. We cannot lock m_tasksMutex
+        // in task callback unless we require startUrlRequest to always
+        // callback async..
+        uint32_t tasksActive = m_tasksActive;
+
         std::unique_lock<std::mutex> lock(m_taskMutex);
 
         /// Check if scene-loading was canceled
@@ -275,6 +271,7 @@ bool Scene::load() {
         /// Ready to build tiles?
         if (startTileWorker && canBuildTiles && m_options.asyncCallback) {
             m_readyToBuildTiles = true;
+            startTileWorker = false;
             m_options.asyncCallback(this);
         }
 
@@ -284,6 +281,9 @@ bool Scene::load() {
             break;
         }
 
+        if (m_tasksActive != tasksActive) {
+            continue;
+        }
         LOGTO("Waiting for fonts and textures");
         m_taskCondition.wait(lock);
     }
@@ -291,7 +291,27 @@ bool Scene::load() {
     /// We got everything needed from Importer
     m_importer.reset();
 
-    if (isCanceled(State::pending_resources)) { return false; }
+    if (isCanceled(State::pending_resources)) {
+        /// Cancel pending texture resources
+        if (!m_textures.tasks.empty()) {
+            LOG("Cancel texture resource tasks");
+            for (auto& task : m_textures.tasks) {
+                if (task->requestHandle) {
+                    m_platform.cancelUrlRequest(task->requestHandle);
+                }
+            }
+        }
+        /// Cancel pending font resources
+        if (!m_fonts.tasks.empty()) {
+            LOG("Cancel font resource tasks");
+            for (auto& task : m_fonts.tasks) {
+                if (task->requestHandle) {
+                    m_platform.cancelUrlRequest(task->requestHandle);
+                }
+            }
+        }
+        return false;
+    }
 
     if (m_state == State::pending_resources) {
         m_state = State::pending_completion;
@@ -423,7 +443,6 @@ std::shared_ptr<Texture> SceneTextures::get(const std::string& _name) {
 }
 
 void Scene::runTextureTasks() {
-    std::lock_guard<std::mutex> lock(m_taskMutex);
 
     for (auto& task : m_textures.tasks) {
         if (task->started) { continue; }
@@ -431,6 +450,8 @@ void Scene::runTextureTasks() {
 
         LOG("Fetch texture %s", task->url.string().c_str());
 
+        // TODO remove weak_ptr - it should not be possible to get a callback
+        // after task was deleted.
         auto cb = [this, t = std::weak_ptr<SceneTextures::Task>(task)](UrlResponse&& response) {
             auto task = t.lock();
             if (!task) { return; }
@@ -450,10 +471,11 @@ void Scene::runTextureTasks() {
             }
             task->done = true;
 
-            std::lock_guard<std::mutex> lock(m_taskMutex);
+            m_tasksActive--;
             m_taskCondition.notify_one();
         };
 
+        m_tasksActive++;
         if (task->url.scheme() == "zip") {
             m_importer->readFromZip(task->url, cb);
         } else {
@@ -477,14 +499,14 @@ void SceneFonts::add(const std::string& _uri, const std::string& _family,
 }
 
 void Scene::runFontTasks() {
-    std::lock_guard<std::mutex> lock(m_taskMutex);
 
     for (auto& task : m_fonts.tasks) {
         if (task->started) { continue; }
         task->started = true;
 
         LOG("Fetch font %s", task->ft.uri.c_str());
-
+        // TODO remove weak_ptr - it should not be possible to get a callback
+        // after task was deleted.
         auto cb = [this, t = std::weak_ptr<SceneFonts::Task>(task)](UrlResponse&& response) {
              auto task = t.lock();
              if (!task) { return; }
@@ -492,10 +514,11 @@ void Scene::runFontTasks() {
              task->response = std::move(response);
              task->done = true;
 
-             std::lock_guard<std::mutex> lock(m_taskMutex);
+             m_tasksActive--;
              m_taskCondition.notify_one();
         };
 
+        m_tasksActive++;
         if (task->url.scheme() == "zip") {
             m_importer->readFromZip(task->url, cb);
         } else {
