@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform.h"
+#include "util/url.h"
 
 #include <unordered_map>
 
@@ -9,6 +10,7 @@ namespace Tangram {
 class MockPlatform : public Platform {
 
 public:
+    MockPlatform();
 
     void shutdown() override {}
     void requestRender() const override;
@@ -24,10 +26,11 @@ public:
     // Get the contents of a local file (not mock URL contents).
     static std::vector<char> getBytesFromFile(const char* path);
 
+    Url resolveUrl(Url _url) { return _url.resolved(m_baseUrl); }
 private:
 
     std::unordered_map<Url, std::vector<char>> m_files;
-
+    Url m_baseUrl;
 };
 
 } // namespace Tangram

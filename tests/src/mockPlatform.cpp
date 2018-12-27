@@ -7,6 +7,8 @@
 #include <string>
 
 #include <libgen.h>
+#include <unistd.h>
+#include <limits.h>
 
 #define DEFAULT_FONT "res/fonts/NotoSans-Regular.ttf"
 
@@ -19,6 +21,14 @@ void logMsg(const char* fmt, ...) {
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
+}
+
+MockPlatform::MockPlatform() {
+    m_baseUrl = Url("file:///");
+    char pathBuffer[PATH_MAX] = {0};
+    if (getcwd(pathBuffer, PATH_MAX) != nullptr) {
+        m_baseUrl = Url(std::string(pathBuffer) + "/").resolved(m_baseUrl);
+    }
 }
 
 void MockPlatform::requestRender() const {}
@@ -46,6 +56,7 @@ bool MockPlatform::startUrlRequestImpl(const Url& _url, const UrlRequestHandle _
             response.error = "Url contents could not be found!";
         }
     } else {
+
         auto allocator = [&](size_t size) {
                              response.content.resize(size);
                              return response.content.data();
