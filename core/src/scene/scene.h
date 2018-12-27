@@ -226,7 +226,9 @@ protected:
         ready,               // set on main thread when Scene::complete() succeeded
         canceled,            // should stop any scene- or tile-loading tasks
         disposed
-    } m_state = State::initial;
+    };
+
+    State m_state = State::initial;
 
     /// ---------------------------------------------------------------///
     /// Loaded Scene Data
@@ -275,7 +277,9 @@ protected:
     std::unique_ptr<MarkerManager> m_markerManager;
     std::unique_ptr<LabelManager> m_labelManager;
 
+    std::mutex m_sceneLoadMutex;
     std::mutex m_taskMutex;
+    std::atomic_uint m_tasksActive{0};
     std::condition_variable m_taskCondition;
 };
 
