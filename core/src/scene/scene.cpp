@@ -245,26 +245,26 @@ bool Scene::load() {
         int t = 0;
 
         m_textures.tasks.remove_if([&](auto& task) {
-           if (!task->done) { t++; }
-           if (!task->done && task->texture->width() == 0) {
+           if (!task.done) { t++; }
+           if (!task.done && task.texture->width() == 0) {
                canBuildTiles = false;
            }
-           return task->done;
+           return task.done;
         });
 
         m_fonts.tasks.remove_if([&](auto& task) {
-            if (!task->done) { f++; }
-            if (!task->done) {
+            if (!task.done) { f++; }
+            if (!task.done) {
                 canBuildTiles = false;
                 return false;
             }
-            if (task->response.error) {
+            if (task.response.error) {
                 LOGE("Error retrieving font '%s' at %s: ",
-                     task->ft.uri.c_str(), task->response.error);
+                     task.ft.uri.c_str(), task.response.error);
                 return true;
             }
-            auto&& data = task->response.content;
-            m_fontContext->addFont(task->ft, alfons::InputSource(std::move(data)));
+            auto&& data = task.response.content;
+            m_fontContext->addFont(task.ft, alfons::InputSource(std::move(data)));
             return true;
         });
 
@@ -296,8 +296,8 @@ bool Scene::load() {
         if (!m_textures.tasks.empty()) {
             LOG("Cancel texture resource tasks");
             for (auto& task : m_textures.tasks) {
-                if (task->requestHandle) {
-                    m_platform.cancelUrlRequest(task->requestHandle);
+                if (task.requestHandle) {
+                    m_platform.cancelUrlRequest(task.requestHandle);
                 }
             }
         }
@@ -305,8 +305,8 @@ bool Scene::load() {
         if (!m_fonts.tasks.empty()) {
             LOG("Cancel font resource tasks");
             for (auto& task : m_fonts.tasks) {
-                if (task->requestHandle) {
-                    m_platform.cancelUrlRequest(task->requestHandle);
+                if (task.requestHandle) {
+                    m_platform.cancelUrlRequest(task.requestHandle);
                 }
             }
         }
@@ -427,7 +427,7 @@ std::shared_ptr<Texture> SceneTextures::add(const std::string& _name, const Url&
         return texture;
     }
 
-    tasks.push_front(std::make_shared<SceneTextures::Task>(_url, texture));
+    tasks.emplace_front(_url, texture);
 
     return texture;
 }
@@ -445,41 +445,39 @@ std::shared_ptr<Texture> SceneTextures::get(const std::string& _name) {
 void Scene::runTextureTasks() {
 
     for (auto& task : m_textures.tasks) {
-        if (task->started) { continue; }
-        task->started = true;
+        if (task.started) { continue; }
+        task.started = true;
 
-        LOG("Fetch texture %s", task->url.string().c_str());
+        LOG("Fetch texture %s", task.url.string().c_str());
 
         // TODO remove weak_ptr - it should not be possible to get a callback
         // after task was deleted.
-        auto cb = [this, t = std::weak_ptr<SceneTextures::Task>(task)](UrlResponse&& response) {
-            auto task = t.lock();
-            if (!task) { return; }
-            LOG("Received texture %s", task->url.string().c_str());
+        auto cb = [this, &task](UrlResponse&& response) {
+            LOG("Received texture %s", task.url.string().c_str());
             if (response.error) {
-                LOGE("Error retrieving URL '%s': %s", task->url.string().c_str(), response.error);
+                LOGE("Error retrieving URL '%s': %s", task.url.string().c_str(), response.error);
             } else {
                 /// Decode texture on download thread.
                 auto data = reinterpret_cast<const uint8_t*>(response.content.data());
-                auto& texture = task->texture;
+                auto& texture = task.texture;
                 if (!texture->loadImageFromMemory(data, response.content.size())) {
-                    LOGE("Invalid texture data from URL '%s'", task->url.string().c_str());
+                    LOGE("Invalid texture data from URL '%s'", task.url.string().c_str());
                 }
                 if (auto& sprites = texture->spriteAtlas()) {
                     sprites->updateSpriteNodes({texture->width(), texture->height()});
                 }
             }
-            task->done = true;
+            task.done = true;
 
             m_tasksActive--;
             m_taskCondition.notify_one();
         };
 
         m_tasksActive++;
-        if (task->url.scheme() == "zip") {
-            m_importer->readFromZip(task->url, cb);
+        if (task.url.scheme() == "zip") {
+            m_importer->readFromZip(task.url, std::move(cb));
         } else {
-            task->requestHandle = m_platform.startUrlRequest(task->url, std::move(cb));
+            task.requestHandle = m_platform.startUrlRequest(task.url, std::move(cb));
         }
     }
 }
@@ -495,34 +493,32 @@ void SceneFonts::add(const std::string& _uri, const std::string& _family,
     std::transform(_style.begin(), _style.end(), styleNormalized.begin(), ::tolower);
     auto desc = FontDescription{ familyNormalized, styleNormalized, _weight, _uri};
 
-    tasks.push_front(std::make_shared<Task>(Url(_uri), desc));
+    tasks.emplace_front(Url(_uri), desc);
 }
 
 void Scene::runFontTasks() {
 
     for (auto& task : m_fonts.tasks) {
-        if (task->started) { continue; }
-        task->started = true;
+        if (task.started) { continue; }
+        task.started = true;
 
-        LOG("Fetch font %s", task->ft.uri.c_str());
+        LOG("Fetch font %s", task.ft.uri.c_str());
         // TODO remove weak_ptr - it should not be possible to get a callback
         // after task was deleted.
-        auto cb = [this, t = std::weak_ptr<SceneFonts::Task>(task)](UrlResponse&& response) {
-             auto task = t.lock();
-             if (!task) { return; }
-             LOG("Received font: %s", task->ft.uri.c_str());
-             task->response = std::move(response);
-             task->done = true;
+        auto cb = [this, &task](UrlResponse&& response) {
+             LOG("Received font: %s", task.ft.uri.c_str());
+             task.response = std::move(response);
+             task.done = true;
 
              m_tasksActive--;
              m_taskCondition.notify_one();
         };
 
         m_tasksActive++;
-        if (task->url.scheme() == "zip") {
-            m_importer->readFromZip(task->url, cb);
+        if (task.url.scheme() == "zip") {
+            m_importer->readFromZip(task.url, std::move(cb));
         } else {
-            task->requestHandle = m_platform.startUrlRequest(task->url, std::move(cb));
+            task.requestHandle = m_platform.startUrlRequest(task.url, std::move(cb));
         }
     }
 }

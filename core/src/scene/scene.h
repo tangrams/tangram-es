@@ -84,7 +84,7 @@ struct SceneTextures {
 
     std::unordered_map<std::string, std::shared_ptr<Texture>> textures;
 
-    std::forward_list<std::shared_ptr<Task>> tasks;
+    std::forward_list<Task> tasks;
 
     std::shared_ptr<Texture> add(const std::string& name, const Url& url,
                                  const TextureOptions& options);
@@ -102,7 +102,7 @@ struct SceneFonts {
         UrlRequestHandle requestHandle = 0;
         UrlResponse response;
     };
-    std::forward_list<std::shared_ptr<Task>> tasks;
+    std::forward_list<Task> tasks;
 
     void add(const std::string& _uri, const std::string& _family,
              const std::string& _style, const std::string& _weight);
