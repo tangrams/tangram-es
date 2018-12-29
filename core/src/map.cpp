@@ -79,10 +79,6 @@ public:
     std::shared_ptr<Scene> scene;
     std::condition_variable blockUntilSceneReady;
 
-    // Keep previous scene for rendering while new scene loads
-    // TODO Render one time to texture and use that as placeholder when requested
-    std::shared_ptr<Scene> oldScene;
-
     // NB: Destruction of (managed and loading) tiles must happen
     // before implicit destruction of 'scene' above!
     // In particular any references of Labels and Markers to FontContext
@@ -124,7 +120,6 @@ Map::~Map() {
     // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
     impl->asyncWorker.reset();
 
-    impl->oldScene.reset();
     impl->scene.reset();
     impl->blockUntilSceneReady.notify_all();
 
@@ -148,8 +143,7 @@ SceneID Map::loadScene(SceneOptions&& _sceneOptions, bool _async) {
 SceneID Map::Impl::loadScene(SceneOptions&& _sceneOptions) {
 
     /// Avoid to keep loading old scene and tiles
-    oldScene = std::move(scene);
-    oldScene->dispose();
+    scene->dispose();
 
     scene = std::make_shared<Scene>(platform, std::move(_sceneOptions));
 
@@ -165,7 +159,7 @@ SceneID Map::Impl::loadScene(SceneOptions&& _sceneOptions) {
 SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
 
     /// Avoid to keep loading old scene and tiles
-    oldScene = std::move(scene);
+    auto oldScene = std::move(scene);
     oldScene->cancelTasks();
 
     /// Add callback for tile prefetching
@@ -200,9 +194,9 @@ SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
     });
 
     /// Disposing TileWorker is blocking: Do this async just in case
-    asyncWorker->enqueue([=]() {
+    asyncWorker->enqueue([s = std::move(oldScene)]() mutable {
         LOG("ASYNC DISPOSE OLD SCENE");
-        oldScene->dispose();
+        s->dispose();
     });
 
     return scene->id;
