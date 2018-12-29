@@ -16,6 +16,13 @@ const static std::string sceneString = R"END(
 global:
     a: global_a_value
     b: global_b_value
+    c: global.a
+    d: global.c # second level reference
+    e: global.f # loop 1
+    f: global.g # loop 1
+    g: global.e # loop 1
+    h: global.i # loop 2
+    i: global.h # loop 2
 map:
     a: map_a_value
     b: global.b
