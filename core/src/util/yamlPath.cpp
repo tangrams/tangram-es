@@ -7,82 +7,49 @@
 
 namespace Tangram {
 
-YamlPath YamlPathBuffer::toYamlPath() {
-    size_t length = 0;
+using Node = YAML::Node;
 
-    for(auto& element : m_path) {
-        if (element.key) {
-            length += element.key->length()+1;
-        } else {
-            int c = 1;
-            while (element.index >= pow(10, c)) { c += 1; }
-            length += c + 1;
-        }
-    }
-    std::string path;
-    path.reserve(length);
+bool YamlPath::get(const Node& root, const std::string& path, Node& out) {
+    if (!root) { return false; }
 
-    for(auto& element : m_path) {
-        if (element.key) {
-            if (!path.empty()) { path += '.'; }
-            path += *element.key;
-        } else {
-            path += '#';
-            path += std::to_string(element.index);
-        }
-    }
-    return YamlPath(path);
-}
-
-YamlPath::YamlPath() {}
-
-YamlPath::YamlPath(const std::string& path)
-    : codedPath(path) {}
-
-YamlPath YamlPath::add(int index) {
-    return YamlPath(codedPath + SEQ_DELIM + std::to_string(index));
-}
-
-YamlPath YamlPath::add(const std::string& key) {
-    if (codedPath.empty()) { return YamlPath(key); }
-    return YamlPath(codedPath + MAP_DELIM + key);
-}
-
-bool YamlPath::get(YAML::Node root, YAML::Node& out) {
-    size_t beginToken = 0, endToken = 0, pathSize = codedPath.size();
-    auto delimiter = MAP_DELIM; // First token must be a map key.
-    while (endToken < pathSize) {
-        if (!root.IsDefined()) {
-            return false; // A node before the end of the path was mising, quit!
-        }
-        beginToken = endToken;
-        endToken = pathSize;
-        endToken = std::min(endToken, codedPath.find(SEQ_DELIM, beginToken));
-        endToken = std::min(endToken, codedPath.find(MAP_DELIM, beginToken));
-        if (delimiter == SEQ_DELIM) {
-            int index = std::stoi(&codedPath[beginToken]);
-            if (root.IsSequence()) {
-                root.reset(root[index]);
-            } else {
-                return false;
-            }
-        } else if (delimiter == MAP_DELIM) {
-            auto key = codedPath.substr(beginToken, endToken - beginToken);
-            if (root.IsMap()) {
-                root.reset(root[key]);
-            } else {
-                return false;
-            }
-        } else {
-            return false; // Path is malformed, return null node.
-        }
-        delimiter = codedPath[endToken]; // Get next character as the delimiter.
-        ++endToken; // Move past the delimiter.
-    }
-    // Success! Assign the result.
+    size_t pathSize = path.size();
     out.reset(root);
+
+    // First token can be either map or seqence
+    char delimiter = '-';
+    std::string key;
+    size_t endToken = 0;
+
+    while (endToken < pathSize) {
+        size_t beginToken = endToken;
+        endToken = pathSize;
+        endToken = std::min(endToken, path.find(SEQ_DELIM, beginToken));
+        endToken = std::min(endToken, path.find(MAP_DELIM, beginToken));
+
+        if (out.IsMap() && (delimiter == MAP_DELIM || beginToken == 0)) {
+            key = path.substr(beginToken, endToken - beginToken);
+            out.reset(out[key]);
+            // Get next character as the delimiter.
+            delimiter = path[endToken];
+            // Move past the delimiter.
+            ++endToken;
+            continue;
+
+        } else if (out.IsSequence() && (delimiter == SEQ_DELIM ||
+                                        beginToken == 0)) {
+            size_t end = 0;
+            int index = std::stoi(&path[beginToken], &end);
+            Node n = out[index];
+            if (beginToken + end == endToken) {
+                out.reset(n);
+                delimiter = path[endToken];
+                ++endToken;
+                continue;
+            }
+        }
+        return false;
+    }
     return true;
 }
-
 
 }

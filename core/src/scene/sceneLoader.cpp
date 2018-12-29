@@ -53,6 +53,7 @@ namespace Tangram {
 static const char DELIMITER = ':';
 
 static const std::string GLOBAL_PREFIX = "global.";
+static constexpr size_t GLOBAL_PREFIX_LENGTH = 7;
 
 SceneError SceneLoader::applyUpdates(Node& _config, const std::vector<SceneUpdate>& _updates) {
 
@@ -66,78 +67,76 @@ SceneError SceneLoader::applyUpdates(Node& _config, const std::vector<SceneUpdat
             return {update, Error::scene_update_value_yaml_syntax_error};
         }
 
-        if (value) {
-            Node node;
-            bool pathIsValid = YamlPath(update.path).get(_config, node);
-            if (pathIsValid) {
-                node = value;
-            } else {
-                LOGE("Update: %s - %s", update.path.c_str(), update.value.c_str());
-                return {update, Error::scene_update_path_not_found};
-            }
+        Node node;
+        if (YamlPath::get(_config, update.path, node)) {
+            node = value;
+        } else {
+            LOGW("Update: %s - %s", update.path.c_str(), update.value.c_str());
+            return {update, Error::scene_update_path_not_found};
         }
     }
     return {};
 }
 
-void createGlobalRefs(std::vector<std::pair<YamlPath, YamlPath>>& _globalRefs,
-                      const Node& _node, YamlPathBuffer& _path) {
-
-    switch(_node.Type()) {
+bool applyGlobalRefs(Node& node, const Node& globals) {
+    bool changed = false;
+    switch(node.Type()) {
     case NodeType::Scalar: {
-        const auto& value = _node.Scalar();
-        if (value.length() > 7 && value.compare(0, 7, GLOBAL_PREFIX) == 0) {
-            _globalRefs.emplace_back(_path.toYamlPath(),
-                                    YamlPath(value.substr(GLOBAL_PREFIX.length())));
+        const auto& value = node.Scalar();
+        if (value.length() > GLOBAL_PREFIX_LENGTH &&
+            value.compare(0, GLOBAL_PREFIX_LENGTH, GLOBAL_PREFIX) == 0) {
+
+            Node global;
+            if (YamlPath::get(globals,
+                              value.substr(GLOBAL_PREFIX_LENGTH),
+                              global)) {
+                LOG(">>Update %s <== %s", value.c_str(), Dump(global).c_str());
+                node = global;
+            } else {
+                LOGW("Global reference is undefined %s", value.c_str());
+            }
+            changed = true;
         }
-    }
         break;
-    case NodeType::Sequence: {
-        _path.pushSequence();
-        for (const auto& entry : _node) {
-            createGlobalRefs(_globalRefs, entry, _path);
-            _path.increment();
-        }
-        _path.pop();
     }
+    case NodeType::Sequence: {
+        for (auto& entry : node) {
+            changed |= applyGlobalRefs(entry, globals);
+        }
         break;
     case NodeType::Map:
-        for (const auto& entry : _node) {
-            _path.pushMap(&entry.first.Scalar());
-            createGlobalRefs(_globalRefs, entry.second, _path);
-            _path.pop();
+        for (auto& entry : node) {
+            changed |= applyGlobalRefs(entry.second, globals);
         }
         break;
+    }
     default:
         break;
     }
+    return changed;
 }
 
 void SceneLoader::applyGlobals(Node& _config) {
-    const Node& globals = _config["global"];
 
-    // Records the YAML Nodes for which global values have been swapped; keys are
-    // nodes that referenced globals, values are nodes of globals themselves.
-    std::vector<std::pair<YamlPath, YamlPath>> globalRefs;
-
-    YamlPathBuffer path;
-    createGlobalRefs(globalRefs, _config, path);
-    if (!globalRefs.empty() && (!globals || !globals.IsMap())) {
-        LOGW("Missing global references");
+    Node globalNode = _config["global"];
+    if (!globalNode.IsMap()) {
+        LOGW("Invalid 'globals' entry!");
         return;
     }
 
-    for (auto& globalRef : globalRefs) {
-        Node target, global;
-        bool targetPathIsValid = globalRef.first.get(_config, target);
-        bool globalPathIsValid = globalRef.second.get(globals, global);
-        if (targetPathIsValid && globalPathIsValid && target.IsDefined() && global.IsDefined()) {
-            target = global;
-        } else {
-            LOGW("Global reference is undefined: %s <= %s",
-                 globalRef.first.codedPath.c_str(),
-                 globalRef.second.codedPath.c_str());
-        }
+    // Resolve up to ten levels of global references
+    int maxResolve = 10;
+
+    const auto& globals = globalNode;
+    while (applyGlobalRefs(globalNode, globals) && maxResolve-- > 0);
+
+    if (maxResolve < 0) {
+        LOGNode("Please check your globals section for loops of global references!", globals);
+    }
+
+    for (auto& entry : _config) {
+        if (entry.first.Scalar() == "global") { continue; }
+        applyGlobalRefs(entry.second, globals);
     }
 }
 
