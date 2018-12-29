@@ -8,7 +8,6 @@
 #include "tile/tileManager.h"
 #include "util/color.h"
 #include "util/url.h"
-#include "util/yamlPath.h"
 #include "view/view.h"
 
 #include <atomic>
