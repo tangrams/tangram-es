@@ -13,6 +13,7 @@
 #include <atomic>
 #include <forward_list>
 #include <functional>
+#include <list>
 #include <memory>
 #include <condition_variable>
 #include <mutex>
@@ -22,7 +23,10 @@
 #include <unordered_map>
 
 #include "glm/vec2.hpp"
-#include "yaml-cpp/yaml.h"
+
+namespace YAML {
+class Node;
+};
 
 namespace Tangram {
 
@@ -41,6 +45,7 @@ class SelectionQuery;
 class Style;
 class Texture;
 class TileSource;
+struct SceneConfig;
 struct SceneLoader;
 
 struct SceneCamera : public Camera {
@@ -132,6 +137,8 @@ public:
     const auto& options() const { return m_options; }
     const auto& styles() const { return m_styles; }
     const auto& textures() const { return m_textures.textures; }
+
+    YAML::Node globals() const;
 
     std::shared_ptr<TileSource> getTileSource(int32_t id) const;
     std::shared_ptr<Texture> getTexture(const std::string& name) const;
@@ -232,7 +239,7 @@ protected:
     /// ---------------------------------------------------------------///
     /// Loaded Scene Data
     /// The root node of the YAML scene configuration
-    YAML::Node m_config;
+    std::unique_ptr<SceneConfig> m_config;
 
     SceneCamera m_camera;
 

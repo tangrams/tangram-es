@@ -100,7 +100,7 @@ void StyleContext::initFunctions(const Scene& _scene) {
     }
     m_sceneId = _scene.id;
 
-    setSceneGlobals(_scene.config()["global"]);
+    setSceneGlobals(_scene.globals());
     setFunctions(_scene.functions());
 }
 

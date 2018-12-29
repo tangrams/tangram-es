@@ -28,15 +28,22 @@
 
 #include <algorithm>
 
+#include "yaml-cpp/yaml.h"
+
 namespace Tangram {
 
-static std::atomic<int32_t> s_serial;
+struct SceneConfig {
+    YAML::Node yaml;
+};
 
+static std::atomic<int32_t> s_serial;
 
 Scene::Scene(Platform& _platform, SceneOptions&& _options) :
     id(s_serial++),
     m_platform(_platform),
     m_options(std::move(_options)) {
+
+    m_config = std::make_unique<SceneConfig>();
 
     m_markerManager = std::make_unique<MarkerManager>(*this);
 }
@@ -125,7 +132,8 @@ bool Scene::load() {
     ///
     /// Importer is blocking until all imports are loaded
     m_importer = std::make_unique<Importer>();
-    m_config = m_importer->loadSceneData(m_platform, m_options.url, m_options.yaml);
+    auto& yaml = m_config->yaml;
+    yaml = m_importer->loadSceneData(m_platform, m_options.url, m_options.yaml);
     LOGTO("<<< applyImports");
 
     if (isCanceled(State::loading)) { return false; }
@@ -136,7 +144,7 @@ bool Scene::load() {
         return false;
     }
 
-    auto result = SceneLoader::applyUpdates(m_config, m_options.updates);
+    auto result = SceneLoader::applyUpdates(yaml, m_options.updates);
     if (result.error != Error::none) {
         m_errors.push_back(result);
         LOGE("Applying SceneUpdates failed!");
@@ -144,18 +152,18 @@ bool Scene::load() {
     }
     LOGTO("<<< applyUpdates");
 
-    Importer::resolveSceneUrls(m_config, m_options.url);
+    Importer::resolveSceneUrls(yaml, m_options.url);
 
-    SceneLoader::applyGlobals(m_config);
+    SceneLoader::applyGlobals(yaml);
     LOGTO("<<< applyGlobals");
 
-    m_tileSources = SceneLoader::applySources(m_config, m_options, m_platform);
+    m_tileSources = SceneLoader::applySources(yaml, m_options, m_platform);
     LOGTO("<<< applySources");
 
-    SceneLoader::applyCameras(m_config, m_camera);
+    SceneLoader::applyCameras(yaml, m_camera);
     LOGTO("<<< applyCameras");
 
-    SceneLoader::applyScene(m_config["scene"], m_background, m_backgroundStops, m_animated);
+    SceneLoader::applyScene(yaml["scene"], m_background, m_backgroundStops, m_animated);
     LOGTO("<<< applyScene");
 
     m_tileWorker = std::make_unique<TileWorker>(m_platform, m_options.numTileWorkers);
@@ -171,15 +179,15 @@ bool Scene::load() {
     m_fontContext->loadFonts();
     LOGTO("<<< initFonts");
 
-    SceneLoader::applyFonts(m_config["fonts"], m_fonts);
+    SceneLoader::applyFonts(yaml["fonts"], m_fonts);
     runFontTasks();
     LOGTO("<<< applyFonts");
 
-    SceneLoader::applyTextures(m_config["textures"], m_textures);
+    SceneLoader::applyTextures(yaml["textures"], m_textures);
     runTextureTasks();
     LOGTO("<<< textures");
 
-    m_styles = SceneLoader::applyStyles(m_config["styles"], m_textures,
+    m_styles = SceneLoader::applyStyles(yaml["styles"], m_textures,
                                         m_jsFunctions, m_stops, m_names);
     if (m_options.debugStyles) {
         m_styles.emplace_back(new DebugTextStyle("debugtext", true));
@@ -204,11 +212,11 @@ bool Scene::load() {
     runTextureTasks();
     LOGTO("<<< applyStyles");
 
-    m_lights = SceneLoader::applyLights(m_config["lights"]);
+    m_lights = SceneLoader::applyLights(yaml["lights"]);
     m_lightShaderBlocks = Light::assembleLights(m_lights);
     LOGTO("<<< applyLights");
 
-    m_layers = SceneLoader::applyLayers(m_config["layers"], m_jsFunctions, m_stops, m_names);
+    m_layers = SceneLoader::applyLayers(yaml["layers"], m_jsFunctions, m_stops, m_names);
     LOGTO("<<< applyLayers");
 
     for (auto& style : m_styles) { style->build(*this); }
@@ -608,6 +616,12 @@ std::shared_ptr<TileSource> Scene::getTileSource(int32_t id) const {
         return *it;
     }
     return nullptr;
+}
+
+YAML::Node Scene::globals() const {
+    const auto& yaml = m_config->yaml;
+
+    return yaml["global"];
 }
 
 Color Scene::backgroundColor(int _zoom) const {
