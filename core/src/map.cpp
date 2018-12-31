@@ -451,32 +451,32 @@ bool Map::Impl::updateCameraEase(float _dt) {
 void Map::updateCameraPosition(const CameraUpdate& _update, float _duration, EaseType _e) {
 
     CameraPosition camera{};
-    if ((_update.set & CameraUpdate::SET_CAMERA) != 0) {
+    if ((_update.set & CameraUpdate::set_camera) != 0) {
         camera = getCameraPosition();
     }
-    if ((_update.set & CameraUpdate::SET_BOUNDS) != 0) {
+    if ((_update.set & CameraUpdate::set_bounds) != 0) {
         camera = getEnclosingCameraPosition(_update.bounds[0], _update.bounds[1], _update.padding);
     }
-    if ((_update.set & CameraUpdate::SET_LNGLAT) != 0) {
+    if ((_update.set & CameraUpdate::set_lnglat) != 0) {
         camera.longitude = _update.lngLat.longitude;
         camera.latitude = _update.lngLat.latitude;
     }
-    if ((_update.set & CameraUpdate::SET_ZOOM) != 0) {
+    if ((_update.set & CameraUpdate::set_zoom) != 0) {
         camera.zoom = _update.zoom;
     }
-    if ((_update.set & CameraUpdate::SET_ROTATION) != 0) {
+    if ((_update.set & CameraUpdate::set_rotation) != 0) {
         camera.rotation = _update.rotation;
     }
-    if ((_update.set & CameraUpdate::SET_TILT) != 0) {
+    if ((_update.set & CameraUpdate::set_tilt) != 0) {
         camera.tilt = _update.tilt;
     }
-    if ((_update.set & CameraUpdate::SET_ZOOM_BY) != 0) {
+    if ((_update.set & CameraUpdate::set_zoom_by) != 0) {
         camera.zoom += _update.zoomBy;
     }
-    if ((_update.set & CameraUpdate::SET_ROTATION_BY) != 0) {
+    if ((_update.set & CameraUpdate::set_rotation_by) != 0) {
         camera.rotation += _update.rotationBy;
     }
-    if ((_update.set & CameraUpdate::SET_TILT_BY) != 0) {
+    if ((_update.set & CameraUpdate::set_tilt_by) != 0) {
         camera.tilt += _update.tiltBy;
     }
 
