@@ -341,8 +341,19 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
         _renderRequested = NO;
 
         CFTimeInterval dt = _displayLink.targetTimestamp - _displayLink.timestamp;
-        BOOL mapViewComplete = self.map->update(dt);
+        auto mapState = self.map->update(dt);
+
+        BOOL mapViewComplete = mapState.viewComplete();
         BOOL viewComplete = mapViewComplete && !_prevMapViewComplete;
+
+        BOOL cameraEasing = mapState.viewChanging();
+        if (cameraEasing) {
+            [self setMapRegionChangeState:TGMapRegionAnimating];
+        } else if (_prevCameraEasing) {
+            [self setMapRegionChangeState:TGMapRegionIdle];
+        }
+
+        _prevCameraEasing = cameraEasing;
 
         // When invoking delegate selectors like this below, we don't need to check whether the delegate is `nil`. `nil` is
         // a valid object that returns `0`, `nil`, or `NO` from all messages, including `respondsToSelector`. So we can use
@@ -373,6 +384,10 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
         _prevMapViewComplete = mapViewComplete;
 
         [self.glView display];
+
+        if (mapState.isAnimating()) {
+            [self requestRender];
+        }
     }
 }
 
@@ -382,14 +397,7 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
         return;
     }
 
-    BOOL cameraEasing = self.map->render();
-    if (cameraEasing) {
-        [self setMapRegionChangeState:TGMapRegionAnimating];
-    } else if (_prevCameraEasing) {
-        [self setMapRegionChangeState:TGMapRegionIdle];
-    }
-
-    _prevCameraEasing = cameraEasing;
+    self.map->render();
 }
 
 #pragma mark Screenshots

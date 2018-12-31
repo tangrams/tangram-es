@@ -41,15 +41,15 @@ JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved) {
 
 #define MapRenderer(NAME) FUNC(MapRenderer, NAME)
 
-jboolean MapRenderer(Update)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat dt) {
+jint MapRenderer(Update)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat dt) {
     auto_map(mapPtr);
     auto result = map->update(dt);
-    return static_cast<jboolean>(result);
+    return static_cast<jint>(result.flags);
 }
 
-jboolean MapRenderer(Render)(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
+void MapRenderer(Render)(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
     auto_map(mapPtr);
-    return map->render();
+    map->render();
 }
 
 void MapRenderer(SetupGL)(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {

@@ -132,6 +132,26 @@ struct CameraUpdate {
     EdgePadding padding;
 };
 
+struct MapState {
+    enum Flags {
+        // NB: View is complete when no other flags are set.
+        view_complete =    0,
+        view_changing =    1 << 0,
+        labels_changing =  1 << 1,
+        tiles_loading =    1 << 3,
+        scene_loading =    1 << 4,
+        is_animating =     1 << 5,
+    };
+    uint32_t flags = 0;
+
+    bool viewComplete() { return flags == 0; }
+    bool viewChanging() { return flags & view_changing; }
+    bool labelsChanging() { return flags & labels_changing; }
+    bool tilesLoading() { return flags & tiles_loading; }
+    bool sceneLoading() { return flags & scene_loading; }
+    bool isAnimating() { return flags & is_animating; }
+};
+
 class Map {
 
 public:
@@ -185,13 +205,12 @@ public:
     // Resize the map view to a new width and height (in pixels)
     void resize(int _newWidth, int _newHeight);
 
-    // Update the map state with the time interval since the last update, returns
-    // true when the current view is completely loaded (all tiles are available and
-    // no animation in progress)
-    bool update(float _dt);
+    // Update the map state with the time interval since the last update.
+    // Return MapState with flags set to determine whether the view is complete or changing.
+    MapState update(float _dt);
 
     // Render a new frame of the map view (if needed)
-    bool render();
+    void render();
 
     // Gets the viewport height in physical pixels (framebuffer size)
     int getViewportHeight();
