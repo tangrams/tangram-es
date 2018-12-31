@@ -1291,7 +1291,7 @@ bool SceneLoader::parseStyleUniforms(const Node& _value, StyleUniform& _styleUni
         } else {
             const auto& strVal = _value.Scalar();
             _styleUniform.type = "sampler2D";
-            _styleUniform.value = _textures.get(strVal);
+            _styleUniform.value = _textures.get(strVal).get();
         }
     } else if (_value.IsSequence()) {
         size_t size = _value.size();
@@ -1349,7 +1349,7 @@ bool SceneLoader::parseStyleUniforms(const Node& _value, StyleUniform& _styleUni
 
             for (const auto& strVal : _value) {
                 const auto& textureName = strVal.Scalar();
-                textureArrayUniform.textures.push_back(_textures.get(textureName));
+                textureArrayUniform.textures.push_back(_textures.get(textureName).get());
             }
 
             _styleUniform.value = std::move(textureArrayUniform);

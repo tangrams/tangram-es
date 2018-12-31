@@ -103,9 +103,9 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: textures uniform value", 
 
     StyleUniform uniformValues;
     SceneTextures textures;
-    auto tex0 = textures.get("img/cross.png");
-    auto tex1 = textures.get("img/normals.jpg");
-    auto tex2 = textures.get("img/sem.jpg");
+    auto tex0 = textures.get("img/cross.png").get();
+    auto tex1 = textures.get("img/normals.jpg").get();
+    auto tex2 = textures.get("img/sem.jpg").get();
 
     REQUIRE(SceneLoader::parseStyleUniforms(node["u_tex"], uniformValues, textures));
     REQUIRE(uniformValues.value.is<UniformTexture>());
