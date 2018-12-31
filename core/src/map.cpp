@@ -63,6 +63,7 @@ public:
     void setPixelScale(float _pixelsPerPoint);
     SceneID loadScene(SceneOptions&& _sceneOptions);
     SceneID loadSceneAsync(SceneOptions&& _sceneOptions);
+    void syncClientTileSources(bool _firstUpdate);
 
     std::mutex sceneMutex;
 
@@ -224,6 +225,7 @@ void Map::resize(int _newWidth, int _newHeight) {
     impl->selectionBuffer = std::make_unique<FrameBuffer>(_newWidth/2, _newHeight/2);
 }
 
+
 bool Map::update(float _dt) {
 
     impl->jobQueue.runJobs();
@@ -235,27 +237,10 @@ bool Map::update(float _dt) {
 
     // Check if the current scene finished loading
     if (scene.completeScene(view)) {
-        // Scene is ready. Update ClientTileSources
-        std::lock_guard<std::mutex> lock(impl->tileSourceMutex);
-        auto& tileManager = *scene.tileManager();
-        for (auto it = impl->clientTileSources.begin();
-             it != impl->clientTileSources.end(); ) {
-            auto& ts = it->second;
-            if (ts.remove) {
-                tileManager.removeClientTileSource(it->first);
-                it = impl->clientTileSources.erase(it);
-                continue;
-            }
-            if (ts.added || !wasReady) {
-                ts.added = false;
-                tileManager.addClientTileSource(ts.tileSource);
-            }
-            if (ts.clear) {
-                ts.clear = false;
-                tileManager.clearTileSet(it->first);
-            }
-            ++it;
-        }
+        // Sync ClientTileSource changes with TileManager
+        bool firstUpdate = !wasReady;
+        impl->syncClientTileSources(firstUpdate);
+
     } else {
         platform->requestRender();
         return false;
@@ -739,6 +724,7 @@ bool Map::removeTileSource(TileSource& _source) {
 
 bool Map::clearTileSource(TileSource& _source, bool _data, bool _tiles) {
     std::lock_guard<std::mutex> lock(impl->tileSourceMutex);
+
     if (_data) { _source.clearData(); }
     if (!_tiles) { return true; }
 
@@ -749,6 +735,30 @@ bool Map::clearTileSource(TileSource& _source, bool _data, bool _tiles) {
         return true;
     }
     return false;
+}
+
+void Map::Impl::syncClientTileSources(bool _firstUpdate) {
+    std::lock_guard<std::mutex> lock(tileSourceMutex);
+
+    auto& tileManager = *scene->tileManager();
+    for (auto it = clientTileSources.begin();
+         it != clientTileSources.end(); ) {
+        auto& ts = it->second;
+        if (ts.remove) {
+            tileManager.removeClientTileSource(it->first);
+            it = clientTileSources.erase(it);
+            continue;
+        }
+        if (ts.added || _firstUpdate) {
+            ts.added = false;
+            tileManager.addClientTileSource(ts.tileSource);
+        }
+        if (ts.clear) {
+            ts.clear = false;
+            tileManager.clearTileSet(it->first);
+        }
+        ++it;
+    }
 }
 
 MarkerID Map::markerAdd() {
