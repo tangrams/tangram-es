@@ -161,8 +161,7 @@ public class MapController {
         assetManager = context.getAssets();
 
         // Parse font file description
-        fontFileParser = new FontFileParser();
-        fontFileParser.parse();
+        //FontFileParser.init();
 
         mapPointer = nativeInit(assetManager);
         if (mapPointer <= 0) {
@@ -1371,12 +1370,12 @@ public class MapController {
     // =============
     @Keep
     String getFontFilePath(final String key) {
-        return fontFileParser.getFontFile(key);
+        return FontFileParser.getFontFile(key);
     }
 
     @Keep
     String getFontFallbackFilePath(final int importance, final int weightHint) {
-        return fontFileParser.getFontFallback(importance, weightHint);
+        return FontFileParser.getFontFallback(importance, weightHint);
     }
 
     // Private members
@@ -1388,7 +1387,6 @@ public class MapController {
     private MapRegionChangeState currentState = MapRegionChangeState.IDLE;
     private AssetManager assetManager;
     private TouchInput touchInput;
-    private FontFileParser fontFileParser;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
     private final Map<Long, Object> httpRequestHandles = Collections.synchronizedMap(new HashMap());

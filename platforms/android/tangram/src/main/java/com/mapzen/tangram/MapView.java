@@ -108,7 +108,9 @@ public class MapView extends FrameLayout {
 
         loadLibraryTask = loadNativeLibraryAsync(new NativeLibraryLoadCb() {
             @Override
-            public void onLibraryReadyAsync(Boolean ok) {}
+            public void onLibraryReadyAsync(Boolean ok) {
+                //FontFileParser.init();
+            }
 
             @Override
             public void onLibraryReady(Boolean ok) {
@@ -165,9 +167,20 @@ public class MapView extends FrameLayout {
             return null;
         }
 
+        long time = System.currentTimeMillis();
+
         mapController = getMapInstance(getContext());
+
+        long now = System.currentTimeMillis();
+        Log.d("Tangram", "MapController creation took " + (now - time)+ "ms");
+        time = now;
+
         if (mapController != null) {
             mapController.UIThreadInit(viewHolder, handler);
+
+            now = System.currentTimeMillis();
+            Log.d("Tangram", "MapController init took " + (now - time) + "ms");
+
             addView(viewHolder.getView());
         }
         return mapController;
@@ -186,11 +199,14 @@ public class MapView extends FrameLayout {
      * @return true when everything went as expected
      */
     public static boolean loadNativeLibrary() {
+        long time = System.currentTimeMillis();
         if (NativeLibraryLoader.sNativeLibraryLoaded) {
             libraryLoaded = true;
+            time = System.currentTimeMillis() - time;
+            Log.d("Tangram", "Loading native library took " + time + "ms");
             return true;
         }
-        android.util.Log.e("Tangram", "Unable to initialize MapController: Failed to initialize native libraries");
+        Log.e("Tangram", "Unable to initialize MapController: Failed to load native library");
         return false;
     }
 
