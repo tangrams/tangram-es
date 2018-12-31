@@ -148,11 +148,12 @@ public:
     float pixelScale() const { return m_pixelScale; }
     void setPixelScale(float _scale);
 
-    /// Update TileManager, Labels and Markers for current View, returns:
+    /// Update TileManager, Labels and Markers for current View,
+    /// sets MapState for:
     /// - hasLoadingTiles
     /// - labelsNeedUpdate
     /// - markersNeedUpdate
-    std::tuple<bool,bool,bool> update(const View& _view, float _dt);
+    MapState update(const View& _view, float _dt);
 
     void renderBeginFrame(RenderState& _rs);
     bool render(RenderState& _rs, View& _view);

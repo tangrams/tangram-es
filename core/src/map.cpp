@@ -64,6 +64,7 @@ public:
     SceneID loadScene(SceneOptions&& _sceneOptions);
     SceneID loadSceneAsync(SceneOptions&& _sceneOptions);
     void syncClientTileSources(bool _firstUpdate);
+    bool updateCameraEase(float _dt);
 
     std::mutex sceneMutex;
 
@@ -87,7 +88,7 @@ public:
 
     bool cacheGlState = false;
     float pickRadius = .5f;
-    bool isCameraEasing = false;
+    bool isAnimating = false;
 
     std::vector<SelectionQuery> selectionQueries;
 
@@ -225,73 +226,51 @@ void Map::resize(int _newWidth, int _newHeight) {
     impl->selectionBuffer = std::make_unique<FrameBuffer>(_newWidth/2, _newHeight/2);
 }
 
+MapState Map::update(float _dt) {
 
-bool Map::update(float _dt) {
+    FrameInfo::beginUpdate();
 
     impl->jobQueue.runJobs();
 
-    auto& scene = *impl->scene;
-    auto& view = impl->view;
+    bool isEasing = impl->updateCameraEase(_dt);
+    bool isFlinging = impl->inputHandler.update(_dt);
 
+    uint32_t state = 0;
+    if (isEasing || isFlinging) {
+        state |= MapState::view_changing;
+        state |= MapState::is_animating;
+    }
+
+    impl->view.update();
+
+    auto& scene = *impl->scene;
     bool wasReady = scene.isReady();
 
-    // Check if the current scene finished loading
-    if (scene.completeScene(view)) {
+    if (!scene.completeScene(impl->view)) {
+        state |= MapState::scene_pending;
+    } else {
         // Sync ClientTileSource changes with TileManager
         bool firstUpdate = !wasReady;
         impl->syncClientTileSources(firstUpdate);
 
-    } else {
-        platform->requestRender();
-        return false;
-    }
-    FrameInfo::beginUpdate();
+        auto sceneState = scene.update(impl->view, _dt);
 
-    bool viewComplete = true;
-    bool isEasing = false;
-
-    if (impl->ease) {
-        auto& ease = *(impl->ease);
-        ease.update(_dt);
-
-        if (ease.finished()) {
-            if (impl->cameraAnimationListener) {
-                impl->cameraAnimationListener(true);
-            }
-            impl->ease.reset();
-            isEasing = false;
-        } else {
-            isEasing = true;
-        }
-    }
-
-    bool isFlinging = impl->inputHandler.update(_dt);
-    impl->isCameraEasing = (isEasing || isFlinging);
-
-    view.update();
-
-    bool tilesLoading, animateLabels, animateMarkers;
-    std::tie(tilesLoading, animateLabels, animateMarkers) = scene.update(view, _dt);
-
-    if (tilesLoading || animateLabels || animateMarkers) {
-        viewComplete = false;
-    }
-
-    // Request render if labels are in fading states or markers are easing.
-    if (impl->isCameraEasing || animateLabels || animateMarkers) {
-        platform->requestRender();
+        // Sets tiles_loading, animate_labels, animate_markers
+        state |= sceneState.flags;
     }
 
     FrameInfo::endUpdate();
 
-    return viewComplete;
+    return { state };
 }
 
-bool Map::render() {
+void Map::render() {
 
     auto& scene = *impl->scene;
     auto& view = impl->view;
     auto& renderState = impl->renderState;
+
+    glm::vec2 viewport(view.getWidth(), view.getHeight());
 
     // Delete batch of gl resources
     renderState.flushResourceDeletion();
@@ -306,11 +285,9 @@ bool Map::render() {
 
     // Do not render while scene is loading
     if (!scene.isReady()) {
-        glm::vec2 viewport(view.getWidth(), view.getHeight());
         FrameBuffer::apply(renderState, renderState.defaultFrameBuffer(),
                            viewport, impl->background.toColorF());
-
-        return impl->isCameraEasing;
+        return;
     }
 
     Primitives::setResolution(renderState, view.getWidth(), view.getHeight());
@@ -318,10 +295,11 @@ bool Map::render() {
 
     scene.renderBeginFrame(renderState);
 
-    bool drawSelectionBuffer = getDebugFlag(DebugFlags::selection_buffer);
-
     // Render feature selection pass to offscreen framebuffer
-    if (impl->selectionQueries.size() > 0 || drawSelectionBuffer) {
+    bool drawSelectionDebug = getDebugFlag(DebugFlags::selection_buffer);
+    bool drawSelectionBuffer = !impl->selectionQueries.empty();
+
+    if (drawSelectionBuffer || drawSelectionDebug) {
         impl->selectionBuffer->applyAsRenderTarget(impl->renderState);
 
         scene.renderSelection(renderState, view,
@@ -331,19 +309,17 @@ bool Map::render() {
         impl->selectionQueries.clear();
     }
 
-    // Setup default framebuffer for a new frame
-    glm::vec2 viewport(view.getWidth(), view.getHeight());
-
     // Get background color for frame based on zoom level, if there are stops
     impl->background = scene.backgroundColor(view.getIntegerZoom());
 
+    // Setup default framebuffer for a new frame
     FrameBuffer::apply(renderState, renderState.defaultFrameBuffer(),
                        viewport, impl->background.toColorF());
 
-    if (drawSelectionBuffer) {
+    if (drawSelectionDebug) {
         impl->selectionBuffer->drawDebug(renderState, viewport);
         FrameInfo::draw(renderState, view, *scene.tileManager());
-        return impl->isCameraEasing;
+        return;
     }
 
     // Render scene
@@ -355,8 +331,6 @@ bool Map::render() {
     }
 
     FrameInfo::draw(renderState, view, *scene.tileManager());
-
-    return impl->isCameraEasing;
 }
 
 int Map::getViewportHeight() {
@@ -392,7 +366,6 @@ void Map::cancelCameraAnimation() {
     impl->inputHandler.cancelFling();
 
     impl->ease.reset();
-    impl->isCameraEasing = false;
 
     if (impl->cameraAnimationListener) {
         impl->cameraAnimationListener(false);
@@ -460,6 +433,20 @@ void Map::setCameraPositionEased(const CameraPosition& _camera, float _duration,
     platform->requestRender();
 }
 
+bool Map::Impl::updateCameraEase(float _dt) {
+    if (!ease) { return false; }
+
+    ease->update(_dt);
+
+    if (ease->finished()) {
+        if (cameraAnimationListener) {
+            cameraAnimationListener(true);
+        }
+        ease.reset();
+        return false;
+    }
+    return true;
+}
 
 void Map::updateCameraPosition(const CameraUpdate& _update, float _duration, EaseType _e) {
 

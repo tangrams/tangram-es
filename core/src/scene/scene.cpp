@@ -278,8 +278,9 @@ bool Scene::load() {
 
         /// Ready to build tiles?
         if (startTileWorker && canBuildTiles && m_options.asyncCallback) {
-            m_readyToBuildTiles = true;
             startTileWorker = false;
+
+            m_readyToBuildTiles = true;
             m_options.asyncCallback(this);
         }
 
@@ -531,7 +532,7 @@ void Scene::runFontTasks() {
     }
 }
 
-std::tuple<bool,bool,bool> Scene::update(const View& _view, float _dt) {
+MapState Scene::update(const View& _view, float _dt) {
 
     m_time += _dt;
 
@@ -559,7 +560,16 @@ std::tuple<bool,bool,bool> Scene::update(const View& _view, float _dt) {
         m_labelManager->updateLabels(_view.state(), _dt, m_styles, tiles, markers);
     }
 
-    return { m_tileManager->hasLoadingTiles(), m_labelManager->needUpdate(), markersChanged };
+    uint32_t state = 0;
+    if (m_labelManager->needUpdate() || markersChanged) {
+        state |= MapState::labels_changing;
+        state |= MapState::is_animating;
+    }
+    if (m_tileManager->hasLoadingTiles()) {
+        state |= MapState::tiles_loading;
+    }
+
+    return { state };
 }
 
 void Scene::renderBeginFrame(RenderState& _rs) {
