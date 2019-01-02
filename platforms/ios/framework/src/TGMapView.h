@@ -349,6 +349,23 @@ TG_EXPORT
 @property (assign, nonatomic) NSInteger preferredFramesPerSecond;
 
 /**
+ The CADisplayLink used by the renderer. Exposed mostly for the ability to pause/unpause rendering without having to initiate
+ a scene update, as animations defined within the stylesheet force a continuous rendering regardless of the `continuous`
+ setting defined in code.
+ 
+ @note This property is manipulated by the rendering subsystem depending on lifecycle events coming from the OS as well as
+ certain events within Tangram itself. As such, do not expect your manipulation of individual settings (such as `paused`) to
+ be long lived. An example of this is setting displayLink.paused to YES, then backgrounding and foregrounding the app. Tangram
+ will respond to the OS lifecycle events and pause/unpause the map rendering, respectively, thereby overriding your setting.
+ This is intended functionality and will not be changed.
+ 
+ @note This property, even though it is marked NS_ASSUME_NONNULL at the top of the header, *will be nil* until the view is
+ added to some kind of view hierarchy (window or subview). In a future PR we should clean up this assumption, but until then,
+ you have been warned :)
+ */
+@property (strong, nonatomic, readonly) CADisplayLink *displayLink;
+
+/**
  If `continuous` is `YES`, the map view will re-draw continuously. Otherwise, the map will re-draw only when an event
  changes the map view.
 
