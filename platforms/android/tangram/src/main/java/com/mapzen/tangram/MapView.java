@@ -109,7 +109,7 @@ public class MapView extends FrameLayout {
         loadLibraryTask = loadNativeLibraryAsync(new NativeLibraryLoadCb() {
             @Override
             public void onLibraryReadyAsync(Boolean ok) {
-                //FontFileParser.init();
+                //FontConfig.init();
             }
 
             @Override

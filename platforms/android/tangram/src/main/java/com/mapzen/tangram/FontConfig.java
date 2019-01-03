@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class FontFileParser {
+class FontConfig {
 
     private static boolean initialized = false;
     private static Map<String, String> fontDict;
@@ -35,7 +35,7 @@ class FontFileParser {
     private static final String oldFontXMLPath = "/system/etc/system_fonts.xml";
     private static final String oldFontXMLFallbackPath = "/system/etc/fallback_fonts.xml";
 
-    private FontFileParser() {}
+    private FontConfig() {}
 
     public static synchronized void init() {
         if (initialized) { return; }
@@ -54,7 +54,7 @@ class FontFileParser {
         parse();
 
         time = System.currentTimeMillis() - time;
-        Log.d("Tangram", "FontFileParser init took " + time + "ms");
+        Log.d("Tangram", "FontConfig init took " + time + "ms");
     }
 
     private static void addFallback(final Integer weight, final String filename) {

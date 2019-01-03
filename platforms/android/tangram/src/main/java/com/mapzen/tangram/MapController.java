@@ -155,7 +155,7 @@ public class MapController {
         assetManager = context.getAssets();
 
         // Parse font file description
-        //FontFileParser.init();
+        //FontConfig.init();
 
         mapPointer = nativeInit(assetManager);
         if (mapPointer <= 0) {
@@ -1364,12 +1364,12 @@ public class MapController {
     // =============
     @Keep
     String getFontFilePath(final String key) {
-        return FontFileParser.getFontFile(key);
+        return FontConfig.getFontFile(key);
     }
 
     @Keep
     String getFontFallbackFilePath(final int importance, final int weightHint) {
-        return FontFileParser.getFontFallback(importance, weightHint);
+        return FontConfig.getFontFallback(importance, weightHint);
     }
 
     // Private members
