@@ -2,6 +2,7 @@
 #include "data/propertyItem.h"
 #include "data/tileData.h"
 #include "tile/tile.h"
+#include "tile/tileBuilder.h"
 #include "tile/tileTask.h"
 #include "util/mapProjection.h"
 #include "log.h"
@@ -10,8 +11,12 @@ namespace Tangram {
 
 class RasterTileTask : public BinaryTileTask {
 public:
-    RasterTileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _subTask)
-        : BinaryTileTask(_tileId, _source, _subTask) {}
+
+    const bool subTask = false;
+
+    RasterTileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, bool _subTask)
+        : BinaryTileTask(_tileId, _source),
+          subTask(_subTask) {}
 
     std::shared_ptr<Texture> m_texture;
 
@@ -24,7 +29,7 @@ public:
     }
 
     bool isReady() const override {
-        if (!isSubTask()) {
+        if (!subTask) {
             return bool(m_tile);
         } else {
             return bool(m_texture);
@@ -41,8 +46,9 @@ public:
         }
 
         // Create tile geometries
-        if (!isSubTask()) {
-            BinaryTileTask::process(_tileBuilder);
+        if (!subTask) {
+            m_tile = _tileBuilder.build(m_tileId, *(source->m_tileData), *source);
+            m_ready = true;
         }
     }
 
@@ -50,7 +56,7 @@ public:
         auto source = rasterSource();
         if (!source) { return; }
 
-        auto raster = source->addRaster(*this);
+        auto raster = source->addRaster(m_tileId, m_texture);
         assert(raster.isValid());
 
         m_tile->rasters().push_back(std::move(raster));
@@ -65,7 +71,7 @@ public:
         auto source = rasterSource();
         if (!source) { return; }
 
-        auto raster = source->addRaster(*this);
+        auto raster = source->addRaster(m_tileId, m_texture);
         assert(raster.isValid());
 
         _mainTask.tile()->rasters().push_back(std::move(raster));
@@ -79,6 +85,25 @@ RasterSource::RasterSource(const std::string& _name, std::unique_ptr<DataSource>
       m_texOptions(_options) {
 
     m_emptyTexture = std::make_shared<Texture>(m_texOptions);
+
+    GLubyte pixel[4] = { 0, 0, 0, 0 };
+    auto bpp = _options.bytesPerPixel();
+    m_emptyTexture->setPixelData(1, 1, bpp, pixel, bpp);
+
+    Feature rasterFeature;
+    rasterFeature.geometryType = GeometryType::polygons;
+    rasterFeature.polygons = { { {
+                {0.0f, 0.0f},
+                {1.0f, 0.0f},
+                {1.0f, 1.0f},
+                {0.0f, 1.0f},
+                {0.0f, 0.0f}
+            } } };
+    rasterFeature.props = Properties();
+
+    m_tileData = std::make_shared<TileData>();
+    m_tileData->layers.emplace_back("");
+    m_tileData->layers.back().features.push_back(rasterFeature);
 }
 
 std::shared_ptr<Texture> RasterSource::createTexture(TileID _tile, const std::vector<char>& _rawTileData) {
@@ -108,30 +133,29 @@ void RasterSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb)
 }
 
 std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task) const {
-
-    std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
-
-    Feature rasterFeature;
-    rasterFeature.geometryType = GeometryType::polygons;
-    rasterFeature.polygons = { { {
-                                         {0.0f, 0.0f},
-                                         {1.0f, 0.0f},
-                                         {1.0f, 1.0f},
-                                         {0.0f, 1.0f},
-                                         {0.0f, 0.0f}
-                                 } } };
-    rasterFeature.props = Properties();
-
-    tileData->layers.emplace_back("");
-    tileData->layers.back().features.push_back(rasterFeature);
-    return tileData;
-
+    assert(false);
+    return nullptr;
 }
 
-std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask) {
-    auto task = std::make_shared<RasterTileTask>(_tileId, shared_from_this(), _subTask);
+void RasterSource::addRasterTask(TileTask& _task) {
 
-    createSubTasks(task);
+    TileID subTileID = _task.tileId();
+
+    // get tile for lower zoom if we are past max zoom
+    if (subTileID.z > maxZoom()) {
+        subTileID = subTileID.withMaxSourceZoom(maxZoom());
+    }
+
+    auto rasterTask = createRasterTask(subTileID, true);
+
+    _task.subTasks().push_back(rasterTask);
+
+    // Needed? Do we support recursive raster-source inclusion?
+    addRasterTasks(_task);
+}
+
+std::shared_ptr<RasterTileTask> RasterSource::createRasterTask(TileID _tileId, bool subTask) {
+    auto task = std::make_shared<RasterTileTask>(_tileId, shared_from_this(), subTask);
 
     // First try existing textures cache
     TileID id(_tileId.x, _tileId.y, _tileId.z);
@@ -143,22 +167,27 @@ std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask)
         if (task->m_texture) {
             // No more loading needed.
             task->startedLoading();
-            return task;
         }
     }
+    return task;
+}
+
+std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId) {
+    auto task = createRasterTask(_tileId, false);
+
+    addRasterTasks(*task);
 
     return task;
 }
 
-Raster RasterSource::addRaster(const RasterTileTask& _task) {
-    const auto& tileId = _task.tileId();
-    TileID id(tileId.x, tileId.y, tileId.z);
+Raster RasterSource::addRaster(const TileID& _tileId, std::shared_ptr<Texture> _texture) {
+    TileID id(_tileId.x, _tileId.y, _tileId.z);
 
-    if (_task.m_texture == m_emptyTexture) {
+    if (_texture == m_emptyTexture) {
         return Raster{id, m_emptyTexture};
     }
 
-    auto entry = m_textures.emplace(id, _task.m_texture);
+    auto entry = m_textures.emplace(id, _texture);
     std::shared_ptr<Texture> texture = entry.first->second;
     LOGD("Cache: add %d/%d/%d - reused: %d", id.x, id.y, id.z, !entry.second);
 

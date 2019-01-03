@@ -76,8 +76,8 @@ struct TestTileSource : TileSource {
     public:
         bool gotData = false;
 
-        Task(TileID& _tileId, std::shared_ptr<TileSource> _source, bool _subTask)
-            : TileTask(_tileId, _source, _subTask) {}
+        Task(TileID& _tileId, std::shared_ptr<TileSource> _source)
+            : TileTask(_tileId, _source) {}
 
         bool hasData() const override { return gotData; }
     };
@@ -103,8 +103,8 @@ struct TestTileSource : TileSource {
 
     void clearData() override {}
 
-    std::shared_ptr<TileTask> createTask(TileID _tileId, int _subTask) override {
-        return std::make_shared<Task>(_tileId, shared_from_this(), _subTask);
+    std::shared_ptr<TileTask> createTask(TileID _tileId) override {
+        return std::make_shared<Task>(_tileId, shared_from_this());
     }
 };
 
