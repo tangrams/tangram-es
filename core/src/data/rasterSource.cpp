@@ -50,7 +50,7 @@ public:
         auto source = rasterSource();
         if (!source) { return; }
 
-        auto raster = source->getRaster(*this);
+        auto raster = source->addRaster(*this);
         assert(raster.isValid());
 
         m_tile->rasters().push_back(std::move(raster));
@@ -65,7 +65,7 @@ public:
         auto source = rasterSource();
         if (!source) { return; }
 
-        auto raster = source->getRaster(*this);
+        auto raster = source->addRaster(*this);
         assert(raster.isValid());
 
         _mainTask.tile()->rasters().push_back(std::move(raster));
@@ -150,7 +150,7 @@ std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask)
     return task;
 }
 
-Raster RasterSource::getRaster(const RasterTileTask& _task) {
+Raster RasterSource::addRaster(const RasterTileTask& _task) {
     const auto& tileId = _task.tileId();
     TileID id(tileId.x, tileId.y, tileId.z);
 

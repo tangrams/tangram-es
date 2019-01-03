@@ -42,7 +42,7 @@ public:
 
     std::shared_ptr<Texture> createTexture(TileID _tile, const std::vector<char>& _rawTileData);
 
-    Raster getRaster(const RasterTileTask& _task);
+    Raster addRaster(const RasterTileTask& _task);
 
 };
 
