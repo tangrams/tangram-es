@@ -15,8 +15,8 @@ class RasterTileTask;
 
 class RasterSource : public TileSource {
 
-    using Cache = std::map<TileID, std::shared_ptr<Texture>>;
-    Cache m_textures;
+    using Cache = std::map<TileID, std::weak_ptr<Texture>>;
+    std::shared_ptr<Cache> m_textures;
 
     TextureOptions m_texOptions;
 
@@ -33,9 +33,11 @@ protected:
 
     void addRasterTask(TileTask& _tileTask);
 
-    std::shared_ptr<Texture> createTexture(TileID _tile, const std::vector<char>& _rawTileData);
+    std::unique_ptr<Texture> createTexture(TileID _tile, const std::vector<char>& _rawTileData);
 
-    Raster addRaster(const TileID& _tileId, std::shared_ptr<Texture> _texture);
+    std::shared_ptr<Texture> cacheTexture(const TileID& _tileId, std::unique_ptr<Texture> _texture);
+
+    std::shared_ptr<Texture> emptyTexture() { return m_emptyTexture; }
 
 public:
 

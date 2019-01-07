@@ -14,25 +14,27 @@ public:
 
     const bool subTask = false;
 
+    std::unique_ptr<Texture> texture;
+    std::unique_ptr<Raster> raster;
+
     RasterTileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, bool _subTask)
         : BinaryTileTask(_tileId, _source),
           subTask(_subTask) {}
 
-    std::shared_ptr<Texture> m_texture;
 
     std::shared_ptr<RasterSource> rasterSource() {
         return reinterpret_cast<std::weak_ptr<RasterSource>*>(&m_source)->lock();
     }
 
     bool hasData() const override {
-        return bool(rawTileData) || bool(m_texture);
+        return bool(rawTileData) || bool(texture) || bool(raster);
     }
 
     bool isReady() const override {
         if (!subTask) {
             return bool(m_tile);
         } else {
-            return bool(m_texture);
+            return bool(texture) || bool(raster);
         }
     }
 
@@ -40,9 +42,12 @@ public:
         auto source = rasterSource();
         if (!source) { return; }
 
-        if (!m_texture) {
+        if (!texture && !raster) {
             // Decode texture data
-            m_texture = source->createTexture(m_tileId, *rawTileData);
+            texture = source->createTexture(m_tileId, *rawTileData);
+            if (!texture) {
+                raster = std::make_unique<Raster>(m_tileId, source->emptyTexture());
+            }
         }
 
         // Create tile geometries
@@ -52,14 +57,23 @@ public:
         }
     }
 
-    void complete() override {
+    void addRaster(Tile& _tile) {
         auto source = rasterSource();
         if (!source) { return; }
 
-        auto raster = source->addRaster(m_tileId, m_texture);
-        assert(raster.isValid());
+        auto& rasters = _tile.rasters();
 
-        m_tile->rasters().push_back(std::move(raster));
+        if (raster) {
+            rasters.emplace_back(raster->tileID, raster->texture);
+        } else {
+            auto tex = source->cacheTexture(m_tileId, std::move(texture));
+            rasters.emplace_back(m_tileId, tex);
+        }
+    }
+
+    void complete() override {
+
+        addRaster(*m_tile);
 
         for (auto& subTask : m_subTasks) {
             assert(subTask->isReady());
@@ -68,13 +82,7 @@ public:
     }
 
     void complete(TileTask& _mainTask) override {
-        auto source = rasterSource();
-        if (!source) { return; }
-
-        auto raster = source->addRaster(m_tileId, m_texture);
-        assert(raster.isValid());
-
-        _mainTask.tile()->rasters().push_back(std::move(raster));
+        addRaster(*_mainTask.tile());
     }
 };
 
@@ -84,6 +92,7 @@ RasterSource::RasterSource(const std::string& _name, std::unique_ptr<DataSource>
     : TileSource(_name, std::move(_sources), _zoomOptions),
       m_texOptions(_options) {
 
+    m_textures = std::make_shared<Cache>();
     m_emptyTexture = std::make_shared<Texture>(m_texOptions);
 
     GLubyte pixel[4] = { 0, 0, 0, 0 };
@@ -106,29 +115,25 @@ RasterSource::RasterSource(const std::string& _name, std::unique_ptr<DataSource>
     m_tileData->layers.back().features.push_back(rasterFeature);
 }
 
-std::shared_ptr<Texture> RasterSource::createTexture(TileID _tile, const std::vector<char>& _rawTileData) {
-    if (_rawTileData.empty()) {
-        return m_emptyTexture;
-    }
+std::unique_ptr<Texture> RasterSource::createTexture(TileID _tile, const std::vector<char>& _rawTileData) {
+    if (_rawTileData.empty()) { return nullptr; }
 
     auto data = reinterpret_cast<const uint8_t*>(_rawTileData.data());
     auto length = _rawTileData.size();
 
-    return std::make_shared<Texture>(data, length, m_texOptions);
+    return std::make_unique<Texture>(data, length, m_texOptions);
 }
 
 void RasterSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
     // TODO, remove this
     // Overwrite cb to set empty texture on failure
     TileTaskCb cb{[this, _cb](std::shared_ptr<TileTask> _task) {
-
-            if (!_task->hasData()) {
-                auto& task = static_cast<RasterTileTask&>(*_task);
-                task.m_texture = m_emptyTexture;
-            }
-            _cb.func(_task);
-        }};
-
+        if (!_task->hasData()) {
+            auto& task = static_cast<RasterTileTask&>(*_task);
+            task.raster = std::make_unique<Raster>(task.tileId(), m_emptyTexture);
+        }
+        _cb.func(_task);
+    }};
     TileSource::loadTileData(_task, cb);
 }
 
@@ -160,11 +165,14 @@ std::shared_ptr<RasterTileTask> RasterSource::createRasterTask(TileID _tileId, b
     // First try existing textures cache
     TileID id(_tileId.x, _tileId.y, _tileId.z);
 
-    auto texIt = m_textures.find(id);
-    if (texIt != m_textures.end()) {
-        task->m_texture = texIt->second;
+    auto texIt = m_textures->find(id);
+    if (texIt != m_textures->end()) {
+        auto texture = texIt->second.lock();
 
-        if (task->m_texture) {
+        if (texture) {
+            LOG("%d - reuse %s", m_textures->size(), id.toString().c_str());
+
+            task->raster = std::make_unique<Raster>(id, texture);
             // No more loading needed.
             task->startedLoading();
         }
@@ -180,28 +188,30 @@ std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId) {
     return task;
 }
 
-Raster RasterSource::addRaster(const TileID& _tileId, std::shared_ptr<Texture> _texture) {
+std::shared_ptr<Texture> RasterSource::cacheTexture(const TileID& _tileId, std::unique_ptr<Texture> _texture) {
     TileID id(_tileId.x, _tileId.y, _tileId.z);
 
-    if (_texture == m_emptyTexture) {
-        return Raster{id, m_emptyTexture};
+    auto& textureEntry = (*m_textures)[id];
+    auto texture = textureEntry.lock();
+    if (texture) {
+        LOG("%d - drop duplicate %s", m_textures->size(), id.toString().c_str());
+        // The same texture has been loaded in the meantime: Reuse it and drop _texture..
+        return texture;
     }
 
-    auto entry = m_textures.emplace(id, _texture);
-    std::shared_ptr<Texture> texture = entry.first->second;
-    LOGD("Cache: add %d/%d/%d - reused: %d", id.x, id.y, id.z, !entry.second);
+    texture = std::shared_ptr<Texture>(_texture.release(),
+                                       [c = std::weak_ptr<Cache>(m_textures), id](auto t) {
+                                           if (auto cache = c.lock()) {
+                                               cache->erase(id);
+                                               LOG("%d - remove %s", cache->size(), id.toString().c_str());
+                                           }
+                                           delete t;
+                                       });
+    // Add to cache
+    textureEntry = texture;
+    LOG("%d - added %s", m_textures->size(), id.toString().c_str());
 
-    // Remove textures that are only held by cache
-    for(auto it = m_textures.begin(), end = m_textures.end(); it != end; ) {
-        if (it->second.use_count() == 1) {
-            LOGD("Cache: remove %d/%d/%d", it->first.x, it->first.y, it->first.z);
-            it = m_textures.erase(it);
-        } else {
-            ++it;
-        }
-    }
-
-    return Raster{id, texture};
+    return texture;
 }
 
 }
