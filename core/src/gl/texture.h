@@ -46,6 +46,21 @@ struct TextureOptions {
     PixelFormat pixelFormat = PixelFormat::RGBA;
     float displayScale = 1.f; // 0.5 for a "@2x" image.
     bool generateMipmaps = false;
+
+    int bytesPerPixel() const {
+        switch (pixelFormat) {
+        case PixelFormat::ALPHA:
+        case PixelFormat::LUMINANCE:
+            return 1;
+        case PixelFormat::LUMINANCE_ALPHA:
+            return 2;
+        case PixelFormat::RGB:
+            return 3;
+        default:
+            break;
+        }
+        return 4;
+    }
 };
 
 class Texture {
