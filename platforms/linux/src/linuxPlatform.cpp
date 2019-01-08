@@ -88,8 +88,6 @@ Platform::UrlRequestId LinuxPlatform::startUrlRequest(Url _url, UrlRequestHandle
                  onUrlResponse(_handle, std::move(response));
              });
     } else {
-        //UrlRequestId id = static_cast<UrlRequestHandle>(--m_urlRequestCount);
-
         m_fileWorker.enqueue([this, path = _url.path(), _handle](){
              UrlResponse response;
              auto allocator = [&](size_t size) {
@@ -105,7 +103,9 @@ Platform::UrlRequestId LinuxPlatform::startUrlRequest(Url _url, UrlRequestHandle
 }
 
 void LinuxPlatform::urlRequestCanceled(Platform::UrlRequestId _id) {
-    m_urlClient->cancelRequest(_id);
+    if (m_urlClient) {
+        m_urlClient->cancelRequest(_id);
+    }
 }
 
 void setCurrentThreadPriority(int priority) {
