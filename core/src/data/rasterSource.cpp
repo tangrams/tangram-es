@@ -196,7 +196,7 @@ std::shared_ptr<Texture> RasterSource::cacheTexture(const TileID& _tileId, std::
     auto& textureEntry = (*m_textures)[id];
     auto texture = textureEntry.lock();
     if (texture) {
-        LOG("%d - drop duplicate %s", m_textures->size(), id.toString().c_str());
+        LOGD("%d - drop duplicate %s", m_textures->size(), id.toString().c_str());
         // The same texture has been loaded in the meantime: Reuse it and drop _texture..
         return texture;
     }
@@ -205,13 +205,13 @@ std::shared_ptr<Texture> RasterSource::cacheTexture(const TileID& _tileId, std::
                                        [c = std::weak_ptr<Cache>(m_textures), id](auto t) {
                                            if (auto cache = c.lock()) {
                                                cache->erase(id);
-                                               LOG("%d - remove %s", cache->size(), id.toString().c_str());
+                                               LOGD("%d - remove %s", cache->size(), id.toString().c_str());
                                            }
                                            delete t;
                                        });
     // Add to cache
     textureEntry = texture;
-    LOG("%d - added %s", m_textures->size(), id.toString().c_str());
+    LOGD("%d - added %s", m_textures->size(), id.toString().c_str());
 
     return texture;
 }
