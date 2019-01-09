@@ -99,20 +99,22 @@ RasterSource::RasterSource(const std::string& _name, std::unique_ptr<DataSource>
     auto bpp = _options.bytesPerPixel();
     m_emptyTexture->setPixelData(1, 1, bpp, pixel, bpp);
 
-    Feature rasterFeature;
-    rasterFeature.geometryType = GeometryType::polygons;
-    rasterFeature.polygons = { { {
-                {0.0f, 0.0f},
-                {1.0f, 0.0f},
-                {1.0f, 1.0f},
-                {0.0f, 1.0f},
-                {0.0f, 0.0f}
-            } } };
-    rasterFeature.props = Properties();
+    if (m_generateGeometry) {
+        Feature rasterFeature;
+        rasterFeature.geometryType = GeometryType::polygons;
+        rasterFeature.polygons = { { {
+                    {0.0f, 0.0f},
+                    {1.0f, 0.0f},
+                    {1.0f, 1.0f},
+                    {0.0f, 1.0f},
+                    {0.0f, 0.0f}
+                } } };
+        rasterFeature.props = Properties();
 
-    m_tileData = std::make_shared<TileData>();
-    m_tileData->layers.emplace_back("");
-    m_tileData->layers.back().features.push_back(rasterFeature);
+        m_tileData = std::make_shared<TileData>();
+        m_tileData->layers.emplace_back("");
+        m_tileData->layers.back().features.push_back(rasterFeature);
+    }
 }
 
 std::unique_ptr<Texture> RasterSource::createTexture(TileID _tile, const std::vector<char>& _rawTileData) {
