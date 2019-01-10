@@ -12,7 +12,8 @@ View getView() {
     View view(1000, 1000);
     view.setPosition(0, 0);
     view.setZoom(0);
-    view.update(false);
+    view.setConstrainToWorldBounds(false);
+    view.update();
     return view;
 }
 

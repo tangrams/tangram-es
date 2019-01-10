@@ -46,7 +46,8 @@ View makeView() {
 
     view.setPosition(0, 0);
     view.setZoom(0);
-    view.update(false);
+    view.setConstrainToWorldBounds(false);
+    view.update();
 
     return view;
 }
