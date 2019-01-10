@@ -69,6 +69,7 @@ void View::setSize(int _width, int _height) {
     m_aspect = (float)m_vpWidth/ (float)m_vpHeight;
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
+    m_dirtyConstraint = true;
 
     // Screen space orthographic projection matrix, top left origin, y pointing down
     m_orthoViewport = glm::ortho(0.f, (float)m_vpWidth, (float)m_vpHeight, 0.f, -1.f, 1.f);
@@ -125,7 +126,7 @@ float View::getFocalLength() const {
 
 void View::setMinZoom(float minZoom) {
 
-    m_minZoom = std::max(minZoom, 0.f);
+    m_minZoom = (m_constrainToWorldBounds) ? std::max(minZoom, m_constrainZoom) : std::max(minZoom, 0.f);
     m_maxZoom = std::max(minZoom, m_maxZoom);
     // Set the current zoom again to validate it.
     setZoom(m_zoom);
@@ -161,6 +162,10 @@ float View::getMaxPitch() const {
     }
     return m_maxPitch;
 
+}
+
+void View::setConstrainToWorldBounds(bool constrainToWorldBounds) {
+    m_constrainToWorldBounds = constrainToWorldBounds;
 }
 
 void View::setPosition(double _x, double _y) {
@@ -228,18 +233,16 @@ LngLat View::getCenterCoordinates() const {
     return center;
 }
 
-void View::update(bool _constrainToWorldBounds) {
+void View::update() {
 
     m_changed = false;
 
-    if (_constrainToWorldBounds) {
+    if (m_constrainToWorldBounds && m_dirtyConstraint) {
         // Approximate the view diameter in pixels by taking the maximum dimension.
         double viewDiameterPixels = std::fmax(getWidth(), getHeight()) / pixelScale();
         // Approximate the minimum zoom that keeps with view span within the drawable projection area. [1]
-        double minZoom = std::log(viewDiameterPixels / MapProjection::tileSize() + 2) / std::log(2);
-        if (m_zoom < minZoom) {
-            m_zoom = static_cast<float>(minZoom);
-        }
+        m_constrainZoom = std::log(viewDiameterPixels / MapProjection::tileSize() + 1.5f) / std::log(2);
+        setMinZoom(m_minZoom);
         // Constrain by moving map center to keep view in bounds.
         m_constraint.setRadius(0.5 * viewDiameterPixels / pixelsPerMeter());
         m_pos.x = m_constraint.getConstrainedX(m_pos.x);

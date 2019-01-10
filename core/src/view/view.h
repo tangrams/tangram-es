@@ -96,6 +96,9 @@ public:
     // Get the maximum pitch angle for the current zoom, in degrees.
     float getMaxPitch() const;
 
+    // Sets constrainToWorldBounds for view to aptly respect m_constrainToWorldBounds
+    void setConstrainToWorldBounds(bool constrainToWorldBounds);
+
     /* Sets the ratio of hardware pixels to logical pixels (for high-density screens)
      * If unset, default is 1.0
      */
@@ -145,7 +148,7 @@ public:
     float getPitch() const { return m_pitch; }
 
     /* Updates the view and projection matrices if properties have changed */
-    void update(bool _constrainToWorldBounds = true);
+    void update();
 
     /* Gets the position of the view in projection units (z is the effective 'height' determined from zoom) */
     const glm::dvec3& getPosition() const { return m_pos; }
@@ -241,6 +244,7 @@ protected:
     float m_pitch = 0.f;
 
     float m_zoom = 0.f;
+    float m_constrainZoom = 0.f;
 
     float m_width;
     float m_height;
@@ -258,7 +262,9 @@ protected:
 
     bool m_dirtyMatrices;
     bool m_dirtyTiles;
+    bool m_dirtyConstraint;
     bool m_changed;
+    bool m_constrainToWorldBounds = true;
 
 };
 
