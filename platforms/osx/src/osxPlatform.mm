@@ -181,7 +181,7 @@ Platform::UrlRequestId OSXPlatform::startUrlRequest(Url _url, UrlRequestHandle _
 
 }
 
-void OSXPlatform::cancelUrlRequest(Platform::UrlRequestId id) {
+void OSXPlatform::urlRequestCanceled(Platform::UrlRequestId id) {
 
     [m_urlSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
         for (NSURLSessionTask* task in dataTasks) {
