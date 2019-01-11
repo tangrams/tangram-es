@@ -94,10 +94,6 @@ UrlRequestHandle Platform::startUrlRequest(Url _url, UrlCallback&& _callback) {
     // Start Platform specific url request
     entry->id = startUrlRequest(_url, handle);
 
-    if (entry->id == UrlRequestNotCancelable) {
-        LOGW("Cannot cancel request for handle %llu! %s", handle, _url.path().c_str());
-    }
-
     return handle;
 }
 
