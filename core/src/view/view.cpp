@@ -38,6 +38,7 @@ void View::setPixelScale(float _pixelsPerPoint) {
     m_pixelScale = _pixelsPerPoint;
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
+    m_dirtyConstraint = true;
 
 }
 
@@ -126,7 +127,7 @@ float View::getFocalLength() const {
 
 void View::setMinZoom(float minZoom) {
 
-    m_minZoom = (m_constrainToWorldBounds) ? std::max(minZoom, m_constrainZoom) : std::max(minZoom, 0.f);
+    m_minZoom = std::max(minZoom, 0.f);
     m_maxZoom = std::max(minZoom, m_maxZoom);
     // Set the current zoom again to validate it.
     setZoom(m_zoom);
@@ -165,7 +166,11 @@ float View::getMaxPitch() const {
 }
 
 void View::setConstrainToWorldBounds(bool constrainToWorldBounds) {
+    // Reset view constraints
+    m_constrainMinZoom = 0.f;
+    m_dirtyConstraint = true;
     m_constrainToWorldBounds = constrainToWorldBounds;
+    setZoom(m_zoom);
 }
 
 void View::setPosition(double _x, double _y) {
@@ -182,8 +187,21 @@ void View::setCenterCoordinates(Tangram::LngLat center) {
 }
 
 void View::setZoom(float _z) {
+
+    if (m_constrainToWorldBounds && m_dirtyConstraint) {
+        // Approximate the view diameter in pixels by taking the maximum dimension.
+        double viewDiameterPixels = std::fmax(getWidth(), getHeight()) / pixelScale();
+        // Approximate the minimum zoom that keeps with view span within the drawable projection area. [1]
+        m_constrainMinZoom = std::log(viewDiameterPixels / MapProjection::tileSize() + 2.f) / std::log(2);
+        // Constrain by moving map center to keep view in bounds.
+        m_constraint.setRadius(0.5 * viewDiameterPixels / pixelsPerMeter());
+        m_pos.x = m_constraint.getConstrainedX(m_pos.x);
+        m_pos.y = m_constraint.getConstrainedY(m_pos.y);
+        m_dirtyConstraint = false;
+    }
+
     // ensure zoom value is allowed
-    m_zoom = glm::clamp(_z, m_minZoom, m_maxZoom);
+    m_zoom = glm::clamp(_z, std::fmax(m_constrainMinZoom, m_minZoom), m_maxZoom);
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
 }
@@ -236,18 +254,6 @@ LngLat View::getCenterCoordinates() const {
 void View::update() {
 
     m_changed = false;
-
-    if (m_constrainToWorldBounds && m_dirtyConstraint) {
-        // Approximate the view diameter in pixels by taking the maximum dimension.
-        double viewDiameterPixels = std::fmax(getWidth(), getHeight()) / pixelScale();
-        // Approximate the minimum zoom that keeps with view span within the drawable projection area. [1]
-        m_constrainZoom = std::log(viewDiameterPixels / MapProjection::tileSize() + 1.5f) / std::log(2);
-        setMinZoom(m_minZoom);
-        // Constrain by moving map center to keep view in bounds.
-        m_constraint.setRadius(0.5 * viewDiameterPixels / pixelsPerMeter());
-        m_pos.x = m_constraint.getConstrainedX(m_pos.x);
-        m_pos.y = m_constraint.getConstrainedY(m_pos.y);
-    }
 
     // Ensure valid pitch angle.
     {

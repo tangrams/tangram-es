@@ -244,7 +244,7 @@ protected:
     float m_pitch = 0.f;
 
     float m_zoom = 0.f;
-    float m_constrainZoom = 0.f;
+    float m_constrainMinZoom = 0.f;
 
     float m_width;
     float m_height;
