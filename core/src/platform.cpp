@@ -5,6 +5,7 @@
 #include <string>
 #include <cassert>
 
+constexpr char const* shutdown_message = "Shutting down";
 constexpr char const* cancel_message = "Request canceled";
 
 namespace Tangram {
@@ -55,12 +56,11 @@ void Platform::shutdown() {
     {
         std::lock_guard<std::mutex> lock(m_callbackMutex);
 
-        UrlResponse response;
-        response.error = "Shutting down";
-
         for (auto& entry : m_urlCallbacks) {
             auto& request = entry.second;
             if (request.callback) {
+                UrlResponse response;
+                response.error = shutdown_message;
                 request.callback(std::move(response));
             }
             if (request.id) {
@@ -72,15 +72,15 @@ void Platform::shutdown() {
 }
 
 UrlRequestHandle Platform::startUrlRequest(Url _url, UrlCallback&& _callback) {
+
     assert(_callback);
 
     if (m_shutdown) {
         UrlResponse response;
-        response.error = "Shutting down";
-        if (_callback) {
-            _callback(std::move(response));
-        }
-        return 0;
+        response.error = shutdown_message;
+        _callback(std::move(response));
+
+        return UrlRequestNotCancelable;
     }
 
     UrlRequestHandle handle= ++m_urlRequestCount;
