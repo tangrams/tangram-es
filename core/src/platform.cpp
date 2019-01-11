@@ -5,6 +5,8 @@
 #include <string>
 #include <cassert>
 
+constexpr char const* cancel_message = "Request canceled";
+
 namespace Tangram {
 
 Platform::Platform() : m_continuousRendering(false) {}
@@ -83,7 +85,7 @@ UrlRequestHandle Platform::startUrlRequest(Url _url, UrlCallback&& _callback) {
 
     UrlRequestHandle handle= ++m_urlRequestCount;
 
-    // Need to do this in advance in case startUrlRequest calls back synchronously..
+    // Need to do this in advance in case startUrlRequest calls back synchronously.
     UrlRequestEntry* entry = nullptr;
     {
         std::lock_guard<std::mutex> lock(m_callbackMutex);
@@ -99,17 +101,30 @@ UrlRequestHandle Platform::startUrlRequest(Url _url, UrlCallback&& _callback) {
 
 void Platform::cancelUrlRequest(UrlRequestHandle _request) {
     UrlRequestId id = 0;
+    UrlCallback callback;
 
     {
         std::lock_guard<std::mutex> lock(m_callbackMutex);
         auto it = m_urlCallbacks.find(_request);
         if (it != m_urlCallbacks.end()) {
             id = it->second.id;
+
+            if (id == UrlRequestNotCancelable) {
+                callback = std::move(it->second.callback);
+                m_urlCallbacks.erase(it);
+            }
         }
     }
 
-    if (id != UrlRequestNotCancelable) {
-         urlRequestCanceled(id);
+    // Run callback directly when platform implementation cannot cancel it.
+    if (id == UrlRequestNotCancelable) {
+        if (callback) {
+            UrlResponse response;
+            response.error = cancel_message;
+            callback(std::move(response));
+        }
+    } else  {
+        urlRequestCanceled(id);
     }
 }
 
