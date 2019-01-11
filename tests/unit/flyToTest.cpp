@@ -11,8 +11,8 @@ const static double nearZero = 0.00000001;
 View getView() {
     View view(1000, 1000);
     view.setPosition(0, 0);
-    view.setZoom(0);
     view.setConstrainToWorldBounds(false);
+    view.setZoom(0);
     view.update();
     return view;
 }

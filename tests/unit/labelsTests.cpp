@@ -105,8 +105,8 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
 
     View view(256, 256);
     view.setPosition(0, 0);
-    view.setZoom(0);
     view.setConstrainToWorldBounds(false);
+    view.setZoom(0);
     view.update();
 
     Tile tile({0,0,0});
