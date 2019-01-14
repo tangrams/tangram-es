@@ -45,13 +45,15 @@ public:
                  TextureOptions _options, TileSource::ZoomOptions _zoomOptions = {});
 
     // TODO Is this always PNG or can it also be JPEG?
-    virtual const char* mimeType() const override { return "image/png"; };
+    const char* mimeType() const override { return "image/png"; };
 
     void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
 
-    virtual std::shared_ptr<TileTask> createTask(TileID _tile) override;
+    std::shared_ptr<TileTask> createTask(TileID _tile) override;
 
-    virtual bool isRaster() const override { return true; }
+    bool isRaster() const override { return true; }
+
+    void generateGeometry(bool _generateGeometry) override;
 
 };
 

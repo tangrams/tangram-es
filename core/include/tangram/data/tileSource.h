@@ -136,7 +136,9 @@ public:
     const auto& rasterSources() const { return m_rasterSources; }
 
     bool generateGeometry() const { return m_generateGeometry; }
-    void generateGeometry(bool generateGeometry) { m_generateGeometry = generateGeometry; }
+    virtual void generateGeometry(bool _generateGeometry) {
+        m_generateGeometry = _generateGeometry;
+    }
 
     /* Avoid RTTI by adding a boolean check on the data source object */
     virtual bool isRaster() const { return false; }
