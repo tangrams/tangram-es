@@ -79,30 +79,30 @@ FontSourceHandle LinuxPlatform::systemFont(const std::string& _name,
     return FontSourceHandle(Url(fontFile));
 }
 
-Platform::UrlRequestId LinuxPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) {
-    UrlRequestId id = UrlRequestNotCancelable;
+bool LinuxPlatform::startUrlRequestImpl(const Url& _url, const UrlRequestHandle _request, UrlRequestId& _id) {
 
     if (_url.hasHttpScheme()) {
-        id = m_urlClient->addRequest(_url.string(),
-             [this, _handle](UrlResponse&& response) {
-                 onUrlResponse(_handle, std::move(response));
+        _id = m_urlClient->addRequest(_url.string(),
+             [this, _request](UrlResponse&& response) {
+                 onUrlResponse(_request, std::move(response));
              });
-    } else {
-        m_fileWorker.enqueue([this, path = _url.path(), _handle](){
-             UrlResponse response;
-             auto allocator = [&](size_t size) {
-                 response.content.resize(size);
-                 return response.content.data();
-             };
-
-             Platform::bytesFromFileSystem(path.c_str(), allocator);
-             onUrlResponse(_handle, std::move(response));
-        });
+        return true;
     }
-    return id;
+
+    m_fileWorker.enqueue([this, path = _url.path(), _request](){
+        UrlResponse response;
+        auto allocator = [&](size_t size) {
+                             response.content.resize(size);
+                             return response.content.data();
+                         };
+
+        Platform::bytesFromFileSystem(path.c_str(), allocator);
+        onUrlResponse(_request, std::move(response));
+    });
+    return false;
 }
 
-void LinuxPlatform::urlRequestCanceled(Platform::UrlRequestId _id) {
+void LinuxPlatform::cancelUrlRequestImpl(const UrlRequestId _id) {
     if (m_urlClient) {
         m_urlClient->cancelRequest(_id);
     }

@@ -97,16 +97,13 @@ protected:
     // It's purpose is to be able to cancel UrlRequests
     using UrlRequestId = uint64_t;
 
-    // TODO is this safe on ios/osx that task identifier are never 0?
-    // Wouldn't hur too much if we don't cancel one request though
-    static constexpr UrlRequestId UrlRequestNotCancelable = 0;
-
     // To be called by implementations to pass UrlResponse
-    void onUrlResponse(UrlRequestHandle _request, UrlResponse&& _response);
+    void onUrlResponse(const UrlRequestHandle _request, UrlResponse&& _response);
 
-    virtual void urlRequestCanceled(UrlRequestId _id) = 0;
+    virtual void cancelUrlRequestImpl(const UrlRequestId _id) = 0;
 
-    virtual UrlRequestId startUrlRequest(Url _url, UrlRequestHandle _request) = 0;
+    // Return true when UrlRequestId has been set (i.e. when request is async and can be canceled)
+    virtual bool startUrlRequestImpl(const Url& _url, const UrlRequestHandle _request, UrlRequestId& _id) = 0;
 
     static bool bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator);
 
@@ -118,6 +115,7 @@ protected:
     struct UrlRequestEntry {
         UrlCallback callback;
         UrlRequestId id;
+        bool cancelable;
     };
     std::unordered_map<UrlRequestHandle, UrlRequestEntry> m_urlCallbacks;
     std::atomic_uint_fast64_t m_urlRequestCount = {0};

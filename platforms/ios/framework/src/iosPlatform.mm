@@ -138,14 +138,14 @@ FontSourceHandle iOSPlatform::systemFont(const std::string& _name, const std::st
     return FontSourceHandle(std::string(font.fontName.UTF8String));
 }
 
-Platform::UrlRequestId iOSPlatform::startUrlRequest(Url _url, UrlRequestHandle _request) {
+bool iOSPlatform::startUrlRequestImpl(const Url& _url, const UrlRequestHandle _request, UrlRequestId& _id) {
     __strong TGMapView* mapView = m_mapView;
 
     UrlResponse errorResponse;
     if (!mapView) {
         errorResponse.error = "MapView not initialized.";
         onUrlResponse(_request, std::move(errorResponse));
-        return UrlRequestNotCancelable;
+        return false;
     }
 
     id<TGURLHandler> urlHandler = mapView.urlHandler;
@@ -153,7 +153,7 @@ Platform::UrlRequestId iOSPlatform::startUrlRequest(Url _url, UrlRequestHandle _
     if (!urlHandler) {
         errorResponse.error = "urlHandler not set in MapView";
         onUrlResponse(_request, std::move(errorResponse));
-        return UrlRequestNotCancelable;
+        return false;
     }
 
     TGDownloadCompletionHandler handler = ^void (NSData* data, NSURLResponse* response, NSError* error) {
@@ -163,7 +163,7 @@ Platform::UrlRequestId iOSPlatform::startUrlRequest(Url _url, UrlRequestHandle _
             // Map was disposed before the request completed, so abort the completion handler.
             return;
         }
-        
+
         // Create our response object. The '__block' specifier is to allow mutation in the data-copy block below.
         __block UrlResponse urlResponse;
 
@@ -196,12 +196,13 @@ Platform::UrlRequestId iOSPlatform::startUrlRequest(Url _url, UrlRequestHandle _
 
     NSString* urlAsString = [NSString stringWithUTF8String:_url.string().c_str()];
     NSURL* url = [NSURL URLWithString:urlAsString];
-    NSUInteger taskIdentifier = [urlHandler downloadRequestAsync:url completionHandler:handler];
 
-    return taskIdentifier;
+    _id = [urlHandler downloadRequestAsync:url completionHandler:handler];
+
+    return true;
 }
 
-void iOSPlatform::urlRequestCanceled(Platform::UrlRequestId _id) {
+void iOSPlatform::cancelUrlRequestImpl(const UrlRequestId _id) {
     __strong TGMapView* mapView = m_mapView;
 
     if (!mapView) {

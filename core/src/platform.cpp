@@ -63,8 +63,9 @@ void Platform::shutdown() {
                 response.error = shutdown_message;
                 request.callback(std::move(response));
             }
-            if (request.id) {
-                urlRequestCanceled(request.id);
+
+            if (request.cancelable) {
+                cancelUrlRequestImpl(request.id);
             }
         }
         m_urlCallbacks.clear();
@@ -79,8 +80,7 @@ UrlRequestHandle Platform::startUrlRequest(Url _url, UrlCallback&& _callback) {
         UrlResponse response;
         response.error = shutdown_message;
         _callback(std::move(response));
-
-        return UrlRequestNotCancelable;
+        return 0;
     }
 
     UrlRequestHandle handle= ++m_urlRequestCount;
@@ -89,46 +89,51 @@ UrlRequestHandle Platform::startUrlRequest(Url _url, UrlCallback&& _callback) {
     UrlRequestEntry* entry = nullptr;
     {
         std::lock_guard<std::mutex> lock(m_callbackMutex);
-        auto it = m_urlCallbacks.emplace(handle, UrlRequestEntry{std::move(_callback), 0});
+        auto it = m_urlCallbacks.emplace(handle, UrlRequestEntry{std::move(_callback), 0, false});
         entry = &it.first->second;
     }
 
     // Start Platform specific url request
-    entry->id = startUrlRequest(_url, handle);
+    entry->cancelable = startUrlRequestImpl(_url, handle, entry->id);
 
     return handle;
 }
 
-void Platform::cancelUrlRequest(UrlRequestHandle _request) {
+void Platform::cancelUrlRequest(const UrlRequestHandle _request) {
+    if (_request == 0) { return; }
+
     UrlRequestId id = 0;
     UrlCallback callback;
+    bool cancelable = false;
 
     {
         std::lock_guard<std::mutex> lock(m_callbackMutex);
         auto it = m_urlCallbacks.find(_request);
         if (it != m_urlCallbacks.end()) {
             id = it->second.id;
+            cancelable = it->second.cancelable;
 
-            if (id == UrlRequestNotCancelable) {
+            if (!cancelable) {
                 callback = std::move(it->second.callback);
                 m_urlCallbacks.erase(it);
             }
         }
     }
 
-    // Run callback directly when platform implementation cannot cancel it.
-    if (id == UrlRequestNotCancelable) {
+    if (cancelable) {
+        cancelUrlRequestImpl(id);
+
+    } else {
+        // Run callback directly when platform implementation cannot cancel it.
         if (callback) {
             UrlResponse response;
             response.error = cancel_message;
             callback(std::move(response));
         }
-    } else  {
-        urlRequestCanceled(id);
     }
 }
 
-void Platform::onUrlResponse(UrlRequestHandle _request, UrlResponse&& _response) {
+void Platform::onUrlResponse(const UrlRequestHandle _request, UrlResponse&& _response) {
     if (m_shutdown) {
         LOGW("onUrlResponse after shutdown");
         return;

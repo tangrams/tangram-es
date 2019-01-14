@@ -276,20 +276,24 @@ std::vector<char> AndroidPlatform::bytesFromFile(const Url& url) const {
     return data;
 }
 
-Platform::UrlRequestId AndroidPlatform::startUrlRequest(Url _url, UrlRequestHandle _handle) {
+bool AndroidPlatform::startUrlRequestImpl(const Url& _url, const UrlRequestHandle _request, UrlRequestId& _id) {
 
     // If the requested URL does not use HTTP or HTTPS, retrieve it asynchronously.
     if (!_url.hasHttpScheme()) {
         m_fileWorker.enqueue([=](){
              UrlResponse response;
              response.content = bytesFromFile(_url);
-             onUrlResponse(_handle, std::move(response));
+             onUrlResponse(_request, std::move(response));
         });
-        return 0;
+        return false;
     }
 
+    // We can use UrlRequestHandle to cancel requests. MapController handles the
+    // mapping between UrlRequestHandle and request object
+    _id = _request;
+
     m_jniWorker.enqueue([=](JNIEnv *jniEnv) {
-        jlong jRequestHandle = static_cast<jlong>(_handle);
+        jlong jRequestHandle = static_cast<jlong>(_request);
 
         // Make sure no one changed UrlRequestHandle from being uint64_t,
         // so that it's safe to convert to jlong and back.
@@ -303,10 +307,11 @@ Platform::UrlRequestId AndroidPlatform::startUrlRequest(Url _url, UrlRequestHand
         // Call the MapController method to start the URL request.
         jniEnv->CallVoidMethod(m_tangramInstance, startUrlRequestMID, jUrl, jRequestHandle);
     });
-    return _handle;
+
+    return true;
 }
 
-void AndroidPlatform::urlRequestCanceled(Platform::UrlRequestId _id) {
+void AndroidPlatform::cancelUrlRequestImpl(const UrlRequestId _id) {
 
     m_jniWorker.enqueue([=](JNIEnv *jniEnv) {
 
