@@ -115,9 +115,13 @@ void TileSource::cancelLoadingTile(TileTask& _task) {
 }
 
 void TileSource::addRasterSource(std::shared_ptr<TileSource> _rasterSource) {
+    if (!_rasterSource) {
+        LOGE("No raster source");
+        return;
+    }
     auto rasterSource = dynamic_cast<RasterSource*>(_rasterSource.get());
     if (!rasterSource) {
-        assert(false);
+        LOGE("Not a raster source: %s", _rasterSource->name().c_str());
         return;
     }
     // We limit the parent source by any attached raster source's min/max.
