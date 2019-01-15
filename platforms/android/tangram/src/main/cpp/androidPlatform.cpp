@@ -65,7 +65,6 @@ static jmethodID hashmapPutMID = 0;
 static bool glExtensionsLoaded = false;
 
 
-
 void AndroidPlatform::bindJniEnvToThread(JNIEnv* jniEnv) {
     jniEnv->GetJavaVM(&jvm);
 }
