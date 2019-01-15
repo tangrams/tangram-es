@@ -53,7 +53,7 @@ UrlClient::~UrlClient() {
     }
 }
 
-UrlClient::RequestId UrlClient::addRequest(const std::string& url, Callback onComplete) {
+UrlClient::RequestId UrlClient::addRequest(const std::string& url, UrlCallback onComplete) {
     // Create a new request.
     auto id = ++m_requestCount;
     Request request = {url, onComplete, id, false};
@@ -69,7 +69,7 @@ UrlClient::RequestId UrlClient::addRequest(const std::string& url, Callback onCo
 }
 
 void UrlClient::cancelRequest(UrlClient::RequestId id) {
-    Callback callback;
+    UrlCallback callback;
     // First check the pending request list.
     {
         // Lock the mutex to prevent concurrent modification of the list by the curl loop thread.

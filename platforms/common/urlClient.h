@@ -23,10 +23,9 @@ public:
     UrlClient(Options options);
     ~UrlClient();
 
-    using Callback = std::function<void(UrlResponse&&)>;
     using RequestId = uint64_t;
 
-    RequestId addRequest(const std::string& url, Callback cb);
+    RequestId addRequest(const std::string& url, UrlCallback cb);
 
     void cancelRequest(RequestId request);
 
@@ -34,7 +33,7 @@ private:
 
     struct Request {
         std::string url;
-        Callback callback;
+        UrlCallback callback;
         RequestId id;
         bool canceled;
     };
