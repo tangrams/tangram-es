@@ -12,6 +12,7 @@ namespace Tangram {
 struct TileData;
 struct TileID;
 struct Raster;
+class RasterSource;
 class Tile;
 class TileManager;
 struct RawCache;
@@ -110,7 +111,7 @@ public:
 
     const std::string& name() const { return m_name; }
 
-    virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask = -1);
+    virtual std::shared_ptr<TileTask> createTask(TileID _tile);
 
     /* ID of this TileSource instance */
     int32_t id() const { return m_id; }
@@ -135,7 +136,9 @@ public:
     const auto& rasterSources() const { return m_rasterSources; }
 
     bool generateGeometry() const { return m_generateGeometry; }
-    void generateGeometry(bool generateGeometry) { m_generateGeometry = generateGeometry; }
+    virtual void generateGeometry(bool _generateGeometry) {
+        m_generateGeometry = _generateGeometry;
+    }
 
     /* Avoid RTTI by adding a boolean check on the data source object */
     virtual bool isRaster() const { return false; }
@@ -144,7 +147,7 @@ public:
 
 protected:
 
-    void createSubTasks(std::shared_ptr<TileTask> _task);
+    void addRasterTasks(TileTask& _task);
 
     // This datasource is used to generate actual tile geometry
     // Is set true for any source assigned in a Scene Layer and when the layer is not disabled
@@ -165,7 +168,7 @@ protected:
     Format m_format = Format::GeoJson;
 
     /* vector of raster sources (as raster samplers) referenced by this datasource */
-    std::vector<std::shared_ptr<TileSource>> m_rasterSources;
+    std::vector<RasterSource*> m_rasterSources;
 
     std::unique_ptr<DataSource> m_sources;
 };

@@ -174,17 +174,7 @@ void Texture::resize(int width, int height) {
 }
 
 size_t Texture::bpp() const {
-    switch (m_options.pixelFormat) {
-    case PixelFormat::ALPHA:
-    case PixelFormat::LUMINANCE:
-        return 1;
-    case PixelFormat::LUMINANCE_ALPHA:
-        return 2;
-    case PixelFormat::RGB:
-        return 3;
-    default:
-        return 4;
-    }
+    return m_options.bytesPerPixel();
 }
 
 bool Texture::sanityCheck(size_t _width, size_t _height, size_t _bytesPerPixel,

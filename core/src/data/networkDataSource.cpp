@@ -68,12 +68,11 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
         if (task->isCanceled()) {
             return;
         }
+
         if (response.error) {
             LOGD("URL request '%s': %s", url.string().c_str(), response.error);
-            return;
-        }
 
-        if (!response.content.empty()) {
+        } else if (!response.content.empty()) {
             auto& dlTask = static_cast<BinaryTileTask&>(*task);
             dlTask.rawTileData = std::make_shared<std::vector<char>>(std::move(response.content));
         }
