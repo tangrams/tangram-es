@@ -2,6 +2,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "imgui_stl.h"
 #define GLFW_INCLUDE_GLEXT
 #include <GLFW/glfw3.h>
 #include <cstdlib>
@@ -533,15 +534,10 @@ void framebufferResizeCallback(GLFWwindow* window, int fWidth, int fHeight) {
 
 void showSceneGUI() {
     if (ImGui::CollapsingHeader("Scene")) {
-        char buffer[256];
-        std::memcpy(buffer, sceneFile.data(), std::min(sceneFile.size(), sizeof(buffer)));
-        if (ImGui::InputText("Scene URL", buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
-            sceneFile.assign(buffer);
+        if (ImGui::InputText("Scene URL", &sceneFile, ImGuiInputTextFlags_EnterReturnsTrue)) {
             loadSceneFile();
         }
-        std::memcpy(buffer, apiKey.data(), std::min(apiKey.size(), sizeof(buffer)));
-        if (ImGui::InputText("API key", buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
-            apiKey.assign(buffer);
+        if (ImGui::InputText("API key", &apiKey, ImGuiInputTextFlags_EnterReturnsTrue)) {
             loadSceneFile();
         }
         if (ImGui::Button("Reload Scene")) {

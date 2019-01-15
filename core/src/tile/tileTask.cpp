@@ -8,9 +8,8 @@
 
 namespace Tangram {
 
-TileTask::TileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _subTask) :
+TileTask::TileTask(TileID& _tileId, std::shared_ptr<TileSource> _source) :
     m_tileId(_tileId),
-    m_subTaskId(_subTask),
     m_source(_source),
     m_sourceId(_source->id()),
     m_sourceGeneration(_source->generation()),

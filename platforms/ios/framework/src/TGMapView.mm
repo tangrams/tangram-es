@@ -72,6 +72,8 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
 
 @implementation TGMapView
 
+@synthesize displayLink = _displayLink;
+
 #pragma mark Lifecycle Methods
 
 - (instancetype)initWithFrame:(CGRect)frame

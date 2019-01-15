@@ -438,33 +438,32 @@ bool Style::draw(RenderState& rs, const Tile& _tile) {
     bool styleMeshDrawn = true;
     TileID tileID = _tile.getID();
 
-    if (hasRasters() && !_tile.rasters().empty()) {
+    if (hasRasters()) {
         UniformTextureArray textureIndexUniform;
         UniformArray2f rasterSizeUniform;
         UniformArray3f rasterOffsetsUniform;
 
         for (auto& raster : _tile.rasters()) {
-            if (raster.isValid()) {
-                auto& texture = raster.texture;
-                auto texUnit = rs.nextAvailableTextureUnit();
-                texture->bind(rs, texUnit);
 
-                textureIndexUniform.slots.push_back(texUnit);
-                rasterSizeUniform.push_back({texture->width(), texture->height()});
+            auto& texture = raster.texture;
+            auto texUnit = rs.nextAvailableTextureUnit();
+            texture->bind(rs, texUnit);
 
-                if (tileID.z > raster.tileID.z) {
-                    float dz = tileID.z - raster.tileID.z;
-                    float dz2 = powf(2.f, dz);
+            textureIndexUniform.slots.push_back(texUnit);
+            rasterSizeUniform.push_back({texture->width(), texture->height()});
 
-                    rasterOffsetsUniform.push_back({
-                            fmodf(tileID.x, dz2) / dz2,
-                                (dz2 - 1.f - fmodf(tileID.y, dz2)) / dz2,
-                                1.f / dz2
-                                });
-                } else {
-                    rasterOffsetsUniform.push_back({0, 0, 1});
-                }
+            float x = 0.f;
+            float y = 0.f;
+            float z = 1.f;
+
+            if (tileID.z > raster.tileID.z) {
+                float dz = tileID.z - raster.tileID.z;
+                float dz2 = powf(2.f, dz);
+                x = fmodf(tileID.x, dz2) / dz2;
+                y = (dz2 - 1.f - fmodf(tileID.y, dz2)) / dz2;
+                z = 1.f / dz2;
             }
+            rasterOffsetsUniform.emplace_back(x, y, z);
         }
 
         m_shaderProgram->setUniformi(rs, m_mainUniforms.uRasters, textureIndexUniform);
