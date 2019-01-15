@@ -25,10 +25,8 @@ void logMsg(const char* fmt, ...) {
     va_end(args);
 }
 
-LinuxPlatform::LinuxPlatform() {
-    m_urlClient = std::make_unique<UrlClient>(UrlClient::Options{});
-    m_fcConfig = FcInitLoadConfigAndFonts();
-}
+LinuxPlatform::LinuxPlatform()
+    : LinuxPlatform(UrlClient::Options{}) {}
 
 LinuxPlatform::LinuxPlatform(UrlClient::Options urlClientOptions) :
     m_urlClient(std::make_unique<UrlClient>(urlClientOptions)) {
