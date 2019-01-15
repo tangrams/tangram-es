@@ -67,7 +67,7 @@ ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform,
             }
             m_hasPendingData = false;
         };
-        m_platform->startUrlRequest(_url, onUrlFinished);
+        m_platform->startUrlRequest(_url, std::move(onUrlFinished));
         m_hasPendingData = true;
     }
 

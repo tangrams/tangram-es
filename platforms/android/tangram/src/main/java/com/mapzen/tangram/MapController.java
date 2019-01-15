@@ -5,7 +5,6 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.graphics.Rect;
-import android.opengl.GLSurfaceView.Renderer;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.IntRange;
@@ -17,6 +16,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.LongSparseArray;
 import android.view.MotionEvent;
+import android.view.View;
 
 import com.mapzen.tangram.TouchInput.Gestures;
 import com.mapzen.tangram.viewholder.GLViewHolder;
@@ -24,21 +24,18 @@ import com.mapzen.tangram.networking.DefaultHttpHandler;
 import com.mapzen.tangram.networking.HttpHandler;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
 
 /**
  * {@code MapController} is the main class for interacting with a Tangram map.
  */
-public class MapController implements Renderer {
+public class MapController {
 
 
-    public boolean handleGesture(MapView mapView, MotionEvent ev) {
+    public boolean handleGesture(View mapView, MotionEvent ev) {
         return touchInput.onTouch(mapView, ev);
     }
 
@@ -90,7 +87,7 @@ public class MapController implements Renderer {
         SELECTION_BUFFER,
     }
 
-    private enum MapRegionChangeState {
+    enum MapRegionChangeState {
         IDLE,
         JUMPING,
         ANIMATING,
@@ -124,7 +121,7 @@ public class MapController implements Renderer {
      */
     public interface FrameCaptureCallback {
         /**
-         * Called on the render-thread when a frame was captured.
+         * Called on the ui-thread when a frame was captured.
          */
         void onCaptured(@NonNull final Bitmap bitmap);
     }
@@ -135,32 +132,8 @@ public class MapController implements Renderer {
      *                            no ease- or label-animation is running.
      */
     public void captureFrame(@NonNull final FrameCaptureCallback callback, final boolean waitForCompleteView) {
-        frameCaptureCallback = callback;
-        frameCaptureAwaitCompleteView = waitForCompleteView;
+        mapRenderer.captureFrame(callback, waitForCompleteView);
         requestRender();
-    }
-
-    @NonNull
-    private Bitmap capture() {
-        final int w = viewHolder.getView().getWidth();
-        final int h = viewHolder.getView().getHeight();
-
-        final int b[] = new int[w * h];
-        final int bt[] = new int[w * h];
-
-        nativeCaptureSnapshot(mapPointer, b);
-
-        for (int i = 0; i < h; i++) {
-            for (int j = 0; j < w; j++) {
-                final int pix = b[i * w + j];
-                final int pb = (pix >> 16) & 0xff;
-                final int pr = (pix << 16) & 0x00ff0000;
-                final int pix1 = (pix & 0xff00ff00) | pr | pb;
-                bt[(h - i - 1) * w + j] = pix1;
-            }
-        }
-
-        return Bitmap.createBitmap(bt, w, h, Bitmap.Config.ARGB_8888);
     }
 
     /**
@@ -182,13 +155,13 @@ public class MapController implements Renderer {
         assetManager = context.getAssets();
 
         // Parse font file description
-        fontFileParser = new FontFileParser();
-        fontFileParser.parse();
+        //FontConfig.init();
 
-        mapPointer = nativeInit(this, assetManager);
+        mapPointer = nativeInit(assetManager);
         if (mapPointer <= 0) {
             throw new RuntimeException("Unable to create a native Map object! There may be insufficient memory available.");
         }
+        nativeSetPixelScale(mapPointer, displayMetrics.density);
     }
 
     /**
@@ -206,13 +179,17 @@ public class MapController implements Renderer {
             httpHandler = handler;
         }
 
+        Context context = viewHolder.getView().getContext();
+
+        uiThreadHandler = new Handler(context.getMainLooper());
+        mapRenderer = new MapRenderer(this, uiThreadHandler);
+
         // Set up MapView
         this.viewHolder = viewHolder;
-        viewHolder.setRenderer(this);
+        viewHolder.setRenderer(mapRenderer);
         isGLRendererSet = true;
         viewHolder.setRenderMode(GLViewHolder.RenderMode.RENDER_WHEN_DIRTY);
 
-        Context context = viewHolder.getView().getContext();
         touchInput = new TouchInput(context);
 
         touchInput.setPanResponder(getPanResponder());
@@ -225,54 +202,55 @@ public class MapController implements Renderer {
         touchInput.setSimultaneousDetectionDisabled(Gestures.SHOVE, Gestures.SCALE);
         touchInput.setSimultaneousDetectionDisabled(Gestures.SHOVE, Gestures.PAN);
         touchInput.setSimultaneousDetectionDisabled(Gestures.SCALE, Gestures.LONG_PRESS);
-
-        uiThreadHandler = new Handler(context.getMainLooper());
     }
 
     /**
      * Responsible to dispose internals of MapController during Map teardown.
      * If client code extends MapController and overrides this method, then it must call super.dispose()
      */
-    protected void dispose() {
+    protected synchronized void dispose() {
+        if (mapPointer == 0) { return; }
 
-        cancelAllNetworkRequests();
-        httpHandler = null;
+        Log.e("TANGRAM", ">>> dispose");
+        nativeShutdown(mapPointer);
+        Log.e("TANGRAM", "<<< http requests: " + httpRequestHandles.size());
 
-        // Prevent any other calls to native functions during dispose
-        synchronized (this) {
-            // Dispose each data sources by first removing it from the Map values and then
-            // calling remove(), so that we don't improperly modify the Map while iterating.
-            for (final Iterator<MapData> it = clientTileSources.values().iterator(); it.hasNext(); ) {
-                final MapData mapData = it.next();
-                it.remove();
-                mapData.remove();
-            }
-            clientTileSources.clear();
-            markers.clear();
-
-            // Dispose all listener and callbacks associated with mapController
-            // This will help prevent leaks of references from the client code, possibly used in these
-            // listener/callbacks
-            touchInput = null;
-            mapChangeListener = null;
-            featurePickListener = null;
-            sceneLoadListener = null;
-            labelPickListener = null;
-            markerPickListener = null;
-            cameraAnimationCallback = null;
-            frameCaptureCallback = null;
-
-            // Prevent any calls to native functions - except dispose.
-            final long pointer = mapPointer;
-            mapPointer = 0;
-
-            // NOTE: It is possible for the MapView held by a ViewGroup to be removed, calling detachFromWindow which
-            // stops the Render Thread associated with GLSurfaceView, possibly resulting in leaks from render thread
-            // queue. Because of the above, destruction lifecycle of the GLSurfaceView will not be triggered.
-            //
-            // To avoid the above senario, nativeDispose is called from the UIThread.
-            nativeDispose(pointer);
+        for (MapData mapData : clientTileSources.values()) {
+            mapData.remove();
         }
+
+        Log.e("TANGRAM", "<<< 1");
+        clientTileSources.clear();
+        Log.e("TANGRAM", "<<< 2");
+        markers.clear();
+        Log.e("TANGRAM", "<<< 3");
+
+        // Dispose all listener and callbacks associated with mapController
+        // This will help prevent leaks of references from the client code, possibly used in these
+        // listener/callbacks
+        touchInput = null;
+        mapChangeListener = null;
+        featurePickListener = null;
+        sceneLoadListener = null;
+        labelPickListener = null;
+        markerPickListener = null;
+        cameraAnimationCallback = null;
+        frameCaptureCallback = null;
+
+        // Prevent any calls to native functions - except dispose.
+        final long pointer = mapPointer;
+        mapPointer = 0;
+
+        // NOTE: It is possible for the MapView held by a ViewGroup to be removed, calling detachFromWindow which
+        // stops the Render Thread associated with GLSurfaceView, possibly resulting in leaks from render thread
+        // queue. Because of the above, destruction lifecycle of the GLSurfaceView will not be triggered.
+        // To avoid the above senario, nativeDispose is called from the UIThread.
+        //
+        // Since all gl resources will be freed when GLSurfaceView is deleted this is safe until
+        // we support sharing gl contexts.
+        nativeDispose(pointer);
+        Log.e("TANGRAM", "<<< disposed");
+
     }
 
     /**
@@ -1063,7 +1041,8 @@ public class MapController implements Renderer {
 
     /**
      * Set a listener for map change events
-     * @param listener The {@link MapChangeListener} to call when the map change events occur due to camera updates or user interaction
+     * @param listener The {@link MapChangeListener} to call when the map change events occur
+     *                due to camera updates or user interaction
      */
     public void setMapChangeListener(@Nullable final MapChangeListener listener) {
         mapChangeListener = listener;
@@ -1158,27 +1137,20 @@ public class MapController implements Renderer {
         nativeClearTileSource(mapPointer, sourcePtr);
     }
 
-    void addFeature(final long sourcePtr, final double[] coordinates, final int[] rings, final String[] properties) {
-        checkPointer(mapPointer);
-        checkPointer(sourcePtr);
-        nativeAddFeature(mapPointer, sourcePtr, coordinates, rings, properties);
-    }
-
-    void addGeoJson(final long sourcePtr, final String geoJson) {
-        checkPointer(mapPointer);
-        checkPointer(sourcePtr);
-        nativeAddGeoJson(mapPointer, sourcePtr, geoJson);
-    }
 
     void checkPointer(final long ptr) {
         if (ptr <= 0) {
-            throw new RuntimeException("Tried to perform an operation on an invalid pointer! This means you may have used an object that has been disposed and is no longer valid.");
+            throw new RuntimeException("Tried to perform an operation on an invalid pointer!"
+                    + " This means you may have used an object that has been disposed and is no"
+                    + " longer valid.");
         }
     }
 
     void checkId(final long id) {
         if (id <= 0) {
-            throw new RuntimeException("Tried to perform an operation on an invalid id! This means you may have used an object that has been disposed and is no longer valid.");
+            throw new RuntimeException("Tried to perform an operation on an invalid id!"
+                    + " This means you may have used an object that has been disposed and is no"
+                    + " longer valid.");
         }
     }
 
@@ -1253,280 +1225,50 @@ public class MapController implements Renderer {
         return nativeMarkerSetDrawOrder(mapPointer, markerId, drawOrder);
     }
 
-    // Native methods
-    // ==============
-
-    private synchronized native void nativeOnLowMemory(long mapPtr);
-    private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
-    private synchronized native void nativeDispose(long mapPtr);
-    private synchronized native int nativeLoadScene(long mapPtr, String path, String[] updateStrings);
-    private synchronized native int nativeLoadSceneAsync(long mapPtr, String path, String[] updateStrings);
-    private synchronized native int nativeLoadSceneYaml(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
-    private synchronized native int nativeLoadSceneYamlAsync(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
-    private synchronized native void nativeSetupGL(long mapPtr);
-    private synchronized native void nativeResize(long mapPtr, int width, int height);
-    private synchronized native boolean nativeUpdate(long mapPtr, float dt);
-    private synchronized native boolean nativeRender(long mapPtr);
-    private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
-    private synchronized native void nativeUpdateCameraPosition(long mapPtr, int set, double lon, double lat, float zoom, float zoomBy,
-                                                                float rotation, float rotateBy, float tilt, float tiltBy,
-                                                                double b1lon, double b1lat, double b2lon, double b2lat, int[] padding,
-                                                                float duration, int ease);
-    private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
-    private synchronized native void nativeGetEnclosingCameraPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int[] buffer, double[] lngLatZoom);
-    private synchronized native void nativeCancelCameraAnimation(long mapPtr);
-    private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
-    private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates);
-    private synchronized native void nativeSetPixelScale(long mapPtr, float scale);
-    private synchronized native void nativeSetCameraType(long mapPtr, int type);
-    private synchronized native int nativeGetCameraType(long mapPtr);
-    private synchronized native float nativeGetMinZoom(long mapPtr);
-    private synchronized native void nativeSetMinZoom(long mapPtr, float minZoom);
-    private synchronized native float nativeGetMaxZoom(long mapPtr);
-    private synchronized native void nativeSetMaxZoom(long mapPtr, float maxZoom);
-    private synchronized native void nativeHandleTapGesture(long mapPtr, float posX, float posY);
-    private synchronized native void nativeHandleDoubleTapGesture(long mapPtr, float posX, float posY);
-    private synchronized native void nativeHandlePanGesture(long mapPtr, float startX, float startY, float endX, float endY);
-    private synchronized native void nativeHandleFlingGesture(long mapPtr, float posX, float posY, float velocityX, float velocityY);
-    private synchronized native void nativeHandlePinchGesture(long mapPtr, float posX, float posY, float scale, float velocity);
-    private synchronized native void nativeHandleRotateGesture(long mapPtr, float posX, float posY, float rotation);
-    private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
-    private synchronized native int nativeUpdateScene(long mapPtr, String[] updateStrings);
-    private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
-    private synchronized native void nativePickFeature(long mapPtr, float posX, float posY);
-    private synchronized native void nativePickLabel(long mapPtr, float posX, float posY);
-    private synchronized native void nativePickMarker(long mapPtr, float posX, float posY);
-    private synchronized native long nativeMarkerAdd(long mapPtr);
-    private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
-    private synchronized native boolean nativeMarkerSetStylingFromString(long mapPtr, long markerID, String styling);
-    private synchronized native boolean nativeMarkerSetStylingFromPath(long mapPtr, long markerID, String path);
-    private synchronized native boolean nativeMarkerSetBitmap(long mapPtr, long markerID, Bitmap bitmap, float density);
-    private synchronized native boolean nativeMarkerSetPoint(long mapPtr, long markerID, double lng, double lat);
-    private synchronized native boolean nativeMarkerSetPointEased(long mapPtr, long markerID, double lng, double lat, float duration, int ease);
-    private synchronized native boolean nativeMarkerSetPolyline(long mapPtr, long markerID, double[] coordinates, int count);
-    private synchronized native boolean nativeMarkerSetPolygon(long mapPtr, long markerID, double[] coordinates, int[] rings, int count);
-    private synchronized native boolean nativeMarkerSetVisible(long mapPtr, long markerID, boolean visible);
-    private synchronized native boolean nativeMarkerSetDrawOrder(long mapPtr, long markerID, int drawOrder);
-    private synchronized native void nativeMarkerRemoveAll(long mapPtr);
-
-    private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
-    private synchronized native void nativeCaptureSnapshot(long mapPtr, int[] buffer);
-
-    private synchronized native void nativeSetDefaultBackgroundColor(long mapPtr, float r, float g, float b);
-
-    private native void nativeOnUrlComplete(long mapPtr, long requestHandle, byte[] rawDataBytes, String errorMessage);
-
-    synchronized native long nativeAddTileSource(long mapPtr, String name, boolean generateCentroid);
-    synchronized native void nativeRemoveTileSource(long mapPtr, long sourcePtr);
-    synchronized native void nativeClearTileSource(long mapPtr, long sourcePtr);
-    synchronized native void nativeAddFeature(long mapPtr, long sourcePtr, double[] coordinates, int[] rings, String[] properties);
-    synchronized native void nativeAddGeoJson(long mapPtr, long sourcePtr, String geoJson);
-
-    native void nativeSetDebugFlag(int flag, boolean on);
-
-    // Private members
-    // ===============
-
-    private long mapPointer;
-    private long time = System.nanoTime();
-    private GLViewHolder viewHolder;
-    private MapRegionChangeState currentState = MapRegionChangeState.IDLE;
-    private AssetManager assetManager;
-    private TouchInput touchInput;
-    private FontFileParser fontFileParser;
-    private DisplayMetrics displayMetrics = new DisplayMetrics();
-    private HttpHandler httpHandler;
-    private final LongSparseArray<Object> httpRequestHandles = new LongSparseArray<>();
-    private MapChangeListener mapChangeListener;
-    private FeaturePickListener featurePickListener;
-    private SceneLoadListener sceneLoadListener;
-    private LabelPickListener labelPickListener;
-    private MarkerPickListener markerPickListener;
-    private FrameCaptureCallback frameCaptureCallback;
-    private boolean frameCaptureAwaitCompleteView;
-    private Map<String, MapData> clientTileSources;
-    private LongSparseArray<Marker> markers;
-    private Handler uiThreadHandler;
-    private CameraAnimationCallback cameraAnimationCallback;
-    private CameraAnimationCallback pendingCameraAnimationCallback;
-    private final Object cameraAnimationCallbackLock = new Object();
-    private boolean isGLRendererSet = false;
-    private boolean isPrevCameraEasing = false;
-    private boolean isPrevMapViewComplete = false;
-    private Runnable setMapRegionAnimatingRunnable = new Runnable() {
-        @Override
-        public void run() {
-            setMapRegionState(MapRegionChangeState.ANIMATING);
-        }
-    };
-    private Runnable setMapRegionIdleRunnable = new Runnable() {
-        @Override
-        public void run() {
-            setMapRegionState(MapRegionChangeState.IDLE);
-        }
-    };
-
-    // GLSurfaceView.Renderer methods
-    // ==============================
-
-    @Override
-    public void onDrawFrame(final GL10 gl) {
-        final long newTime = System.nanoTime();
-        final float delta = (newTime - time) / 1000000000.0f;
-        time = newTime;
-
-        if (mapPointer <= 0) {
-            // No native instance is initialized, so stop here. This can happen during Activity
-            // shutdown when the map has been disposed but the View hasn't been destroyed yet.
-            return;
-        }
-
-        boolean mapViewComplete;
-        boolean isCameraEasing;
-        synchronized(this) {
-            mapViewComplete = nativeUpdate(mapPointer, delta);
-            isCameraEasing = nativeRender(mapPointer);
-        }
-
-        if (isCameraEasing) {
-            uiThreadHandler.post(setMapRegionAnimatingRunnable);
-        } else if (isPrevCameraEasing) {
-            uiThreadHandler.post(setMapRegionIdleRunnable);
-        }
-
-        boolean viewComplete = mapViewComplete && !isPrevMapViewComplete;
-
-        if (viewComplete) {
-            if (mapChangeListener != null) {
-                mapChangeListener.onViewComplete();
-            }
-        }
-        if (frameCaptureCallback != null) {
-            if (!frameCaptureAwaitCompleteView || viewComplete) {
-                frameCaptureCallback.onCaptured(capture());
-                frameCaptureCallback = null;
-            }
-        }
-
-        isPrevCameraEasing = isCameraEasing;
-        isPrevMapViewComplete = mapViewComplete;
-    }
-
-    @Override
-    public void onSurfaceChanged(final GL10 gl, final int width, final int height) {
-        if (mapPointer <= 0) {
-            // No native instance is initialized, so stop here. This can happen during Activity
-            // shutdown when the map has been disposed but the View hasn't been destroyed yet.
-            return;
-        }
-
-        nativeSetPixelScale(mapPointer, displayMetrics.density);
-        nativeResize(mapPointer, width, height);
-    }
-
-    @Override
-    public void onSurfaceCreated(final GL10 gl, final EGLConfig config) {
-        if (mapPointer <= 0) {
-            // No native instance is initialized, so stop here. This can happen during Activity
-            // shutdown when the map has been disposed but the View hasn't been destroyed yet.
-            return;
-        }
-
-        nativeSetupGL(mapPointer);
-    }
 
     // Networking methods
     // ==================
 
-    void cancelAllNetworkRequests() {
-        if (httpHandler == null) {
-            return;
-        }
-        synchronized (httpRequestHandles) {
-            for (int i = 0; i < httpRequestHandles.size(); i++) {
-                httpHandler.cancelRequest(httpRequestHandles.valueAt(i));
-            }
-            httpRequestHandles.clear();
-        }
-    }
-
     @Keep
     void cancelUrlRequest(final long requestHandle) {
-        final HttpHandler handler = httpHandler;
-        if (handler == null) {
-            return;
-        }
-
-        Object request;
-        synchronized (httpRequestHandles) {
-            request = httpRequestHandles.get(requestHandle);
-            httpRequestHandles.remove(requestHandle);
-        }
+        Object request = httpRequestHandles.remove(requestHandle);
         if (request != null) {
-            handler.cancelRequest(request);
+            httpHandler.cancelRequest(request);
         }
     }
 
     @Keep
     void startUrlRequest(@NonNull final String url, final long requestHandle) {
-        // TODO
-        // This is still does not ensure that handler.startRequest is not
-        // executed after MapController.dispose() when startUrlRequest is
-        // called from worker threads. At least the result will be ignored
-        final HttpHandler handler = httpHandler;
-        if (handler == null) {
-            return;
-        }
 
         final HttpHandler.Callback callback = new HttpHandler.Callback() {
             @Override
             public void onFailure(@Nullable final IOException e) {
-                if (httpHandler == null) {
-                    Log.w("Tangram", "Network call after disposing MapController - Failure");
-                    return;
-                }
+                if (httpRequestHandles.remove(requestHandle) == null) { return; }
                 String msg = (e == null) ? "" : e.getMessage();
                 nativeOnUrlComplete(mapPointer, requestHandle, null, msg);
-                synchronized(httpRequestHandles) {
-                    httpRequestHandles.remove(requestHandle);
-                }
             }
 
             @Override
             public void onResponse(final int code, @Nullable final byte[] rawDataBytes) {
-                if (httpHandler == null) {
-                    Log.w("Tangram", "Network call after disposing MapController - Response");
-                    return;
-                }
+                if (httpRequestHandles.remove(requestHandle) == null) { return; }
                 if (code >= 200 && code < 300) {
                     nativeOnUrlComplete(mapPointer, requestHandle, rawDataBytes, null);
                 } else {
                     nativeOnUrlComplete(mapPointer, requestHandle, null,
                             "Unexpected response code: " + code + " for URL: " + url);
                 }
-                synchronized(httpRequestHandles) {
-                    httpRequestHandles.remove(requestHandle);
-                }
             }
 
             @Override
             public void onCancel() {
-                if (httpHandler == null) {
-                    Log.w("Tangram", "Network call after disposing MapController - Cancel");
-                    return;
-                }
+                if (httpRequestHandles.remove(requestHandle) == null) { return; }
                 nativeOnUrlComplete(mapPointer, requestHandle, null, null);
-                synchronized(httpRequestHandles) {
-                    httpRequestHandles.remove(requestHandle);
-                }
             }
         };
 
-        Object request = handler.startRequest(url, callback);
+        Object request = httpHandler.startRequest(url, callback);
         if (request != null) {
-            synchronized (httpRequestHandles) {
-                httpRequestHandles.put(requestHandle, request);
-            }
+            httpRequestHandles.put(requestHandle, request);
         }
     }
 
@@ -1622,12 +1364,103 @@ public class MapController implements Renderer {
     // =============
     @Keep
     String getFontFilePath(final String key) {
-        return fontFileParser.getFontFile(key);
+        return FontConfig.getFontFile(key);
     }
 
     @Keep
     String getFontFallbackFilePath(final int importance, final int weightHint) {
-        return fontFileParser.getFontFallback(importance, weightHint);
+        return FontConfig.getFontFallback(importance, weightHint);
     }
+
+    // Private members
+    // ===============
+
+    long mapPointer;
+    private MapRenderer mapRenderer;
+    private GLViewHolder viewHolder;
+    private MapRegionChangeState currentState = MapRegionChangeState.IDLE;
+    private AssetManager assetManager;
+    private TouchInput touchInput;
+    private DisplayMetrics displayMetrics = new DisplayMetrics();
+    private HttpHandler httpHandler;
+    private final Map<Long, Object> httpRequestHandles = Collections.synchronizedMap(new HashMap());
+    MapChangeListener mapChangeListener;
+    private FeaturePickListener featurePickListener;
+    private SceneLoadListener sceneLoadListener;
+    private LabelPickListener labelPickListener;
+    private MarkerPickListener markerPickListener;
+    private FrameCaptureCallback frameCaptureCallback;
+    private boolean frameCaptureAwaitCompleteView;
+    private Map<String, MapData> clientTileSources;
+    private LongSparseArray<Marker> markers;
+    private Handler uiThreadHandler;
+    private CameraAnimationCallback cameraAnimationCallback;
+    private CameraAnimationCallback pendingCameraAnimationCallback;
+    private final Object cameraAnimationCallbackLock = new Object();
+    private boolean isGLRendererSet = false;
+
+    // Native methods
+    // ==============
+
+    private synchronized native void nativeOnLowMemory(long mapPtr);
+    private synchronized native long nativeInit(AssetManager assetManager);
+    private synchronized native void nativeDispose(long mapPtr);
+    private synchronized native void nativeShutdown(long mapPtr);
+    private synchronized native int nativeLoadScene(long mapPtr, String path, String[] updateStrings);
+    private synchronized native int nativeLoadSceneAsync(long mapPtr, String path, String[] updateStrings);
+    private synchronized native int nativeLoadSceneYaml(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
+    private synchronized native int nativeLoadSceneYamlAsync(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
+
+    private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
+    private synchronized native void nativeUpdateCameraPosition(long mapPtr, int set, double lon, double lat, float zoom, float zoomBy,
+                                                                float rotation, float rotateBy, float tilt, float tiltBy,
+                                                                double b1lon, double b1lat, double b2lon, double b2lat, int[] padding,
+                                                                float duration, int ease);
+    private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
+    private synchronized native void nativeGetEnclosingCameraPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int[] buffer, double[] lngLatZoom);
+    private synchronized native void nativeCancelCameraAnimation(long mapPtr);
+    private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
+    private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates);
+    private synchronized native void nativeSetPixelScale(long mapPtr, float scale);
+    private synchronized native void nativeSetCameraType(long mapPtr, int type);
+    private synchronized native int nativeGetCameraType(long mapPtr);
+    private synchronized native float nativeGetMinZoom(long mapPtr);
+    private synchronized native void nativeSetMinZoom(long mapPtr, float minZoom);
+    private synchronized native float nativeGetMaxZoom(long mapPtr);
+    private synchronized native void nativeSetMaxZoom(long mapPtr, float maxZoom);
+    private synchronized native void nativeHandleTapGesture(long mapPtr, float posX, float posY);
+    private synchronized native void nativeHandleDoubleTapGesture(long mapPtr, float posX, float posY);
+    private synchronized native void nativeHandlePanGesture(long mapPtr, float startX, float startY, float endX, float endY);
+    private synchronized native void nativeHandleFlingGesture(long mapPtr, float posX, float posY, float velocityX, float velocityY);
+    private synchronized native void nativeHandlePinchGesture(long mapPtr, float posX, float posY, float scale, float velocity);
+    private synchronized native void nativeHandleRotateGesture(long mapPtr, float posX, float posY, float rotation);
+    private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
+    private synchronized native int nativeUpdateScene(long mapPtr, String[] updateStrings);
+    private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
+    private synchronized native void nativePickFeature(long mapPtr, float posX, float posY);
+    private synchronized native void nativePickLabel(long mapPtr, float posX, float posY);
+    private synchronized native void nativePickMarker(long mapPtr, float posX, float posY);
+    private synchronized native long nativeMarkerAdd(long mapPtr);
+    private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
+    private synchronized native boolean nativeMarkerSetStylingFromString(long mapPtr, long markerID, String styling);
+    private synchronized native boolean nativeMarkerSetStylingFromPath(long mapPtr, long markerID, String path);
+    private synchronized native boolean nativeMarkerSetBitmap(long mapPtr, long markerID, Bitmap bitmap, float density);
+    private synchronized native boolean nativeMarkerSetPoint(long mapPtr, long markerID, double lng, double lat);
+    private synchronized native boolean nativeMarkerSetPointEased(long mapPtr, long markerID, double lng, double lat, float duration, int ease);
+    private synchronized native boolean nativeMarkerSetPolyline(long mapPtr, long markerID, double[] coordinates, int count);
+    private synchronized native boolean nativeMarkerSetPolygon(long mapPtr, long markerID, double[] coordinates, int[] rings, int count);
+    private synchronized native boolean nativeMarkerSetVisible(long mapPtr, long markerID, boolean visible);
+    private synchronized native boolean nativeMarkerSetDrawOrder(long mapPtr, long markerID, int drawOrder);
+    private synchronized native void nativeMarkerRemoveAll(long mapPtr);
+    private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
+    private synchronized native void nativeSetDefaultBackgroundColor(long mapPtr, float r, float g, float b);
+
+    private synchronized native long nativeAddTileSource(long mapPtr, String name, boolean generateCentroid);
+    private synchronized native void nativeRemoveTileSource(long mapPtr, long sourcePtr);
+    private synchronized native void nativeClearTileSource(long mapPtr, long sourcePtr);
+
+    private synchronized native void nativeSetDebugFlag(int flag, boolean on);
+
+    private native void nativeOnUrlComplete(long mapPtr, long requestHandle, byte[] rawDataBytes, String errorMessage);
 
 }

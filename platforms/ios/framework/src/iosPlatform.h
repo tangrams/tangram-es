@@ -11,12 +11,13 @@ class iOSPlatform : public Platform {
 public:
 
     iOSPlatform(__weak TGMapView* _mapView);
+    void shutdown() override {}
     void requestRender() const override;
     void setContinuousRendering(bool _isContinuous) override;
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
     FontSourceHandle systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const override;
-    UrlRequestHandle startUrlRequest(Url _url, UrlCallback _callback) override;
-    void cancelUrlRequest(UrlRequestHandle _request) override;
+    bool startUrlRequestImpl(const Url& _url, const UrlRequestHandle _request, UrlRequestId& _id) override;
+    void cancelUrlRequestImpl(const UrlRequestId _id) override;
 
 private:
 

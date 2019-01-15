@@ -5,10 +5,15 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
 
 import okhttp3.Call;
@@ -40,6 +45,43 @@ public class DefaultHttpHandler implements HttpHandler {
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .writeTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS);
+
+
+        builder.socketFactory(new SocketFactory() {
+            SocketFactory factory = SocketFactory.getDefault();
+
+            @Override
+            public Socket createSocket() throws IOException {
+                Socket s = factory.createSocket();
+                try {
+                    //Log.d("Tangram", "Patching socket nodelay: " + s.getTcpNoDelay());
+                    s.setTcpNoDelay(true);
+                } catch (SocketException e) {
+                    // empty
+                }
+                return s;
+            }
+
+            @Override
+            public Socket createSocket(String s, int i) throws IOException, UnknownHostException {
+                return null;
+            }
+
+            @Override
+            public Socket createSocket(String s, int i, InetAddress inetAddress, int i1) throws IOException, UnknownHostException {
+                return null;
+            }
+
+            @Override
+            public Socket createSocket(InetAddress inetAddress, int i) throws IOException {
+                return null;
+            }
+
+            @Override
+            public Socket createSocket(InetAddress inetAddress, int i, InetAddress inetAddress1, int i1) throws IOException {
+                return null;
+            }
+        });
 
         configureClient(builder);
 
