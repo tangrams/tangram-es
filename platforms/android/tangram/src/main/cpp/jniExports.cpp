@@ -22,10 +22,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(JNIEnv* jniEnv, jobjectArra
     return sceneUpdates;
 }
 
-#define EXTERN_C_BEGIN extern "C" {
-#define EXTERN_C_END }
-
-EXTERN_C_BEGIN
+extern "C" {
 
 JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     return AndroidPlatform::jniOnLoad(vm);
@@ -627,4 +624,4 @@ void MapData(AddGeoJson)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jstring g
     source->addData(data);
 }
 
-EXTERN_C_END
+} // extern "C"
