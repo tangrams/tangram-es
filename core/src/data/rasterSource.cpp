@@ -160,9 +160,6 @@ void RasterSource::addRasterTask(TileTask& _task) {
     auto rasterTask = createRasterTask(subTileID, true);
 
     _task.subTasks().push_back(rasterTask);
-
-    // Needed? Do we support recursive raster-source inclusion?
-    addRasterTasks(_task);
 }
 
 std::shared_ptr<RasterTileTask> RasterSource::createRasterTask(TileID _tileId, bool subTask) {
