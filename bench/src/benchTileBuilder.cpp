@@ -17,11 +17,20 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <chrono>
+#include <thread>
 
+#define NUM_ITERATIONS 0
+
+#if NUM_ITERATIONS
+#define ITERATIONS ->Iterations(NUM_ITERATIONS)
+#else
+#define ITERATIONS
+#endif
 
 #define RUN(FIXTURE, NAME)                                              \
     BENCHMARK_DEFINE_F(FIXTURE, NAME)(benchmark::State& st) { while (st.KeepRunning()) { run(); } } \
-    BENCHMARK_REGISTER_F(FIXTURE, NAME);  //->Iterations(1)
+    BENCHMARK_REGISTER_F(FIXTURE, NAME)ITERATIONS;
 
 using namespace Tangram;
 
@@ -32,16 +41,15 @@ const char tile_file[] = "res/tile.mvt";
 std::shared_ptr<Scene> scene;
 std::shared_ptr<TileSource> source;
 std::shared_ptr<TileData> tileData;
+std::shared_ptr<MockPlatform> platform;
 
 void globalSetup() {
     static std::atomic<bool> initialized{false};
     if (initialized.exchange(true)) { return; }
 
-    std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
+    platform = std::make_shared<MockPlatform>();
 
     Url sceneUrl(scene_file);
-    platform->putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(scene_file));
-
     scene = std::make_shared<Scene>(platform, sceneUrl);
     Importer importer(scene);
     try {
@@ -59,8 +67,19 @@ void globalSetup() {
     scene->fontContext()->loadFonts();
 
     for (auto& s : scene->tileSources()) {
-        source = s;
-        if (source->generateGeometry()) { break; }
+        if (s->generateGeometry()) {
+            source = s;
+            break;
+        }
+    }
+    if (!source) {
+        LOGE("No TileSource found");
+        exit(-1);
+    }
+
+    while (scene->pendingFonts || scene->pendingFonts) {
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(100ms);
     }
 
     Tile tile({0,0,10,10});
@@ -79,10 +98,12 @@ void globalSetup() {
 class TileBuilderFixture : public benchmark::Fixture {
 public:
     std::unique_ptr<TileBuilder> tileBuilder;
+    StyleContext* styleContext;
     std::shared_ptr<Tile> result;
     void SetUp(const ::benchmark::State& state) override {
         globalSetup();
-        tileBuilder = std::make_unique<TileBuilder>(scene, new StyleContext());
+        styleContext = new StyleContext();
+        tileBuilder = std::make_unique<TileBuilder>(scene, styleContext);
     }
     void TearDown(const ::benchmark::State& state) override {
         result.reset();
@@ -90,6 +111,7 @@ public:
 
     __attribute__ ((noinline)) void run() {
         result = tileBuilder->build({0,0,10,10}, *tileData, *source);
+        styleContext->clear();
     }
 };
 

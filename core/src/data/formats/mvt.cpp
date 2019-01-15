@@ -24,9 +24,12 @@
 
 namespace Tangram {
 
-Mvt::Geometry Mvt::getGeometry(ParserContext& _ctx, protobuf::message _geomIn) {
 
-    Geometry geometry;
+void Mvt::getGeometry(ParserContext& _ctx, protobuf::message _geomIn) {
+
+    auto& geometry = _ctx.geometry;
+    geometry.coordinates.clear();
+    geometry.sizes.clear();
 
     GeomCmd cmd = GeomCmd::moveTo;
     uint32_t cmdRepeat = 0;
@@ -81,17 +84,16 @@ Mvt::Geometry Mvt::getGeometry(ParserContext& _ctx, protobuf::message _geomIn) {
     if (numCoordinates > 0) {
         geometry.sizes.push_back(numCoordinates);
     }
-
-    return geometry;
 }
 
-Feature Mvt::getFeature(ParserContext& _ctx, protobuf::message _featureIn) {
+void Mvt::getFeature(ParserContext& _ctx, std::vector<Feature>& features, protobuf::message _featureIn) {
 
-    Feature feature(_ctx.sourceId);
 
-    _ctx.featureTags.clear();
-    _ctx.featureTags.assign(_ctx.keys.size(), -1);
+    GeometryType geometryType;
 
+    auto& featureTags = _ctx.featureTags;
+    featureTags.clear();
+    featureTags.assign(_ctx.keys.size(), -1);
 
     while(_featureIn.next()) {
         switch(_featureIn.tag) {
@@ -108,31 +110,33 @@ Feature Mvt::getFeature(ParserContext& _ctx, protobuf::message _featureIn) {
 
                     if(_ctx.keys.size() <= tagKey) {
                         LOGE("accessing out of bound key");
-                        return feature;
+                        return;
                     }
 
                     if(!tagsMsg) {
                         LOGE("uneven number of feature tag ids");
-                        return feature;
+                        return;
                     }
 
                     auto valueKey = tagsMsg.varint();
-
+                    // Check if the property should be dropped
+                    if (_ctx.keys[tagKey].empty()) {
+                        continue;
+                    }
                     if( _ctx.values.size() <= valueKey ) {
                         LOGE("accessing out of bound values");
-                        return feature;
+                        return;
                     }
-
-                    _ctx.featureTags[tagKey] = valueKey;
+                    featureTags[tagKey] = valueKey;
                 }
                 break;
             }
             case FEATURE_TYPE:
-                feature.geometryType = (GeometryType)_featureIn.varint();
+                geometryType = (GeometryType)_featureIn.varint();
                 break;
             // Actual geometry data
             case FEATURE_GEOM:
-                _ctx.geometry = getGeometry(_ctx, _featureIn.getMessage());
+                getGeometry(_ctx, _featureIn.getMessage());
                 break;
 
             default:
@@ -141,28 +145,87 @@ Feature Mvt::getFeature(ParserContext& _ctx, protobuf::message _featureIn) {
         }
     }
 
-    std::vector<Properties::Item> properties;
-    properties.reserve(_ctx.featureTags.size());
+    int id = -1;
+    bool newFeature = true;
 
-    for (int tagKey : _ctx.orderedKeys) {
-        int tagValue = _ctx.featureTags[tagKey];
-        if (tagValue >= 0) {
-            properties.emplace_back(_ctx.keys[tagKey], _ctx.values[tagValue]);
+    if (_ctx.mergeFeatures && !_ctx.featureMap.empty()) {
+        // Check the previous added feature first
+        auto& prev = _ctx.featureMap.back();
+        if (prev.first == featureTags &&
+            features[prev.second].geometryType == geometryType) {
+            id = prev.second;
+            newFeature = false;
+            LOG("HIT 1");
+        }
+        if (newFeature) {
+            auto& prev = _ctx.featureMap[_ctx.lastFound];
+            if (prev.first == featureTags &&
+                features[prev.second].geometryType == geometryType) {
+                id = prev.second;
+                newFeature = false;
+                LOG("HIT 2");
+            }
+        }
+        if (newFeature) {
+            size_t l = 0;
+            for (auto& f : _ctx.featureMap) {
+                if (f.first == featureTags &&
+                    features[f.second].geometryType == geometryType) {
+                    id = f.second;
+                    _ctx.lastFound = l;
+                    newFeature = false;
+                    break;
+                }
+                l++;
+            }
         }
     }
-    feature.props.setSorted(std::move(properties));
+    if (newFeature) {
+        id = features.size();
+        features.emplace_back(_ctx.sourceId);
 
-    switch(feature.geometryType) {
+        if (_ctx.mergeFeatures) {
+            _ctx.featureMap.emplace_back(featureTags, id);
+        }
+
+        //LOGE("ADD %d", id);
+    } else {
+        LOGE("USE SAME PROPS / %d %d / %d", id, _ctx.featureMap.size()-1, _ctx.featureMap.size()-1-id);
+        _ctx.featureMerged++;
+
+    }
+
+    _ctx.featureSum++;
+
+    auto& feature = features[id];
+    feature.geometryType = geometryType;
+
+    if (newFeature) {
+        std::vector<Properties::Item> properties;
+        properties.reserve(featureTags.size());
+
+        for (int tagKey : _ctx.orderedKeys) {
+            int tagValue = featureTags[tagKey];
+            if (tagValue >= 0) {
+                properties.emplace_back(_ctx.keys[tagKey], _ctx.values[tagValue]);
+            }
+        }
+        feature.props.setSorted(std::move(properties));
+    }
+
+    auto& geometry = _ctx.geometry;
+
+    switch(geometryType) {
         case GeometryType::points:
-            feature.points.insert(feature.points.begin(),
-                                  _ctx.geometry.coordinates.begin(),
-                                  _ctx.geometry.coordinates.end());
+            feature.points.insert(feature.points.end(),
+                                  geometry.coordinates.begin(),
+                                  geometry.coordinates.end());
             break;
 
         case GeometryType::lines:
         {
-            auto pos = _ctx.geometry.coordinates.begin();
-            for (int length : _ctx.geometry.sizes) {
+            auto pos = geometry.coordinates.begin();
+            for (int length : geometry.sizes) {
                 if (length == 0) { continue; }
                 Line line;
                 line.reserve(length);
@@ -174,9 +237,9 @@ Feature Mvt::getFeature(ParserContext& _ctx, protobuf::message _featureIn) {
         }
         case GeometryType::polygons:
         {
-            auto pos = _ctx.geometry.coordinates.begin();
-            auto rpos = _ctx.geometry.coordinates.rend();
-            for (int length : _ctx.geometry.sizes) {
+            auto pos = geometry.coordinates.begin();
+            auto rpos = geometry.coordinates.rend();
+            for (int length : geometry.sizes) {
                 if (length == 0) { continue; }
                 float area = signedArea(pos, pos + length);
                 if (area == 0) {
@@ -211,17 +274,17 @@ Feature Mvt::getFeature(ParserContext& _ctx, protobuf::message _featureIn) {
         default:
             break;
     }
-
-    return feature;
 }
 
-Layer Mvt::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
+Layer Mvt::getLayer(ParserContext& _ctx, protobuf::message _layerIn,
+                    const TileSource::PropertyFilter& filter) {
 
     Layer layer("");
-
     _ctx.keys.clear();
     _ctx.values.clear();
     _ctx.featureMsgs.clear();
+    _ctx.featureMap.clear();
+    _ctx.mergeFeatures = !filter.drop.empty();
 
     bool lastWasFeature = false;
     size_t numFeatures = 0;
@@ -245,7 +308,29 @@ Layer Mvt::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
                 continue;
             }
             case LAYER_KEY: {
-                _ctx.keys.push_back(_layerIn.string());
+                std::string key = _layerIn.string();
+                // Check whether the key must be kept
+                if (std::find(std::begin(filter.keep), std::end(filter.keep), key) == std::end(filter.keep)) {
+                    // Check whether the key should be dropped
+                    if (std::find_if(std::begin(filter.drop), std::end(filter.drop),
+                                     [&](auto& k) {
+                                         if (k.back() == '*' && key.length() >= k.length()-1) {
+                                             int n = std::strncmp(key.c_str(), k.c_str(), k.length()-1);
+                                             //LOG("check %s / %d / %d", k.c_str(), n, k.length()-1);
+                                             return  n == 0;
+                                         } else {
+                                             return key == k;
+                                         }}) != std::end(filter.drop)) {
+
+                        LOG("drop key: %s", key.c_str());
+                        key = "";
+                        } else {
+                        LOG(">>> keep key: %s", key.c_str());
+                    }
+                    } else {
+                    LOG(">>> keep key: %s", key.c_str());
+                }
+                _ctx.keys.emplace_back(std::move(key));
                 break;
             }
             case LAYER_VALUE: {
@@ -292,6 +377,7 @@ Layer Mvt::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
         }
         lastWasFeature = false;
     }
+    LOG(">>>>>>>>>>>>>>>>>>>>>>>>>>>>> layer: %s", layer.name.c_str());
 
     if (_ctx.featureMsgs.empty()) { return layer; }
 
@@ -313,7 +399,7 @@ Layer Mvt::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
         do {
             auto featureMsg = featureItr.getMessage();
 
-            layer.features.push_back(getFeature(_ctx, featureMsg));
+            getFeature(_ctx, layer.features, featureMsg);
 
         } while (featureItr.next() && featureItr.tag == LAYER_FEATURE);
     }
@@ -321,7 +407,8 @@ Layer Mvt::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
     return layer;
 }
 
-std::shared_ptr<TileData> Mvt::parseTile(const TileTask& _task, int32_t _sourceId) {
+std::shared_ptr<TileData> Mvt::parseTile(const TileTask& _task, int32_t _sourceId,
+                                         const TileSource::PropertyFilter& filter) {
 
     auto tileData = std::make_shared<TileData>();
 
@@ -333,7 +420,7 @@ std::shared_ptr<TileData> Mvt::parseTile(const TileTask& _task, int32_t _sourceI
     try {
         while(item.next()) {
             if(item.tag == LAYER) {
-                tileData->layers.push_back(getLayer(ctx, item.getMessage()));
+                tileData->layers.push_back(getLayer(ctx, item.getMessage(), filter));
             } else {
                 item.skip();
             }
@@ -347,6 +434,8 @@ std::shared_ptr<TileData> Mvt::parseTile(const TileTask& _task, int32_t _sourceI
     } catch(...) {
         return {};
     }
+    LOGE("SUM:%d REUSE:%d (%f)", ctx.featureSum, ctx.featureMerged, float(ctx.featureSum) / ctx.featureMerged);
+
     return tileData;
 }
 
