@@ -177,7 +177,9 @@ bool OSXPlatform::startUrlRequestImpl(const Url& _url, const UrlRequestHandle _r
 
     [dataTask resume];
 
-    return [dataTask taskIdentifier];
+    _id = [dataTask taskIdentifier];
+
+    return true;
 
 }
 
