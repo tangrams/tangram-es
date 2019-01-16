@@ -9,14 +9,14 @@ import android.view.View;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class MapRenderer  implements GLSurfaceView.Renderer {
+class MapRenderer implements GLSurfaceView.Renderer {
 
-    public MapRenderer(MapController mapController, Handler uiThreadHandler) {
+    MapRenderer(MapController mapController, Handler uiThreadHandler) {
         this.uiThreadHandler = uiThreadHandler;
-
         this.map = mapController;
         this.mapPointer = mapController.mapPointer;
     }
+
     // GLSurfaceView.Renderer methods
     // ==============================
 
@@ -97,7 +97,7 @@ public class MapRenderer  implements GLSurfaceView.Renderer {
         }
     }
 
-    public void captureFrame(MapController.FrameCaptureCallback callback, boolean waitForCompleteView) {
+    void captureFrame(MapController.FrameCaptureCallback callback, boolean waitForCompleteView) {
         frameCaptureCallback = callback;
         frameCaptureAwaitCompleteView = waitForCompleteView;
 
