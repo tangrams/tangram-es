@@ -98,12 +98,12 @@ protected:
     using UrlRequestId = uint64_t;
 
     // To be called by implementations to pass UrlResponse
-    void onUrlResponse(const UrlRequestHandle _request, UrlResponse&& _response);
+    void onUrlResponse(UrlRequestHandle _request, UrlResponse&& _response);
 
-    virtual void cancelUrlRequestImpl(const UrlRequestId _id) = 0;
+    virtual void cancelUrlRequestImpl(UrlRequestId _id) = 0;
 
     // Return true when UrlRequestId has been set (i.e. when request is async and can be canceled)
-    virtual bool startUrlRequestImpl(const Url& _url, const UrlRequestHandle _request, UrlRequestId& _id) = 0;
+    virtual bool startUrlRequestImpl(const Url& _url, UrlRequestHandle _request, UrlRequestId& _id) = 0;
 
     static bool bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator);
 
