@@ -173,7 +173,7 @@ std::shared_ptr<RasterTileTask> RasterSource::createRasterTask(TileID _tileId, b
         auto texture = texIt->second.lock();
 
         if (texture) {
-            LOG("%d - reuse %s", m_textures->size(), id.toString().c_str());
+            LOGD("%d - reuse %s", m_textures->size(), id.toString().c_str());
 
             task->raster = std::make_unique<Raster>(id, texture);
             // No more loading needed.
