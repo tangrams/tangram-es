@@ -1,12 +1,3 @@
-# Multiplatform stuff
-ifdef ComSpec
-	# Windows shell
-	RMPATH = rmdir /S /Q
-else
-	# Civilized rest of the world
-	RMPATH = rm -rf
-endif
-
 all: android osx ios
 
 .PHONY: clean
@@ -39,6 +30,7 @@ all: android osx ios
 .PHONY: cmake-ios
 .PHONY: cmake-rpi
 .PHONY: cmake-linux
+.PHONY: cmake-windows
 
 ANDROID_BUILD_DIR = platforms/android/tangram/build
 OSX_BUILD_DIR = build/osx
@@ -47,7 +39,7 @@ IOS_BUILD_DIR = build/ios
 IOS_DOCS_BUILD_DIR = build/ios-docs
 RPI_BUILD_DIR = build/rpi
 LINUX_BUILD_DIR = build/linux
-WINDOWS_BUILD_DIR = build\windows
+WINDOWS_BUILD_DIR = build/windows
 TESTS_BUILD_DIR = build/tests
 BENCH_BUILD_DIR = build/bench
 TIZEN_ARM_BUILD_DIR = build/tizen-arm
@@ -112,10 +104,10 @@ LINUX_CMAKE_PARAMS = \
 	${CMAKE_OPTIONS}
 
 WINDOWS_CMAKE_PARAMS = \
+	-G "MinGW Makefiles" \
 	-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-	-DPLATFORM_TARGET=windows \
+	-DTANGRAM_PLATFORM=windows \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
-	-G "MinGW Makefiles"\
 	${CMAKE_OPTIONS}
 
 ifndef TIZEN_PROFILE
@@ -146,47 +138,47 @@ TIZEN_X86_CMAKE_PARAMS = \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
 	${CMAKE_OPTIONS}
 
-clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode \
-	clean-linux clean-windows clean-shaders clean-tizen-arm clean-tizen-x86
+clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux clean-shaders \
+	clean-tizen-arm clean-tizen-x86 clean-windows
 
 clean-android:
-	${RMPATH} platforms/android/build
-	${RMPATH} platforms/android/tangram/build
-	${RMPATH} platforms/android/tangram/.externalNativeBuild
-	${RMPATH} platforms/android/demo/build
+	rm -rf platforms/android/build
+	rm -rf platforms/android/tangram/build
+	rm -rf platforms/android/tangram/.externalNativeBuild
+	rm -rf platforms/android/demo/build
 
 clean-osx:
-	${RMPATH} ${OSX_BUILD_DIR}
+	rm -rf ${OSX_BUILD_DIR}
 
 clean-ios:
-	${RMPATH} ${IOS_BUILD_DIR}
+	rm -rf ${IOS_BUILD_DIR}
 
 clean-rpi:
-	${RMPATH} ${RPI_BUILD_DIR}
+	rm -rf ${RPI_BUILD_DIR}
 
 clean-linux:
-	${RMPATH} ${LINUX_BUILD_DIR}
+	rm -rf ${LINUX_BUILD_DIR}
 
 clean-windows:
-	${RMPATH} ${WINDOWS_BUILD_DIR}
+	rm -rf ${WINDOWS_BUILD_DIR}
 
 clean-xcode:
-	${RMPATH} ${OSX_XCODE_BUILD_DIR}
+	rm -rf ${OSX_XCODE_BUILD_DIR}
 
 clean-tests:
-	${RMPATH} ${TESTS_BUILD_DIR}
+	rm -rf ${TESTS_BUILD_DIR}
 
 clean-benchmark:
-	${RMPATH} ${BENCH_BUILD_DIR}
+	rm -rf ${BENCH_BUILD_DIR}
 
 clean-shaders:
-	${RMPATH} core/generated/*.h
+	rm -rf core/generated/*.h
 
 clean-tizen-arm:
-	${RMPATH} ${TIZEN_ARM_BUILD_DIR}
+	rm -rf ${TIZEN_ARM_BUILD_DIR}
 
 clean-tizen-x86:
-	${RMPATH} ${TIZEN_X86_BUILD_DIR}
+	rm -rf ${TIZEN_X86_BUILD_DIR}
 
 android: android-demo
 	@echo "run: 'adb install -r platforms/android/demo/build/outputs/apk/debug/demo-debug.apk'"
@@ -275,11 +267,11 @@ cmake-rpi:
 linux: cmake-linux
 	cmake --build ${LINUX_BUILD_DIR}
 
-cmake-linux:
-	cmake -H. -B${LINUX_BUILD_DIR} ${LINUX_CMAKE_PARAMS}
-
 windows: cmake-windows
 	cmake --build ${WINDOWS_BUILD_DIR}
+
+cmake-linux:
+	cmake -H. -B${LINUX_BUILD_DIR} ${LINUX_CMAKE_PARAMS}
 
 cmake-windows:
 	cmake -H. -B${WINDOWS_BUILD_DIR} ${WINDOWS_CMAKE_PARAMS}
