@@ -21,10 +21,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class FontFileParser {
+class FontConfig {
 
-    private Map<String, String> fontDict;
-    private SparseArray<List<String>> fallbackFontDict;
+    private static boolean initialized = false;
+    private static Map<String, String> fontDict;
+    private static SparseArray<List<String>> fallbackFontDict;
 
     private static final String systemFontPath = "/system/fonts/";
     // Android version >= 5.0
@@ -34,7 +35,14 @@ class FontFileParser {
     private static final String oldFontXMLPath = "/system/etc/system_fonts.xml";
     private static final String oldFontXMLFallbackPath = "/system/etc/fallback_fonts.xml";
 
-    public FontFileParser() {
+    private FontConfig() {}
+
+    public static synchronized void init() {
+        if (initialized) { return; }
+        initialized = true;
+
+        long time = System.currentTimeMillis();
+
         if (Build.VERSION.SDK_INT > 18) {
             fontDict = new ArrayMap<>();
         }
@@ -42,9 +50,14 @@ class FontFileParser {
             fontDict = new HashMap<>();
         }
         fallbackFontDict = new SparseArray<>();
+
+        parse();
+
+        time = System.currentTimeMillis() - time;
+        Log.d("Tangram", "FontConfig init took " + time + "ms");
     }
 
-    private void addFallback(final Integer weight, final String filename) {
+    private static void addFallback(final Integer weight, final String filename) {
         final String fullFileName = systemFontPath + filename;
         if (!new File(fullFileName).exists()) {
             return;
@@ -58,7 +71,7 @@ class FontFileParser {
     }
 
 
-    private void processDocumentPreLollipop(@NonNull final XmlPullParser parser) throws XmlPullParserException, IOException {
+    private static void processDocumentPreLollipop(@NonNull final XmlPullParser parser) throws XmlPullParserException, IOException {
         parser.nextTag();
         parser.require(XmlPullParser.START_TAG, null, "familyset");
 
@@ -150,7 +163,7 @@ class FontFileParser {
         }
     }
 
-    private void processDocument(@NonNull final XmlPullParser parser) throws XmlPullParserException, IOException {
+    private static void processDocument(@NonNull final XmlPullParser parser) throws XmlPullParserException, IOException {
         final List<String> familyWeights = new ArrayList<>();
 
         parser.nextTag();
@@ -263,7 +276,7 @@ class FontFileParser {
         }
     }
 
-    private void skip(@NonNull final XmlPullParser parser) throws XmlPullParserException, IOException {
+    private static void skip(@NonNull final XmlPullParser parser) throws XmlPullParserException, IOException {
         int depth = 1;
         while (depth > 0) {
             switch (parser.next()) {
@@ -277,7 +290,7 @@ class FontFileParser {
         }
     }
 
-    public void parse() {
+    public static void parse() {
 
         File fontFile = new File(fontXMLPath);
         if (fontFile.exists()) {
@@ -296,7 +309,7 @@ class FontFileParser {
         }
     }
 
-    private void parse(final File fileXml, final boolean oldXML) {
+    private static void parse(final File fileXml, final boolean oldXML) {
         InputStream in;
 
         try {
@@ -332,7 +345,9 @@ class FontFileParser {
         }
     }
 
-    public String getFontFile(final String _key) {
+    public static synchronized String getFontFile(final String _key) {
+        if (!initialized) { init(); }
+
         return fontDict.containsKey(_key) ? fontDict.get(_key) : "";
     }
 
@@ -342,7 +357,9 @@ class FontFileParser {
      * The weightHint value determines the closest fallback hint for boldness
      * See /etc/fonts/font_fallback for documentation
      */
-    public String getFontFallback(final int importance, final int weightHint) {
+    public static synchronized String getFontFallback(final int importance, final int weightHint) {
+        if (!initialized) { init(); }
+
         int diffWeight = Integer.MAX_VALUE;
         String fallback = "";
 

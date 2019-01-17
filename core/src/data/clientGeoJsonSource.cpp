@@ -40,8 +40,8 @@ struct ClientGeoJsonData {
     std::vector<Properties> properties;
 };
 
-std::shared_ptr<TileTask> ClientGeoJsonSource::createTask(TileID _tileId, int _subTask) {
-    return std::make_shared<TileTask>(_tileId, shared_from_this(), _subTask);
+std::shared_ptr<TileTask> ClientGeoJsonSource::createTask(TileID _tileId) {
+    return std::make_shared<TileTask>(_tileId, shared_from_this());
 }
 
 
@@ -67,7 +67,7 @@ ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform,
             }
             m_hasPendingData = false;
         };
-        m_platform->startUrlRequest(_url, onUrlFinished);
+        m_platform->startUrlRequest(_url, std::move(onUrlFinished));
         m_hasPendingData = true;
     }
 

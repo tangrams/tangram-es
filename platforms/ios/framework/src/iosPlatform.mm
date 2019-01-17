@@ -138,22 +138,22 @@ FontSourceHandle iOSPlatform::systemFont(const std::string& _name, const std::st
     return FontSourceHandle(std::string(font.fontName.UTF8String));
 }
 
-UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
+bool iOSPlatform::startUrlRequestImpl(const Url& _url, const UrlRequestHandle _request, UrlRequestId& _id) {
     __strong TGMapView* mapView = m_mapView;
 
     UrlResponse errorResponse;
     if (!mapView) {
         errorResponse.error = "MapView not initialized.";
-        _callback(std::move(errorResponse));
-        return 0;
+        onUrlResponse(_request, std::move(errorResponse));
+        return false;
     }
 
     id<TGURLHandler> urlHandler = mapView.urlHandler;
 
     if (!urlHandler) {
         errorResponse.error = "urlHandler not set in MapView";
-        _callback(std::move(errorResponse));
-        return 0;
+        onUrlResponse(_request, std::move(errorResponse));
+        return false;
     }
 
     TGDownloadCompletionHandler handler = ^void (NSData* data, NSURLResponse* response, NSError* error) {
@@ -163,7 +163,7 @@ UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
             // Map was disposed before the request completed, so abort the completion handler.
             return;
         }
-        
+
         // Create our response object. The '__block' specifier is to allow mutation in the data-copy block below.
         __block UrlResponse urlResponse;
 
@@ -191,19 +191,18 @@ UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
         }];
 
         // Run the callback from the requester.
-        if (_callback) {
-            _callback(std::move(urlResponse));
-        }
+        onUrlResponse(_request, std::move(urlResponse));
     };
 
     NSString* urlAsString = [NSString stringWithUTF8String:_url.string().c_str()];
     NSURL* url = [NSURL URLWithString:urlAsString];
-    NSUInteger taskIdentifier = [urlHandler downloadRequestAsync:url completionHandler:handler];
 
-    return taskIdentifier;
+    _id = [urlHandler downloadRequestAsync:url completionHandler:handler];
+
+    return true;
 }
 
-void iOSPlatform::cancelUrlRequest(UrlRequestHandle _request) {
+void iOSPlatform::cancelUrlRequestImpl(const UrlRequestId _id) {
     __strong TGMapView* mapView = m_mapView;
 
     if (!mapView) {
@@ -216,7 +215,7 @@ void iOSPlatform::cancelUrlRequest(UrlRequestHandle _request) {
         return;
     }
 
-    [urlHandler cancelDownloadRequestAsync:_request];
+    [urlHandler cancelDownloadRequestAsync:_id];
 }
 
 } // namespace Tangram

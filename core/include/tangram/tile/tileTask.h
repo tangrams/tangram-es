@@ -22,7 +22,7 @@ class TileTask {
 
 public:
 
-    TileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _subTask);
+    TileTask(TileID& _tileId, std::shared_ptr<TileSource> _source);
 
     // No copies
     TileTask(const TileTask& _other) = delete;
@@ -64,8 +64,6 @@ public:
     bool isProxy() const { return m_proxyState; }
 
     auto& subTasks() { return m_subTasks; }
-    int subTaskId() const { return m_subTaskId; }
-    bool isSubTask() const { return m_subTaskId >= 0; }
 
     // running on worker thread
     virtual void process(TileBuilder& _tileBuilder);
@@ -91,8 +89,6 @@ protected:
 
     const TileID m_tileId;
 
-    const int m_subTaskId;
-
     // Save shared reference to Datasource while building tile
     std::weak_ptr<TileSource> m_source;
 
@@ -115,8 +111,8 @@ protected:
 
 class BinaryTileTask : public TileTask {
 public:
-    BinaryTileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _subTask)
-        : TileTask(_tileId, _source, _subTask) {}
+    BinaryTileTask(TileID& _tileId, std::shared_ptr<TileSource> _source)
+        : TileTask(_tileId, _source) {}
 
     virtual bool hasData() const override {
         return rawTileData && !rawTileData->empty();

@@ -34,7 +34,7 @@ public:
     void generateLabelCentroidFeature();
 
     virtual void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
-    std::shared_ptr<TileTask> createTask(TileID _tileId, int _subTask) override;
+    std::shared_ptr<TileTask> createTask(TileID _tileId) override;
 
     virtual void cancelLoadingTile(TileTask& _task) override {};
     virtual void clearData() override;

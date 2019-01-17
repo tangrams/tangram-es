@@ -29,19 +29,24 @@ android {
         arguments '-DTANGRAM_PLATFORM=android',
                   '-DANDROID_STL=c++_shared'
         cppFlags '-std=c++14',
+                 '-fvisibility=hidden', // export only JNIEXPORT
                  '-pedantic',
                  '-fPIC',
                  '-fexceptions',
                  '-frtti',
+                 // linker
+                 '-Wl,--exclude-libs,ALL', // dont export static lib symbols
                  //warnings
                  '-Wall',
                  '-Wignored-qualifiers',
                  '-Wtype-limits',
-                 '-Wmissing-field-initializers',
+                 '-Wno-missing-field-initializers',
                  '-Wno-format-pedantic',
                  '-Wno-gnu-statement-expression',
-                 '-Wgnu-anonymous-struct',
-                 '-Wno-nested-anon-types'
+                 '-Wno-gnu-anonymous-struct',
+                 '-Wno-nested-anon-types',
+                 '-Wno-unused-command-line-argument', // for -Wl linker flags..
+                 '-Wno-unknown-warning-option'
 
         if (abi == 'all') {
           abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86'
