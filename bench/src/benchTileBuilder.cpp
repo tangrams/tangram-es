@@ -45,7 +45,7 @@ void globalSetup() {
     scene = std::make_shared<Scene>(*platform, sceneUrl);
     Importer importer(scene);
     try {
-        scene->config() = importer.applySceneImports(*platform.get());
+        scene->config() = importer.applySceneImports(*platform);
     }
     catch (const YAML::ParserException& e) {
         LOGE("Parsing scene config '%s'", e.what());
@@ -55,7 +55,7 @@ void globalSetup() {
         LOGE("Invalid scene file '%s'", scene_file);
         exit(-1);
     }
-    SceneLoader::applyConfig(*platform.get(), scene);
+    SceneLoader::applyConfig(*platform, scene);
     scene->fontContext()->loadFonts();
 
     for (auto& s : scene->tileSources()) {
