@@ -13,80 +13,79 @@ using namespace YAML;
 
 struct ImportMockPlatform : public MockPlatform {
     ImportMockPlatform() {
+        putMockUrlContents("/root/a.yaml", R"END(
+            import: b.yaml
+            value: a
+            has_a: true
+        )END");
 
-    putMockUrlContents("/root/a.yaml", R"END(
-        import: b.yaml
-        value: a
-        has_a: true
-    )END");
+        putMockUrlContents("/root/b.yaml", R"END(
+            value: b
+            has_b: true
+        )END");
 
-    putMockUrlContents("/root/b.yaml", R"END(
-        value: b
-        has_b: true
-    )END");
+        putMockUrlContents("/root/c.yaml", R"END(
+            import: [a.yaml, b.yaml]
+            value: c
+            has_c: true
+        )END");
 
-    putMockUrlContents("/root/c.yaml", R"END(
-        import: [a.yaml, b.yaml]
-        value: c
-        has_c: true
-    )END");
+        putMockUrlContents("/root/cycle_simple.yaml", R"END(
+            import: cycle_simple.yaml
+            value: cyclic
+        )END");
 
-    putMockUrlContents("/root/cycle_simple.yaml", R"END(
-        import: cycle_simple.yaml
-        value: cyclic
-    )END");
+        putMockUrlContents("/root/cycle_tricky.yaml", R"END(
+            import: imports/cycle_tricky.yaml
+            has_cycle_tricky: true
+        )END");
 
-    putMockUrlContents("/root/cycle_tricky.yaml", R"END(
-        import: imports/cycle_tricky.yaml
-        has_cycle_tricky: true
-    )END");
+        putMockUrlContents("/root/imports/cycle_tricky.yaml", R"END(
+            import: ../cycle_tricky.yaml
+            has_imports_cycle_tricky: true
+        )END");
 
-    putMockUrlContents("/root/imports/cycle_tricky.yaml", R"END(
-        import: ../cycle_tricky.yaml
-        has_imports_cycle_tricky: true
-    )END");
+        putMockUrlContents("/root/urls.yaml", R"END(
+            import: imports/urls.yaml
+            fonts: { fontA: { url: https://host/font.woff } }
+            sources: { sourceA: { url: 'https://host/tiles/{z}/{y}/{x}.mvt' } }
+            textures:
+                tex1: { url: "path/to/texture.png" }
+                tex2: { url: "../up_a_directory.png" }
+            styles:
+                styleA:
+                    texture: "path/to/texture.png"
+                    shaders:
+                        uniforms:
+                            u_tex1: "/at_root.png"
+                            u_tex2: ["path/to/texture.png", tex2]
+                            u_tex3: tex3
+                            u_bool: true
+                            u_float: 0.25
+        )END");
 
-    putMockUrlContents("/root/urls.yaml", R"END(
-        import: imports/urls.yaml
-        fonts: { fontA: { url: https://host/font.woff } }
-        sources: { sourceA: { url: 'https://host/tiles/{z}/{y}/{x}.mvt' } }
-        textures:
-            tex1: { url: "path/to/texture.png" }
-            tex2: { url: "../up_a_directory.png" }
-        styles:
-            styleA:
-                texture: "path/to/texture.png"
-                shaders:
-                    uniforms:
-                        u_tex1: "/at_root.png"
-                        u_tex2: ["path/to/texture.png", tex2]
-                        u_tex3: tex3
-                        u_bool: true
-                        u_float: 0.25
-    )END");
+        putMockUrlContents("/root/imports/urls.yaml", R"END(
+            fonts: { fontB: [ { url: fonts/0.ttf }, { url: fonts/1.ttf } ] }
+            sources: { sourceB: { url: "tiles/{z}/{y}/{x}.mvt" } }
+            textures:
+                tex3: { url: "in_imports.png" }
+                tex4: { url: "../not_in_imports.png" }
+                tex5: { url: "/at_root.png" }
+            styles:
+                styleB:
+                    texture: "in_imports.png"
+                    shaders:
+                        uniforms:
+                            u_tex1: "in_imports.png"
+                            u_tex2: tex2
+        )END");
 
-    putMockUrlContents("/root/imports/urls.yaml", R"END(
-        fonts: { fontB: [ { url: fonts/0.ttf }, { url: fonts/1.ttf } ] }
-        sources: { sourceB: { url: "tiles/{z}/{y}/{x}.mvt" } }
-        textures:
-            tex3: { url: "in_imports.png" }
-            tex4: { url: "../not_in_imports.png" }
-            tex5: { url: "/at_root.png" }
-        styles:
-            styleB:
-                texture: "in_imports.png"
-                shaders:
-                    uniforms:
-                        u_tex1: "in_imports.png"
-                        u_tex2: tex2
-    )END");
-
-    putMockUrlContents("/root/globals.yaml", R"END(
-        fonts: { aFont: { url: global.fontUrl } }
-        sources: { aSource: { url: global.sourceUrl } }
-        textures: { aTexture: { url: global.textureUrl } }
-        styles: { aStyle: { texture: global.textureUrl, shaders: { uniforms: { aUniform: global.textureUrl } } } }
-    )END");
+        putMockUrlContents("/root/globals.yaml", R"END(
+            fonts: { aFont: { url: global.fontUrl } }
+            sources: { aSource: { url: global.sourceUrl } }
+            textures: { aTexture: { url: global.textureUrl } }
+            styles: { aStyle: { texture: global.textureUrl, shaders: { uniforms: { aUniform: global.textureUrl } } } }
+        )END");
     }
 };
 
