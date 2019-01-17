@@ -38,7 +38,7 @@ void View::setPixelScale(float _pixelsPerPoint) {
     m_pixelScale = _pixelsPerPoint;
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
-    m_dirtyConstraint = true;
+    m_dirtyWorldBoundsMinZoom = true;
 
 }
 
@@ -70,7 +70,7 @@ void View::setSize(int _width, int _height) {
     m_aspect = (float)m_vpWidth/ (float)m_vpHeight;
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
-    m_dirtyConstraint = true;
+    m_dirtyWorldBoundsMinZoom = true;
 
     // Screen space orthographic projection matrix, top left origin, y pointing down
     m_orthoViewport = glm::ortho(0.f, (float)m_vpWidth, (float)m_vpHeight, 0.f, -1.f, 1.f);
@@ -167,10 +167,10 @@ float View::getMaxPitch() const {
 
 void View::setConstrainToWorldBounds(bool constrainToWorldBounds) {
 
-    m_constraintMinZoom = 0.f;
+    m_worldBoundsMinZoom = 0.f;
     m_constrainToWorldBounds = constrainToWorldBounds;
     if (m_constrainToWorldBounds) {
-        applyConstraint();
+        applyWorldBounds();
     }
 
 }
@@ -182,12 +182,7 @@ void View::setPosition(double _x, double _y) {
     m_pos.y = glm::clamp(_y, -MapProjection::EARTH_HALF_CIRCUMFERENCE_METERS, MapProjection::EARTH_HALF_CIRCUMFERENCE_METERS);
     m_dirtyTiles = true;
     if (m_constrainToWorldBounds) {
-        if (m_dirtyConstraint) {
-            applyConstraint();
-        } else {
-            m_pos.x = m_constraint.getConstrainedX(m_pos.x);
-            m_pos.y = m_constraint.getConstrainedY(m_pos.y);
-        }
+        applyWorldBounds();
     }
 }
 
@@ -202,11 +197,7 @@ void View::setZoom(float _z) {
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
     if (m_constrainToWorldBounds) {
-        if (m_dirtyConstraint) {
-            applyConstraint();
-        } else if (m_zoom < m_constraintMinZoom) {
-            m_zoom = m_constraintMinZoom;
-        }
+        applyWorldBounds();
     }
 }
 
@@ -255,19 +246,21 @@ LngLat View::getCenterCoordinates() const {
     return center;
 }
 
-void View::applyConstraint() {
+void View::applyWorldBounds() {
     // Approximate the view diameter in pixels by taking the maximum dimension.
     double viewDiameterPixels = std::fmax(getWidth(), getHeight()) / pixelScale();
-    // Approximate the minimum zoom that keeps with view span within the drawable projection area. [1]
-    m_constraintMinZoom = std::log(viewDiameterPixels / MapProjection::tileSize() + 2) / std::log(2);
-    if (m_zoom < m_constraintMinZoom) {
-        m_zoom = m_constraintMinZoom;
+    if (m_dirtyWorldBoundsMinZoom) {
+        // Approximate the minimum zoom that keeps with view span within the drawable projection area. [1]
+        m_worldBoundsMinZoom = static_cast<float>(std::log(viewDiameterPixels / MapProjection::tileSize() + 2) / std::log(2));
+        m_dirtyWorldBoundsMinZoom = false;
+    }
+    if (m_zoom < m_worldBoundsMinZoom) {
+        m_zoom = m_worldBoundsMinZoom;
     }
     // Constrain by moving map center to keep view in bounds.
     m_constraint.setRadius(0.5 * viewDiameterPixels / pixelsPerMeter());
     m_pos.x = m_constraint.getConstrainedX(m_pos.x);
     m_pos.y = m_constraint.getConstrainedY(m_pos.y);
-    m_dirtyConstraint = false;
 }
 
 void View::update() {

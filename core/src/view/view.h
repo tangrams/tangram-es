@@ -217,7 +217,7 @@ protected:
 
     void updateMatrices();
 
-    void applyConstraint();
+    void applyWorldBounds();
 
     double screenToGroundPlaneInternal(double& _screenX, double& _screenY) const;
 
@@ -243,7 +243,7 @@ protected:
     float m_pitch = 0.f;
 
     float m_zoom = 0.f;
-    float m_constraintMinZoom = 0.f;
+    float m_worldBoundsMinZoom = 0.f;
 
     float m_width;
     float m_height;
@@ -261,7 +261,7 @@ protected:
 
     bool m_dirtyMatrices;
     bool m_dirtyTiles;
-    bool m_dirtyConstraint;
+    bool m_dirtyWorldBoundsMinZoom;
     bool m_changed;
     bool m_constrainToWorldBounds = true;
 
