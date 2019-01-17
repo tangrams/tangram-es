@@ -160,9 +160,6 @@ void RasterSource::addRasterTask(TileTask& _task) {
     auto rasterTask = createRasterTask(subTileID, true);
 
     _task.subTasks().push_back(rasterTask);
-
-    // Needed? Do we support recursive raster-source inclusion?
-    addRasterTasks(_task);
 }
 
 std::shared_ptr<RasterTileTask> RasterSource::createRasterTask(TileID _tileId, bool subTask) {
@@ -176,7 +173,7 @@ std::shared_ptr<RasterTileTask> RasterSource::createRasterTask(TileID _tileId, b
         auto texture = texIt->second.lock();
 
         if (texture) {
-            LOG("%d - reuse %s", m_textures->size(), id.toString().c_str());
+            LOGD("%d - reuse %s", m_textures->size(), id.toString().c_str());
 
             task->raster = std::make_unique<Raster>(id, texture);
             // No more loading needed.
