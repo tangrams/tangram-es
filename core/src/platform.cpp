@@ -94,7 +94,9 @@ UrlRequestHandle Platform::startUrlRequest(Url _url, UrlCallback&& _callback) {
     }
 
     // Start Platform specific url request
-    entry->cancelable = startUrlRequestImpl(_url, handle, entry->id);
+    if (startUrlRequestImpl(_url, handle, entry->id)) {
+        entry->cancelable = true;
+    }
 
     return handle;
 }
