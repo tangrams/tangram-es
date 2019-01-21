@@ -13,7 +13,7 @@ jobs:
       - run: source scripts/run_bench.sh build/linux
   build-android:
     docker:
-      - image: circleci/android:api-28-ndk-r17b
+      - image: circleci/android:api-28-ndk
     environment:
       GRADLE_OPTS: -Xmx2048m
     steps:
@@ -22,7 +22,7 @@ jobs:
       - run: cd platforms/android && ./gradlew demo:assembleDebug -Ptangram.abis=armeabi-v7a
   build-deploy-android-snapshot:
     docker:
-      - image: circleci/android:api-28-ndk-r17b
+      - image: circleci/android:api-28-node8-alpha
     environment:
       GRADLE_OPTS: -Xmx2048m
     steps:
