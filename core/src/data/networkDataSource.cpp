@@ -5,8 +5,8 @@
 
 namespace Tangram {
 
-NetworkDataSource::NetworkDataSource(std::shared_ptr<Platform> _platform, const std::string& _urlTemplate,
-        std::vector<std::string>&& _urlSubdomains, bool isTms) :
+NetworkDataSource::NetworkDataSource(Platform& _platform, const std::string& _urlTemplate,
+                                     std::vector<std::string>&& _urlSubdomains, bool isTms) :
     m_platform(_platform),
     m_urlTemplate(_urlTemplate),
     m_urlSubdomains(std::move(_urlSubdomains)),
@@ -80,7 +80,7 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
     };
 
     auto& dlTask = static_cast<BinaryTileTask&>(*task);
-    dlTask.urlRequestHandle = m_platform->startUrlRequest(url, std::move(onRequestFinish));
+    dlTask.urlRequestHandle = m_platform.startUrlRequest(url, std::move(onRequestFinish));
     dlTask.urlRequestStarted = true;
 
     return true;
@@ -91,7 +91,7 @@ void NetworkDataSource::cancelLoadingTile(TileTask& task) {
     if (dlTask.urlRequestStarted) {
         dlTask.urlRequestStarted = false;
 
-        m_platform->cancelUrlRequest(dlTask.urlRequestHandle);
+        m_platform.cancelUrlRequest(dlTask.urlRequestHandle);
     }
 }
 

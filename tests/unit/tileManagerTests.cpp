@@ -140,7 +140,8 @@ public:
 
 TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TestTileManager tileManager(std::make_shared<MockPlatform>(), worker);
+    MockPlatform platform;
+    TestTileManager tileManager(platform, worker);
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
@@ -186,18 +187,20 @@ TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileMana
 TEST_CASE( "Mock TileWorker Initialization", "[TileManager][Constructor]" ) {
 
     TestTileWorker worker;
-    TileManager tileManager(std::shared_ptr<MockPlatform>(), worker);
+    MockPlatform platform;
+    TileManager tileManager(platform, worker);
 }
 
 TEST_CASE( "Real TileWorker Initialization", "[TileManager][Constructor]" ) {
-    auto platform = std::make_shared<MockPlatform>();
+    MockPlatform platform;
     TileWorker worker(platform, 1);
     TileManager tileManager(platform, worker);
 }
 
 TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TestTileManager tileManager(std::make_shared<MockPlatform>(), worker);
+    MockPlatform platform;
+    TestTileManager tileManager(platform, worker);
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
@@ -222,7 +225,8 @@ TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
 
 TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TestTileManager tileManager(std::make_shared<MockPlatform>(), worker);
+    MockPlatform platform;
+    TestTileManager tileManager(platform, worker);
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
@@ -260,7 +264,8 @@ TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
 
 TEST_CASE( "Use proxy Tile - circular proxies", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TestTileManager tileManager(std::make_shared<MockPlatform>(), worker);
+    MockPlatform platform;
+    TestTileManager tileManager(platform, worker);
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };

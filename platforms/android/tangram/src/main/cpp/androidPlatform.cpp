@@ -369,7 +369,7 @@ void initGLExtensions() {
 }
 
 AndroidMap::AndroidMap(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance)
-        : Map(std::make_shared<AndroidPlatform>(_jniEnv, _assetManager, _tangramInstance)) {
+        : Map(std::make_unique<AndroidPlatform>(_jniEnv, _assetManager, _tangramInstance)) {
 
     m_tangramInstance = _jniEnv->NewWeakGlobalRef(_tangramInstance);
 
