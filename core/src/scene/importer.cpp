@@ -75,6 +75,9 @@ Node Importer::applySceneImports(Platform& platform) {
         });
     }
 
+    if (m_importedScenes.size() == 1) {
+        return m_importedScenes.begin()->second;
+    }
     Node root;
 
     LOGD("Processing scene import Stack:");
@@ -212,7 +215,7 @@ void Importer::mergeMapFields(Node& target, const Node& import) {
                  Dump(target).c_str(), Dump(import).c_str());
         }
 
-        target = import;
+        target = YAML::Clone(import);
 
     } else {
         for (const auto& entry : import) {
