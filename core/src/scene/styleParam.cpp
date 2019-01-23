@@ -285,9 +285,7 @@ StyleParam::Value StyleParam::parseNode(StyleParamKey key, const YAML::Node& nod
         break;
     case StyleParamKey::order:
     case StyleParamKey::outline_order:
-    case StyleParamKey::priority:
-    case StyleParamKey::text_max_lines:
-    case StyleParamKey::text_priority: {
+    case StyleParamKey::text_max_lines: {
         int result = -1;
         if (YamlUtil::getInt(node, result)) {
             return static_cast<uint32_t>(result);
@@ -350,6 +348,8 @@ StyleParam::Value StyleParam::parseNode(StyleParamKey key, const YAML::Node& nod
         LOGW("Invalid angle value: %s", Dump(node).c_str());
         break;
     }
+    case StyleParamKey::priority:
+    case StyleParamKey::text_priority:
     case StyleParamKey::miter_limit:
     case StyleParamKey::outline_miter_limit:
     case StyleParamKey::placement_min_length_ratio:
@@ -477,9 +477,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::order:
     case StyleParamKey::text_order:
     case StyleParamKey::outline_order:
-    case StyleParamKey::priority:
     case StyleParamKey::text_max_lines:
-    case StyleParamKey::text_priority:
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
     case StyleParamKey::outline_style:
@@ -493,6 +491,8 @@ std::string StyleParam::toString() const {
     case StyleParamKey::outline_join:
         if (!value.is<uint32_t>()) break;
         return k + std::to_string(value.get<uint32_t>());
+    case StyleParamKey::priority:
+    case StyleParamKey::text_priority:
     case StyleParamKey::miter_limit:
     case StyleParamKey::angle:
     case StyleParamKey::outline_miter_limit:
