@@ -74,9 +74,6 @@ Node Importer::applySceneImports(Platform& platform) {
         });
     }
 
-    // if (m_importedScenes.size() == 1) {
-    //     return m_importedScenes.begin()->second;
-    // }
     Node root;
 
     LOGD("Processing scene import Stack:");
