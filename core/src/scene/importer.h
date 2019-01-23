@@ -60,7 +60,7 @@ protected:
     // Imported scenes must be parsed into YAML nodes to find further imports.
     // The parsed scenes are stored in a map with their URLs to be merged once
     // all imports are found and parsed.
-    std::unordered_map<Url, Node> m_importedScenes;
+    std::unordered_map<Url, std::pair<Node, std::vector<Url>>> m_importedScenes = {};
 
     std::vector<Url> m_sceneQueue;
 };
