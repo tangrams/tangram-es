@@ -77,9 +77,8 @@ Node Importer::applySceneImports(Platform& platform) {
     Node root;
 
     LOGD("Processing scene import Stack:");
-    std::vector<Url> sceneStack;
     std::unordered_set<Url> imported;
-    importScenesRecursive(root, sceneUrl, sceneStack, imported);
+    importScenesRecursive(root, sceneUrl, imported);
 
     return root;
 }
@@ -170,17 +169,12 @@ std::vector<Url> Importer::getResolvedImportUrls(const Node& sceneNode, const Ur
     return sceneUrls;
 }
 
-void Importer::importScenesRecursive(Node& root, const Url& sceneUrl, std::vector<Url>& sceneStack,
-                                     std::unordered_set<Url>& imported) {
+void Importer::importScenesRecursive(Node& root, const Url& sceneUrl, std::unordered_set<Url>& imported) {
 
-    if (std::find(std::begin(sceneStack), std::end(sceneStack), sceneUrl) != std::end(sceneStack)) {
-        LOGE("%s will cause a cyclic import. Stopping this scene from being imported",
-             sceneUrl.string().c_str());
-        return;
-    }
     LOGD("Starting importing Scene: %s", sceneUrl.string().c_str());
 
-    sceneStack.push_back(sceneUrl);
+    // Insert self to handle self-imports cycles
+    imported.insert(sceneUrl);
 
     auto& entry = m_importedScenes[sceneUrl];
     auto& sceneNode = entry.first;
@@ -196,10 +190,8 @@ void Importer::importScenesRecursive(Node& root, const Url& sceneUrl, std::vecto
     imported.insert(std::begin(imports), std::end(imports));
 
     for (const auto& url : imports) {
-        importScenesRecursive(root, url, sceneStack, imported);
+        importScenesRecursive(root, url, imported);
     }
-
-    sceneStack.pop_back();
 
     mergeMapFields(root, sceneNode);
 

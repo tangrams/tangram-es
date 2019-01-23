@@ -51,8 +51,7 @@ protected:
     std::vector<Url> getResolvedImportUrls(const Node& sceneNode, const Url& base);
 
     // loads all the imported scenes and the master scene and returns a unified YAML root node.
-    void importScenesRecursive(Node& root, const Url& sceneUrl, std::vector<Url>& sceneStack,
-                               std::unordered_set<Url>& imported);
+    void importScenesRecursive(Node& root, const Url& sceneUrl, std::unordered_set<Url>& imported);
 
     void mergeMapFields(Node& target, const Node& import);
 
