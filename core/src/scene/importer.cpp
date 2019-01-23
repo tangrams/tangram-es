@@ -5,6 +5,7 @@
 #include "scene/sceneLoader.h"
 #include "util/zipArchive.h"
 
+#include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <condition_variable>
@@ -56,10 +57,8 @@ Node Importer::applySceneImports(Platform& platform) {
                 continue;
             }
 
-            if (m_importedScenes.find(nextUrlToImport) != m_importedScenes.end()) {
-                // This scene URL has already been imported, we're done!
-                continue;
-            }
+            // Mark Url as going-to-be-imported to prevent duplicate work.
+            m_sceneNodes.emplace(nextUrlToImport, SceneNode{});
         }
 
         activeDownloads++;
@@ -78,20 +77,14 @@ Node Importer::applySceneImports(Platform& platform) {
     Node root;
 
     LOGD("Processing scene import Stack:");
-    std::vector<Url> sceneStack;
-    importScenesRecursive(root, sceneUrl, sceneStack);
+    std::unordered_set<Url> imported;
+    importScenesRecursive(root, sceneUrl, imported);
 
     return root;
 }
 
 void Importer::addSceneData(const Url& sceneUrl, std::vector<char>&& sceneData) {
-
     LOGD("Process: '%s'", sceneUrl.string().c_str());
-
-    // Don't load imports twice
-    if (m_importedScenes.find(sceneUrl) != m_importedScenes.end()) {
-        return;
-    }
 
     if (!isZipArchiveUrl(sceneUrl)) {
         addSceneYaml(sceneUrl, sceneData.data(), sceneData.size());
@@ -123,22 +116,31 @@ void Importer::addSceneData(const Url& sceneUrl, std::vector<char>&& sceneData) 
 }
 
 void Importer::addSceneYaml(const Url& sceneUrl, const char* sceneYaml, size_t length) {
-    Node sceneNode;
+
+    auto& sceneNode = m_sceneNodes[sceneUrl];
+
     try {
-        sceneNode = YAML::Load(sceneYaml, length);
+        sceneNode.yaml = YAML::Load(sceneYaml, length);
     } catch (const YAML::ParserException& e) {
         LOGE("Parsing scene config '%s'", e.what());
         return;
     }
-    if (!sceneNode.IsDefined() || !sceneNode.IsMap()) {
+
+    if (!sceneNode.yaml.IsDefined() || !sceneNode.yaml.IsMap()) {
         LOGE("Scene is not a valid YAML map: %s", sceneUrl.string().c_str());
         return;
     }
 
-    m_importedScenes[sceneUrl] = sceneNode;
+    sceneNode.imports = getResolvedImportUrls(sceneNode.yaml, sceneUrl);
 
-    for (const auto& import : getResolvedImportUrls(sceneNode, sceneUrl)) {
-        m_sceneQueue.push_back(import);
+    // Remove 'import' values so they don't get merged.
+    sceneNode.yaml.remove("import");
+
+    for (const auto& url : sceneNode.imports) {
+        // Check if this scene URL has been (or is going to be) imported already
+        if (m_sceneNodes.find(url) == m_sceneNodes.end()) {
+            m_sceneQueue.push_back(url);
+        }
     }
 }
 
@@ -168,38 +170,36 @@ std::vector<Url> Importer::getResolvedImportUrls(const Node& sceneNode, const Ur
     return sceneUrls;
 }
 
-void Importer::importScenesRecursive(Node& root, const Url& sceneUrl, std::vector<Url>& sceneStack) {
+void Importer::importScenesRecursive(Node& root, const Url& sceneUrl, std::unordered_set<Url>& imported) {
 
     LOGD("Starting importing Scene: %s", sceneUrl.string().c_str());
 
-    for (const auto& s : sceneStack) {
-        if (sceneUrl == s) {
-            LOGE("%s will cause a cyclic import. Stopping this scene from being imported",
-                    sceneUrl.string().c_str());
-            return;
-        }
+    // Insert self to handle self-imports cycles
+    imported.insert(sceneUrl);
+
+    auto& sceneNode = m_sceneNodes[sceneUrl];
+
+    // If an import URL is already in the imported set that means it is imported by a "parent" scene file to this one.
+    // The parent import will assign the same values, so we can safely skip importing it here. This saves some work and
+    // also prevents import cycles.
+    //
+    // It is important that we don't merge the same YAML node more than once. YAML node assignment is by reference, so
+    // merging mutates the original input nodes.
+    auto it = std::remove_if(sceneNode.imports.begin(), sceneNode.imports.end(),
+                             [&](auto& i){ return imported.find(i) != imported.end(); });
+
+    if (it != sceneNode.imports.end()) {
+        LOGD("Skipping redundant import(s)");
+        sceneNode.imports.erase(it, sceneNode.imports.end());
     }
 
-    sceneStack.push_back(sceneUrl);
+    imported.insert(sceneNode.imports.begin(), sceneNode.imports.end());
 
-    auto sceneNode = m_importedScenes[sceneUrl];
-
-    if (!sceneNode.IsDefined() || !sceneNode.IsMap()) {
-        return;
+    for (const auto& url : sceneNode.imports) {
+        importScenesRecursive(root, url, imported);
     }
 
-    auto imports = getResolvedImportUrls(sceneNode, sceneUrl);
-
-    // Don't want to merge imports, so remove them here.
-    sceneNode.remove("import");
-
-    for (const auto& url : imports) {
-        importScenesRecursive(root, url, sceneStack);
-    }
-
-    sceneStack.pop_back();
-
-    mergeMapFields(root, sceneNode);
+    mergeMapFields(root, sceneNode.yaml);
 
     resolveSceneUrls(root, sceneUrl);
 }

@@ -89,7 +89,7 @@ struct ImportMockPlatform : public MockPlatform {
     }
 };
 
-                           
+
 std::shared_ptr<Scene> getScene(MockPlatform& platform, const Url& url) {
     return std::make_shared<Scene>(platform, url);
 }
@@ -296,9 +296,33 @@ TEST_CASE("Scene load from source string", "[import][core]") {
     auto scene = std::make_shared<Scene>(platform, base_yaml, Url("/resource_root/"));
 
     Importer importer(scene);
-    
+
     auto root = importer.applySceneImports(platform);
 
     CHECK(root["scalar_at_end"].Scalar() == "scalar");
     CHECK(root["null_at_end"].IsNull());
+}
+
+TEST_CASE("Scenes imported more than once are not mutated", "[import][core]") {
+    MockPlatform platform;
+    platform.putMockUrlContents("/duplicate_imports_a.yaml", R"END(
+        key: value_a
+    )END");
+
+    platform.putMockUrlContents("/duplicate_imports_b.yaml", R"END(
+        import: duplicate_imports_a.yaml
+        key: value_b
+    )END");
+
+    platform.putMockUrlContents("/duplicate_imports.yaml", R"END(
+        import: [duplicate_imports_b.yaml, duplicate_imports_a.yaml]
+    )END");
+
+    auto scene = std::make_shared<Scene>(platform, Url("/duplicate_imports.yaml"));
+
+    Importer importer(scene);
+
+    auto root = importer.applySceneImports(platform);
+
+    CHECK(root["key"].Scalar() == "value_a");
 }
