@@ -179,11 +179,17 @@ void Importer::importScenesRecursive(Node& root, const Url& sceneUrl, std::unord
 
     auto& sceneNode = m_sceneNodes[sceneUrl];
 
+    // If an import URL is already in the imported set that means it is imported by a "parent" scene file to this one.
+    // The parent import will assign the same values, so we can safely skip importing it here. This saves some work and
+    // also prevents import cycles.
+    //
+    // It is important that we don't merge the same YAML node more than once. YAML node assignment is by reference, so
+    // merging mutates the original input nodes.
     auto it = std::remove_if(sceneNode.imports.begin(), sceneNode.imports.end(),
                              [&](auto& i){ return imported.find(i) != imported.end(); });
 
     if (it != sceneNode.imports.end()) {
-        LOGD("Remove duplicate import");
+        LOGD("Skipping redundant import(s)");
         sceneNode.imports.erase(it, sceneNode.imports.end());
     }
 
