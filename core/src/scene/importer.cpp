@@ -135,7 +135,7 @@ void Importer::addSceneYaml(const Url& sceneUrl, const char* sceneYaml, size_t l
 
     for (const auto& url : sceneNode.imports) {
         // Check if this scene URL has been (or is going to be) imported already
-        if (m_sceneNodes.find(url) == std::end(m_sceneNodes)) {
+        if (m_sceneNodes.find(url) == m_sceneNodes.end()) {
             m_sceneQueue.push_back(url);
         }
     }
@@ -177,15 +177,15 @@ void Importer::importScenesRecursive(Node& root, const Url& sceneUrl, std::unord
 
     auto& sceneNode = m_sceneNodes[sceneUrl];
 
-    auto it = std::remove_if(std::begin(sceneNode.imports), std::end(sceneNode.imports),
-                             [&](auto& i){ return imported.find(i) != std::end(imported); });
+    auto it = std::remove_if(sceneNode.imports.begin(), sceneNode.imports.end(),
+                             [&](auto& i){ return imported.find(i) != imported.end(); });
 
-    if (it != std::end(sceneNode.imports)) {
+    if (it != sceneNode.imports.end()) {
         LOGD("Remove duplicate import");
-        sceneNode.imports.erase(it, std::end(sceneNode.imports));
+        sceneNode.imports.erase(it, sceneNode.imports.end());
     }
 
-    imported.insert(std::begin(sceneNode.imports), std::end(sceneNode.imports));
+    imported.insert(sceneNode.imports.begin(), sceneNode.imports.end());
 
     for (const auto& url : sceneNode.imports) {
         importScenesRecursive(root, url, imported);
