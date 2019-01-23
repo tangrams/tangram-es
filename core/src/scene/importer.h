@@ -58,10 +58,14 @@ protected:
     // Importer holds a pointer to the scene it is operating on.
     std::shared_ptr<Scene> m_scene;
 
-    // Imported scenes must be parsed into YAML nodes to find further imports.
+    // Scene files must be parsed into YAML nodes to find further imports.
     // The parsed scenes are stored in a map with their URLs to be merged once
     // all imports are found and parsed.
-    std::unordered_map<Url, std::pair<Node, std::vector<Url>>> m_importedScenes = {};
+    struct SceneNode {
+        Node yaml{};
+        std::vector<Url> imports;
+    };
+    std::unordered_map<Url, SceneNode> m_sceneNodes = {};
 
     std::vector<Url> m_sceneQueue;
 };
