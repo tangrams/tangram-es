@@ -211,7 +211,7 @@ void Importer::mergeMapFields(Node& target, const Node& import) {
                  Dump(target).c_str(), Dump(import).c_str());
         }
 
-        target = YAML::Clone(import);
+        target = import;
 
     } else {
         for (const auto& entry : import) {
