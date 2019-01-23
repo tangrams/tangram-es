@@ -4,7 +4,6 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_stl.h"
-#include "debug/textDisplay.h"
 
 #ifdef TANGRAM_WINDOWS
 #define GLFW_INCLUDE_NONE

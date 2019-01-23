@@ -8,12 +8,14 @@ find_package(CURL REQUIRED)
 include(cmake/glfw.cmake)
 
 add_executable(tangram
-  ${PROJECT_SOURCE_DIR}/platforms/windows/src/windowsPlatform.cpp
-  ${PROJECT_SOURCE_DIR}/platforms/windows/src/main.cpp
-  ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
-  ${PROJECT_SOURCE_DIR}/platforms/common/urlClient.cpp
-  ${PROJECT_SOURCE_DIR}/platforms/common/glfwApp.cpp
-  #${PROJECT_SOURCE_DIR}/platforms/common/glad.c
+  platforms/windows/src/windowsPlatform.cpp
+  platforms/windows/src/main.cpp
+  platforms/common/platform_gl.cpp
+  platforms/common/urlClient.cpp
+  platforms/common/glfwApp.cpp
+  platforms/common/imgui_impl_glfw.cpp
+  platforms/common/imgui_impl_opengl3.cpp
+  platforms/common/glfw/deps/glad.c
 )
 
 add_resources(tangram "${PROJECT_SOURCE_DIR}/scenes" "res")
