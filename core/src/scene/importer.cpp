@@ -133,6 +133,9 @@ void Importer::addSceneYaml(const Url& sceneUrl, const char* sceneYaml, size_t l
 
     sceneNode.imports = getResolvedImportUrls(sceneNode.yaml, sceneUrl);
 
+    // Remove 'import' values so they don't get merged.
+    sceneNode.yaml.remove("import");
+
     for (const auto& url : sceneNode.imports) {
         // Check if this scene URL has been (or is going to be) imported already
         if (m_sceneNodes.find(url) == m_sceneNodes.end()) {
@@ -161,7 +164,6 @@ std::vector<Url> Importer::getResolvedImportUrls(const Node& sceneNode, const Ur
                     }
                 }
             }
-            Node(sceneNode).remove("import");
         }
     }
 
