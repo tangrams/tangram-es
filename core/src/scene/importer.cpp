@@ -78,7 +78,8 @@ Node Importer::applySceneImports(Platform& platform) {
 
     LOGD("Processing scene import Stack:");
     std::vector<Url> sceneStack;
-    importScenesRecursive(root, sceneUrl, sceneStack);
+    std::unordered_set<Url> imported;
+    importScenesRecursive(root, sceneUrl, sceneStack, imported);
 
     return root;
 }
@@ -132,19 +133,14 @@ void Importer::addSceneYaml(const Url& sceneUrl, const char* sceneYaml, size_t l
         return;
     }
 
-    auto imports = getResolvedImportUrls(sceneNode, sceneUrl);
+    entry.second = getResolvedImportUrls(sceneNode, sceneUrl);
 
-    for (const auto& import : imports) {
+    for (const auto& import : entry.second) {
         // Check if this scene URL has been (or is going to be) imported already
         if (m_importedScenes.find(import) == std::end(m_importedScenes)) {
             m_sceneQueue.push_back(import);
-        } else {
-            LOGD("Remove duplicate import: %s", import.string().c_str());
-            imports.erase(std::remove(std::begin(imports), std::end(imports), import),
-                          std::end(imports));
         }
     }
-    entry.second = std::move(imports);
 }
 
 std::vector<Url> Importer::getResolvedImportUrls(const Node& sceneNode, const Url& baseUrl) {
@@ -174,7 +170,8 @@ std::vector<Url> Importer::getResolvedImportUrls(const Node& sceneNode, const Ur
     return sceneUrls;
 }
 
-void Importer::importScenesRecursive(Node& root, const Url& sceneUrl, std::vector<Url>& sceneStack) {
+void Importer::importScenesRecursive(Node& root, const Url& sceneUrl, std::vector<Url>& sceneStack,
+                                     std::unordered_set<Url>& imported) {
 
     if (std::find(std::begin(sceneStack), std::end(sceneStack), sceneUrl) != std::end(sceneStack)) {
         LOGE("%s will cause a cyclic import. Stopping this scene from being imported",
@@ -189,8 +186,17 @@ void Importer::importScenesRecursive(Node& root, const Url& sceneUrl, std::vecto
     auto& sceneNode = entry.first;
     auto& imports = entry.second;
 
+    auto it = std::remove_if(std::begin(imports), std::end(imports),
+                             [&](auto& i){ return imported.find(i) != std::end(imported); });
+    if (it != std::end(imports)) {
+        LOGD("Remove duplicate import");
+        imports.erase(it, std::end(imports));
+    }
+
+    imported.insert(std::begin(imports), std::end(imports));
+
     for (const auto& url : imports) {
-        importScenesRecursive(root, url, sceneStack);
+        importScenesRecursive(root, url, sceneStack, imported);
     }
 
     sceneStack.pop_back();
