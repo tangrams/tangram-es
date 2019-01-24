@@ -224,6 +224,18 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     @Override
     public boolean onSingleTapConfirmed(float x, float y) {
         LngLat tappedPoint = map.screenPositionToLngLat(new PointF(x, y));
+        if (tappedPoint == null) { return true; }
+
+        Marker p = map.addMarker();
+
+        if (pointMarkers.size() % 2 == 0) {
+            p.setStylingFromPath(pointStylingPath);
+        } else {
+            p.setStylingFromString("{ style: 'points', color: 'white', size: [50px, 50px], order: 2000, collide: false }");
+            p.setDrawable(com.mapzen.tangram.android.R.drawable.ic_launcher);
+        }
+        p.setPoint(tappedPoint);
+        pointMarkers.add(p);
 
         if (lastTappedPoint != null) {
             Map<String, String> props = new HashMap<>();
@@ -234,11 +246,6 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
             line.add(lastTappedPoint);
             line.add(tappedPoint);
             markers.addPolyline(line, props);
-
-            Marker p = map.addMarker();
-            p.setStylingFromPath(pointStylingPath);
-            p.setPoint(tappedPoint);
-            pointMarkers.add(p);
         }
 
         lastTappedPoint = tappedPoint;
