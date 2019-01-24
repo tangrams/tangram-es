@@ -34,7 +34,7 @@ class TileManager {
 
 public:
 
-    TileManager(std::shared_ptr<Platform> platform, TileTaskQueue& _tileWorker);
+    TileManager(Platform& platform, TileTaskQueue& _tileWorker);
 
     virtual ~TileManager();
 
@@ -78,6 +78,7 @@ protected:
     struct TileSet {
         TileSet(std::shared_ptr<TileSource> _source, bool _clientSource);
         ~TileSet();
+        void cancelTasks();
 
         std::shared_ptr<TileSource> source;
 

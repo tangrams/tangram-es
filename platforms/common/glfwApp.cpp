@@ -35,8 +35,6 @@ constexpr double scroll_span_multiplier = 0.05; // scaling for zoom and rotation
 constexpr double scroll_distance_multiplier = 5.0; // scaling for shove
 constexpr double single_tap_time = 0.25; //seconds (to avoid a long press being considered as a tap)
 
-std::shared_ptr<Platform> platform;
-
 std::string sceneFile = "scene.yaml";
 std::string sceneYaml;
 std::string apiKey;
@@ -113,9 +111,8 @@ void setScene(const std::string& _path, const std::string& _yaml) {
     sceneYaml = _yaml;
 }
 
-void create(std::shared_ptr<Platform> p, int w, int h) {
+void create(std::unique_ptr<Platform> p, int w, int h) {
 
-    platform = p;
     width = w;
     height = h;
 
@@ -137,7 +134,7 @@ void create(std::shared_ptr<Platform> p, int w, int h) {
 
     // Setup tangram
     if (!map) {
-        map = new Tangram::Map(platform);
+        map = new Tangram::Map(std::move(p));
     }
 
     // Build a version string for the window title.
@@ -238,7 +235,7 @@ void run() {
         glfwSwapBuffers(main_window);
 
         // Poll for and process events
-        if (platform->isContinuousRendering()) {
+        if (map->getPlatform().isContinuousRendering()) {
             glfwPollEvents();
         } else {
             glfwWaitEvents();
@@ -333,7 +330,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
         logMsg("Clicked:  %f, %f\n", x, y);
         logMsg("Remapped: %f, %f\n", xx, yy);
 
-        platform->requestRender();
+        map->getPlatform().requestRender();
     }
 
     last_time_released = time;

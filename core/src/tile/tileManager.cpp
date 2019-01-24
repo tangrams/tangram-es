@@ -133,18 +133,30 @@ struct TileManager::TileEntry {
 TileManager::TileSet::TileSet(std::shared_ptr<TileSource> _source, bool _clientSource) :
     source(_source), clientTileSource(_clientSource) {}
 
-TileManager::TileSet::~TileSet() {}
+TileManager::TileSet::~TileSet() {
+    cancelTasks();
+}
 
-TileManager::TileManager(std::shared_ptr<Platform> platform, TileTaskQueue& _tileWorker) :
+void TileManager::TileSet::cancelTasks() {
+    for (auto& tile : tiles) {
+        auto& entry = tile.second;
+        if (entry.isInProgress()) {
+            source->cancelLoadingTile(*entry.task);
+        }
+        entry.clearTask();
+    }
+}
+
+TileManager::TileManager(Platform& platform, TileTaskQueue& _tileWorker) :
     m_workers(_tileWorker) {
 
     m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
 
     // Callback to pass task from Download-Thread to Worker-Queue
-    m_dataCallback = TileTaskCb{[this, platform](std::shared_ptr<TileTask> task) {
+    m_dataCallback = TileTaskCb{[&](std::shared_ptr<TileTask> task) {
 
         if (task->isReady()) {
-             platform->requestRender();
+             platform.requestRender();
 
         } else if (task->hasData()) {
             m_workers.enqueue(task);
@@ -225,7 +237,10 @@ bool TileManager::removeClientTileSource(TileSource& _tileSource) {
 }
 
 void TileManager::clearTileSets(bool clearSourceCaches) {
+
     for (auto& tileSet : m_tileSets) {
+        tileSet.cancelTasks();
+
         tileSet.tiles.clear();
 
         if (clearSourceCaches) {
@@ -239,6 +254,8 @@ void TileManager::clearTileSets(bool clearSourceCaches) {
 void TileManager::clearTileSet(int32_t _sourceId) {
     for (auto& tileSet : m_tileSets) {
         if (tileSet.source->id() != _sourceId) { continue; }
+
+        tileSet.cancelTasks();
         tileSet.tiles.clear();
     }
 

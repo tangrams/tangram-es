@@ -53,10 +53,10 @@ UrlClient::~UrlClient() {
     }
 }
 
-UrlRequestHandle UrlClient::addRequest(const std::string& url, UrlCallback onComplete) {
+UrlClient::RequestId UrlClient::addRequest(const std::string& url, UrlCallback onComplete) {
     // Create a new request.
-    m_requestCount++;
-    Request request = {url, onComplete, m_requestCount, false};
+    auto id = ++m_requestCount;
+    Request request = {url, onComplete, id, false};
     // Add the request to our list.
     {
         // Lock the mutex to prevent concurrent modification of the list by the curl loop thread.
@@ -65,10 +65,10 @@ UrlRequestHandle UrlClient::addRequest(const std::string& url, UrlCallback onCom
     }
     // Notify a thread to start the transfer.
     m_requestCondition.notify_one();
-    return m_requestCount;
+    return id;
 }
 
-void UrlClient::cancelRequest(UrlRequestHandle handle) {
+void UrlClient::cancelRequest(UrlClient::RequestId id) {
     UrlCallback callback;
     // First check the pending request list.
     {
@@ -76,7 +76,7 @@ void UrlClient::cancelRequest(UrlRequestHandle handle) {
         std::lock_guard<std::mutex> lock(m_requestMutex);
         for (auto it = m_requests.begin(), end = m_requests.end(); it != end; ++it) {
             auto& request = *it;
-            if (request.handle == handle) {
+            if (request.id == id) {
                 // Found the request! Now run its callback and remove it.
                 callback = std::move(request.callback);
                 m_requests.erase(it);
@@ -92,7 +92,7 @@ void UrlClient::cancelRequest(UrlRequestHandle handle) {
 
     // Next check the active request list.
     for (auto& task : m_tasks) {
-        if (task.request.handle == handle) {
+        if (task.request.id == id) {
             task.request.canceled = true;
         }
     }
@@ -143,6 +143,8 @@ void UrlClient::curlLoop(uint32_t index) {
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_options.requestTimeoutMs);
     curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1);
     curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 20);
+    curl_easy_setopt(handle, CURLOPT_TCP_NODELAY, 1);
+
     // Loop until the session is destroyed.
     while (m_keepRunning) {
         bool haveRequest = false;

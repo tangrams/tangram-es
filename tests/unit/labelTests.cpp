@@ -43,10 +43,10 @@ TextLabel makeLabel(glm::vec2 _transform, Label::Type _type) {
 
 View makeView() {
     View view(256, 256);
-
+    view.setConstrainToWorldBounds(false);
     view.setPosition(0, 0);
     view.setZoom(0);
-    view.update(false);
+    view.update();
 
     return view;
 }

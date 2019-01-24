@@ -313,6 +313,8 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
                 break;
             }
             case StyleParamKey::angle:
+            case StyleParamKey::priority:
+            case StyleParamKey::text_priority:
             case StyleParamKey::text_font_stroke_width:
             case StyleParamKey::placement_min_length_ratio: {
                 _val = static_cast<float>(number);
@@ -326,7 +328,6 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
             }
             case StyleParamKey::order:
             case StyleParamKey::outline_order:
-            case StyleParamKey::priority:
             case StyleParamKey::color:
             case StyleParamKey::outline_color:
             case StyleParamKey::text_font_fill:

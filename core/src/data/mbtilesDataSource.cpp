@@ -115,8 +115,8 @@ struct MBTilesQueries {
 
 };
 
-MBTilesDataSource::MBTilesDataSource(std::shared_ptr<Platform> _platform, std::string _name,
-                                     std::string _path, std::string _mime, bool _cache, bool _offlineFallback)
+MBTilesDataSource::MBTilesDataSource(Platform& _platform, std::string _name, std::string _path,
+                                     std::string _mime, bool _cache, bool _offlineFallback)
     : m_name(_name),
       m_path(_path),
       m_mime(_mime),
@@ -169,7 +169,7 @@ bool MBTilesDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb
                     // Trigger TileManager update so that tile will be
                     // downloaded next time.
                     _task->setNeedsLoading(true);
-                    m_platform->requestRender();
+                    m_platform.requestRender();
                 }
             } else {
                 LOGW("missing tile: %s, %d", _task->tileId().toString().c_str());

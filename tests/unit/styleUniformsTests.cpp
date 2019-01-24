@@ -19,7 +19,7 @@ using namespace Tangram;
 using YAML::Node;
 
 TEST_CASE( "Style Uniforms Parsing and Injection Test: Float uniform value", "[StyleUniforms][core][yaml]") {
-    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
+    MockPlatform platform;
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform, Url());
 
     Node node = YAML::Load(R"END(
@@ -35,7 +35,7 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: Float uniform value", "[S
 }
 
 TEST_CASE( "Style Uniforms Parsing and Injection Test: Boolean uniform value", "[StyleUniforms][core][yaml]") {
-    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
+    MockPlatform platform;
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform, Url());
 
     Node node = YAML::Load(R"END(
@@ -57,7 +57,7 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: Boolean uniform value", "
 }
 
 TEST_CASE( "Style Uniforms Parsing and Injection Test: vec2, vec3, vec4 uniform value", "[StyleUniforms][core][yaml]") {
-    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
+    MockPlatform platform;
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform, Url());
 
     Node node = YAML::Load(R"END(
@@ -101,7 +101,7 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: vec2, vec3, vec4 uniform 
 
 TEST_CASE( "Style Uniforms Parsing and Injection Test: textures uniform value", "[StyleUniforms][core][yaml]") {
     std::unordered_map<Url, std::string> testScenes;
-    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
+    MockPlatform platform;
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform, Url());
 
     Node node = YAML::Load(R"END(

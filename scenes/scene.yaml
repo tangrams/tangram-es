@@ -328,7 +328,7 @@ layers:
                     texture: pois
                     sprite: shield
                     # sprite: function() { return feature.network }
-                    priority: 2
+                    priority: 2.5
                     color: white
                     size: 24px
                     placement: midpoint
@@ -368,7 +368,7 @@ layers:
                     text:
                         repeat_distance: 200px
                         repeat_group: road_labels
-                        priority: 2
+                        priority: 2.5
                         font:
                             stroke: { color: white, width: 4 }
                             transform: capitalize
@@ -480,7 +480,7 @@ layers:
             draw:
                 points:
                     sprite: tree
-                    priority: 2
+                    priority: 2.5
                     size: 16px
                     text:
                         font:
@@ -499,7 +499,7 @@ layers:
                 points:
                     visible: false
                 text:
-                    priority: 2
+                    priority: 2.5
                     font:
                         size: 9pt
                         style: italic
@@ -555,7 +555,7 @@ layers:
                     draw: { points: { sprite: museum } }
                 station:
                     filter: { kind: [station] }
-                    draw: { points: { sprite: train, priority: 2 } }
+                    draw: { points: { sprite: train, priority: 2.5 } }
                 hospital:
                     filter: { kind: [hospital, pharmacy] }
                     draw: { points: { sprite: hospital } }

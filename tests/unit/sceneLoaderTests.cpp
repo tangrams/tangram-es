@@ -15,7 +15,7 @@ using namespace Tangram;
 using YAML::Node;
 
 TEST_CASE("Style with the same name as a built-in style are ignored") {
-    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
+    MockPlatform platform;
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform, Url());
     SceneLoader::loadStyle(platform, "polygons", Node(), scene);
     REQUIRE(scene->styles().size() == 0);
@@ -23,7 +23,7 @@ TEST_CASE("Style with the same name as a built-in style are ignored") {
 }
 
 TEST_CASE("Correctly instantiate a style from a YAML configuration") {
-    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
+    MockPlatform platform;
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform, Url());
 
     scene->styles().emplace_back(new PolygonStyle("polygons"));

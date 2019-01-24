@@ -17,7 +17,7 @@ class AsyncWorker;
 class MBTilesDataSource : public TileSource::DataSource {
 public:
 
-    MBTilesDataSource(std::shared_ptr<Platform> _platform, std::string _name, std::string _path, std::string _mime,
+    MBTilesDataSource(Platform& _platform, std::string _name, std::string _path, std::string _mime,
                       bool _cache = false, bool _offlineFallback = false);
 
     ~MBTilesDataSource();
@@ -53,7 +53,7 @@ private:
     std::unique_ptr<AsyncWorker> m_worker;
 
     // Platform reference
-    std::shared_ptr<Platform> m_platform;
+    Platform& m_platform;
 
     enum class Compression {
         undefined,
