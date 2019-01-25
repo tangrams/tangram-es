@@ -23,7 +23,7 @@ public:
 
     TileWorker(Platform& _platform, int _numWorker);
 
-    ~TileWorker();
+    virtual ~TileWorker();
 
     virtual void enqueue(std::shared_ptr<TileTask> task) override;
 
