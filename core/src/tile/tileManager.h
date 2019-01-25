@@ -59,11 +59,11 @@ public:
         return m_tilesInProgress > 0;
     }
 
-    std::shared_ptr<TileSource> getClientTileSource(int32_t sourceID);
+    std::shared_ptr<TileSource> getClientTileSource(int32_t _sourceId);
 
     void addClientTileSource(std::shared_ptr<TileSource> _source);
 
-    bool removeClientTileSource(TileSource& _source);
+    bool removeClientTileSource(int32_t _sourceId);
 
     const std::unique_ptr<TileCache>& getTileCache() const { return m_tileCache; }
 

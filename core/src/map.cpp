@@ -45,8 +45,15 @@ struct CameraEase {
 
 using CameraAnimator = std::function<uint32_t(float dt)>;
 
-class Map::Impl {
+struct ClientTileSource {
+    std::shared_ptr<TileSource> tileSource;
+    bool added = false;
+    bool clear = false;
+    bool remove = false;
+};
 
+
+class Map::Impl {
 public:
     explicit Impl(Platform& _platform) :
         platform(_platform),
@@ -55,8 +62,8 @@ public:
 
     void setPixelScale(float _pixelsPerPoint);
     SceneID loadScene(SceneOptions&& _sceneOptions, bool _async);
+    void syncClientTileSources(bool _firstUpdate);
 
-    std::mutex tilesMutex;
     std::mutex sceneMutex;
 
     Platform& platform;
@@ -90,7 +97,9 @@ public:
     SceneReadyCallback onSceneReady = nullptr;
     CameraAnimationCallback cameraAnimationListener = nullptr;
 
-    std::vector<std::shared_ptr<TileSource>> clientTileSources;
+    std::mutex tileSourceMutex;
+
+    std::map<int32_t, ClientTileSource> clientTileSources;
 
     // TODO MapOption
     Color background{0xffffffff};
@@ -220,6 +229,7 @@ void Map::resize(int _newWidth, int _newHeight) {
     impl->selectionBuffer = std::make_unique<FrameBuffer>(_newWidth/2, _newHeight/2);
 }
 
+
 bool Map::update(float _dt) {
 
     impl->jobQueue.runJobs();
@@ -227,12 +237,18 @@ bool Map::update(float _dt) {
     auto& scene = *impl->scene;
     auto& view = impl->view;
 
+    bool wasReady = scene.isReady();
+
     // Check if the current scene finished loading
-    if (!scene.completeScene(view)) {
+    if (scene.completeScene(view)) {
+        // Sync ClientTileSource changes with TileManager
+        bool firstUpdate = !wasReady;
+        impl->syncClientTileSources(firstUpdate);
+
+    } else {
         platform->requestRender();
         return false;
     }
-
     FrameInfo::beginUpdate();
 
     bool viewComplete = true;
@@ -259,10 +275,7 @@ bool Map::update(float _dt) {
     view.update();
 
     bool tilesLoading, animateLabels, animateMarkers;
-    {
-        std::lock_guard<std::mutex> lock(impl->tilesMutex);
-        std::tie(tilesLoading, animateLabels, animateMarkers) = scene.update(view, _dt);
-    }
+    std::tie(tilesLoading, animateLabels, animateMarkers) = scene.update(view, _dt);
 
     if (tilesLoading || animateLabels || animateMarkers) {
         viewComplete = false;
@@ -315,8 +328,6 @@ bool Map::render() {
     if (impl->selectionQueries.size() > 0 || drawSelectionBuffer) {
         impl->selectionBuffer->applyAsRenderTarget(impl->renderState);
 
-        std::lock_guard<std::mutex> lock(impl->tilesMutex);
-
         scene.renderSelection(renderState, view,
                               *impl->selectionBuffer,
                               impl->selectionQueries);
@@ -340,11 +351,7 @@ bool Map::render() {
     }
 
     // Render scene
-    bool drawnAnimatedStyle = false;
-    {
-        std::lock_guard<std::mutex> lock(impl->tilesMutex);
-        drawnAnimatedStyle = scene.render(renderState, view);
-    }
+    bool drawnAnimatedStyle = scene.render(renderState, view);
 
     if (scene.animated() != Scene::animate::no &&
         drawnAnimatedStyle != platform->isContinuousRendering()) {
@@ -698,30 +705,64 @@ int Map::getCameraType() {
 }
 
 void Map::addTileSource(std::shared_ptr<TileSource> _source) {
-    impl->clientTileSources.push_back(_source);
+    std::lock_guard<std::mutex> lock(impl->tileSourceMutex);
 
-    std::lock_guard<std::mutex> lock(impl->tilesMutex);
-    impl->scene->tileManager()->addClientTileSource(_source);
+    auto& tileSources = impl->clientTileSources;
+    auto& entry = tileSources[_source->id()];
+
+    entry.tileSource = _source;
+    entry.added = true;
 }
 
-bool Map::removeTileSource(TileSource& source) {
-    for (auto it = impl->clientTileSources.begin(); it != impl->clientTileSources.end(); ++it) {
-        if (it->get() == &source) {
-            impl->clientTileSources.erase(it);
-            break;
-        }
+bool Map::removeTileSource(TileSource& _source) {
+    std::lock_guard<std::mutex> lock(impl->tileSourceMutex);
+
+    auto& tileSources = impl->clientTileSources;
+    auto it = tileSources.find(_source.id());
+    if (it != tileSources.end()) {
+        it->second.remove = true;
+        return true;
     }
-    std::lock_guard<std::mutex> lock(impl->tilesMutex);
-    return impl->scene->tileManager()->removeClientTileSource(source);
+    return false;
 }
 
-void Map::clearTileSource(TileSource& _source, bool _data, bool _tiles) {
-    std::lock_guard<std::mutex> lock(impl->tilesMutex);
+bool Map::clearTileSource(TileSource& _source, bool _data, bool _tiles) {
+    std::lock_guard<std::mutex> lock(impl->tileSourceMutex);
 
-    if (_tiles) { impl->scene->tileManager()->clearTileSet(_source.id()); }
     if (_data) { _source.clearData(); }
+    if (!_tiles) { return true; }
 
-    platform->requestRender();
+    auto& tileSources = impl->clientTileSources;
+    auto it = tileSources.find(_source.id());
+    if (it != tileSources.end()) {
+        it->second.clear = true;
+        return true;
+    }
+    return false;
+}
+
+void Map::Impl::syncClientTileSources(bool _firstUpdate) {
+    std::lock_guard<std::mutex> lock(tileSourceMutex);
+
+    auto& tileManager = *scene->tileManager();
+    for (auto it = clientTileSources.begin();
+         it != clientTileSources.end(); ) {
+        auto& ts = it->second;
+        if (ts.remove) {
+            tileManager.removeClientTileSource(it->first);
+            it = clientTileSources.erase(it);
+            continue;
+        }
+        if (ts.added || _firstUpdate) {
+            ts.added = false;
+            tileManager.addClientTileSource(ts.tileSource);
+        }
+        if (ts.clear) {
+            ts.clear = false;
+            tileManager.clearTileSet(it->first);
+        }
+        ++it;
+    }
 }
 
 MarkerID Map::markerAdd() {
@@ -925,7 +966,6 @@ void toggleDebugFlag(DebugFlags _flag) {
     //  || _flag == DebugFlags::tile_bounds
     //  || _flag == DebugFlags::tile_infos) {
     //     if (m_tileManager) {
-    //         std::lock_guard<std::mutex> lock(m_tilesMutex);
     //         m_tileManager->clearTileSets();
     //     }
     // }

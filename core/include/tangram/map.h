@@ -299,7 +299,8 @@ public:
     // and removed, otherwise returns false.
     bool removeTileSource(TileSource& _source);
 
-    void clearTileSource(TileSource& _source, bool _data, bool _tiles);
+    // Returns true if the source was found and cleared, otherwise returns false.
+    bool clearTileSource(TileSource& _source, bool _data, bool _tiles);
 
     // Add a marker object to the map and return an ID for it; an ID of 0 indicates an invalid marker;
     // the marker will not be drawn until both styling and geometry are set using the functions below.
