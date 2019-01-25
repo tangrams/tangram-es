@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 
+apply from: 'profiling.gradle'
+
 android {
   compileSdkVersion 28
 
@@ -26,7 +28,6 @@ android {
       minifyEnabled true
     }
   }
-
 }
 
 dependencies {

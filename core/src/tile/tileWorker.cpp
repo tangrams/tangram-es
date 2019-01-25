@@ -48,7 +48,7 @@ void TileWorker::run(Worker* instance) {
 
             if (instance->tileBuilder) {
                 builder = std::move(instance->tileBuilder);
-                LOG("Passed new TileBuilder to TileWorker");
+                LOGTO("Passed new TileBuilder to TileWorker");
             }
 
             // Check if thread should stop
@@ -90,8 +90,9 @@ void TileWorker::run(Worker* instance) {
         if (task->isCanceled()) {
             continue;
         }
-
+        LOGTInit(">>> %s", task->tileId().toString().c_str());
         task->process(*builder);
+        LOGT("<<< %s", task->tileId().toString().c_str());
 
         m_platform.requestRender();
     }

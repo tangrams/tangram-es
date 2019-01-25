@@ -5,6 +5,7 @@ group = GROUP
 version = VERSION_NAME
 
 apply from: 'versioning.gradle'
+apply from: 'profiling.gradle'
 
 android {
   compileSdkVersion 28
@@ -27,7 +28,8 @@ android {
       cmake {
         targets 'tangram'
         arguments '-DTANGRAM_PLATFORM=android',
-                  '-DANDROID_STL=c++_shared'
+                  '-DANDROID_STL=c++_shared',
+                  '-DCMAKE_BUILD_TYPE=Release'
         cppFlags '-std=c++14',
                  '-fvisibility=hidden', // export only JNIEXPORT
                  '-pedantic',
