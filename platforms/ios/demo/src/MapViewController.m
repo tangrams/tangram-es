@@ -56,13 +56,6 @@
         return;
     }
 
-    CLLocationCoordinate2D newYork;
-    newYork.longitude = -74.00976419448854;
-    newYork.latitude = 40.70532700869127;
-
-    TGCameraPosition *camera = [[TGCameraPosition alloc] initWithCenter:newYork zoom:15 bearing:0 pitch:0];
-    [mapView setCameraPosition:camera];
-
     // Add a client data source, named 'mz_route_line_transit'
     self.mapData = [mapView addDataLayer:@"mz_route_line_transit" generateCentroid:NO];
 }
@@ -217,6 +210,9 @@
     newYork.latitude = 40.70532700869127;
     markerPoint.point = newYork;
     self.locationTrackingMarker = markerPoint;
+
+    TGCameraPosition *camera = [[TGCameraPosition alloc] initWithCenter:newYork zoom:15 bearing:0 pitch:0];
+    [mapView setCameraPosition:camera];
 }
 
 - (void)viewDidLoad
