@@ -89,6 +89,11 @@ protected:
 
         int64_t sourceGeneration = 0;
         bool clientTileSource;
+
+        TileSet(const TileSet&) = delete;
+        TileSet(TileSet&&) = default;
+        TileSet& operator=(const TileSet&) = delete;
+        TileSet& operator=(TileSet&&) = default;
     };
 
     void updateTileSet(TileSet& tileSet, const ViewState& _view);
