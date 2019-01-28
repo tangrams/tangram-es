@@ -879,21 +879,21 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition callback:(void (^)(BOOL))callback
 {
-    [self flyToCameraPosition:cameraPosition withDuration:-1.0 callback:callback];
+    [self flyToCameraPosition:cameraPosition withDuration:-1.0 speed:1.0 callback:callback];
 }
 
 - (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition
                withDuration:(NSTimeInterval)duration
                    callback:(void (^)(BOOL))callback
 {
-    Tangram::CameraPosition camera = [cameraPosition convertToCoreCamera];
-    if (duration > 0) {
-        [self setMapRegionChangeState:TGMapRegionAnimating];
-    } else {
-        [self setMapRegionChangeState:TGMapRegionJumping];
-    }
-    self.map->flyTo(camera, duration);
-    self.cameraAnimationCallback = callback;
+    [self flyToCameraPosition:cameraPosition withDuration:duration speed:1.0 callback:callback];
+}
+
+- (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition
+                  withSpeed:(CGFloat)speed
+                   callback:(void (^)(BOOL))callback
+{
+    [self flyToCameraPosition:cameraPosition withDuration:-1 speed:speed callback:callback];
 }
 
 - (TGCameraPosition *)cameraThatFitsBounds:(TGCoordinateBounds)bounds withPadding:(UIEdgeInsets)padding
@@ -1219,6 +1219,21 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 }
 
 #pragma mark Internal Logic
+
+- (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition
+               withDuration:(NSTimeInterval)duration
+                      speed:(CGFloat)speed
+                   callback:(void (^)(BOOL))callback
+{
+    Tangram::CameraPosition camera = [cameraPosition convertToCoreCamera];
+    if (duration > 0) {
+        [self setMapRegionChangeState:TGMapRegionAnimating];
+    } else {
+        [self setMapRegionChangeState:TGMapRegionJumping];
+    }
+    self.map->flyTo(camera, duration, speed);
+    self.cameraAnimationCallback = callback;
+}
 
 - (void)setMapRegionChangeState:(TGMapRegionChangeState)state
 {
