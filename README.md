@@ -28,3 +28,5 @@ You can also find us in the tangram-chat gitter chat room: https://gitter.im/tan
 ## Contributions Welcome
 
 We gladly appreciate feedback, feature requests, and contributions. For information and instructions, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Tangram ES was created by [Mapzen](https://www.mapzen.com/) and is now a [Linux Foundation Project](https://www.linuxfoundation.org/press-release/2019/01/mapzen-open-source-data-and-software-for-real-time-mapping-applications-to-become-a-linux-foundation-project/).
