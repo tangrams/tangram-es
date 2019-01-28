@@ -23,16 +23,18 @@ public:
     UrlClient(Options options);
     ~UrlClient();
 
-    UrlRequestHandle addRequest(const std::string& url, UrlCallback onComplete);
+    using RequestId = uint64_t;
 
-    void cancelRequest(UrlRequestHandle request);
+    RequestId addRequest(const std::string& url, UrlCallback cb);
+
+    void cancelRequest(RequestId request);
 
 private:
 
     struct Request {
         std::string url;
         UrlCallback callback;
-        UrlRequestHandle handle;
+        RequestId id;
         bool canceled;
     };
 
@@ -40,7 +42,7 @@ private:
 
     struct Task {
         Request request;
-        Response response;
+        std::vector<char> content;
     };
 
     static Response getCanceledResponse();

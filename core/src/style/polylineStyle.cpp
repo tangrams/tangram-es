@@ -66,8 +66,10 @@ struct PolylineVertex : PolylineVertexNoUVs {
 };
 
 PolylineStyle::PolylineStyle(std::string _name, Blending _blendMode, GLenum _drawMode, bool _selection)
-    : Style(_name, _blendMode, _drawMode, _selection)
-{}
+    : Style(_name, _blendMode, _drawMode, _selection) {
+    m_type = StyleType::polyline;
+    m_material.material = std::make_shared<Material>();
+}
 
 void PolylineStyle::constructVertexLayout() {
 
@@ -88,20 +90,18 @@ void PolylineStyle::constructVertexLayout() {
             {"a_selection_color", 4, GL_UNSIGNED_BYTE, true, 0},
         }));
     }
-
 }
 
 void PolylineStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
     Style::onBeginDrawFrame(rs, _view, _scene);
 
-    if (m_texture) {
+    if (m_texture && m_texture->width() > 0) {
         GLuint textureUnit = rs.nextAvailableTextureUnit();
 
-        m_texture->update(rs, textureUnit);
         m_texture->bind(rs, textureUnit);
 
         m_shaderProgram->setUniformi(rs, m_uTexture, textureUnit);
-        m_shaderProgram->setUniformf(rs, m_uTextureRatio, m_texture->getHeight() / m_texture->getWidth());
+        m_shaderProgram->setUniformf(rs, m_uTextureRatio, m_texture->height() / m_texture->width());
     }
 }
 
@@ -112,16 +112,19 @@ void PolylineStyle::setDashBackgroundColor(const glm::vec4 _dashBackgroundColor)
 
 void PolylineStyle::constructShaderProgram() {
 
-    m_shaderSource->setSourceStrings(SHADER_SOURCE(polyline_fs),
-                                     SHADER_SOURCE(polyline_vs));
+    m_shaderSource->setSourceStrings(polyline_fs, polyline_vs);
 
     if (m_dashArray.size() > 0) {
-        TextureOptions options {GL_RGBA, GL_RGBA, {GL_NEAREST, GL_NEAREST}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
+        TextureOptions options;
+        options.minFilter = TextureMinFilter::NEAREST;
+        options.magFilter = TextureMagFilter::NEAREST;
         // provides precision for dash patterns that are a fraction of line width
         auto pixels = DashArray::render(m_dashArray, dash_scale);
 
-        m_texture = std::make_shared<Texture>(1, pixels.size(), options);
-        m_texture->setData(pixels.data(), pixels.size());
+        m_texture = std::make_shared<Texture>(options);
+        m_texture->setPixelData(pixels.size(), 1, sizeof(GLuint),
+                                reinterpret_cast<GLubyte*>(pixels.data()),
+                                pixels.size() * sizeof(GLuint));
 
         if (m_dashBackground) {
             m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LINE_BACKGROUND_COLOR vec3(" +
@@ -222,7 +225,7 @@ void PolylineStyleBuilder<V>::setup(const Tile& tile) {
     m_zoom = id.s;
     m_overzoom2 = exp2(id.s - id.z);
     m_tileUnitsPerMeter = tile.getInverseScale();
-    m_tileUnitsPerPixel = 1.f / tile.getProjection()->TileSize();
+    m_tileUnitsPerPixel = 1.f / MapProjection::tileSize();
 
     // When a tile is overzoomed, we are actually styling the area of its
     // 'source' tile, which will have a larger effective pixel size at the
@@ -236,7 +239,7 @@ void PolylineStyleBuilder<V>::setup(const Marker& marker, int zoom) {
     m_zoom = zoom;
     m_overzoom2 = 1.f;
     m_tileUnitsPerMeter = 1.f / marker.extent();
-    float metersPerTile = 2.f * MapProjection::HALF_CIRCUMFERENCE * exp2(-zoom);
+    float metersPerTile = MapProjection::metersPerTileAtZoom(zoom);
 
     // In general, a Marker won't cover the same area as a tile, so the effective
     // "tile size" for building a Marker is the size of a tile in pixels multiplied

@@ -38,8 +38,7 @@ void init() {
     if (!s_initialized) {
         s_shader = std::make_unique<ShaderProgram>();
 
-        s_shader->setShaderSource(SHADER_SOURCE(debugPrimitive_vs),
-                                  SHADER_SOURCE(debugPrimitive_fs));
+        s_shader->setShaderSource(debugPrimitive_vs, debugPrimitive_fs);
 
         s_layout = std::unique_ptr<VertexLayout>(new VertexLayout({
             {"a_position", 2, GL_FLOAT, false, 0},
@@ -48,8 +47,7 @@ void init() {
 
         s_textureShader = std::make_unique<ShaderProgram>();
 
-        s_textureShader->setShaderSource(SHADER_SOURCE(debugTexture_vs),
-                                         SHADER_SOURCE(debugTexture_fs));
+        s_textureShader->setShaderSource(debugTexture_vs, debugTexture_fs);
 
         s_textureLayout = std::unique_ptr<VertexLayout>(new VertexLayout({
             {"a_position", 2, GL_FLOAT, false, 0},
@@ -131,8 +129,8 @@ void drawTexture(RenderState& rs, Texture& _tex, glm::vec2 _pos, glm::vec2 _dim)
     rs.vertexBuffer(0);
     rs.depthTest(GL_FALSE);
 
-    float w = _tex.getWidth();
-    float h = _tex.getHeight();
+    float w = _tex.width();
+    float h = _tex.height();
 
     if (_dim != glm::vec2(0)) {
         w = _dim.x;

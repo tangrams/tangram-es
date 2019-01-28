@@ -3,7 +3,7 @@ Mac OS X
 
 ## Setup ##
 
-This project uses CMake (minimum version 3.0), you can download it [here](http://www.cmake.org/download/) or use your favorite installation package tool like [homebrew](http://brew.sh/).
+This project uses CMake (minimum version 3.2), you can download it [here](http://www.cmake.org/download/) or use your favorite installation package tool like [homebrew](http://brew.sh/).
 
 ```bash
 brew install cmake
@@ -41,7 +41,7 @@ To build a runnable OS X application bundle, run:
 make osx
 ```
 
-You can optionally use `make -j` to parallelize the build and append `DEBUG=1` or `RELEASE=1` to choose the build type.
+You can optionally use `make -j` to parallelize the build and append a `BUILD_TYPE` variable to choose the build type, for example `BUILD_TYPE=Debug`.
 
 Then open the application with:
 

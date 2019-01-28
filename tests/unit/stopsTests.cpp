@@ -98,9 +98,7 @@ TEST_CASE("Stops parses correctly from YAML distance values", "[Stops][YAML]") {
 
     YAML::Node node = YAML::Load("[ [10, 0], [16, .04], [18, .2], [19, .2] ]");
 
-    MercatorProjection proj;
-
-    Stops stops(Stops::Widths(node, proj, {}));
+    Stops stops(Stops::Widths(node, {}));
 
     // +1 added for meter end stop
     REQUIRE(stops.frames.size() == 5);
@@ -135,9 +133,7 @@ TEST_CASE("Regression test - Dont crash on evaluating empty stops", "[Stops][YAM
     YAML::Node node = YAML::Load("[]");
 
     {
-        MercatorProjection proj{};
-        uint8_t allowedUnit = Unit::meter;
-        Stops stops(Stops::Widths(node, proj, allowedUnit));
+        Stops stops(Stops::Widths(node, UnitSet{Unit::meter}));
         REQUIRE(stops.frames.size() == 0);
         stops.evalVec2(1);
     }
@@ -147,8 +143,7 @@ TEST_CASE("Regression test - Dont crash on evaluating empty stops", "[Stops][YAM
         stops.evalVec2(1);
     }
     {
-        uint8_t allowedUnit = Unit::meter;
-        Stops stops(Stops::Offsets(node, allowedUnit));
+        Stops stops(Stops::Offsets(node, UnitSet{Unit::meter}));
         REQUIRE(stops.frames.size() == 0);
         stops.evalVec2(1);
     }
@@ -166,42 +161,42 @@ TEST_CASE("Mixed dimension stops for StyleParam::size not allowed, exception of 
     YAML::Node node = YAML::Load(R"END(
         [[0, 6px], [1, [6px, 7px]]]
     )END");
-    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+    Stops stops(Stops::Sizes(node, StyleParam::unitSetForStyleParam(StyleParamKey::size)));
     REQUIRE(stops.frames.size() == 0);
 
     // 2d, 1d
     node = YAML::Load(R"END(
         [[0, [6px, 7px]], [1, 6px]]
     )END");
-    stops = Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size));
+    stops = Stops::Sizes(node, StyleParam::unitSetForStyleParam(StyleParamKey::size));
     REQUIRE(stops.frames.size() == 0);
 
     // 1d, %, 2d
     node = YAML::Load(R"END(
         [[0, 6px], [1, 50%], [2, [6px, 7px]]]
     )END");
-    stops = Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size));
+    stops = Stops::Sizes(node, StyleParam::unitSetForStyleParam(StyleParamKey::size));
     REQUIRE(stops.frames.size() == 0);
 
     // % 1d 2d
     node = YAML::Load(R"END(
         [[0, 50%], [1, 6px], [2, [6px, 7px]]]
     )END");
-    stops = Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size));
+    stops = Stops::Sizes(node, StyleParam::unitSetForStyleParam(StyleParamKey::size));
     REQUIRE(stops.frames.size() == 0);
 
     // % 2d 1d
     node = YAML::Load(R"END(
         [[0, 50%], [1, [6px, 7px]], [2, 6px]]
     )END");
-    stops = Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size));
+    stops = Stops::Sizes(node, StyleParam::unitSetForStyleParam(StyleParamKey::size));
     REQUIRE(stops.frames.size() == 0);
 
     // 2d % 1d
     node = YAML::Load(R"END(
         [[0, 50%], [1, [6px, 7px]], [2, 6px]]
     )END");
-    stops = Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size));
+    stops = Stops::Sizes(node, StyleParam::unitSetForStyleParam(StyleParamKey::size));
     REQUIRE(stops.frames.size() == 0);
 }
 
@@ -211,7 +206,7 @@ TEST_CASE("2 dimension stops for icon sizes with mixed units", "[Stops][YAML]") 
     )END");
     const glm::vec2 CSS_SIZE(1.f, 1.f);
 
-    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+    Stops stops(Stops::Sizes(node, StyleParam::unitSetForStyleParam(StyleParamKey::size)));
 
     REQUIRE(stops.frames.size() == 3);
 
@@ -227,7 +222,7 @@ TEST_CASE("1 dimension stops for icon sizes", "[Stops][YAML]") {
     )END");
     const glm::vec2 CSS_SIZE(1.f, 1.f);
 
-    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+    Stops stops(Stops::Sizes(node, StyleParam::unitSetForStyleParam(StyleParamKey::size)));
 
     REQUIRE(stops.frames.size() == 2);
 
@@ -242,7 +237,7 @@ TEST_CASE("Stops using auto for StyleParam::size", "[Stops][YAML]") {
     )END");
     const glm::vec2 CSS_SIZE(2.f, 1.f);
 
-    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+    Stops stops(Stops::Sizes(node, StyleParam::unitSetForStyleParam(StyleParamKey::size)));
 
     REQUIRE(stops.frames.size() == 2);
     REQUIRE(stops.evalSize(0, CSS_SIZE) == glm::vec2(18, 9));
@@ -259,7 +254,7 @@ TEST_CASE("Stops using `%` for StyleParam::size", "[Stops][YAML]") {
     )END");
     const glm::vec2 CSS_SIZE(10.f, 20.f);
 
-    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+    Stops stops(Stops::Sizes(node, StyleParam::unitSetForStyleParam(StyleParamKey::size)));
 
     /*
      * Make sure this has valid frames, because of mixed 1D (%) and 2D stops.
@@ -285,7 +280,7 @@ TEST_CASE("Stops using auto and `%` for StyleParam::size", "[Stops][YAML]") {
     )END");
     const glm::vec2 CSS_SIZE(60, 30);
 
-    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+    Stops stops(Stops::Sizes(node, StyleParam::unitSetForStyleParam(StyleParamKey::size)));
 
     /*
      * Make sure this has valid frames, because of mixed 2D and 1D (%) stops.
@@ -309,7 +304,7 @@ TEST_CASE("Stops using `%` and auto for StyleParam::size", "[Stops][YAML]") {
     )END");
     const glm::vec2 CSS_SIZE(60, 30);
 
-    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+    Stops stops(Stops::Sizes(node, StyleParam::unitSetForStyleParam(StyleParamKey::size)));
 
     /*
      * Make sure this has valid frames, because of mixed 1D (%) and 2D stops.

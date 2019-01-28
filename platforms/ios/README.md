@@ -1,11 +1,13 @@
-iOS
-===
+Tangram iOS SDK
+===============
 
-The recommended way to use tangram-es in an iOS project is to add it as a CocoaPods dependency. The library is hosted in CocoaPods under the pod name 'Tangram-es'. To find the latest version, check CocoaPods: https://cocoapods.org/pods/Tangram-es.
+The recommended way to use Tangram in an iOS project is to add it as a CocoaPods dependency. The library is hosted in CocoaPods under the pod name _Tangram-es_. To find the latest version, check CocoaPods: https://cocoapods.org/pods/Tangram-es. Then follow the instructions from CocoaPods on adding a pod to your Xcode project: https://guides.cocoapods.org/using/using-cocoapods.html.
+
+That's it! If you want to build Tangram for iOS from source instead, continue reading.
 
 ## Setup ##
 
-This project uses CMake (minimum version 3.0), you can download it [here](http://www.cmake.org/download/) or use your favorite installation package tool like [homebrew](http://brew.sh/).
+This project uses CMake (minimum version 3.2), you can download it [here](http://www.cmake.org/download/) or use your favorite installation package tool like [homebrew](http://brew.sh/).
 
 ```bash
 brew install cmake
@@ -31,41 +33,32 @@ To get an API key visit: [developers.nextzen.org](https://developers.nextzen.org
 Building the iOS demo application requires Xcode 9.0 or newer. From the root directory of the project, run:
 
 ```bash
-make ios NEXTZEN_API_KEY=yourApiKeyHere
+make ios-xcode NEXTZEN_API_KEY=yourApiKeyHere
 ```
 
-You can optionally append `DEBUG=1` or `RELEASE=1` to choose the build type.
+You can optionally append a `BUILD_TYPE` variable to choose the build type, for example `BUILD_TYPE=Debug` or `BUILD_TYPE=Release`.
 
-> Note: DEBUG version of the framework does not have bitcode enabled. If you need bitcode, make sure to get RELEASE version of the framework.
-
-This will generate an Xcode project that you can use to deploy on device or simulator:
-
-```bash
-open build/ios/tangram.xcodeproj
-```
-
-Make sure to set up the code signing identity and code sign the framework on copy (select target _tangram_ > _Build Phases_ > _Copy Files_ > _TangramMap.framework_ > _Code Sign On Copy_).
+This will generate an Xcode project for the Tangram iOS framework and demo application and open the project in an Xcode
+workspace. 
 
 Note on Code Signing and Provisioning Profiles:
-* For Simulator: Does not need any code signing identity, so you can ignore any provionining profile failures on target _tangram_ > _General_ > _Signing_.
-* For Device: You will have to modify the _Bundle Identifier_ under target _tangram_ > _General_ > _Identity_ > _Bundle Identifier_, to something other than `com.mapzen.tangram`, since this needs to be unique.
-
-For development, you can use the Makefile option `TANGRAM_IOS_FRAMEWORK_SLIM` to build for simulator only and faster your build times.
+* For Simulator: Code signing is not required, so you can ignore any signing errors in target _TangramDemo_ > _General_ > _Signing_.
+* For Device: You will have to modify the _Bundle Identifier_ in target _TangramDemo_ > _General_ > _Identity_ > _Bundle Identifier_ to something other than `com.mapzen.ios.TangramDemo`, since App IDs are associated with a specific signing identity.
 
 ### iOS Binary Framework ###
 
-An iOS binary framework bundle targeted for ARM architectures can be produced by running the following:
+To build an iOS binary framework bundle compiled for iOS devices, run:
 
 ```bash
 make ios-framework
 ```
 
-The framework will be output in '/build/ios-framework/lib/', in a folder named 'release' or 'debug' according to the build type.
+The framework will be output in '/build/ios/CONFIG-iphoneos/', where CONFIG is 'Release' or 'Debug' according to the build type.
 
-To build a universal binary working on both device and simulator architectures run the following:
+To build a universal binary framework compiled for both iOS devices and the iOS simulator, run:
 
 ```bash
 make ios-framework-universal
 ```
 
-The universal framework will be output in '/build/ios-framework-universal/', in a folder named 'release' or 'debug' according to the build type.
+The framework will be output in '/build/ios/CONFIG-universal/', where CONFIG is 'Release' or 'Debug' according to the build type.

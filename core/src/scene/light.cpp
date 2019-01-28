@@ -93,7 +93,7 @@ auto Light::assembleLights(const std::vector<std::unique_ptr<Light>>& _lights) -
         lighting << '\n' << light->getInstanceBlock();
     }
     // After lights definitions are all added, add the main lighting functions
-    std::string lightingBlock = SHADER_SOURCE(lights_glsl);
+    std::string lightingBlock = lights_glsl;
 
     // The main lighting functions each contain a tag where all light instances should be computed;
     std::stringstream lights;

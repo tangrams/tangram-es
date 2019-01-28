@@ -25,7 +25,9 @@ struct PosColVertex {
 
 
 DebugStyle::DebugStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
-    : Style(_name, _blendMode, _drawMode, false) {}
+    : Style(_name, _blendMode, _drawMode, false) {
+    m_type = StyleType::debug;
+}
 
 void DebugStyle::constructVertexLayout() {
 
@@ -38,8 +40,7 @@ void DebugStyle::constructVertexLayout() {
 
 void DebugStyle::constructShaderProgram() {
 
-    m_shaderSource->setSourceStrings(SHADER_SOURCE(debug_fs),
-                                     SHADER_SOURCE(debug_vs));
+    m_shaderSource->setSourceStrings(debug_fs, debug_vs);
 
 }
 

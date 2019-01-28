@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl/texture.h"
+#include "gl/glyphTexture.h"
 #include "labels/textLabel.h"
 #include "style/textStyle.h"
 #include "text/textUtil.h"
@@ -19,22 +19,6 @@ namespace Tangram {
 
 struct FontMetrics {
     float ascender, descender, lineHeight;
-};
-
-// TODO could be a shared_ptr<Texture>
-struct GlyphTexture {
-
-    static constexpr int size = 256;
-
-    GlyphTexture() : texture(size, size) {
-        texData.resize(size * size);
-    }
-
-    std::vector<unsigned char> texData;
-    Texture texture;
-
-    bool dirty = false;
-    size_t refCount = 0;
 };
 
 struct FontDescription {
@@ -63,7 +47,7 @@ public:
 
     static constexpr int max_textures = 64;
 
-    FontContext(std::shared_ptr<const Platform> _platform);
+    FontContext(Platform& _platform);
     virtual ~FontContext() {}
 
     void loadFonts();
@@ -131,7 +115,7 @@ private:
     alfons::FontManager m_alfons;
     std::array<std::shared_ptr<alfons::Font>, 3> m_font;
 
-    std::vector<GlyphTexture> m_textures;
+    std::vector<std::unique_ptr<GlyphTexture>> m_textures;
 
     // TextShaper to create <LineLayout> for a given text and Font
     alfons::TextShaper m_shaper;
@@ -142,7 +126,7 @@ private:
     alfons::TextBatch m_batch;
     TextWrapper m_textWrapper;
 
-    std::shared_ptr<const Platform> m_platform;
+    Platform& m_platform;
 
 };
 

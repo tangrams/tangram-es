@@ -150,7 +150,7 @@ std::string Material::getDefinesBlock(){
 }
 
 std::string Material::getClassBlock() {
-    return SHADER_SOURCE(material_glsl);
+    return material_glsl;
 }
 
 std::unique_ptr<MaterialUniforms> Material::injectOnProgram(ShaderSource& _source ) {
@@ -172,8 +172,7 @@ void Material::setupProgram(RenderState& rs, ShaderProgram& _shader, MaterialUni
         _shader.setUniformf(rs, u.emission, m_emission);
 
         if (m_emission_texture.tex) {
-            m_emission_texture.tex->update(rs, rs.nextAvailableTextureUnit());
-            m_emission_texture.tex->bind(rs, rs.currentTextureUnit());
+            m_emission_texture.tex->bind(rs, rs.nextAvailableTextureUnit());
             _shader.setUniformi(rs, u.emissionTexture, rs.currentTextureUnit());
             _shader.setUniformf(rs, u.emissionScale, m_emission_texture.scale);
         }
@@ -183,8 +182,7 @@ void Material::setupProgram(RenderState& rs, ShaderProgram& _shader, MaterialUni
         _shader.setUniformf(rs, u.ambient, m_ambient);
 
         if (m_ambient_texture.tex) {
-            m_ambient_texture.tex->update(rs, rs.nextAvailableTextureUnit());
-            m_ambient_texture.tex->bind(rs, rs.currentTextureUnit());
+            m_ambient_texture.tex->bind(rs, rs.nextAvailableTextureUnit());
             _shader.setUniformi(rs, u.ambientTexture, rs.currentTextureUnit());
             _shader.setUniformf(rs, u.ambientScale, m_ambient_texture.scale);
         }
@@ -194,8 +192,7 @@ void Material::setupProgram(RenderState& rs, ShaderProgram& _shader, MaterialUni
         _shader.setUniformf(rs, u.diffuse, m_diffuse);
 
         if (m_diffuse_texture.tex) {
-            m_diffuse_texture.tex->update(rs, rs.nextAvailableTextureUnit());
-            m_diffuse_texture.tex->bind(rs, rs.currentTextureUnit());
+            m_diffuse_texture.tex->bind(rs, rs.nextAvailableTextureUnit());
             _shader.setUniformi(rs, u.diffuseTexture, rs.currentTextureUnit());
             _shader.setUniformf(rs, u.diffuseScale, m_diffuse_texture.scale);
         }
@@ -206,16 +203,14 @@ void Material::setupProgram(RenderState& rs, ShaderProgram& _shader, MaterialUni
         _shader.setUniformf(rs, u.shininess, m_shininess);
 
         if (m_specular_texture.tex) {
-            m_specular_texture.tex->update(rs, rs.nextAvailableTextureUnit());
-            m_specular_texture.tex->bind(rs, rs.currentTextureUnit());
+            m_specular_texture.tex->bind(rs, rs.nextAvailableTextureUnit());
             _shader.setUniformi(rs, u.specularTexture, rs.currentTextureUnit());
             _shader.setUniformf(rs, u.specularScale, m_specular_texture.scale);
         }
     }
 
     if (m_normal_texture.tex) {
-        m_normal_texture.tex->update(rs, rs.nextAvailableTextureUnit());
-        m_normal_texture.tex->bind(rs, rs.currentTextureUnit());
+        m_normal_texture.tex->bind(rs, rs.nextAvailableTextureUnit());
         _shader.setUniformi(rs, u.normalTexture, rs.currentTextureUnit());
         _shader.setUniformf(rs, u.normalScale, m_normal_texture.scale);
         _shader.setUniformf(rs, u.normalAmount, m_normal_texture.amount);

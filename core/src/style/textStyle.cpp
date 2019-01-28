@@ -19,7 +19,11 @@ namespace Tangram {
 TextStyle::TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
                      bool _sdf, Blending _blendMode, GLenum _drawMode, bool _selection)
     : Style(_name, _blendMode, _drawMode, _selection), m_sdf(_sdf),
-      m_context(_fontContext) {}
+      m_context(_fontContext) {
+
+    m_type = StyleType::text;
+    m_lightingType = LightingType::none;
+}
 
 TextStyle::~TextStyle() {}
 
@@ -38,11 +42,9 @@ void TextStyle::constructVertexLayout() {
 void TextStyle::constructShaderProgram() {
 
     if (m_sdf) {
-        m_shaderSource->setSourceStrings(SHADER_SOURCE(sdf_fs),
-                                         SHADER_SOURCE(text_vs));
+        m_shaderSource->setSourceStrings(sdf_fs, text_vs);
     } else {
-        m_shaderSource->setSourceStrings(SHADER_SOURCE(text_fs),
-                                         SHADER_SOURCE(text_vs));
+        m_shaderSource->setSourceStrings(text_fs, text_vs);
     }
 
     m_shaderSource->addSourceBlock("defines", "#define TANGRAM_TEXT\n");

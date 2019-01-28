@@ -2,9 +2,10 @@
 
 #include "map.h"
 #include "platform.h"
+#include "stops.h"
 #include "util/color.h"
 #include "util/url.h"
-#include "util/yamlHelper.h"
+#include "util/yamlPath.h"
 #include "view/view.h"
 
 #include <atomic>
@@ -32,7 +33,6 @@ class Style;
 class Texture;
 class TileSource;
 class ZipArchive;
-struct Stops;
 
 // Delimiter used in sceneloader for style params and layer-sublayer naming
 const std::string DELIMITER = ":";
@@ -67,8 +67,8 @@ public:
     };
 
     Scene();
-    Scene(std::shared_ptr<const Platform> _platform, const Url& _url);
-    Scene(std::shared_ptr<const Platform> _platform, const std::string& _yaml, const Url& _url);
+    Scene(Platform& _platform, const Url& _url);
+    Scene(Platform& _platform, const std::string& _yaml, const Url& _url);
     Scene(const Scene& _other) = delete;
 
     ~Scene();
@@ -88,6 +88,7 @@ public:
     auto& functions() { return m_jsFunctions; }
     auto& stops() { return m_stops; }
     auto& background() { return m_background; }
+    auto& backgroundStops() { return m_backgroundStops; }
     auto& fontContext() { return m_fontContext; }
     auto& globalRefs() { return m_globalRefs; }
     auto& featureSelection() { return m_featureSelection; }
@@ -102,7 +103,6 @@ public:
     const auto& lights() const { return m_lights; }
     const auto& lightBlocks() const { return m_lightShaderBlocks; }
     const auto& functions() const { return m_jsFunctions; }
-    const auto& mapProjection() const { return m_mapProjection; }
     const auto& fontContext() const { return m_fontContext; }
     const auto& globalRefs() const { return m_globalRefs; }
     const auto& featureSelection() const { return m_featureSelection; }
@@ -121,7 +121,7 @@ public:
     // as expected within zip archives). This function expects that all required
     // zip archives will be added to the scene with addZipArchive before being
     // requested.
-    UrlRequestHandle startUrlRequest(std::shared_ptr<Platform> platform, Url url, UrlCallback callback);
+    UrlRequestHandle startUrlRequest(Platform& platform, Url url, UrlCallback callback);
 
     void addZipArchive(Url url, std::shared_ptr<ZipArchive> zipArchive);
 
@@ -163,8 +163,6 @@ private:
     // The root node of the YAML scene configuration
     YAML::Node m_config;
 
-    std::unique_ptr<MapProjection> m_mapProjection;
-
     std::vector<DataLayer> m_layers;
     std::vector<std::shared_ptr<TileSource>> m_tileSources;
     std::vector<std::unique_ptr<Style>> m_styles;
@@ -192,6 +190,7 @@ private:
     std::list<Stops> m_stops;
 
     Color m_background;
+    Stops m_backgroundStops;
 
     std::shared_ptr<FontContext> m_fontContext;
 

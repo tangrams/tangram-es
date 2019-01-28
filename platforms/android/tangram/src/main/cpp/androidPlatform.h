@@ -1,10 +1,13 @@
 #pragma once
 
+#include "map.h"
 #include "platform.h"
+#include "jniWorker.h"
+#include "util/asyncWorker.h"
+
 
 #include <jni.h>
 #include <android/asset_manager.h>
-
 #include <atomic>
 #include <mutex>
 #include <string>
@@ -21,31 +24,28 @@ struct SceneUpdate;
 struct SceneError;
 using SceneID = int32_t;
 
-void featurePickCallback(jobject listener, const FeaturePickResult* featurePickResult);
-void markerPickCallback(jobject listener, jobject tangramInstance, const MarkerPickResult* markerPickResult);
-void labelPickCallback(jobject listener, const LabelPickResult* labelPickResult);
-
 std::string stringFromJString(JNIEnv* jniEnv, jstring string);
 jstring jstringFromString(JNIEnv* jniEnv, const std::string& string);
+
 
 class AndroidPlatform : public Platform {
 
 public:
 
     AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance);
-    void dispose(JNIEnv* _jniEnv);
+    void shutdown() override;
     void requestRender() const override;
     void setContinuousRendering(bool _isContinuous) override;
     FontSourceHandle systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const override;
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
-    UrlRequestHandle startUrlRequest(Url _url, UrlCallback _callback) override;
-    void cancelUrlRequest(UrlRequestHandle _request) override;
-    void sceneReadyCallback(SceneID id, const SceneError* error);
+    bool startUrlRequestImpl(const Url& _url, const UrlRequestHandle _request, UrlRequestId& _id) override;
+    void cancelUrlRequestImpl(const UrlRequestId _id) override;
 
     void onUrlComplete(JNIEnv* jniEnv, jlong jRequestHandle, jbyteArray jBytes, jstring jError);
 
     static void bindJniEnvToThread(JNIEnv* jniEnv);
-    static void setupJniEnv(JNIEnv* _jniEnv);
+    static jint jniOnLoad(JavaVM* javaVM);
+    static void jniOnUnload(JavaVM* javaVM);
 
 private:
 
@@ -57,12 +57,20 @@ private:
     jobject m_tangramInstance;
     AAssetManager* m_assetManager;
 
-    std::atomic_uint_fast64_t m_urlRequestCount;
-
-    // m_callbackMutex should be locked any time m_callbacks is accessed.
-    std::mutex m_callbackMutex;
-    std::unordered_map<UrlRequestHandle, UrlCallback> m_callbacks;
-
+    mutable JniWorker m_jniWorker;
+    AsyncWorker m_fileWorker;
 };
+
+class AndroidMap : public Map {
+public:
+    AndroidMap(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance);
+    void pickFeature(float posX, float posY);
+    void pickMarker(float posX, float posY);
+    void pickLabel(float posX, float posY);
+
+
+    jobject m_tangramInstance;
+};
+
 
 } // namespace Tangram

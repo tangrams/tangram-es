@@ -4,18 +4,23 @@
 #include "platform.h"
 #include "style/textStyle.h"
 #include "util/builders.h" // for cap, join
+#include "util/color.h"
 #include "util/extrude.h"
 #include "util/floatFormatter.h"
 #include "util/geom.h" // for CLAMP
+#include "util/mapProjection.h"
+#include "util/yamlUtil.h"
 
 #include "csscolorparser.hpp"
+#include "yaml-cpp/node/node.h"
+#include "yaml-cpp/node/convert.h"
+#include "yaml-cpp/node/emit.h"
 #include <algorithm>
 #include <cstring>
 #include <map>
+#include <style/pointStyle.h>
 
 namespace Tangram {
-
-using Color = CSSColorParser::Color;
 
 const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"align", StyleParamKey::text_align},
@@ -101,41 +106,6 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"width", StyleParamKey::width},
 };
 
-const std::map<StyleParamKey, uint8_t > s_StyleParamUnits = {
-    {StyleParamKey::offset, Unit::pixel},
-    {StyleParamKey::text_offset, Unit::pixel},
-    {StyleParamKey::buffer, Unit::pixel},
-    {StyleParamKey::text_buffer, Unit::pixel},
-    {StyleParamKey::size, (Unit::pixel | Unit::percentage | Unit::sizeauto)},
-    {StyleParamKey::placement_spacing, Unit::pixel},
-    {StyleParamKey::text_font_stroke_width, Unit::pixel},
-    {StyleParamKey::width, (Unit::pixel | Unit::meter)},
-    {StyleParamKey::outline_width, (Unit::pixel | Unit::meter)}
-};
-
-static int parseInt(const std::string& _str, int& _value) {
-    try {
-        size_t index;
-        _value = std::stoi(_str, &index);
-        return index;
-    } catch (std::invalid_argument) {
-    } catch (std::out_of_range) {}
-    LOGW("Not an Integer '%s'", _str.c_str());
-
-    return -1;
-}
-
-static int parseFloat(const std::string& _str, double& _value) {
-    int index = 0;
-    _value = ff::stod(_str.data(), _str.size(), &index);
-    if (index == 0) {
-        LOGW("Not a Float '%s'", _str.c_str());
-        return -1;
-    }
-
-    return index;
-}
-
 const std::string& StyleParam::keyName(StyleParamKey _key) {
     static std::string fallback = "bug";
     for (const auto& entry : s_StyleParamMap) {
@@ -152,62 +122,58 @@ StyleParamKey StyleParam::getKey(const std::string& _key) {
     return it->second;
 }
 
-StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
+StyleParam::StyleParam(const std::string& _key, const YAML::Node& _value) {
     key = getKey(_key);
     value = none_type{};
 
     if (key == StyleParamKey::none) {
-        LOGW("Unknown StyleParam %s:%s", _key.c_str(), _value.c_str());
+        LOGW("Unknown StyleParam %s:%s", _key.c_str(), Dump(_value).c_str());
         return;
     }
-    if (!_value.empty()) {
-        value = parseString(key, _value);
-    }
+    value = parseNode(key, _value);
 }
 
-StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& _value) {
-    auto allowedUnits = unitsForStyleParam(key);
+StyleParam::StyleParam(StyleParamKey _key, const YAML::Node& _value) {
+    key = _key;
+    value = parseNode(key, _value);
+}
+
+
+StyleParam::Value StyleParam::parseNode(StyleParamKey key, const YAML::Node& node) {
+    UnitSet allowedUnits = unitSetForStyleParam(key);
 
     switch (key) {
     case StyleParamKey::extrude: {
-        return parseExtrudeString(_value);
+        return parseExtrudeNode(node);
     }
     case StyleParamKey::text_wrap: {
-        int textWrap;
-        if (_value == "false") {
-            return std::numeric_limits<uint32_t>::max();
-        }
-        if (_value == "true") {
-            return uint32_t(15); // DEFAULT
-        }
-        if (parseInt(_value, textWrap) > 0 && textWrap > 0) {
-             return static_cast<uint32_t>(textWrap);
+        int wrapLength = TextStyle::DEFAULT_TEXT_WRAP_LENGTH;
+        if (YamlUtil::getBoolOrDefault(node, false)) {
+            return (uint32_t)wrapLength;
+        } else if (YamlUtil::getInt(node, wrapLength) && wrapLength > 0) {
+            return (uint32_t)wrapLength;
         }
         return std::numeric_limits<uint32_t>::max();
     }
     case StyleParamKey::text_offset:
-    case StyleParamKey::offset: {
-        UnitVec<glm::vec2> vec;
-        if (!parseVec2(_value, allowedUnits, vec) || std::isnan(vec.value.y)) {
-            LOGW("Invalid offset parameter '%s'.", _value.c_str());
-        }
-        return vec.value;
-    }
+    case StyleParamKey::offset:
     case StyleParamKey::text_buffer:
     case StyleParamKey::buffer: {
+        ValueUnitPair scalar;
+        if (node.IsScalar() && (parseValueUnitPair(node.Scalar(), scalar) && allowedUnits.contains(scalar.unit))) {
+            return glm::vec2(scalar.value);
+        }
         UnitVec<glm::vec2> vec;
-        if (!parseVec2(_value, allowedUnits, vec)) {
-            LOGW("Invalid buffer parameter '%s'.", _value.c_str());
+        if (parseVec2(node, allowedUnits, vec)) {
+            return vec.value;
         }
-        if (std::isnan(vec.value.y)) {
-            vec.value.y = vec.value.x;
-        }
-        return vec.value;
+        LOGW("Invalid buffer/offset parameter '%s'.", Dump(node).c_str());
+        return Value();
     }
     case StyleParamKey::size: {
         SizeValue vec;
-        if (!parseSize(_value, allowedUnits, vec)) {
-            LOGW("Invalid size parameter '%s'.", _value.c_str());
+        if (!parseSize(node, allowedUnits, vec)) {
+            LOGW("Invalid size parameter '%s'.", Dump(node).c_str());
         }
         return vec;
     }
@@ -218,36 +184,42 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::text_transition_show_time:
     case StyleParamKey::text_transition_selected_time: {
         float time = 0.0f;
-        if (!parseTime(_value, time)) {
-            LOGW("Invalid time param '%s'", _value.c_str());
+        if (!node.IsScalar() || !parseTime(node.Scalar(), time)) {
+            LOGW("Invalid time param '%s'", Dump(node).c_str());
         }
         return time;
     }
     case StyleParamKey::text_font_family:
     case StyleParamKey::text_font_weight:
     case StyleParamKey::text_font_style: {
-        std::string normalized = _value;
-        std::transform(normalized.begin(), normalized.end(), normalized.begin(), ::tolower);
-        return normalized;
+        std::string result;
+        if (node.IsScalar()) {
+            result = node.Scalar();
+            std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+        } else {
+            LOGW("Invalid font property: %s", Dump(node).c_str());
+        }
+        return result;
     }
     case StyleParamKey::anchor:
     case StyleParamKey::text_anchor: {
-        LabelProperty::Anchors anchors;
-        for (auto& anchor : splitString(_value, ',')) {
-            if (anchors.count == LabelProperty::max_anchors) { break; }
-
-            LabelProperty::Anchor labelAnchor;
-            if (LabelProperty::anchor(anchor, labelAnchor)) {
-                anchors.anchor[anchors.count++] = labelAnchor;
-            } else {
-                LOG("Invalid anchor %s", anchor.c_str());
+        LabelProperty::Anchors anchorSet;
+        LabelProperty::Anchor anchor;
+        if (node.IsScalar() && LabelProperty::anchor(node.Scalar(), anchor)) {
+            anchorSet.anchor[anchorSet.count++] = anchor;
+        } else if (node.IsSequence()) {
+            for (const auto& subNode : node) {
+                if (anchorSet.count >= LabelProperty::max_anchors) { break; }
+                if (subNode.IsScalar() && LabelProperty::anchor(subNode.Scalar(), anchor)) {
+                    anchorSet.anchor[anchorSet.count++] = anchor;
+                }
             }
         }
-        return anchors;
+        return anchorSet;
     }
     case StyleParamKey::placement: {
         LabelProperty::Placement placement = LabelProperty::Placement::vertex;
-        if (!LabelProperty::placement(_value, placement)) {
+        if (!(node.IsScalar() && LabelProperty::placement(node.Scalar(), placement))) {
             LOG("Invalid placement parameter, Setting vertex as default.");
         }
         return placement;
@@ -256,15 +228,16 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::text_source_left:
     case StyleParamKey::text_source_right: {
         TextSource textSource;
-        // FIXME remove white space
-        std::string tmp;
-        if (_value.find(',') != std::string::npos) {
-            std::stringstream ss(_value);
-            while (std::getline(ss, tmp, ',')) {
-                textSource.keys.push_back(tmp);
+        if (node.IsScalar()) {
+            textSource.keys.push_back(node.Scalar());
+        } else if (node.IsSequence()) {
+            for (const auto& subNode : node) {
+                if (subNode.IsScalar()) {
+                    textSource.keys.push_back(subNode.Scalar());
+                }
             }
         } else {
-            textSource.keys.push_back(_value);
+            LOGW("Invalid text source: %s", Dump(node).c_str());
         }
         return std::move(textSource);
     }
@@ -276,12 +249,17 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::outline_style:
     case StyleParamKey::repeat_group:
     case StyleParamKey::text_repeat_group:
-    case StyleParamKey::texture:
-        return _value;
+    case StyleParamKey::texture: {
+        if (node.IsScalar()) {
+            return node.Scalar();
+        }
+        LOGW("Invalid scalar value: %s", Dump(node).c_str());
+        return std::string();
+    }
     case StyleParamKey::text_font_size: {
         float fontSize = 0.f;
-        if (!parseFontSize(_value, fontSize)) {
-            LOGW("Invalid font-size '%s'.", _value.c_str());
+        if (!node.IsScalar() || !parseFontSize(node.Scalar(), fontSize)) {
+            LOGW("Invalid font-size '%s'.", node.Scalar().c_str());
         }
         return fontSize;
     }
@@ -294,116 +272,129 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::outline_visible:
     case StyleParamKey::collide:
     case StyleParamKey::text_optional:
-    case StyleParamKey::text_collide:
-        if (_value == "true") { return true; }
-        if (_value == "false") { return false; }
-        LOGW("Invalid boolean value %s for key %s", _value.c_str(), StyleParam::keyName(key).c_str());
+    case StyleParamKey::text_collide: {
+        bool result = false;
+        if (YamlUtil::getBool(node, result)) {
+            return result;
+        }
+        LOGW("Invalid boolean value %s for key %s", Dump(node).c_str(), StyleParam::keyName(key).c_str());
         break;
+    }
     case StyleParamKey::text_order:
         LOGW("text:order parameter is ignored.");
         break;
     case StyleParamKey::order:
     case StyleParamKey::outline_order:
-    case StyleParamKey::priority:
-    case StyleParamKey::text_max_lines:
-    case StyleParamKey::text_priority: {
-        int num;
-        if (parseInt(_value, num) > 0) {
-            if (num >= 0) {
-                return static_cast<uint32_t>(num);
-            }
+    case StyleParamKey::text_max_lines: {
+        int result = -1;
+        if (YamlUtil::getInt(node, result)) {
+            return static_cast<uint32_t>(result);
         }
-        LOGW("Invalid '%s' value '%s'", keyName(key).c_str(), _value.c_str());
+        LOGW("Invalid '%s' value '%s'", keyName(key).c_str(), Dump(node).c_str());
         break;
     }
     case StyleParamKey::placement_spacing: {
-        ValueUnitPair placementSpacing;
-        placementSpacing.unit = Unit::pixel;
-
-        int pos = parseValueUnitPair(_value, 0, placementSpacing);
-        if (pos < 0) {
-            LOGW("Invalid placement spacing value '%s'", _value.c_str());
-            placementSpacing.value =  80.0f;
-            placementSpacing.unit = Unit::pixel;
-        } else {
-            if (placementSpacing.unit != Unit::pixel) {
-                LOGW("Invalid unit provided for placement spacing");
+        ValueUnitPair result;
+        if (node.IsScalar() && parseValueUnitPair(node.Scalar(), result)) {
+            if (result.unit == Unit::none) {
+                result.unit = Unit::pixel;
             }
         }
-
-        return Width(placementSpacing);
+        if (result.unit != Unit::pixel) {
+            LOGW("Invalid placement spacing value '%s'", Dump(node).c_str());
+            result.value = PointStyle::DEFAULT_PLACEMENT_SPACING;
+            result.unit = Unit::pixel;
+        }
+        return Width(result);
     }
     case StyleParamKey::repeat_distance:
     case StyleParamKey::text_repeat_distance: {
-        ValueUnitPair repeatDistance;
-        repeatDistance.unit = Unit::pixel;
-
-        int pos = parseValueUnitPair(_value, 0, repeatDistance);
-        if (pos < 0) {
-            LOGW("Invalid repeat distance value '%s'", _value.c_str());
-            repeatDistance.value =  256.0f;
-            repeatDistance.unit = Unit::pixel;
-        } else {
-            if (repeatDistance.unit != Unit::pixel) {
-                LOGW("Invalid unit provided for repeat distance");
+        ValueUnitPair result;
+        if (node.IsScalar() && parseValueUnitPair(node.Scalar(), result)) {
+            if (result.unit == Unit::none) {
+                result.unit = Unit::pixel;
             }
         }
-
-        return Width(repeatDistance);
+        if (result.unit != Unit::pixel) {
+            LOGW("Invalid repeat distance value '%s'", Dump(node).c_str());
+            result.value = MapProjection::tileSize();
+            result.unit = Unit::pixel;
+        }
+        return Width(result);
     }
     case StyleParamKey::width:
     case StyleParamKey::outline_width: {
-        ValueUnitPair width;
-        width.unit = Unit::meter;
-
-        int pos = parseValueUnitPair(_value, 0, width);
-        if (pos < 0) {
-            LOGW("Invalid width value '%s'", _value.c_str());
-            width.value =  2.0f;
-            width.unit = Unit::pixel;
+        ValueUnitPair result;
+        if (node.IsScalar() && parseValueUnitPair(node.Scalar(), result)) {
+            if (result.unit == Unit::none) {
+                result.unit = Unit::meter;
+            }
         }
-
-        return Width(width);
+        if (result.unit != Unit::meter && result.unit != Unit::pixel) {
+            LOGW("Invalid width value '%s'", Dump(node).c_str());
+            result.value = 2.f;
+            result.unit = Unit::pixel;
+        }
+        return Width(result);
     }
     case StyleParamKey::angle: {
-        double num;
-        if (_value == "auto") {
-            return std::nanf("1");
-        } else if (parseFloat(_value, num) > 0) {
-            return static_cast<float>(num);
+        if (node.IsScalar() && node.Scalar() == "auto") {
+            return NAN;
         }
+        float number;
+        if (YAML::convert<float>::decode(node, number)) {
+            return number;
+        }
+        LOGW("Invalid angle value: %s", Dump(node).c_str());
         break;
     }
+    case StyleParamKey::priority:
+    case StyleParamKey::text_priority:
     case StyleParamKey::miter_limit:
     case StyleParamKey::outline_miter_limit:
     case StyleParamKey::placement_min_length_ratio:
     case StyleParamKey::text_font_stroke_width: {
-        double num;
-        if (parseFloat(_value, num) > 0) {
-             return static_cast<float>(num);
+        float floatValue;
+        if (YamlUtil::getFloat(node, floatValue, true)) {
+            return floatValue;
+        } else {
+            LOGW("Invalid width value: %s", Dump(node).c_str());
         }
         break;
     }
-
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
     case StyleParamKey::text_font_fill:
-    case StyleParamKey::text_font_stroke_color:
-        return parseColor(_value);
-
+    case StyleParamKey::text_font_stroke_color: {
+        Color result;
+        if (parseColor(node, result)) {
+            return result.abgr;
+        }
+        LOGW("Invalid color value: %s", Dump(node).c_str());
+        break;
+    }
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
-        return static_cast<uint32_t>(CapTypeFromString(_value));
-
+        if (node.IsScalar()) {
+            return static_cast<uint32_t>(CapTypeFromString(node.Scalar()));
+        }
+        break;
     case StyleParamKey::join:
     case StyleParamKey::outline_join:
-        return static_cast<uint32_t>(JoinTypeFromString(_value));
-
+        if (node.IsScalar()) {
+            return static_cast<uint32_t>(JoinTypeFromString(node.Scalar()));
+        }
+        break;
     default:
         break;
     }
 
     return none_type{};
+}
+
+StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& value) {
+    YAML::Node node(value);
+    return parseNode(key, node);
 }
 
 std::string StyleParam::toString() const {
@@ -486,9 +477,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::order:
     case StyleParamKey::text_order:
     case StyleParamKey::outline_order:
-    case StyleParamKey::priority:
     case StyleParamKey::text_max_lines:
-    case StyleParamKey::text_priority:
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
     case StyleParamKey::outline_style:
@@ -502,6 +491,8 @@ std::string StyleParam::toString() const {
     case StyleParamKey::outline_join:
         if (!value.is<uint32_t>()) break;
         return k + std::to_string(value.get<uint32_t>());
+    case StyleParamKey::priority:
+    case StyleParamKey::text_priority:
     case StyleParamKey::miter_limit:
     case StyleParamKey::angle:
     case StyleParamKey::outline_miter_limit:
@@ -520,67 +511,19 @@ std::string StyleParam::toString() const {
 
 }
 
-static const std::vector<std::string> s_units = { "px", "ms", "m", "s", "%" };
-
-int StyleParam::parseSizeUnitPair(const std::string &_value, size_t offset,
-                                  StyleParam::ValueUnitPair &_result) {
-    const char* autoStr = "auto";
-    const size_t autoSize = 4;
-
-    if (_value.size() >= (offset + autoSize) && _value.compare(offset, autoSize, autoStr) == 0) {
-        _result.unit = Unit::sizeauto;
-        offset += autoSize;
-        return offset;
-    }
-
-    return parseValueUnitPair(_value, offset, _result);
-}
-
-int StyleParam::parseValueUnitPair(const std::string& _value, size_t offset,
-                                   StyleParam::ValueUnitPair& _result) {
-
-    if (offset >= _value.length()) { return -1; }
-
-    const char* str = _value.c_str();
-    int count;
-    _result.value = ff::stof(str + offset,
-                             _value.length() - offset, &count);
-
-    if (count == 0) { return -1; }
-    offset += count;
-
-    if (offset >= _value.length()) { return offset; }
-
-    for (size_t i = 0; i < s_units.size(); ++i) {
-        const auto& unit = s_units[i];
-        std::string valueUnit;
-        if (unit == _value.substr(offset, std::min<int>(_value.length(), unit.length()))) {
-            _result.unit = static_cast<Unit>(1 << i);
-            offset += unit.length();
-            break;
-        }
-    }
-
-    // Skip next comma
-    while (str[offset] == ' ') { offset++; }
-    if (str[offset] == ',') { offset++; }
-
-    return offset;
-}
-
 bool StyleParam::parseTime(const std::string &_value, float &_time) {
-    ValueUnitPair p;
+    ValueUnitPair result;
 
-    if (!parseValueUnitPair(_value, 0, p)) {
+    if (!parseValueUnitPair(_value, result)) {
         return false;
     }
 
-    switch (p.unit) {
+    switch (result.unit) {
         case Unit::milliseconds:
-            _time = p.value / 1000.f;
+            _time = result.value / 1000.f;
             break;
         case Unit::seconds:
-            _time = p.value;
+            _time = result.value;
             break;
         default:
             LOGW("Invalid unit provided for time %s", _value.c_str());
@@ -592,92 +535,111 @@ bool StyleParam::parseTime(const std::string &_value, float &_time) {
 }
 
 template<typename T>
-int parseVec(const std::string& _value, T& _vec) {
-
-    const size_t elements = _vec.length();
-    const char* str = _value.data();
-
-    const int length = _value.length();
-    int count = 0;
-    int offset = 0;
-
-    for (size_t i = 0; i < elements; i++) {
-
-        float v = ff::stof(str + offset, length - offset, &count);
-        if (count == 0) { return i; }
-
-        _vec[i] = v;
-        offset += count;
-
-        if (length - offset <= 0) { return i; }
-
-        // Skip next comma
-        while (str[offset] == ' ') { offset++; }
-        if (str[offset++] != ',') { return i; }
+bool parseVec(const YAML::Node& node, UnitSet allowedUnits, UnitVec<T>& vec) {
+    if (!node.IsSequence()) {
+        return false;
     }
-
-    return elements;
-}
-
-template<typename T>
-int parseVec(const std::string& _value, uint8_t allowedUnits, UnitVec<T>& _vec) {
-     // initialize with defaults
-    const size_t elements = _vec.size;
-    for (size_t i = 0; i < elements; i++) {
-        _vec.units[i] = Unit::pixel;
-        _vec.value[i] = NAN;
-    }
-
-    int offset = 0;
-    for (size_t i = 0; i < elements; i++) {
-        StyleParam::ValueUnitPair v;
-        offset = StyleParam::parseValueUnitPair(_value, offset, v);
-        if (offset < 0) { return i; }
-
-        if ( !(v.unit & allowedUnits) ) {
-            return 0;
+    size_t nodeSize = node.size();
+    bool success = true;
+    for (size_t i = 0; i < vec.size; i++) {
+        if (i >= nodeSize) {
+            success = false;
+            break;
         }
-        _vec.units[i] = v.unit;
-        _vec.value[i] = v.value;
+        const auto& nodeElement = node[i];
+        if (!nodeElement.IsScalar()) {
+            success = false;
+            continue;
+        }
+        StyleParam::ValueUnitPair result;
+        success &= StyleParam::parseValueUnitPair(nodeElement.Scalar(), result);
+
+        if (!allowedUnits.contains(result.unit)) {
+            success = false;
+        }
+        vec.units[i] = result.unit;
+        vec.value[i] = result.value;
     }
 
-    return elements;
+    return success;
 }
 
-bool StyleParam::parseSize(const std::string &_value, uint8_t allowedUnits, SizeValue& _vec) {
+bool StyleParam::parseSize(const YAML::Node& node, UnitSet allowedUnits, SizeValue& result) {
+    bool success = true;
+    if (node.IsScalar()) {
+        success = parseSizeUnitPair(node.Scalar(), result.x);
+    }
+    if (node.IsSequence() && node.size() >= 2) {
+        const auto& nodeFirst = node[0];
+        const auto& nodeSecond = node[1];
+        success &= nodeFirst.IsScalar() && parseSizeUnitPair(nodeFirst.Scalar(), result.x);
+        success &= nodeSecond.IsScalar() && parseSizeUnitPair(nodeSecond.Scalar(), result.y);
+    }
+    return success && (allowedUnits.contains(result.x.unit) && allowedUnits.contains(result.y.unit));
+}
+
+bool StyleParam::parseVec2(const YAML::Node& node, UnitSet allowedUnits, UnitVec<glm::vec2>& result) {
+    return parseVec(node, allowedUnits, result);
+}
+
+bool StyleParam::parseVec3(const YAML::Node& node, UnitSet allowedUnits, UnitVec<glm::vec3>& result) {
+    return parseVec(node, allowedUnits, result);
+}
+
+bool StyleParam::parseSizeUnitPair(const std::string& value, StyleParam::ValueUnitPair& result) {
+    if (value == "auto") {
+        result.unit = Unit::sizeauto;
+        return true;
+    }
+    return parseValueUnitPair(value, result);
+}
+
+bool StyleParam::parseValueUnitPair(const std::string& value, StyleParam::ValueUnitPair& result) {
     int offset = 0;
-    offset = StyleParam::parseSizeUnitPair(_value, offset, _vec.x);
-    offset = StyleParam::parseSizeUnitPair(_value, offset, _vec.y);
-    return (offset > 0) && ((_vec.x.unit & allowedUnits) && (_vec.y.unit & allowedUnits));
-}
-
-bool StyleParam::parseVec2(const std::string& _value, uint8_t allowedUnits, UnitVec<glm::vec2>& _vec) {
-    return parseVec(_value, allowedUnits, _vec);
-}
-
-bool StyleParam::parseVec3(const std::string& _value, uint8_t allowedUnits, UnitVec<glm::vec3>& _vec) {
-    return parseVec(_value, allowedUnits, _vec);
-}
-
-uint32_t StyleParam::parseColor(const std::string& _color) {
-    Color color;
-
-    // First, try to parse as comma-separated rgba components.
-    glm::vec4 rgba(1.0f);
-    int elements = parseVec(_color, rgba);
-
-    if (elements >= 3) {
-        color = Color {
-            static_cast<uint8_t>(CLAMP((rgba[0] * 255.), 0, 255)),
-            static_cast<uint8_t>(CLAMP((rgba[1] * 255.), 0, 255)),
-            static_cast<uint8_t>(CLAMP((rgba[2] * 255.), 0, 255)),
-            CLAMP(rgba[3], 0, 1)
-        };
-    } else {
-        // parse as css color or #hex-num
-        color = CSSColorParser::parse(_color);
+    float number = ff::stof(value.data(), value.size(), &offset);
+    if (offset <= 0) {
+        return false;
     }
-    return color.getInt();
+    // Skip any leading whitespace.
+    while (std::isspace(value[offset])) {
+        offset++;
+    }
+    Unit unit = stringToUnit(value, offset, value.size() - offset);
+    result.value = number;
+    result.unit = unit;
+    return true;
+}
+
+bool StyleParam::parseColor(const std::string& value, Color& result) {
+    bool isValid = false;
+    auto cssColor = CSSColorParser::parse(value, isValid);
+    if (isValid) {
+        result.abgr = cssColor.getInt();
+    }
+    return isValid;
+}
+
+bool StyleParam::parseColor(const YAML::Node& node, Color& result) {
+    if (node.IsScalar()) {
+        return parseColor(node.Scalar(), result);
+    }
+    if (node.IsSequence() && node.size() >= 3) {
+        ColorF color;
+        bool isValid = true;
+        isValid &= YamlUtil::getFloat(node[0], color.r);
+        isValid &= YamlUtil::getFloat(node[1], color.g);
+        isValid &= YamlUtil::getFloat(node[2], color.b);
+        if (node.size() >= 4) {
+            isValid &= YamlUtil::getFloat(node[3], color.a);
+        } else {
+            color.a = 1.f;
+        }
+        if (isValid) {
+            result = color.toColor();
+        }
+        return isValid;
+    }
+    return false;
 }
 
 bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
@@ -685,11 +647,13 @@ bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
         return false;
     }
 
-    double num;
-    int index = parseFloat(_str, num);
-    if (index < 0) { return false; }
+    int index = 0;
+    float floatValue = ff::stof(_str.data(), _str.size(), &index);
+    if (index <= 0) {
+        return false;
+    }
 
-    _pxSize = static_cast<float>(num);
+    _pxSize = floatValue;
 
     if (size_t(index) == _str.length() && (_str.find('.') == std::string::npos)) {
         return true;
@@ -699,12 +663,14 @@ bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
 
     if (_str.compare(index, end, "px") == 0) {
         return true;
-    } else if (_str.compare(index, end, "em") == 0) {
-        _pxSize *= 16.f;
     } else if (_str.compare(index, end, "pt") == 0) {
         _pxSize /= 0.75f;
     } else if (_str.compare(index, end, "%") == 0) {
         _pxSize /= 6.25f;
+    } else if (_str.compare(index - 1, end, "em") == 0) {
+        // The float parser consumes the 'e' (for scientific notation like '1.2e6') so if the string ends with 'em'
+        // then 'e' will be the last character consumed and the substring from index-1 to end will be 'em'.
+        _pxSize *= 16.f;
     } else {
         return false;
     }
@@ -780,12 +746,23 @@ bool StyleParam::isRequired(StyleParamKey _key) {
     return std::find(requiredKeys.begin(), requiredKeys.end(), _key) != requiredKeys.end();
 }
 
-uint8_t StyleParam::unitsForStyleParam(StyleParamKey _key) {
-    auto it = s_StyleParamUnits.find(_key);
-    if (it != s_StyleParamUnits.end()) {
-        return it->second;
+UnitSet StyleParam::unitSetForStyleParam(StyleParamKey key) {
+    switch (key) {
+    case StyleParamKey::buffer:
+    case StyleParamKey::offset:
+    case StyleParamKey::placement_spacing:
+    case StyleParamKey::text_buffer:
+    case StyleParamKey::text_font_stroke_width:
+    case StyleParamKey::text_offset:
+        return UnitSet{ Unit::none, Unit::pixel };
+    case StyleParamKey::size:
+        return UnitSet{ Unit::none, Unit::pixel, Unit::percentage, Unit::sizeauto };
+    case StyleParamKey::width:
+    case StyleParamKey::outline_width:
+        return UnitSet{ Unit::none, Unit::pixel, Unit::meter };
+    default:
+        return UnitSet{};
     }
-    return 0;
 }
 
 }

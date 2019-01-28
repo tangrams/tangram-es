@@ -71,9 +71,9 @@ void Marker::setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh
 
     float scale;
     if (m_feature && m_feature->geometryType == GeometryType::points) {
-        scale = (MapProjection::HALF_CIRCUMFERENCE * 2) / (1 << zoom);
+        scale = MapProjection::metersPerTileAtZoom(zoom);
     } else {
-        scale = extent();
+        scale = modelScale();
     }
     m_modelMatrix = glm::scale(glm::vec3(scale));
 }
@@ -133,6 +133,10 @@ uint32_t Marker::styleId() const {
 
 float Marker::extent() const {
     return glm::max(m_bounds.width(), m_bounds.height());
+}
+
+float Marker::modelScale() const {
+    return glm::max(extent(), 4096.0f);
 }
 
 Feature* Marker::feature() const {

@@ -17,7 +17,7 @@ namespace Tangram {
 
 const std::vector<float> FontContext::s_fontRasterSizes = { 16, 28, 40 };
 
-FontContext::FontContext(std::shared_ptr<const Platform> _platform) :
+FontContext::FontContext(Platform& _platform) :
     m_sdfRadius(SDF_WIDTH),
     m_atlas(*this, GlyphTexture::size, m_sdfRadius),
     m_batch(m_atlas, m_scratch),
@@ -28,18 +28,21 @@ void FontContext::setPixelScale(float _scale) {
 }
 
 void FontContext::loadFonts() {
-    auto fallbacks = m_platform->systemFontFallbacksHandle();
+    auto fallbacks = m_platform.systemFontFallbacksHandle();
 
     for (size_t i = 0; i < s_fontRasterSizes.size(); i++) {
         m_font[i] = m_alfons.addFont("default", s_fontRasterSizes[i]);
     }
 
+    bool added = false;
     for (const auto& fallback : fallbacks) {
 
-        if (!fallback.isValid()) { continue; }
+        if (!fallback.isValid()) {
+            LOGD("Invalid fallback font");
+            continue;
+        }
 
         alfons::InputSource source;
-
         switch (fallback.tag) {
             case FontSourceHandle::FontPath:
                 source = alfons::InputSource(fallback.fontPath.path());
@@ -51,13 +54,18 @@ void FontContext::loadFonts() {
                 source = alfons::InputSource(fallback.fontLoader);
                 break;
             case FontSourceHandle::None:
-            default:
-                return;
+            default: {
+                LOGD("Invalid fallback font: FontSourceHandle::None");
+                continue;
+            }
         }
-
         for (size_t i = 0; i < s_fontRasterSizes.size(); i++) {
             m_font[i]->addFace(m_alfons.addFontFace(source, s_fontRasterSizes[i]));
         }
+        added = true;
+    }
+    if (!added) {
+        LOGW("No fallback fonts available!");
     }
 }
 
@@ -70,7 +78,7 @@ void FontContext::addTexture(alfons::AtlasID id, uint16_t width, uint16_t height
         LOGE("Way too many glyph textures!");
         return;
     }
-    m_textures.emplace_back();
+    m_textures.push_back(std::make_unique<GlyphTexture>());
 }
 
 // Synchronized on m_mutex in layoutText(), called on tile-worker threads
@@ -81,8 +89,8 @@ void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_
 
     if (id >= max_textures) { return; }
 
-    auto& texData = m_textures[id].texData;
-    auto& texture = m_textures[id].texture;
+    auto texData = m_textures[id]->buffer();
+    auto& texture = m_textures[id];
 
     size_t stride = GlyphTexture::size;
     size_t width =  GlyphTexture::size;
@@ -106,13 +114,13 @@ void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_
                                  dst, gw, gh, width,
                                  &m_sdfBuffer[0]);
 
-    texture.setDirty(gy, gh);
-    m_textures[id].dirty = true;
+    texture->setRowsDirty(gy, gh);
 }
 
 void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
     if (!_refs.any()) { return; }
     std::lock_guard<std::mutex> lock(m_textureMutex);
+
     for (size_t i = 0; i < m_textures.size(); i++) {
         if (_refs[i]) { m_atlasRefCount[i] -= 1; }
     }
@@ -121,19 +129,13 @@ void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
 void FontContext::updateTextures(RenderState& rs) {
     std::lock_guard<std::mutex> lock(m_textureMutex);
 
-    for (auto& gt : m_textures) {
-        if (gt.dirty) {
-            gt.dirty = false;
-            auto td = reinterpret_cast<const GLuint*>(gt.texData.data());
-            gt.texture.update(rs, 0, td);
-        }
-    }
+    for (auto& gt : m_textures) { gt->bind(rs, 0); }
 }
 
 void FontContext::bindTexture(RenderState& rs, alfons::AtlasID _id, GLuint _unit) {
     std::lock_guard<std::mutex> lock(m_textureMutex);
-    m_textures[_id].texture.bind(rs, _unit);
 
+    m_textures[_id]->bind(rs, _unit);
 }
 
 bool FontContext::layoutText(TextStyle::Parameters& _params, const icu::UnicodeString& _text,
@@ -253,7 +255,7 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const icu::UnicodeS
 
             if (!_refs[it->atlas]) {
                 _refs[it->atlas] = true;
-                m_atlasRefCount[it->atlas]++;
+                m_atlasRefCount[it->atlas] += 1;
             }
 
             it->quad[0].pos -= offset;
@@ -266,8 +268,7 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const icu::UnicodeS
         for (size_t i = 0; i < m_textures.size(); i++) {
             if (m_atlasRefCount[i] == 0) {
                 m_atlas.clear(i);
-                m_textures[i].texData.assign(GlyphTexture::size *
-                                             GlyphTexture::size, 0);
+                std::memset(m_textures[i]->buffer(), 0, GlyphTexture::size * GlyphTexture::size);
             }
         }
     }
@@ -281,11 +282,13 @@ void FontContext::addFont(const FontDescription& _ft, alfons::InputSource _sourc
     std::lock_guard<std::mutex> lock(m_fontMutex);
 
     for (size_t i = 0; i < s_fontRasterSizes.size(); i++) {
-        auto font = m_alfons.getFont(_ft.alias, s_fontRasterSizes[i]);
-        font->addFace(m_alfons.addFontFace(_source, s_fontRasterSizes[i]));
+        if (auto font = m_alfons.getFont(_ft.alias, s_fontRasterSizes[i])) {
 
-        // add fallbacks from default font
-        font->addFaces(*m_font[i]);
+            font->addFace(m_alfons.addFontFace(_source, s_fontRasterSizes[i]));
+
+            // add fallbacks from default font
+            if (m_font[i]) { font->addFaces(*m_font[i]); }
+        }
     }
 }
 
@@ -294,19 +297,6 @@ void FontContext::releaseFonts() {
     std::lock_guard<std::mutex> lock(m_fontMutex);
     // Unload Freetype and Harfbuzz resources for all font faces
     m_alfons.unload();
-
-    // Release system font fallbacks input source data from default fonts, since
-    // those are 'weak' resources (would be automatically reloaded by alfons from
-    // its URI or source callback.
-    for (auto& font : m_font) {
-        for (auto& face : font->faces()) {
-            alfons::InputSource& fontSource = face->descriptor().source;
-
-            if (fontSource.isUri() || fontSource.hasSourceCallback()) {
-                fontSource.clearData();
-            }
-        }
-    }
 }
 
 void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) {
@@ -341,10 +331,8 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     if (font->hasFaces()) { return font; }
 
     // First, try to load from the system fonts.
-
     bool useFallbackFont = false;
-
-    auto systemFontHandle = m_platform->systemFont(_family, _weight, _style);
+    auto systemFontHandle = m_platform.systemFont(_family, _weight, _style);
 
     alfons::InputSource source;
 
@@ -373,17 +361,13 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
 
     if (!useFallbackFont) {
         font->addFace(m_alfons.addFontFace(source, fontSize));
-        if (m_font[sizeIndex]) {
-            font->addFaces(*m_font[sizeIndex]);
-        }
     } else {
-        LOGD("Loading fallback font for Family: %s, Style: %s, Weight: %s, Size %f",
-            _family.c_str(), _style.c_str(), _weight.c_str(), _size);
-
-        // Add fallbacks from default font.
-        if (m_font[sizeIndex]) {
-            font->addFaces(*m_font[sizeIndex]);
-        }
+        LOGD("Using fallback font for Family: %s, Style: %s, Weight: %s, Size %f",
+             _family.c_str(), _style.c_str(), _weight.c_str(), _size);
+    }
+    // Add fallbacks from default font.
+    if (m_font[sizeIndex]) {
+        font->addFaces(*m_font[sizeIndex]);
     }
 
     return font;

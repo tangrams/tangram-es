@@ -1,3 +1,5 @@
+#pragma once
+
 #include <condition_variable>
 #include <deque>
 #include <mutex>
@@ -31,6 +33,9 @@ public:
         m_condition.notify_one();
     }
 
+    void waitForCompletion() {
+        m_waitForCompletion = true;
+    }
 private:
 
     void run() {
@@ -39,7 +44,14 @@ private:
             {
                 std::unique_lock<std::mutex> lock(m_mutex);
                 m_condition.wait(lock, [&]{ return !m_running || !m_queue.empty(); });
-                if (!m_running) { break; }
+
+                if (!m_running) {
+                    if (!m_waitForCompletion) {
+                        break;
+                    } else if (m_queue.empty()) {
+                        break;
+                    }
+                }
 
                 task = std::move(m_queue.front());
                 m_queue.pop_front();
@@ -49,7 +61,8 @@ private:
     }
 
     std::thread thread;
-    bool m_running = true;
+    std::atomic<bool> m_running {true};
+    std::atomic<bool> m_waitForCompletion {false};
     std::condition_variable m_condition;
     std::mutex m_mutex;
     std::deque<std::function<void()>> m_queue;

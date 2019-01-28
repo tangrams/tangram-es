@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-#define SHADER_SOURCE(NAME) ShaderSource::shaderSourceBlock(NAME ## _data, NAME ## _size)
 
 namespace Tangram {
 
@@ -39,19 +38,6 @@ public:
 
     // Build selection fragment shader source
     std::string buildSelectionFragmentSource() const;
-
-
-    static std::string shaderSourceBlock(const unsigned char* data, size_t size) {
-        std::string block;
-        if (data[size - 1] == '\n') {
-            block.append(reinterpret_cast<const char*>(data), size);
-        } else {
-            block.reserve(size + 2);
-            block.append(reinterpret_cast<const char*>(data), size);
-            block += '\n';
-        }
-        return block;
-    }
 
 private:
 

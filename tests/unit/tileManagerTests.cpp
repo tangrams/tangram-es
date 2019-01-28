@@ -12,8 +12,7 @@
 
 using namespace Tangram;
 
-MercatorProjection s_projection;
-ViewState viewState { &s_projection, true, glm::vec2(0), 1, 0, 1.f, glm::vec2(0), 256.f };
+ViewState viewState { true, glm::vec2(0), 1, 0, 1.f, glm::vec2(0), 256.f };
 
 struct TestTileWorker : TileTaskQueue {
     int processedCount = 0;
@@ -41,7 +40,9 @@ struct TestTileWorker : TileTaskQueue {
                 continue;
             }
 
-            task->setTile(std::make_unique<Tile>(task->tileId(), s_projection, &task->source()));
+            task->setTile(std::make_unique<Tile>(task->tileId(),
+                                                 task->source()->id(),
+                                                 task->source()->generation()));
 
             pendingTiles = true;
             processedCount++;
@@ -53,7 +54,9 @@ struct TestTileWorker : TileTaskQueue {
         auto task = tasks[position];
         tasks.erase(tasks.begin() + position);
 
-        task->setTile(std::make_unique<Tile>(task->tileId(), s_projection, &task->source()));
+        task->setTile(std::make_unique<Tile>(task->tileId(),
+                                             task->source()->id(),
+                                             task->source()->generation()));
 
         pendingTiles = true;
         processedCount++;
@@ -73,8 +76,8 @@ struct TestTileSource : TileSource {
     public:
         bool gotData = false;
 
-        Task(TileID& _tileId, std::shared_ptr<TileSource> _source, bool _subTask)
-            : TileTask(_tileId, _source, _subTask) {}
+        Task(TileID& _tileId, std::shared_ptr<TileSource> _source)
+            : TileTask(_tileId, _source) {}
 
         bool hasData() const override { return gotData; }
     };
@@ -92,17 +95,16 @@ struct TestTileSource : TileSource {
         _cb.func(std::move(_task));
     }
 
-    void cancelLoadingTile(const TileID& _tile) override {}
+    void cancelLoadingTile(TileTask& _tile) override {}
 
-    std::shared_ptr<TileData> parse(const TileTask& _task,
-                                    const MapProjection& _projection) const override{
+    std::shared_ptr<TileData> parse(const TileTask& _task) const override {
         return nullptr;
     };
 
     void clearData() override {}
 
-    std::shared_ptr<TileTask> createTask(TileID _tileId, int _subTask) override {
-        return std::make_shared<Task>(_tileId, shared_from_this(), _subTask);
+    std::shared_ptr<TileTask> createTask(TileID _tileId) override {
+        return std::make_shared<Task>(_tileId, shared_from_this());
     }
 };
 
@@ -138,7 +140,8 @@ public:
 
 TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TestTileManager tileManager(std::make_shared<MockPlatform>(), worker);
+    MockPlatform platform;
+    TestTileManager tileManager(platform, worker);
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
@@ -184,18 +187,20 @@ TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileMana
 TEST_CASE( "Mock TileWorker Initialization", "[TileManager][Constructor]" ) {
 
     TestTileWorker worker;
-    TileManager tileManager(std::shared_ptr<MockPlatform>(), worker);
+    MockPlatform platform;
+    TileManager tileManager(platform, worker);
 }
 
 TEST_CASE( "Real TileWorker Initialization", "[TileManager][Constructor]" ) {
-    auto platform = std::make_shared<MockPlatform>();
+    MockPlatform platform;
     TileWorker worker(platform, 1);
     TileManager tileManager(platform, worker);
 }
 
 TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TestTileManager tileManager(std::make_shared<MockPlatform>(), worker);
+    MockPlatform platform;
+    TestTileManager tileManager(platform, worker);
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
@@ -220,7 +225,8 @@ TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
 
 TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TestTileManager tileManager(std::make_shared<MockPlatform>(), worker);
+    MockPlatform platform;
+    TestTileManager tileManager(platform, worker);
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
@@ -258,7 +264,8 @@ TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
 
 TEST_CASE( "Use proxy Tile - circular proxies", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TestTileManager tileManager(std::make_shared<MockPlatform>(), worker);
+    MockPlatform platform;
+    TestTileManager tileManager(platform, worker);
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };

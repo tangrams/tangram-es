@@ -7,8 +7,10 @@
 #include <string>
 
 #include <libgen.h>
+#include <unistd.h>
+#include <limits.h>
 
-#define DEFAULT_FONT "fonts/NotoSans-Regular.ttf"
+#define DEFAULT_FONT "res/fonts/NotoSans-Regular.ttf"
 
 #include "log.h"
 
@@ -21,6 +23,14 @@ void logMsg(const char* fmt, ...) {
     va_end(args);
 }
 
+MockPlatform::MockPlatform() {
+    m_baseUrl = Url("file:///");
+    char pathBuffer[PATH_MAX] = {0};
+    if (getcwd(pathBuffer, PATH_MAX) != nullptr) {
+        m_baseUrl = Url(std::string(pathBuffer) + "/").resolved(m_baseUrl);
+    }
+}
+
 void MockPlatform::requestRender() const {}
 
 std::vector<FontSourceHandle> MockPlatform::systemFontFallbacksHandle() const {
@@ -31,23 +41,36 @@ std::vector<FontSourceHandle> MockPlatform::systemFontFallbacksHandle() const {
     return handles;
 }
 
-UrlRequestHandle MockPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
+bool MockPlatform::startUrlRequestImpl(const Url& _url, const UrlRequestHandle _handle, UrlRequestId& _id) {
 
     UrlResponse response;
 
-    auto it = m_files.find(_url);
-    if (it != m_files.end()) {
-        response.content = it->second;
+    if (_url == Url{DEFAULT_FONT}) {
+        LOG("DEFAULT_FONT");
+        response.content = getBytesFromFile(DEFAULT_FONT);
+    } else if (!m_files.empty()){
+        auto it = m_files.find(_url);
+        if (it != m_files.end()) {
+            response.content = it->second;
+        } else {
+            response.error = "Url contents could not be found!";
+        }
     } else {
-        response.error = "Url contents could not be found!";
+
+        auto allocator = [&](size_t size) {
+                             response.content.resize(size);
+                             return response.content.data();
+                         };
+
+        Platform::bytesFromFileSystem(_url.path().c_str(), allocator);
     }
 
-    _callback(response);
+    onUrlResponse(_handle, std::move(response));
 
-    return 0;
+    return false;
 }
 
-void MockPlatform::cancelUrlRequest(UrlRequestHandle _request) {}
+void MockPlatform::cancelUrlRequestImpl(const UrlRequestId _id) {}
 
 void MockPlatform::putMockUrlContents(Url url, std::string contents) {
     m_files[url].assign(contents.begin(), contents.end());

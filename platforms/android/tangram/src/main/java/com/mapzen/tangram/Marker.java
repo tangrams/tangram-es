@@ -91,7 +91,7 @@ public class Marker {
      * <li>{ style: 'polygons', color: '#06a6d4', width: 5px, order: 2000 }</li>
      * </ul>
      *
-     * @param styleStr the style string
+     * @param styleString the style string
      * @return whether the style was successfully set
      */
     public boolean setStylingFromString(final String styleString) {
@@ -100,7 +100,7 @@ public class Marker {
 
     /**
      * Sets the drawable resource id to be used to load a bitmap. When displaying a drawable, a
-     * 'points' style must also be set on the marker (see {@link Marker#setStyling(String)}.
+     * 'points' style must also be set on the marker (see {@link Marker#setStylingFromString(String)}.
      *
      * @param drawableId the drawable resource id
      * @return whether the drawable's bitmap was successfully set
@@ -114,7 +114,7 @@ public class Marker {
 
     /**
      * Sets the drawable to be used to load a bitmap. When displaying a drawable, a
-     * 'points' style must also be set on the marker (see {@link Marker#setStyling(String)}.
+     * 'points' style must also be set on the marker (see {@link Marker#setStylingFromString(String)}.
      *
      * @param drawable the drawable
      * @return whether the drawable's bitmap was successfully set
@@ -154,7 +154,7 @@ public class Marker {
 
     /**
      * Sets the polyline to be displayed. When using this method, a 'polyline' style must also be
-     * set. See {@link Marker#setStyling(String)}.
+     * set. See {@link Marker#setStylingFromString(String)}.
      * @param polyline the polyline to display
      * @return whether the polyline was successfully set
      */
@@ -168,7 +168,7 @@ public class Marker {
 
     /**
      * Sets the polygon to be displayed. When using this method, a 'polygon' style must also be
-     * set. See {@link Marker#setStyling(String)}.
+     * set. See {@link Marker#setStylingFromString(String)}.
      * @param polygon the polygon to display
      * @return whether the polygon was successfully set
      */
@@ -211,27 +211,8 @@ public class Marker {
     }
 
     private boolean setBitmap(@NonNull final Bitmap bitmap) {
-        final int density = context.getResources().getDisplayMetrics().densityDpi;
-        final int width = bitmap.getScaledWidth(density);
-        final int height = bitmap.getScaledHeight(density);
-
-        final int[] argb = new int[width * height];
-        bitmap.getPixels(argb, 0, width, 0, 0, width, height);
-
-        final int[] abgr = new int[width * height];
-        int row, col;
-        for (int i = 0; i < argb.length; i++) {
-            col = i % width;
-            row = i / width;
-            final int pix = argb[i];
-            final int pb = (pix >> 16) & 0xff;
-            final int pr = (pix << 16) & 0x00ff0000;
-            final int pix1 = (pix & 0xff00ff00) | pr | pb;
-            final int flippedIndex = (height - 1 - row) * width + col;
-            abgr[flippedIndex] = pix1;
-        }
-
-        return map.setMarkerBitmap(markerId, width, height, abgr);
+        float density = context.getResources().getDisplayMetrics().density;
+        return map.setMarkerBitmap(markerId, bitmap, density);
     }
 
     void invalidate() {

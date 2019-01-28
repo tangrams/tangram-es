@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace Tangram {
@@ -24,7 +25,7 @@ public:
     Importer(std::shared_ptr<Scene> scene);
 
     // Loads the main scene with deep merging dependent imported scenes.
-    Node applySceneImports(std::shared_ptr<Platform> platform);
+    Node applySceneImports(Platform& platform);
 
     static bool isZipArchiveUrl(const Url& url);
 
@@ -40,27 +41,31 @@ public:
 protected:
 
     // Process and store data for an imported scene from a vector of bytes.
-    void addSceneData(const Url& sceneUrl, std::vector<char>& sceneContent);
+    void addSceneData(const Url& sceneUrl, std::vector<char>&& sceneContent);
 
     // Process and store data for an imported scene from a string of YAML.
-    void addSceneString(const Url& sceneUrl, const std::string& sceneString);
+    void addSceneYaml(const Url& sceneUrl, const char* sceneYaml, size_t length);
 
     // Get the sequence of scene names that are designated to be imported into the
     // input scene node by its 'import' fields.
     std::vector<Url> getResolvedImportUrls(const Node& sceneNode, const Url& base);
 
     // loads all the imported scenes and the master scene and returns a unified YAML root node.
-    void importScenesRecursive(Node& root, const Url& sceneUrl, std::vector<Url>& sceneStack);
+    void importScenesRecursive(Node& root, const Url& sceneUrl, std::unordered_set<Url>& imported);
 
     void mergeMapFields(Node& target, const Node& import);
 
     // Importer holds a pointer to the scene it is operating on.
     std::shared_ptr<Scene> m_scene;
 
-    // Imported scenes must be parsed into YAML nodes to find further imports.
+    // Scene files must be parsed into YAML nodes to find further imports.
     // The parsed scenes are stored in a map with their URLs to be merged once
     // all imports are found and parsed.
-    std::unordered_map<Url, Node> m_importedScenes;
+    struct SceneNode {
+        Node yaml{};
+        std::vector<Url> imports;
+    };
+    std::unordered_map<Url, SceneNode> m_sceneNodes = {};
 
     std::vector<Url> m_sceneQueue;
 };

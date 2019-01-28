@@ -3,6 +3,7 @@
 #include "gl/texture.h"
 #include "tile/tileID.h"
 #include "util/fastmap.h"
+#include "util/types.h"
 
 #include "glm/mat4x4.hpp"
 #include "glm/vec2.hpp"
@@ -13,7 +14,6 @@
 
 namespace Tangram {
 
-class TileSource;
 class MapProjection;
 struct Properties;
 class Style;
@@ -40,8 +40,7 @@ class Tile {
 
 public:
 
-    Tile(TileID _id, const MapProjection& _projection, const TileSource* _source = nullptr);
-
+    Tile(TileID _id, const int32_t& _sourceId = 0, const int32_t& _sourceGeneration = 0);
 
     virtual ~Tile();
 
@@ -51,20 +50,16 @@ public:
     /* Returns the center of the tile area in projection units */
     const glm::dvec2& getOrigin() const { return m_tileOrigin; }
 
-    /* Returns the map projection with which this tile interprets coordinates */
-    const MapProjection* getProjection() const { return m_projection; }
-
     /* Returns the length of a side of this tile in projection units */
-    float getScale() const { return m_scale; }
+    double getScale() const { return m_scale; }
 
-    /* Returns the reciprocal of <getScale()> */
-    float getInverseScale() const { return m_inverseScale; }
+    double getInverseScale() const { return 1.0 / m_scale; }
 
     const glm::mat4& getModelMatrix() const { return m_modelMatrix; }
 
     const glm::mat4& mvp() const { return m_mvp; }
 
-    glm::dvec2 coordToLngLat(const glm::vec2& _tileCoord) const;
+    LngLat coordToLngLat(const glm::vec2& _tileCoord) const;
 
     void initGeometry(uint32_t _size);
 
@@ -84,9 +79,6 @@ public:
     /* Update the Tile considering the current view */
     void update(float _dt, const View& _view);
 
-    /* Update tile origin based on wraping for this tile */
-    void updateTileOrigin(const int _wrap);
-
     void resetState();
 
     /* Get the sum in bytes of static <Mesh>es */
@@ -104,11 +96,7 @@ private:
 
     const TileID m_id;
 
-    const MapProjection* m_projection = nullptr;
-
-    float m_scale = 1;
-
-    float m_inverseScale = 1;
+    double m_scale = 1;
 
     /* ID of the TileSource */
     const int32_t m_sourceId;

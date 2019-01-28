@@ -23,26 +23,20 @@ static std::atomic<int32_t> s_serial;
 
 Scene::Scene() : id(s_serial++) {}
 
-Scene::Scene(std::shared_ptr<const Platform> _platform, const Url& _url)
+Scene::Scene(Platform& _platform, const Url& _url)
     : id(s_serial++),
       m_url(_url),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()) {
-
-    // For now we only have one projection..
-    // TODO how to share projection with view?
-    m_mapProjection.reset(new MercatorProjection());
 }
 
-Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _yaml, const Url& _url)
+Scene::Scene(Platform& _platform, const std::string& _yaml, const Url& _url)
     : id(s_serial++),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()) {
 
     m_url = _url;
     m_yaml = _yaml;
-
-    m_mapProjection.reset(new MercatorProjection());
 }
 
 void Scene::copyConfig(const Scene& _other) {
@@ -56,8 +50,6 @@ void Scene::copyConfig(const Scene& _other) {
     m_yaml = _other.m_yaml;
 
     m_globalRefs = _other.m_globalRefs;
-
-    m_mapProjection.reset(new MercatorProjection());
 
     m_zipArchives = _other.m_zipArchives;
 }
@@ -81,7 +73,7 @@ Style* Scene::findStyle(const std::string& _name) {
     return nullptr;
 }
 
-UrlRequestHandle Scene::startUrlRequest(std::shared_ptr<Platform> platform, Url url, UrlCallback callback) {
+UrlRequestHandle Scene::startUrlRequest(Platform& platform, Url url, UrlCallback callback) {
     if (url.scheme() == "zip") {
         UrlResponse response;
         // URL for a file in a zip archive, get the encoded source URL.
@@ -105,12 +97,12 @@ UrlRequestHandle Scene::startUrlRequest(std::shared_ptr<Platform> platform, Url 
         } else {
             response.error = "Could not find zip archive.";
         }
-        callback(response);
+        callback(std::move(response));
         return 0;
     }
 
     // For non-zip URLs, send it to the platform.
-    return platform->startUrlRequest(url, callback);
+    return platform.startUrlRequest(url, std::move(callback));
 }
 
 void Scene::addZipArchive(Url url, std::shared_ptr<ZipArchive> zipArchive) {

@@ -1,7 +1,5 @@
 #include "util/inputHandler.h"
 
-#include "platform.h"
-
 #include "glm/gtx/rotate_vector.hpp"
 #include "glm/vec2.hpp"
 #include <cmath>
@@ -26,9 +24,9 @@
 
 namespace Tangram {
 
-InputHandler::InputHandler(std::shared_ptr<Platform> _platform, View& _view) : m_platform(_platform), m_view(_view) {}
+InputHandler::InputHandler(View& _view) : m_view(_view) {}
 
-void InputHandler::update(float _dt) {
+bool InputHandler::update(float _dt) {
 
     auto velocityPanPixels = m_view.pixelsPerMeter() / m_view.pixelScale() * m_velocityPan;
 
@@ -42,14 +40,13 @@ void InputHandler::update(float _dt) {
 
         m_velocityZoom -= _dt * DAMPING_ZOOM * m_velocityZoom;
         m_view.zoom(m_velocityZoom * _dt);
-
-        m_platform->requestRender();
     }
+
+    return isFlinging;
 }
 
 void InputHandler::handleTapGesture(float _posX, float _posY) {
-
-    onGesture();
+    cancelFling();
 
     float viewCenterX = 0.5f * m_view.getWidth();
     float viewCenterY = 0.5f * m_view.getHeight();
@@ -58,18 +55,14 @@ void InputHandler::handleTapGesture(float _posX, float _posY) {
     m_view.screenToGroundPlane(_posX, _posY);
 
     m_view.translate((_posX - viewCenterX), (_posY - viewCenterY));
-
 }
 
 void InputHandler::handleDoubleTapGesture(float _posX, float _posY) {
-
     handlePinchGesture(_posX, _posY, 2.f, 0.f);
-
 }
 
 void InputHandler::handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
-
-    onGesture();
+    cancelFling();
 
     m_view.screenToGroundPlane(_startX, _startY);
     m_view.screenToGroundPlane(_endX, _endY);
@@ -78,7 +71,6 @@ void InputHandler::handlePanGesture(float _startX, float _startY, float _endX, f
     float dy = _startY - _endY;
 
     m_view.translate(dx, dy);
-
 }
 
 void InputHandler::handleFlingGesture(float _posX, float _posY, float _velocityX, float _velocityY) {
@@ -89,7 +81,7 @@ void InputHandler::handleFlingGesture(float _posX, float _posY, float _velocityX
 
     const static float epsilon = 0.0167f;
 
-    onGesture();
+    cancelFling();
 
     float startX = _posX;
     float startY = _posY;
@@ -103,12 +95,10 @@ void InputHandler::handleFlingGesture(float _posX, float _posY, float _velocityX
     float dy = (startY - endY) / epsilon;
 
     setVelocity(0.f, glm::vec2(dx, dy));
-
 }
 
 void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, float _velocity) {
-
-    onGesture();
+    cancelFling();
 
     float z = m_view.getZoom();
     static float invLog2 = 1 / log(2);
@@ -125,12 +115,10 @@ void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, fl
     if (std::abs(vz) >= THRESHOLD_START_ZOOM) {
         setVelocity(vz, glm::vec2(0.f));
     }
-
 }
 
 void InputHandler::handleRotateGesture(float _posX, float _posY, float _radians) {
-
-    onGesture();
+    cancelFling();
 
     // Get vector from center of rotation to view center
     m_view.screenToGroundPlane(_posX, _posY);
@@ -141,12 +129,10 @@ void InputHandler::handleRotateGesture(float _posX, float _posY, float _radians)
     m_view.translate(translation.x, translation.y);
 
     m_view.roll(_radians);
-
 }
 
 void InputHandler::handleShoveGesture(float _distance) {
-
-    onGesture();
+    cancelFling();
 
     float angle = -M_PI * _distance / m_view.getHeight();
     m_view.pitch(angle);
@@ -154,20 +140,10 @@ void InputHandler::handleShoveGesture(float _distance) {
 }
 
 void InputHandler::cancelFling() {
-
     setVelocity(0.f, { 0.f, 0.f});
-
-}
-
-void InputHandler::onGesture() {
-
-    setVelocity(0.f, { 0.f, 0.f });
-    m_platform->requestRender();
-
 }
 
 void InputHandler::setVelocity(float _zoom, glm::vec2 _translate) {
-
     // setup deltas for momentum on gesture
     m_velocityPan = _translate;
     m_velocityZoom = _zoom;

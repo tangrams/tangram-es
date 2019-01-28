@@ -9,10 +9,10 @@
 
 namespace Tangram {
 
-class MapProjection;
 struct TileData;
 struct TileID;
 struct Raster;
+class RasterSource;
 class Tile;
 class TileManager;
 struct RawCache;
@@ -57,8 +57,8 @@ public:
         virtual bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) = 0;
 
         /* Stops any running I/O tasks pertaining to @_tile */
-        virtual void cancelLoadingTile(const TileID& _tile) {
-            if (next) { next->cancelLoadingTile(_tile); }
+        virtual void cancelLoadingTile(TileTask& _task) {
+            if (next) { next->cancelLoadingTile(_task); }
         }
 
         virtual void clear() { if (next) next->clear(); }
@@ -100,21 +100,18 @@ public:
      */
     virtual void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb);
 
-    /* Stops any running I/O tasks pertaining to @_tile */
-    virtual void cancelLoadingTile(const TileID& _tile);
+    /* Stops any running I/O tasks pertaining to @_task */
+    virtual void cancelLoadingTile(TileTask& _task);
 
     /* Parse a <TileTask> with data into a <TileData>, returning an empty TileData on failure */
-    virtual std::shared_ptr<TileData> parse(const TileTask& _task, const MapProjection& _projection) const;
+    virtual std::shared_ptr<TileData> parse(const TileTask& _task) const;
 
     /* Clears all data associated with this TileSource */
     virtual void clearData();
 
     const std::string& name() const { return m_name; }
 
-    virtual void clearRasters();
-    virtual void clearRaster(const TileID& id);
-
-    virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask = -1);
+    virtual std::shared_ptr<TileTask> createTask(TileID _tile);
 
     /* ID of this TileSource instance */
     int32_t id() const { return m_id; }
@@ -139,7 +136,9 @@ public:
     const auto& rasterSources() const { return m_rasterSources; }
 
     bool generateGeometry() const { return m_generateGeometry; }
-    void generateGeometry(bool generateGeometry) { m_generateGeometry = generateGeometry; }
+    virtual void generateGeometry(bool _generateGeometry) {
+        m_generateGeometry = _generateGeometry;
+    }
 
     /* Avoid RTTI by adding a boolean check on the data source object */
     virtual bool isRaster() const { return false; }
@@ -148,9 +147,10 @@ public:
 
 protected:
 
-    void createSubTasks(std::shared_ptr<TileTask> _task);
+    void addRasterTasks(TileTask& _task);
 
     // This datasource is used to generate actual tile geometry
+    // Is set true for any source assigned in a Scene Layer and when the layer is not disabled
     bool m_generateGeometry = false;
 
     // Name used to identify this source in the style sheet
@@ -168,7 +168,7 @@ protected:
     Format m_format = Format::GeoJson;
 
     /* vector of raster sources (as raster samplers) referenced by this datasource */
-    std::vector<std::shared_ptr<TileSource>> m_rasterSources;
+    std::vector<RasterSource*> m_rasterSources;
 
     std::unique_ptr<DataSource> m_sources;
 };

@@ -2,23 +2,16 @@
 
 #include "data/propertyItem.h"
 #include "data/tileData.h"
+#include "js/JavaScript.h"
 #include "log.h"
 #include "platform.h"
 #include "scene/filters.h"
 #include "scene/scene.h"
 #include "util/mapProjection.h"
 #include "util/builders.h"
-
-#include "duktape.h"
-
-#define DUMP(...) // do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
-#define DBG(...) do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
-
+#include "util/yamlUtil.h"
 
 namespace Tangram {
-
-const static char INSTANCE_ID[] = "\xff""\xff""obj";
-const static char FUNC_ID[] = "\xff""\xff""fns";
 
 static const std::string key_geom("$geometry");
 static const std::string key_zoom("$zoom");
@@ -31,121 +24,61 @@ static const std::vector<std::string> s_geometryStrings = {
 };
 
 StyleContext::StyleContext() {
-    m_ctx = duk_create_heap_default();
-
-    //// Create global geometry constants
-    // TODO make immutable
-    duk_push_number(m_ctx, GeometryType::points);
-    duk_put_global_string(m_ctx, "point");
-
-    duk_push_number(m_ctx, GeometryType::lines);
-    duk_put_global_string(m_ctx, "line");
-
-    duk_push_number(m_ctx, GeometryType::polygons);
-    duk_put_global_string(m_ctx, "polygon");
-
-    //// Create global 'feature' object
-    // Get Proxy constructor
-    // -> [cons]
-    duk_eval_string(m_ctx, "Proxy");
-
-    // Add feature object
-    // -> [cons, { __obj: this }]
-    duk_idx_t featureObj = duk_push_object(m_ctx);
-    duk_push_pointer(m_ctx, this);
-    duk_put_prop_string(m_ctx, featureObj, INSTANCE_ID);
-
-    // Add handler object
-    // -> [cons, {...}, { get: func, has: func }]
-    duk_idx_t handlerObj = duk_push_object(m_ctx);
-    // Add 'get' property to handler
-    duk_push_c_function(m_ctx, jsGetProperty, 3 /*nargs*/);
-    duk_put_prop_string(m_ctx, handlerObj, "get");
-    // Add 'has' property to handler
-    duk_push_c_function(m_ctx, jsHasProperty, 2 /*nargs*/);
-    duk_put_prop_string(m_ctx, handlerObj, "has");
-
-    // Call proxy constructor
-    // [cons, feature, handler ] -> [obj|error]
-    if (duk_pnew(m_ctx, 2) == 0) {
-        // put feature proxy object in global scope
-        if (!duk_put_global_string(m_ctx, "feature")) {
-            LOGE("Initialization failed");
-        }
-    } else {
-        LOGE("Failure: %s", duk_safe_to_string(m_ctx, -1));
-        duk_pop(m_ctx);
-    }
-
-    DUMP("init\n");
+    m_jsContext = std::make_unique<JSContext>();
 }
 
-StyleContext::~StyleContext() {
-    duk_destroy_heap(m_ctx);
-}
+StyleContext::~StyleContext() = default;
 
 // Convert a scalar node to a boolean, double, or string (in that order)
 // and for the first conversion that works, push it to the top of the JS stack.
-void pushYamlScalarAsJsPrimitive(duk_context* ctx, const YAML::Node& node) {
+JSValue pushYamlScalarAsJsPrimitive(JSScope& jsScope, const YAML::Node& node) {
     bool booleanValue = false;
     double numberValue = 0.;
-    if (YAML::convert<bool>::decode(node, booleanValue)) {
-        duk_push_boolean(ctx, booleanValue);
-    } else if (YAML::convert<double>::decode(node, numberValue)) {
-        duk_push_number(ctx, numberValue);
+    if (YamlUtil::getBool(node, booleanValue)) {
+        return jsScope.newBoolean(booleanValue);
+    } else if (YamlUtil::getDouble(node, numberValue)) {
+        return jsScope.newNumber(numberValue);
     } else {
-        duk_push_string(ctx, node.Scalar().c_str());
+        return jsScope.newString(node.Scalar());
     }
 }
 
-void pushYamlScalarAsJsFunctionOrString(duk_context* ctx, const YAML::Node& node) {
-    auto scalar = node.Scalar().c_str();
-    duk_push_string(ctx, scalar); // Push function source.
-    duk_push_string(ctx, ""); // Push a "filename".
-    if (duk_pcompile(ctx, DUK_COMPILE_FUNCTION) != 0) { // Compile function.
-        auto error = duk_safe_to_string(ctx, -1);
-        LOGW("Compile failed in global function: %s\n%s\n---", error, scalar);
-        duk_pop(ctx); // Pop error.
-        duk_push_string(ctx, scalar); // Push property as a string.
+JSValue pushYamlScalarAsJsFunctionOrString(JSScope& jsScope, const YAML::Node& node) {
+    auto value = jsScope.newFunction(node.Scalar());
+    if (value) {
+        return value;
     }
+    return jsScope.newString(node.Scalar());
 }
 
-void StyleContext::parseSceneGlobals(const YAML::Node& node) {
+JSValue parseSceneGlobals(JSScope& jsScope, const YAML::Node& node) {
     switch(node.Type()) {
-    case YAML::NodeType::Scalar:
-        {
-            auto& scalar = node.Scalar();
-            if (scalar.compare(0, 8, "function") == 0) {
-                pushYamlScalarAsJsFunctionOrString(m_ctx, node);
-            } else {
-                pushYamlScalarAsJsPrimitive(m_ctx, node);
-            }
-            break;
+    case YAML::NodeType::Scalar: {
+        auto& scalar = node.Scalar();
+        if (scalar.compare(0, 8, "function") == 0) {
+            return pushYamlScalarAsJsFunctionOrString(jsScope, node);
         }
-    case YAML::NodeType::Sequence:
-        {
-            auto seqObj = duk_push_array(m_ctx);
-            for (size_t i = 0; i < node.size(); i++) {
-                parseSceneGlobals(node[i]);
-                duk_put_prop_index(m_ctx, seqObj, i);
-            }
-            break;
+        return pushYamlScalarAsJsPrimitive(jsScope, node);
+    }
+    case YAML::NodeType::Sequence: {
+        auto jsArray = jsScope.newArray();
+        for (size_t i = 0; i < node.size(); i++) {
+            jsArray.setValueAtIndex(i, parseSceneGlobals(jsScope, node[i]));
         }
-    case YAML::NodeType::Map:
-        {
-            auto mapObj = duk_push_object(m_ctx);
-            for (const auto& entry : node) {
-                if (!entry.first.IsScalar()) {
-                    continue; // Can't put non-scalar keys in JS objects.
-                }
-                parseSceneGlobals(entry.second);
-                duk_put_prop_string(m_ctx, mapObj, entry.first.Scalar().c_str());
+        return jsArray;
+    }
+    case YAML::NodeType::Map: {
+        auto jsObject = jsScope.newObject();
+        for (const auto& entry : node) {
+            if (!entry.first.IsScalar()) {
+                continue; // Can't put non-scalar keys in JS objects.
             }
-            break;
+            jsObject.setValueForProperty(entry.first.Scalar(), parseSceneGlobals(jsScope, entry.second));
         }
+        return jsObject;
+    }
     default:
-        duk_push_null(m_ctx);
-        break;
+        return jsScope.newNull();
     }
 }
 
@@ -153,13 +86,11 @@ void StyleContext::setSceneGlobals(const YAML::Node& sceneGlobals) {
 
     if (!sceneGlobals) { return; }
 
-    //[ "ctx" ]
-    // globalObject
-    duk_push_object(m_ctx);
+    JSScope jsScope(*m_jsContext);
 
-    parseSceneGlobals(sceneGlobals);
+    auto jsValue = parseSceneGlobals(jsScope, sceneGlobals);
 
-    duk_put_global_string(m_ctx, "global");
+    m_jsContext->setGlobalValue("global", std::move(jsValue));
 }
 
 void StyleContext::initFunctions(const Scene& _scene) {
@@ -174,66 +105,20 @@ void StyleContext::initFunctions(const Scene& _scene) {
 }
 
 bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {
-
-    auto arr_idx = duk_push_array(m_ctx);
-    int id = 0;
-
-    bool ok = true;
-
+    uint32_t id = 0;
+    bool success = true;
     for (auto& function : _functions) {
-        duk_push_string(m_ctx, function.c_str());
-        duk_push_string(m_ctx, "");
-
-        if (duk_pcompile(m_ctx, DUK_COMPILE_FUNCTION) == 0) {
-            duk_put_prop_index(m_ctx, arr_idx, id);
-        } else {
-            LOGW("Compile failed: %s\n%s\n---",
-                 duk_safe_to_string(m_ctx, -1),
-                 function.c_str());
-            duk_pop(m_ctx);
-            ok = false;
-        }
-        id++;
-    }
-
-    if (!duk_put_global_string(m_ctx, FUNC_ID)) {
-        LOGE("'fns' object not set");
+        success &= m_jsContext->setFunction(id++, function);
     }
 
     m_functionCount = id;
 
-    DUMP("setFunctions\n");
-    return ok;
+    return success;
 }
 
 bool StyleContext::addFunction(const std::string& _function) {
-    // Get all functions (array) in context
-    if (!duk_get_global_string(m_ctx, FUNC_ID)) {
-        LOGE("AddFunction - functions array not initialized");
-        duk_pop(m_ctx); // pop [undefined] sitting at stack top
-        return false;
-    }
-
-    int id = m_functionCount++;
-    bool ok = true;
-
-    duk_push_string(m_ctx, _function.c_str());
-    duk_push_string(m_ctx, "");
-
-    if (duk_pcompile(m_ctx, DUK_COMPILE_FUNCTION) == 0) {
-        duk_put_prop_index(m_ctx, -2, id);
-    } else {
-        LOGW("Compile failed: %s\n%s\n---",
-             duk_safe_to_string(m_ctx, -1),
-             _function.c_str());
-        duk_pop(m_ctx);
-        ok = false;
-    }
-
-    // Pop the functions array off the stack
-    duk_pop(m_ctx);
-
-    return ok;
+    bool success = m_jsContext->setFunction(m_functionCount++, _function);
+    return success;
 }
 
 void StyleContext::setFeature(const Feature& _feature) {
@@ -244,6 +129,8 @@ void StyleContext::setFeature(const Feature& _feature) {
         setKeyword(key_geom, s_geometryStrings[m_feature->geometryType]);
         m_keywordGeom = m_feature->geometryType;
     }
+
+    m_jsContext->setCurrentFeature(&_feature);
 }
 
 void StyleContext::setKeywordZoom(int _zoom) {
@@ -268,13 +155,17 @@ void StyleContext::setKeyword(const std::string& _key, Value _val) {
     Value& entry = m_keywords[static_cast<uint8_t>(keywordKey)];
     if (entry == _val) { return; }
 
-    if (_val.is<std::string>()) {
-        duk_push_string(m_ctx, _val.get<std::string>().c_str());
-        duk_put_global_string(m_ctx, _key.c_str());
-    } else if (_val.is<double>()) {
-        duk_push_number(m_ctx, _val.get<double>());
-        duk_put_global_string(m_ctx, _key.c_str());
+    {
+        JSScope jsScope(*m_jsContext);
+        JSValue value;
+        if (_val.is<std::string>()) {
+            value = jsScope.newString(_val.get<std::string>());
+        } else if (_val.is<double>()) {
+            value = jsScope.newNumber(_val.get<double>());
+        }
+        m_jsContext->setGlobalValue(_key, std::move(value));
     }
+
 
     entry = std::move(_val);
 }
@@ -282,7 +173,7 @@ void StyleContext::setKeyword(const std::string& _key, Value _val) {
 float StyleContext::getPixelAreaScale() {
     // scale the filter value with pixelsPerMeter
     // used with `px2` area filtering
-    double metersPerPixel = 2.f * MapProjection::HALF_CIRCUMFERENCE * exp2(-m_keywordZoom) / View::s_pixelsPerTile;
+    double metersPerPixel = MapProjection::EARTH_CIRCUMFERENCE_METERS * exp2(-m_keywordZoom) / MapProjection::tileSize();
     return metersPerPixel * metersPerPixel;
 }
 
@@ -291,83 +182,60 @@ const Value& StyleContext::getKeyword(const std::string& _key) const {
 }
 
 void StyleContext::clear() {
-    m_feature = nullptr;
-}
-
-bool StyleContext::evalFunction(FunctionID id) {
-    // Get all functions (array) in context
-    if (!duk_get_global_string(m_ctx, FUNC_ID)) {
-        LOGE("EvalFilterFn - functions array not initialized");
-        duk_pop(m_ctx); // pop [undefined] sitting at stack top
-        return false;
-    }
-
-    // Get function at index `id` from functions array, put it at stack top
-    if (!duk_get_prop_index(m_ctx, -1, id)) {
-        LOGE("EvalFilterFn - function %d not set", id);
-        duk_pop(m_ctx); // pop "undefined" sitting at stack top
-        duk_pop(m_ctx); // pop functions (array) now sitting at stack top
-        return false;
-    }
-
-    // pop fns array
-    duk_remove(m_ctx, -2);
-
-    // call popped function (sitting at stack top), evaluated value is put on stack top
-    if (duk_pcall(m_ctx, 0) != 0) {
-        LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
-        duk_pop(m_ctx);
-        return false;
-    }
-
-    return true;
+    m_jsContext->setCurrentFeature(nullptr);
 }
 
 bool StyleContext::evalFilter(FunctionID _id) {
-
-    if (!evalFunction(_id)) { return false; };
-
-    // Evaluate the "truthiness" of the function result at the top of the stack.
-    bool result = duk_to_boolean(m_ctx, -1);
-
-    // pop result
-    duk_pop(m_ctx);
-
+    bool result = m_jsContext->evaluateBooleanFunction(_id);
     return result;
 }
 
 bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) {
-
-    if (!evalFunction(_id)) { return false; }
-
-    // parse evaluated result at stack top
-    parseStyleResult(_key, _val);
-
-    // pop result, empty stack
-    duk_pop(m_ctx);
-
-    return !_val.is<none_type>();
-}
-
-void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const {
     _val = none_type{};
 
-    if (duk_is_string(m_ctx, -1)) {
-        std::string value(duk_get_string(m_ctx, -1));
+    JSScope jsScope(*m_jsContext);
+    auto jsValue = jsScope.getFunctionResult(_id);
+    if (!jsValue) {
+        return false;
+    }
+
+    if (jsValue.isString()) {
+        std::string value = jsValue.toString();
 
         switch (_key) {
+            case StyleParamKey::outline_style:
+            case StyleParamKey::repeat_group:
+            case StyleParamKey::sprite:
+            case StyleParamKey::sprite_default:
+            case StyleParamKey::style:
+            case StyleParamKey::text_align:
+            case StyleParamKey::text_repeat_group:
             case StyleParamKey::text_source:
             case StyleParamKey::text_source_left:
             case StyleParamKey::text_source_right:
+            case StyleParamKey::text_transform:
+            case StyleParamKey::texture:
                 _val = value;
                 break;
+            case StyleParamKey::color:
+            case StyleParamKey::outline_color:
+            case StyleParamKey::text_font_fill:
+            case StyleParamKey::text_font_stroke_color: {
+                Color result;
+                if (StyleParam::parseColor(value, result)) {
+                    _val = result.abgr;
+                } else {
+                    LOGW("Invalid color value: %s", value.c_str());
+                }
+                break;
+            }
             default:
                 _val = StyleParam::parseString(_key, value);
                 break;
         }
 
-    } else if (duk_is_boolean(m_ctx, -1)) {
-        bool value = duk_get_boolean(m_ctx, -1);
+    } else if (jsValue.isBoolean()) {
+        bool value = jsValue.toBool();
 
         switch (_key) {
             case StyleParamKey::interactive:
@@ -382,10 +250,8 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 break;
         }
 
-    } else if (duk_is_array(m_ctx, -1)) {
-        duk_get_prop_string(m_ctx, -1, "length");
-        int len = duk_get_int(m_ctx, -1);
-        duk_pop(m_ctx);
+    } else if (jsValue.isArray()) {
+        auto len = jsValue.getLength();
 
         switch (_key) {
             case StyleParamKey::extrude: {
@@ -394,13 +260,8 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                     break;
                 }
 
-                duk_get_prop_index(m_ctx, -1, 0);
-                double v1 = duk_get_number(m_ctx, -1);
-                duk_pop(m_ctx);
-
-                duk_get_prop_index(m_ctx, -1, 1);
-                double v2 = duk_get_number(m_ctx, -1);
-                duk_pop(m_ctx);
+                double v1 = jsValue.getValueAtIndex(0).toDouble();
+                double v2 = jsValue.getValueAtIndex(1).toDouble();
 
                 _val = glm::vec2(v1, v2);
                 break;
@@ -413,136 +274,78 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                     LOGW("Wrong array size for color: '%d'.", len);
                     break;
                 }
-                duk_get_prop_index(m_ctx, -1, 0);
-                double r = duk_get_number(m_ctx, -1);
-                duk_pop(m_ctx);
-
-                duk_get_prop_index(m_ctx, -1, 1);
-                double g = duk_get_number(m_ctx, -1);
-                duk_pop(m_ctx);
-
-                duk_get_prop_index(m_ctx, -1, 2);
-                double b = duk_get_number(m_ctx, -1);
-                duk_pop(m_ctx);
-
+                double r = jsValue.getValueAtIndex(0).toDouble();
+                double g = jsValue.getValueAtIndex(1).toDouble();
+                double b = jsValue.getValueAtIndex(2).toDouble();
                 double a = 1.0;
                 if (len == 4) {
-                    duk_get_prop_index(m_ctx, -1, 3);
-                    a = duk_get_number(m_ctx, -1);
-                    duk_pop(m_ctx);
+                    a = jsValue.getValueAtIndex(3).toDouble();
                 }
-
                 _val = ColorF(r, g, b, a).toColor().abgr;
                 break;
             }
             default:
                 break;
         }
-
-    } else if (duk_is_nan(m_ctx, -1)) {
-        // Ignore setting value
-        LOGD("duk evaluates JS method to NAN.\n");
-    } else if (duk_is_number(m_ctx, -1)) {
-
+    } else if (jsValue.isNumber()) {
+        double number = jsValue.toDouble();
+        if (std::isnan(number)) {
+            LOGD("duk evaluates JS method to NAN.\n");
+        }
         switch (_key) {
             case StyleParamKey::text_source:
             case StyleParamKey::text_source_left:
             case StyleParamKey::text_source_right:
-                _val = doubleToString(static_cast<double>(duk_get_number(m_ctx, -1)));
+                _val = doubleToString(number);
                 break;
             case StyleParamKey::extrude:
-                _val = glm::vec2(0.f, static_cast<float>(duk_get_number(m_ctx, -1)));
+                _val = glm::vec2(0.f, number);
                 break;
             case StyleParamKey::placement_spacing: {
-                double v = duk_get_number(m_ctx, -1);
-                _val = StyleParam::Width{static_cast<float>(v), Unit::pixel};
+                _val = StyleParam::Width{static_cast<float>(number), Unit::pixel};
                 break;
             }
             case StyleParamKey::width:
             case StyleParamKey::outline_width: {
                 // TODO more efficient way to return pixels.
                 // atm this only works by return value as string
-                double v = duk_get_number(m_ctx, -1);
-                _val = StyleParam::Width{static_cast<float>(v)};
+                _val = StyleParam::Width{static_cast<float>(number)};
                 break;
             }
+            case StyleParamKey::angle:
+            case StyleParamKey::priority:
+            case StyleParamKey::text_priority:
             case StyleParamKey::text_font_stroke_width:
             case StyleParamKey::placement_min_length_ratio: {
-                _val = static_cast<float>(duk_get_number(m_ctx, -1));
+                _val = static_cast<float>(number);
                 break;
             }
             case StyleParamKey::size: {
                 StyleParam::SizeValue vec;
-                vec.x.value = static_cast<float>(duk_get_number(m_ctx, -1));
+                vec.x.value = static_cast<float>(number);
                 _val = vec;
                 break;
             }
             case StyleParamKey::order:
             case StyleParamKey::outline_order:
-            case StyleParamKey::priority:
             case StyleParamKey::color:
             case StyleParamKey::outline_color:
             case StyleParamKey::text_font_fill:
             case StyleParamKey::text_font_stroke_color: {
-                _val = static_cast<uint32_t>(duk_get_uint(m_ctx, -1));
+                _val = static_cast<uint32_t>(number);
                 break;
             }
             default:
                 break;
         }
-    } else if (duk_is_null_or_undefined(m_ctx, -1)) {
+    } else if (jsValue.isUndefined()) {
         // Explicitly set value as 'undefined'. This is important for some styling rules.
         _val = Undefined();
     } else {
         LOGW("Unhandled return type from Javascript style function for %d.", _key);
     }
 
-    DUMP("parseStyleResult\n");
+    return !_val.is<none_type>();
 }
 
-// Implements Proxy handler.has(target_object, key)
-duk_ret_t StyleContext::jsHasProperty(duk_context *_ctx) {
-
-    duk_get_prop_string(_ctx, 0, INSTANCE_ID);
-    auto* attr = static_cast<const StyleContext*> (duk_to_pointer(_ctx, -1));
-    if (!attr || !attr->m_feature) {
-        LOGE("Error: no context set %p %p", attr, attr ? attr->m_feature : nullptr);
-        duk_pop(_ctx);
-        return 0;
-    }
-
-    const char* key = duk_require_string(_ctx, 1);
-    duk_push_boolean(_ctx, attr->m_feature->props.contains(key));
-
-    return 1;
-}
-
-// Implements Proxy handler.get(target_object, key)
-duk_ret_t StyleContext::jsGetProperty(duk_context *_ctx) {
-
-    // Get the StyleContext instance from JS Feature object (first parameter).
-    duk_get_prop_string(_ctx, 0, INSTANCE_ID);
-    auto* attr = static_cast<const StyleContext*> (duk_to_pointer(_ctx, -1));
-    if (!attr || !attr->m_feature) {
-        LOGE("Error: no context set %p %p",  attr, attr ? attr->m_feature : nullptr);
-        duk_pop(_ctx);
-        return 0;
-    }
-
-    // Get the property name (second parameter)
-    const char* key = duk_require_string(_ctx, 1);
-
-    auto it = attr->m_feature->props.get(key);
-    if (it.is<std::string>()) {
-        duk_push_string(_ctx, it.get<std::string>().c_str());
-    } else if (it.is<double>()) {
-        duk_push_number(_ctx, it.get<double>());
-    } else {
-        duk_push_undefined(_ctx);
-    }
-    // FIXME: Distinguish Booleans here as well
-
-    return 1;
-}
-
-}
+} // namespace Tangram

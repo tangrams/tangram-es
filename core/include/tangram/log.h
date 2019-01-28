@@ -15,7 +15,20 @@
  * LOGS: Screen log, no LOG_LEVEL
  */
 
-#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+//#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+// From: https://blog.galowicz.de/2016/02/20/short_file_macro/
+static constexpr const char * past_last_slash(const char * const str, const char * const last_slash) {
+    return *str == '\0' ? last_slash :
+        *str == '/'  ? past_last_slash(str + 1, str + 1) :
+        past_last_slash(str + 1, last_slash);
+}
+
+static constexpr const char * past_last_slash(const char * const str) {
+    return past_last_slash(str, str);
+}
+
+#define __FILENAME__ ({constexpr const char * const sf__ {past_last_slash(__FILE__)}; sf__;})
+
 #define TANGRAM_MAX_BUFFER_LOG_SIZE 99999
 
 #if LOG_LEVEL >= 3

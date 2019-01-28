@@ -40,15 +40,14 @@ struct ClientGeoJsonData {
     std::vector<Properties> properties;
 };
 
-std::shared_ptr<TileTask> ClientGeoJsonSource::createTask(TileID _tileId, int _subTask) {
-    return std::make_shared<TileTask>(_tileId, shared_from_this(), _subTask);
+std::shared_ptr<TileTask> ClientGeoJsonSource::createTask(TileID _tileId) {
+    return std::make_shared<TileTask>(_tileId, shared_from_this());
 }
 
 
 // TODO: pass scene's resourcePath to constructor to be used with `stringFromFile`
-ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform,
-                                         const std::string& _name, const std::string& _url,
-                                         bool _generateCentroids,
+ClientGeoJsonSource::ClientGeoJsonSource(Platform& _platform, const std::string& _name,
+                                         const std::string& _url, bool _generateCentroids,
                                          TileSource::ZoomOptions _zoomOptions)
 
     : TileSource(_name, nullptr, _zoomOptions),
@@ -59,7 +58,7 @@ ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform,
     m_store = std::make_unique<ClientGeoJsonData>();
 
     if (!_url.empty()) {
-        UrlCallback onUrlFinished = [&, this](UrlResponse response) {
+        UrlCallback onUrlFinished = [&, this](UrlResponse&& response) {
             if (response.error) {
                 LOGE("Unable to retrieve data from '%s': %s", _url.c_str(), response.error);
             } else {
@@ -67,7 +66,7 @@ ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform,
             }
             m_hasPendingData = false;
         };
-        m_platform->startUrlRequest(_url, onUrlFinished);
+        m_platform.startUrlRequest(_url, std::move(onUrlFinished));
         m_hasPendingData = true;
     }
 
@@ -336,8 +335,7 @@ struct add_geometry {
     }
 };
 
-std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task,
-                                                     const MapProjection& _projection) const {
+std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task) const {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 

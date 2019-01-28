@@ -14,7 +14,7 @@
 
 namespace Tangram {
 
-TileWorker::TileWorker(std::shared_ptr<Platform> _platform, int _numWorker) : m_platform(_platform) {
+TileWorker::TileWorker(Platform& _platform, int _numWorker) : m_platform(_platform) {
     m_running = true;
 
     for (int i = 0; i < _numWorker; i++) {
@@ -76,7 +76,7 @@ void TileWorker::run(Worker* instance) {
                     if (a->isProxy() != b->isProxy()) {
                         return !a->isProxy();
                     }
-                    if (a->source().id() == b->source().id() &&
+                    if (a->sourceId() == b->sourceId() &&
                         a->sourceGeneration() != b->sourceGeneration()) {
                         return a->sourceGeneration() < b->sourceGeneration();
                     }
@@ -93,7 +93,7 @@ void TileWorker::run(Worker* instance) {
 
         task->process(*builder);
 
-        m_platform->requestRender();
+        m_platform.requestRender();
     }
 }
 

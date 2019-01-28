@@ -104,11 +104,12 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
 TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
 
     View view(256, 256);
+    view.setConstrainToWorldBounds(false);
     view.setPosition(0, 0);
     view.setZoom(0);
-    view.update(false);
+    view.update();
 
-    Tile tile({0,0,0}, view.getMapProjection());
+    Tile tile({0,0,0});
     tile.update(0, view);
 
     struct TestTransform {

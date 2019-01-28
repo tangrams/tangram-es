@@ -3,7 +3,7 @@ Ubuntu or Debian Linux
 
 ## Setup ##
 
-This project uses CMake (minimum version 3.0), you can download it [here](http://www.cmake.org/download/) or install it with apt-get.
+This project uses CMake (minimum version 3.2), you can download it [here](http://www.cmake.org/download/) or install it with apt-get.
 
 ```bash
 sudo apt-get install cmake
@@ -45,7 +45,7 @@ To build the executable demo application:
 make linux
 ```
 
-You can optionally use `make -j` to parallelize the build and append `DEBUG=1` or `RELEASE=1` to choose the build type.
+You can optionally use `make -j` to parallelize the build and append a `BUILD_TYPE` variable to choose the build type, for example `BUILD_TYPE=Debug`.
 
 Then run it from the output folder:
 
@@ -68,7 +68,7 @@ sudo apt-get install libglfw3-dev libicu-dev libfreetype6-dev libharfbuzz-dev
 Then compile with the following options:
 
 ```bash
-CMAKE_OPTIONS=" -DUSE_SYSTEM_GLFW_LIBS=1 -DUSE_SYSTEM_FONT_LIBS=1" make linux
+make linux CMAKE_OPTIONS="-DUSE_SYSTEM_GLFW_LIBS=1 -DUSE_SYSTEM_FONT_LIBS=1"
 ```
 
 ### CLion ###

@@ -105,6 +105,9 @@ void PointStyleBuilder::setup(const Marker& _marker, int zoom) {
 }
 
 bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
+    if (m_style.defaultTexture()) {
+        return true;
+    }
     // require a color or texture atlas/texture to be valid
     uint32_t color;
     if (_rule.get(StyleParamKey::color, color)) {
@@ -113,10 +116,6 @@ bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
 
     std::string texture;
     if (_rule.get(StyleParamKey::texture, texture) && !texture.empty()) {
-        return true;
-    }
-
-    if (m_style.defaultTexture()) {
         return true;
     }
 
@@ -132,12 +131,12 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule) const -> Parameters {
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
     _rule.get(StyleParamKey::buffer, p.labelOptions.buffer);
 
-    uint32_t priority = 0;
+    float priority = 0;
     std::string repeatGroup;
     StyleParam::Width repeatDistance;
 
     if (_rule.get(StyleParamKey::priority, priority)) {
-        p.labelOptions.priority = (float)priority;
+        p.labelOptions.priority = priority;
     }
 
     _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
@@ -310,7 +309,7 @@ bool PointStyleBuilder::evalSizeParam(const DrawRule& _rule, Parameters& _params
     glm::vec2 spriteSize(NAN);
 
     if (_texture) {
-        spriteSize = glm::vec2{_texture->getWidth(), _texture->getHeight()} * _texture->invDensity();
+        spriteSize = glm::vec2{_texture->width(), _texture->height()} * _texture->displayScale();
 
         const auto &atlas = _texture->spriteAtlas();
         if (atlas) {
@@ -318,7 +317,7 @@ bool PointStyleBuilder::evalSizeParam(const DrawRule& _rule, Parameters& _params
                 !atlas->getSpriteNode(_params.spriteDefault, spriteNode)) {
                 return false;
             }
-            spriteSize = spriteNode.m_size * _texture->invDensity();
+            spriteSize = spriteNode.m_size * _texture->displayScale();
         } else if ( !_params.sprite.empty() || !_params.spriteDefault.empty()) {
             // missing sprite atlas for texture but sprite specified in draw rule
             return false;
@@ -417,14 +416,14 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& _
 
     float minLineLength = std::max(params.size.x, params.size.y) *
         params.placementMinLengthRatio * m_style.pixelScale() /
-        (View::s_pixelsPerTile * m_tileScale);
+        (MapProjection::tileSize() * m_tileScale);
 
     switch(params.placement) {
         case LabelProperty::Placement::vertex: {
             for (size_t i = 0; i < _line.size() - 1; i++) {
                 auto& p = _line[i];
-                auto& q = _line[i+1];
                 if (params.keepTileEdges || !isOutsideTile(p)) {
+                    auto& q = _line[i+1];
                     if (params.autoAngle) {
                         params.labelOptions.angle = angleBetween(p, q);
                     }
@@ -460,7 +459,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& _
             if (lineLength <= minLineLength) { break; }
 
             float spacing = params.placementSpacing * m_style.pixelScale() /
-                (View::s_pixelsPerTile * m_tileScale);
+                (MapProjection::tileSize() * m_tileScale);
 
             int numLabels = std::max(std::floor(lineLength / spacing), 1.0f);
             float remainderLength = lineLength - (numLabels - 1) * spacing;

@@ -7,7 +7,7 @@ version = VERSION_NAME
 apply from: 'versioning.gradle'
 
 android {
-  compileSdkVersion 27
+  compileSdkVersion 28
 
   // Specific ABI targets can be chosen with the 'abis' property as a comma-separated list of ABIs.
   // From the command line, add '-Ptangram.abis=armeabi-v7a,x86,...' to only build those ABIs.
@@ -18,28 +18,35 @@ android {
   }
 
   defaultConfig {
-    minSdkVersion 15
-    targetSdkVersion 27
+    minSdkVersion 16
+    targetSdkVersion 28
     versionCode buildVersionCode()
     versionName VERSION_NAME
     consumerProguardFiles 'tangram-proguard-rules.txt'
     externalNativeBuild {
       cmake {
         targets 'tangram'
-        arguments '-DPLATFORM_TARGET=android',
-                  '-DANDROID_TOOLCHAIN=clang',
+        arguments '-DTANGRAM_PLATFORM=android',
                   '-DANDROID_STL=c++_shared'
         cppFlags '-std=c++14',
+                 '-fvisibility=hidden', // export only JNIEXPORT
                  '-pedantic',
                  '-fPIC',
                  '-fexceptions',
                  '-frtti',
+                 // linker
+                 '-Wl,--exclude-libs,ALL', // dont export static lib symbols
                  //warnings
                  '-Wall',
                  '-Wignored-qualifiers',
                  '-Wtype-limits',
-                 '-Wmissing-field-initializers',
-                 '-Wno-format-pedantic'
+                 '-Wno-missing-field-initializers',
+                 '-Wno-format-pedantic',
+                 '-Wno-gnu-statement-expression',
+                 '-Wno-gnu-anonymous-struct',
+                 '-Wno-nested-anon-types',
+                 '-Wno-unused-command-line-argument', // for -Wl linker flags..
+                 '-Wno-unknown-warning-option'
 
         if (abi == 'all') {
           abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86'
@@ -72,7 +79,7 @@ android {
 }
 
 dependencies {
-  api 'com.squareup.okhttp3:okhttp:3.10.0'
+  api 'com.squareup.okhttp3:okhttp:3.12.0'
   implementation 'com.android.support:support-annotations:27.1.1'
 }
 

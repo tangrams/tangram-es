@@ -138,7 +138,7 @@ FontSourceHandle OSXPlatform::systemFont(const std::string& _name, const std::st
     return FontSourceHandle(std::string(font.fontName.UTF8String));
 }
 
-UrlRequestHandle OSXPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
+bool OSXPlatform::startUrlRequestImpl(const Url& _url, const UrlRequestHandle _request, UrlRequestId& _id) {
 
     void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
 
@@ -169,9 +169,7 @@ UrlRequestHandle OSXPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
         }];
 
         // Run the callback from the requester.
-        if (_callback) {
-            _callback(urlResponse);
-        }
+        onUrlResponse(_request, std::move(urlResponse));
     };
 
     NSURL* nsUrl = [NSURL URLWithString:[NSString stringWithUTF8String:_url.string().c_str()]];
@@ -179,15 +177,17 @@ UrlRequestHandle OSXPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
 
     [dataTask resume];
 
-    return [dataTask taskIdentifier];
+    _id = [dataTask taskIdentifier];
+
+    return true;
 
 }
 
-void OSXPlatform::cancelUrlRequest(UrlRequestHandle handle) {
+void OSXPlatform::cancelUrlRequestImpl(const UrlRequestId _id) {
 
     [m_urlSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
         for (NSURLSessionTask* task in dataTasks) {
-            if ([task taskIdentifier] == handle) {
+            if ([task taskIdentifier] == _id) {
                 [task cancel];
                 break;
             }

@@ -1,16 +1,18 @@
 global:
-    sdk_mapzen_api_key: ''
+    sdk_api_key: ''
 
 sources:
     terrain-normals:
         type: Raster
-        url: https://tile.mapzen.com/mapzen/terrain/v1/normal/{z}/{x}/{y}.png
+        url: https://tile.nextzen.org/tilezen/terrain/v1/256/normal/{z}/{x}/{y}.png
         url_params:
-            api_key: global.sdk_mapzen_api_key
+            api_key: global.sdk_api_key
     mapzen-osm:
-        type: TopoJSON
-        url: https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson
+        type: MVT
+        url: https://tile.nextzen.org/tilezen/vector/v1/512/all/{z}/{x}/{y}.mvt
         rasters: [terrain-normals]
+        url_params:
+            api_key: global.sdk_api_key
     basemap:
         type: Raster
         #url: http://a.tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg
