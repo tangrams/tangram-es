@@ -70,8 +70,8 @@ public:
     Platform& platform;
     RenderState renderState;
     JobQueue jobQueue;
-    // Current interactive view
     View view;
+
     std::unique_ptr<AsyncWorker> asyncWorker = std::make_unique<AsyncWorker>();
     InputHandler inputHandler;
 
@@ -80,9 +80,6 @@ public:
     std::shared_ptr<Scene> scene;
     std::condition_variable blockUntilSceneReady;
 
-    // NB: Destruction of (managed and loading) tiles must happen
-    // before implicit destruction of 'scene' above!
-    // In particular any references of Labels and Markers to FontContext
     std::unique_ptr<FrameBuffer> selectionBuffer = std::make_unique<FrameBuffer>(0, 0);
 
     bool cacheGlState = false;
