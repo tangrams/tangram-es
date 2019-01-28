@@ -1226,10 +1226,10 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
                    callback:(void (^)(BOOL))callback
 {
     Tangram::CameraPosition camera = [cameraPosition convertToCoreCamera];
-    if (duration > 0) {
-        [self setMapRegionChangeState:TGMapRegionAnimating];
-    } else {
+    if (duration == 0) {
         [self setMapRegionChangeState:TGMapRegionJumping];
+    } else {
+        [self setMapRegionChangeState:TGMapRegionAnimating];
     }
     self.map->flyTo(camera, duration, speed);
     self.cameraAnimationCallback = callback;
