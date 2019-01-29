@@ -53,7 +53,7 @@ jobs:
       - checkout
       - run: git submodule update --init
       # Install dependencies.
-      - run: sudo gem install jazzy --no-document
+      - run: sudo gem install jazzy --no-document --version 0.9.4
       - run: brew install cmake
       # Build the framework in debug mode and package it into pod.zip
       - run: make ios-framework-universal BUILD_TYPE=Debug
@@ -92,7 +92,7 @@ jobs:
       - checkout
       - run: git submodule update --init
       # Install dependencies.
-      - run: sudo gem install jazzy --no-document
+      - run: sudo gem install jazzy --no-document --version 0.9.4
       - run: brew install cmake jfrog-cli-go
       # Build the framework in release mode and package it into pod.zip
       - run: make ios-framework-universal BUILD_TYPE=Release
