@@ -156,9 +156,10 @@ bool iOSPlatform::startUrlRequestImpl(const Url& _url, const UrlRequestHandle _r
         return false;
     }
 
+    __weak TGMapView* weakMapView = m_mapView;
     TGDownloadCompletionHandler handler = ^void (NSData* data, NSURLResponse* response, NSError* error) {
 
-        __strong TGMapView* mapView = m_mapView;
+        __strong TGMapView* mapView = weakMapView;
         if (!mapView) {
             // Map was disposed before the request completed, so abort the completion handler.
             return;
