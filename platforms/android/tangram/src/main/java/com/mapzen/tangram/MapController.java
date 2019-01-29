@@ -485,7 +485,6 @@ public class MapController {
         } else {
             setMapRegionState(MapRegionChangeState.ANIMATING);
         }
-        setMapRegionState(MapRegionChangeState.ANIMATING);
         setPendingCameraAnimationCallback(callback);
         final float seconds = duration / 1000.f;
         nativeFlyTo(mapPointer, position.longitude, position.latitude, position.zoom, seconds, speed);
