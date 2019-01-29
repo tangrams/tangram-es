@@ -225,7 +225,7 @@ TG_EXPORT
 /**
  Move the map camera to a new position with an animation that pans and zooms in a smooth arc.
 
- The animation duration is calculated based on the distance to the new camera position.
+ The animation duration is calculated based on the distance to the new camera position assuming a speed scaling factor of 1.0
 
  @param cameraPosition The new camera position
  @param callback A callback to execute when the animation completes
@@ -237,10 +237,24 @@ TG_EXPORT
  Move the map camera to a new position with an animation that pans and zooms in a smooth arc.
 
  @param cameraPosition The new camera position
+ @param duration Duration of the animation in seconds
  @param callback A callback to execute when the animation completes
  */
 - (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition
                withDuration:(NSTimeInterval)duration
+                   callback:(nullable void (^)(BOOL canceled))callback;
+
+/**
+ Move the map camera to a new position with an animation that pans and zooms in a smooth arc.
+
+ The animation duration is calculated based on the distance to the new camera position and the specified speed
+
+ @param cameraPosition The new camera position
+ @param speed Specified speed scaling factor
+ @param callback A callback to execute when the animation completes
+ */
+- (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition
+                  withSpeed:(CGFloat)speed
                    callback:(nullable void (^)(BOOL canceled))callback;
 
 /**

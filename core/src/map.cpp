@@ -878,7 +878,7 @@ void Map::flyTo(const CameraPosition& _camera, float _duration, float _speed) {
 
     if (_speed <= 0.f) { _speed = 1.f; }
 
-    float duration = _duration > 0 ? _duration : distance / _speed;
+    float duration = _duration >= 0 ? _duration : distance / _speed;
 
     cancelCameraAnimation();
 

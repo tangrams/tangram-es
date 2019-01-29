@@ -480,8 +480,11 @@ public class MapController {
 
     private void flyToCameraPosition(@NonNull final CameraPosition position, final int duration, @Nullable final CameraAnimationCallback callback, final float speed) {
         checkPointer(mapPointer);
-        // TODO: Make sense to have mark animating for flyTo irrespective of duration/speed?
-        setMapRegionState(MapRegionChangeState.ANIMATING);
+        if (duration == 0) {
+            setMapRegionState(MapRegionChangeState.JUMPING);
+        } else {
+            setMapRegionState(MapRegionChangeState.ANIMATING);
+        }
         setPendingCameraAnimationCallback(callback);
         final float seconds = duration / 1000.f;
         nativeFlyTo(mapPointer, position.longitude, position.latitude, position.zoom, seconds, speed);
