@@ -23,13 +23,24 @@ void logMsg(const char* fmt, ...) {
     va_end(args);
 }
 
-WindowsPlatform::WindowsPlatform() :
-    m_urlClient(UrlClient::Options{}) {}
+WindowsPlatform::WindowsPlatform()
+    : WindowsPlatform(UrlClient::Options{}) {}
 
 WindowsPlatform::WindowsPlatform(UrlClient::Options urlClientOptions) :
-    m_urlClient(urlClientOptions) {}
+    m_urlClient(std::make_unique<UrlClient>(urlClientOptions)) {
+}
+
+WindowsPlatform::~WindowsPlatform() {}
+
+void WindowsPlatform::shutdown() {
+    // Stop all UrlWorker threads
+    m_urlClient.reset();
+
+    Platform::shutdown();
+}
 
 void WindowsPlatform::requestRender() const {
+    if (m_shutdown) { return; }
     glfwPostEmptyEvent();
 }
 
@@ -45,19 +56,34 @@ std::vector<FontSourceHandle> WindowsPlatform::systemFontFallbacksHandle() const
     return handles;
 }
 
-UrlRequestHandle WindowsPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
-    return m_urlClient.addRequest(_url.string(), _callback);
+bool WindowsPlatform::startUrlRequestImpl(const Url& _url, const UrlRequestHandle _request, UrlRequestId& _id) {
+    if (_url.hasHttpScheme()) {
+        auto onRequestResponse = [this, _request](UrlResponse&& response) {
+            onUrlResponse(_request, std::move(response));
+        };
+        _id = m_urlClient->addRequest(_url.string(), onRequestResponse);
+        return true;
+    }
+    auto fileWorkerTask = [this, path = _url.path(), _request](){
+        UrlResponse response;
+        auto allocator = [&](size_t size) {
+            response.content.resize(size);
+            return response.content.data();
+        };
+        Platform::bytesFromFileSystem(path.c_str(), allocator);
+        onUrlResponse(_request, std::move(response));
+    };
+    m_fileWorker.enqueue(fileWorkerTask);
+    return false;
 }
 
-void WindowsPlatform::cancelUrlRequest(UrlRequestHandle _request) {
-    m_urlClient.cancelRequest(_request);
+void WindowsPlatform::cancelUrlRequestImpl(const UrlRequestId _id) {
+    if (m_urlClient) {
+        m_urlClient->cancelRequest(_id);
+    }
 }
 
-WindowsPlatform::~WindowsPlatform() {}
-
-void setCurrentThreadPriority(int priority) {
-	// No-op
-}
+void setCurrentThreadPriority(int priority) {}
 
 void initGLExtensions() {
     Tangram::Hardware::supportsMapBuffer = true;

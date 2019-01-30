@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "urlClient.h"
+#include "util/asyncWorker.h"
 
 namespace Tangram {
 
@@ -10,17 +11,17 @@ class WindowsPlatform : public Platform {
 public:
 
     WindowsPlatform();
-    WindowsPlatform(UrlClient::Options urlClientOptions);
+    explicit WindowsPlatform(UrlClient::Options urlClientOptions);
     ~WindowsPlatform() override;
+    void shutdown() override;
     void requestRender() const override;
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
-    UrlRequestHandle startUrlRequest(Url _url, UrlCallback _callback) override;
-    void cancelUrlRequest(UrlRequestHandle _request) override;
+    bool startUrlRequestImpl(const Url& _url, const UrlRequestHandle _request, UrlRequestId& _id) override;
+    void cancelUrlRequestImpl(const UrlRequestId _id) override;
 
 protected:
-
-    UrlClient m_urlClient;
-
+    std::unique_ptr<UrlClient> m_urlClient;
+    AsyncWorker m_fileWorker;
 };
 
 } // namespace Tangram
