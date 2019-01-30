@@ -24,9 +24,9 @@ int main(int argc, char* argv[]) {
     if (getcwd(pathBuffer, PATH_MAX) != nullptr) {
         baseUrl = Url(std::string(pathBuffer) + "/").resolved(baseUrl);
     }
-    
+
     LOG("Base URL: %s", baseUrl.string().c_str());
-    
+
     Url sceneUrl = Url(GlfwApp::sceneFile).resolved(baseUrl);
     GlfwApp::sceneFile = sceneUrl.string();
 
@@ -39,4 +39,5 @@ int main(int argc, char* argv[]) {
     // Clean up.
     GlfwApp::destroy();
 
+    return 0;
 }
