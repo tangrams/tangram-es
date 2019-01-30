@@ -1,8 +1,5 @@
 check_unsupported_compiler_version()
 
-# TODO: only sqlite?
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector")
-
 add_definitions(-DTANGRAM_WINDOWS)
 
 find_package(OpenGL REQUIRED)

@@ -8,11 +8,11 @@
 
 #include <GLFW/glfw3.h>
 
-#define DEFAULT "fonts/NotoSans-Regular.ttf"
-#define FONT_AR "fonts/NotoNaskh-Regular.ttf"
-#define FONT_HE "fonts/NotoSansHebrew-Regular.ttf"
-#define FONT_JA "fonts/DroidSansJapanese.ttf"
-#define FALLBACK "fonts/DroidSansFallback.ttf"
+#define DEFAULT "res/fonts/NotoSans-Regular.ttf"
+#define FONT_AR "res/fonts/NotoNaskh-Regular.ttf"
+#define FONT_HE "res/fonts/NotoSansHebrew-Regular.ttf"
+#define FONT_JA "res/fonts/DroidSansJapanese.ttf"
+#define FALLBACK "res/fonts/DroidSansFallback.ttf"
 
 namespace Tangram {
 
