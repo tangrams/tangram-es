@@ -1108,6 +1108,13 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
             [self setMapRegionChangeState:TGMapRegionJumping];
             break;
         case UIGestureRecognizerStateChanged:
+
+            // NOTE: Based on the documentation https://developer.apple.com/documentation/uikit/uipinchgesturerecognizer,
+            // Pinch gesture state should not be set to "Changed" if "both" fingers are not pressed, which does not seem to be the case.
+            // Following a work-around to avoid this bug.
+            if ([pinchRecognizer numberOfTouches] < 2) {
+                break;
+            }
             [self setMapRegionChangeState:TGMapRegionJumping];
             if ([self.gestureDelegate respondsToSelector:@selector(pinchFocus:recognizer:)]) {
                 CGPoint focusPosition = [self.gestureDelegate pinchFocus:self recognizer:pinchRecognizer];
