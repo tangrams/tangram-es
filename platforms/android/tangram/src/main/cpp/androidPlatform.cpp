@@ -398,31 +398,31 @@ AndroidMap::AndroidMap(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramI
 
 void AndroidMap::pickFeature(float posX, float posY) {
 
-    pickFeatureAt(posX, posY, [this](auto featurePickResult) {
+    pickFeatureAt(posX, posY, [this](const auto* featurePickResult) {
         JniThreadBinding jniEnv(jvm);
 
-        jobject hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
-        float position[2] = {0.0, 0.0};
+        float x = 0.f, y = 0.f;
+        jobject hashmap = nullptr;
 
         if (featurePickResult) {
-            auto properties = featurePickResult->properties;
+            x = featurePickResult->position[0];
+            y = featurePickResult->position[1];
 
-            position[0] = featurePickResult->position[0];
-            position[1] = featurePickResult->position[1];
-
+            hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
+            const auto& properties = featurePickResult->properties;
             for (const auto& item : properties->items()) {
                 jstring jkey = jstringFromString(jniEnv, item.key);
                 jstring jvalue = jstringFromString(jniEnv, properties->asString(item.value));
                 jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
             }
         }
-        jniEnv->CallVoidMethod(m_tangramInstance, featurePickCallbackMID, hashmap, position[0], position[1]);
+        jniEnv->CallVoidMethod(m_tangramInstance, featurePickCallbackMID, hashmap, x, y);
     });
 }
 
 void AndroidMap::pickLabel(float posX, float posY) {
 
-    pickLabelAt(posX, posY, [this](auto labelPickResult){
+    pickLabelAt(posX, posY, [this](const auto* labelPickResult){
         JniThreadBinding jniEnv(jvm);
 
         float x = 0.f, y = 0.f;
@@ -431,13 +431,14 @@ void AndroidMap::pickLabel(float posX, float posY) {
         jobject hashmap = nullptr;
 
         if (labelPickResult) {
-            auto properties = labelPickResult->touchItem.properties;
-
             x = labelPickResult->touchItem.position[0];
             y = labelPickResult->touchItem.position[1];
+            lng = labelPickResult->coordinates.longitude;
+            lat = labelPickResult->coordinates.latitude;
+            type = labelPickResult->type;
 
             hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
-
+            const auto& properties = labelPickResult->touchItem.properties;
             for (const auto& item : properties->items()) {
                 jstring jkey = jstringFromString(jniEnv, item.key);
                 jstring jvalue = jstringFromString(jniEnv, properties->asString(item.value));
@@ -450,7 +451,7 @@ void AndroidMap::pickLabel(float posX, float posY) {
 
 void AndroidMap::pickMarker(float posX, float posY) {
 
-    pickMarkerAt(posX, posY, [this](auto markerPickResult) {
+    pickMarkerAt(posX, posY, [this](const auto* markerPickResult) {
         JniThreadBinding jniEnv(jvm);
 
         float x = 0.f, y = 0.f;
