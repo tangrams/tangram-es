@@ -3,7 +3,10 @@ check_unsupported_compiler_version()
 add_definitions(-DTANGRAM_WINDOWS)
 
 find_package(OpenGL REQUIRED)
-find_package(CURL REQUIRED)
+
+if(NOT DEFINED CURL_LIBRARIES OR NOT DEFINED CURL_INCLUDE_DIRS)
+  find_package(CURL REQUIRED)
+endif()
 
 include(cmake/glfw.cmake)
 

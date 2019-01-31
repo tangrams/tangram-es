@@ -20,8 +20,7 @@ The demo application uses the Nextzen vector tile service, so you will need a Ne
 
 ## Build
 
-  The **only** supported toolchain to build Tangram ES on Windows is currently MinGW (MinGW-w64
-  with GCC, POSIX threads and SJLJ exceptions).
+  The **only** supported toolchain to build Tangram ES on Windows is currently MinGW (MinGW GCC, POSIX threads).
 
  1. Download zlib sources from https://zlib.net/
 

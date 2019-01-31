@@ -1,0 +1,21 @@
+install:
+  - set PATH=C:\cmake-install\bin;C:cmake-install\lib;C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin;%PATH%
+  - appveyor DownloadFile "https://www.zlib.net/zlib-1.2.11.tar.gz"
+  - 7z x -o. zlib-1.2.11.tar.gz
+  - 7z x -oC:\cmake-install zlib-1.2.11.tar
+  - cd C:\cmake-install\zlib-1.2.11
+  - cmake -H. -Bbuild -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX=C:\cmake-install -DCMAKE_SH="CMAKE_SH-NOTFOUND"
+  - cmake --build build
+  - cmake --build build --target install
+  - appveyor DownloadFile "https://curl.haxx.se/download/curl-7.63.0.tar.gz"
+  - 7z x -o. curl-7.63.0.tar.gz
+  - 7z x -oC:\cmake-install curl-7.63.0.tar
+  - cd C:\cmake-install\curl-7.63.0
+  - cmake -H. -Bbuild -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX=C:\cmake-install -DCMAKE_USE_WINSSL=ON -DCMAKE_SH="CMAKE_SH-NOTFOUND"
+  - cmake --build build
+  - cmake --build build --target install
+  - cd C:\projects\tangram-es
+before_build:
+  - git submodule update --init --recursive
+build_script:
+  - mingw32-make windows CMAKE_OPTIONS="-DCURL_LIBRARIES=C:/cmake-install/bin/libcurl.dll -DCURL_INCLUDE_DIRS=C:/cmake-install/include"
