@@ -69,6 +69,7 @@ Tangram::MarkerID poiMarker = 0;
 Tangram::MarkerID polyline = 0;
 
 std::vector<SceneUpdate> sceneUpdates;
+const char* apiKeyScenePath = "global.sdk_api_key";
 
 void loadSceneFile(bool setPosition, std::vector<SceneUpdate> updates) {
 
@@ -151,7 +152,7 @@ void create(std::unique_ptr<Platform> p, int w, int h) {
     }
 
     if (!apiKey.empty()) {
-        sceneUpdates.push_back(SceneUpdate("global.sdk_api_key", apiKey));
+        sceneUpdates.push_back(SceneUpdate(apiKeyScenePath, apiKey));
     }
 
     // Setup tangram
@@ -559,7 +560,7 @@ void showSceneGUI() {
             loadSceneFile();
         }
         if (ImGui::InputText("API key", &apiKey, ImGuiInputTextFlags_EnterReturnsTrue)) {
-            loadSceneFile();
+            loadSceneFile(false, {SceneUpdate{apiKeyScenePath, apiKey}});
         }
         if (ImGui::Button("Reload Scene")) {
             loadSceneFile();
