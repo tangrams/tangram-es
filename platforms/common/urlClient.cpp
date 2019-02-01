@@ -207,7 +207,7 @@ void UrlClient::cancelRequest(UrlClient::RequestId _id) {
     // Check requests that are already active.
     {
         std::lock_guard<std::mutex> lock(m_requestMutex);
-        auto it = std::find_if(std::begin(m_tasks), std::end(m_tasks),
+        auto it = std::find_if(m_tasks.begin(), m_tasks.end(),
                                [&](auto& t) { return t.request.id == _id; });
 
         if (it != std::end(m_tasks)) {
@@ -232,7 +232,7 @@ void UrlClient::startPendingRequests() {
         Task& task = m_tasks.front();
 
         // Swap front with back
-        m_tasks.splice(std::end(m_tasks), m_tasks, std::begin(m_tasks));
+        m_tasks.splice(m_tasks.end(), m_tasks, m_tasks.begin());
 
         task.setup();
 
@@ -348,7 +348,7 @@ void UrlClient::curlLoop() {
             {
                 std::lock_guard<std::mutex> lock(m_requestMutex);
                 // Find Task for this message
-                auto it = std::find_if(std::begin(m_tasks), std::end(m_tasks),
+                auto it = std::find_if(m_tasks.begin(), m_tasks.end(),
                                        [&](auto& t) { return t.handle == handle; });
                 if (it == std::end(m_tasks)) {
                     assert(false);
@@ -356,7 +356,7 @@ void UrlClient::curlLoop() {
                 }
                 auto& task = *it;
                 // Move task to front - for quick reuse
-                m_tasks.splice(std::begin(m_tasks), m_tasks, it);
+                m_tasks.splice(m_tasks.begin(), m_tasks, it);
 
                 // Get Response content and Request callback
                 callback = std::move(task.request.callback);
