@@ -1,12 +1,17 @@
 #pragma once
 
-#include "platform.h"
+#include "platform.h" // UrlResponse
+#include "util/asyncWorker.h"
+
 #include <condition_variable>
 #include <functional>
+#include <list>
 #include <mutex>
+#include <deque>
 #include <string>
 #include <thread>
 #include <vector>
+
 
 namespace Tangram {
 
@@ -15,7 +20,7 @@ class UrlClient {
 public:
 
     struct Options {
-        uint32_t numberOfThreads = 4;
+        uint32_t maxActiveTasks = 20;
         uint32_t connectionTimeoutMs = 3000;
         uint32_t requestTimeoutMs = 30000;
     };
@@ -35,30 +40,39 @@ private:
         std::string url;
         UrlCallback callback;
         RequestId id;
-        bool canceled;
     };
 
-    using Response = UrlResponse;
+    struct Task;
 
-    struct Task {
-        Request request;
-        std::vector<char> content;
-    };
+    void curlLoop();
+    void curlWakeUp();
 
-    static Response getCanceledResponse();
-    static size_t curlWriteCallback(char* ptr, size_t size, size_t n, void* user);
-    static int curlProgressCallback(void* user, double dltotal, double dlnow, double ultotal, double ulnow);
+    void startPendingRequests();
 
-    void curlLoop(uint32_t index);
-
-    std::vector<std::thread> m_threads;
-    std::vector<Task> m_tasks;
-    std::vector<Request> m_requests;
-    std::condition_variable m_requestCondition;
-    std::mutex m_requestMutex;
     Options m_options;
-    UrlRequestHandle m_requestCount = 0;
-    bool m_keepRunning = false;
+
+    // Curl multi handle
+    void *m_curlHandle = nullptr;
+
+    bool m_curlRunning = false;
+    bool m_curlNotified = false;
+
+    std::unique_ptr<std::thread> m_curlWorker;
+    AsyncWorker m_dispatcher;
+
+    std::list<Task> m_tasks;
+    uint32_t m_activeTasks = 0;
+
+    std::deque<Request> m_requests;
+
+    // Synchronize m_tasks and m_requests
+    std::mutex m_requestMutex;
+
+    // RequestIds
+    std::atomic_uint64_t m_requestCount{0};
+
+    // File descriptors to break waiting select.
+    int m_requestNotify[2] = { -1, -1 };
 };
 
 } // namespace Tangram

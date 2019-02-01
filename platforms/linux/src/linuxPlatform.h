@@ -5,7 +5,6 @@
 
 #include "platform.h"
 #include "urlClient.h"
-#include "util/asyncWorker.h"
 
 namespace Tangram {
 
@@ -25,9 +24,8 @@ public:
 
 protected:
     FcConfig* m_fcConfig = nullptr;
-    std::unique_ptr<UrlClient> m_urlClient;
-    AsyncWorker m_fileWorker;
 
+    std::unique_ptr<UrlClient> m_urlClient;
 };
 
 } // namespace Tangram
