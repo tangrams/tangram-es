@@ -913,7 +913,7 @@ Scene::Styles SceneLoader::applyStyles(const Node& _node, SceneTextures& _textur
                 // for rule merging, but style's default styling rules are applied
                 // post rule merging for any style parameter which was not assigned
                 // during merging step.
-                int ruleID = _ruleNames.add(name);
+                int ruleID = addDrawRuleName(_ruleNames, name);
                 style->setDefaultDrawRule(std::make_unique<DrawRuleData>(name, ruleID,
                                                                          std::move(params)));
             }
@@ -1117,7 +1117,7 @@ void SceneLoader::parseStyleParams(const Node& _params, const std::string& _pref
 
             if (val.compare(0, 8, "function") == 0) {
                 StyleParam param(key);
-                param.function = _functions.add(val);
+                param.function = addSceneFunction(_functions, val);
                 _out.push_back(std::move(param));
             } else {
                 _out.push_back(StyleParam{ key, value });
@@ -1580,7 +1580,7 @@ SceneLayer SceneLoader::loadSublayer(const Node& _layer, const std::string& _lay
                 auto params = parseStyleParams(ruleNode.second, _stops, _functions);
 
                 auto const& ruleName = ruleNode.first.Scalar();
-                int ruleId = _ruleNames.add(ruleName);
+                int ruleId = addDrawRuleName(_ruleNames, ruleName);
 
                 rules.push_back({ ruleName, ruleId, std::move(params) });
             }
@@ -1620,7 +1620,7 @@ Filter SceneLoader::generateFilter(SceneFunctions& _functions, const Node& _filt
 
         const std::string& val = _filter.Scalar();
         if (val.compare(0, 8, "function") == 0) {
-            return Filter::MatchFunction(_functions.add(val));
+            return Filter::MatchFunction(addSceneFunction(_functions, val));
         }
         return Filter();
     }
@@ -1784,5 +1784,20 @@ bool SceneLoader::getFilterRangeValue(const Node& _node, double& _val, bool& _ha
     return true;
 }
 
+int SceneLoader::addDrawRuleName(DrawRuleNames& _names, const std::string& _name) {
+    for (size_t i = 0; i <_names.size(); i++) {
+        if (_names.at(i) == _name) { return i; }
+    }
+    _names.push_back(_name);
+    return _names.size()-1;
+}
+
+int SceneLoader::addSceneFunction(SceneFunctions& _functions, const std::string& _function) {
+    for (size_t i = 0; i <_functions.size(); i++) {
+        if (_functions.at(i) == _function) { return i; }
+    }
+    _functions.push_back(_function);
+    return _functions.size()-1;
+}
 
 }

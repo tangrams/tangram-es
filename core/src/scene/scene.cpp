@@ -617,12 +617,4 @@ Color Scene::backgroundColor(int _zoom) const {
     return m_background;
 }
 
-int SceneFunctions::add(const std::string& _function) {
-    for (size_t i = 0; i <size(); i++) {
-        if (at(i) == _function) { return i; }
-    }
-    push_back(_function);
-    return size()-1;
-}
-
 }

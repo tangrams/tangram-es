@@ -110,6 +110,9 @@ struct SceneLoader {
     static Filter generatePredicate(const Node& filter, std::string key);
     static bool getFilterRangeValue(const Node& node, double& val, bool& hasPixelArea);
 
+    static int addDrawRuleName(DrawRuleNames& _names, const std::string& _name);
+    static int addSceneFunction(SceneFunctions& _functions, const std::string& _function);
+
     SceneLoader() = delete;
 
 };

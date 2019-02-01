@@ -48,29 +48,11 @@ struct SceneCamera : public Camera {
     glm::dvec3 startPosition;
 };
 
-struct SceneFunctions : public std::vector<std::string> {
-    int add(const std::string& _function);
-};
+using SceneFunctions = std::vector<std::string>;
 
 using SceneStops = std::list<Stops>;
 
-struct DrawRuleNames : std::vector<std::string> {
-    int add(const std::string& _name) {
-        int id = getId(_name);
-        if (id < 0) {
-            push_back(_name);
-            return size() - 1;
-        }
-        return id;
-    }
-    int getId(const std::string& _name) const {
-        auto it = std::find(begin(), end(), _name);
-        if (it == end()) {
-            return -1;
-        }
-        return it - begin();
-    }
-};
+using DrawRuleNames = std::vector<std::string>;
 
 struct SceneTextures {
     struct Task {
