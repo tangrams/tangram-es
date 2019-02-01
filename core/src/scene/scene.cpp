@@ -327,7 +327,8 @@ void Scene::prefetchTiles(const View& _view) {
     view.setCamera(m_camera);
 
     if (m_options.useScenePosition) {
-        view.setPosition(m_camera.startPosition);
+        view.setZoom(m_camera.startPosition.z);
+        view.setPosition(m_camera.startPosition.x, m_camera.startPosition.y);
     }
 
     LOGTO(">>> loadTiles");
@@ -358,7 +359,8 @@ bool Scene::completeScene(View& _view) {
     _view.setCamera(m_camera);
 
     if (m_options.useScenePosition) {
-        _view.setPosition(m_camera.startPosition);
+        _view.setZoom(m_camera.startPosition.z);
+        _view.setPosition(m_camera.startPosition.x, m_camera.startPosition.y);
     }
 
     m_pixelScale = _view.pixelScale();

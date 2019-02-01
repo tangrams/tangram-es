@@ -121,7 +121,6 @@ public:
 
     // Set the position of the view within the world in projected meters.
     void setPosition(double _x, double _y);
-    void setPosition(const glm::dvec3 pos) { setPosition(pos.x, pos.y); }
     void setPosition(const glm::dvec2 pos) { setPosition(pos.x, pos.y); }
 
     void setCenterCoordinates(LngLat center);
