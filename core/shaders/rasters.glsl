@@ -10,7 +10,7 @@ uniform vec3 u_raster_offsets[TANGRAM_NUM_RASTER_SOURCES];
 
 #define currentRasterPixel(raster_index) (currentRasterUV(raster_index) * rasterPixelSize(raster_index))
 
-#define sampleRasterAtPixel(raster_index, pixel) (texture2D(u_rasters[raster_index], adjustRasterUV(raster_index, (pixel) / rasterPixelSize(raster_index))))
+#define sampleRasterAtPixel(raster_index, pixel) (texture2D(u_rasters[raster_index], (pixel) / rasterPixelSize(raster_index)))
 
 #define sampleRaster(raster_index) (texture2D(u_rasters[raster_index], currentRasterUV(raster_index)))
 
