@@ -1,0 +1,33 @@
+global:
+    sdk_api_key: ''
+    sdk_landcover_api_key: ''
+
+sources:
+  nextzen:
+    type: MVT
+    url: https://tile.nextzen.org/tilezen/vector/v1/256/all/{z}/{x}/{y}.mvt
+    url_params:
+        api_key: global.sdk_api_key
+    rasters: ['terrain']
+  terrain:
+    type: Raster
+    url: https://d3gy1yxv8mxm7h.cloudfront.net/tilezen/landcover/v1/512/all/{z}/{x}/{y}.png
+    url_params:
+        api_key: global.sdk_landcover_api_key
+    zoom_offset: 1
+
+styles:
+  raster-test:
+    base: raster
+    shaders:
+      blocks:
+        color: 
+          "color.rgba = sampleRasterAtPixel(0, vec2(currentRasterPixel(0)));"
+
+layers:
+  earth:
+    data: { source: nextzen }
+    draw:
+      raster-test:
+        order: 1
+        color: white
