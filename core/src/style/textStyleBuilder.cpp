@@ -176,6 +176,8 @@ bool getTextSource(const StyleParamKey _key, const DrawRule& _rule, const Proper
     } else if (textSource.value.is<std::string>()) {
         // From function evaluation
         _text = textSource.value.get<std::string>();
+    } else if (textSource.value.is<Undefined>()) {
+        _text = "";
     } else {
         return false;
     }
