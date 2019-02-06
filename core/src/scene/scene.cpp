@@ -38,44 +38,21 @@ Scene::Scene(Platform& _platform, SceneOptions&& _options) :
     m_platform(_platform),
     m_options(std::move(_options)) {
 
+    m_tileWorker = std::make_unique<TileWorker>(_platform, m_options.numTileWorkers);
+    m_tileManager = std::make_unique<TileManager>(_platform, *m_tileWorker);
     m_markerManager = std::make_unique<MarkerManager>(*this);
 }
 
 Scene::~Scene() {
-    dispose();
-}
-
-void Scene::dispose() {
-    if (m_state == State::disposed) { return; }
-
     cancelTasks();
+    /// Cancels all TileTasks
+    LOGD("Finish TileManager");
+    m_tileManager.reset();
 
-    std::lock_guard<std::mutex> lock(m_sceneLoadMutex);
-
-    // TODO: Could check TileSources held by NetworkDatasource urlcallbacks
-    // bool waitForTileTasks = true;
-    // while(waitForTileTasks) {
-    //     waitForTileTasks = false;
-    //     for (auto& source : m_tileSources) {
-    //         if (source.use_count() > 1) {
-    //             waitForTileTasks = true;
-    //             break;
-    //         }
-    //     }
-    // }
-
-    if (m_tileManager) {
-        /// Cancels all TileTasks
-        LOG("Finish TileManager");
-        m_tileManager.reset();
-
-        /// Waits for processing TileTasks to finish
-        LOG("Finish TileWorker");
-        m_tileWorker.reset();
-        LOG("TileWorker stopped");
-    }
-
-    m_state = State::disposed;
+    /// Waits for processing TileTasks to finish
+    LOGD("Finish TileWorker");
+    m_tileWorker.reset();
+    LOGD("TileWorker stopped");
 }
 
 void Scene::cancelTasks() {
@@ -85,7 +62,7 @@ void Scene::cancelTasks() {
     if (state == State::loading) {
         /// Cancel loading Scene data
         if (m_importer) {
-            LOG("Cancel Importer tasks");
+            LOGD("Cancel Importer tasks");
             m_importer->cancelLoading(m_platform);
         }
     }
@@ -97,14 +74,12 @@ void Scene::cancelTasks() {
 
     /// Cancels all TileTasks
     if (m_tileManager) {
-        LOG("Cancel TileManager tasks");
+        LOGD("Cancel TileManager tasks");
         m_tileManager->cancelTileTasks();
     }
 }
 
 bool Scene::load() {
-    /// Sync with dispose() when loading async.
-    std::lock_guard<std::mutex> sceneLoadLock(m_sceneLoadMutex);
 
     LOGTOInit();
     LOGTO(">>>>>> loadScene >>>>>>");
@@ -158,8 +133,6 @@ bool Scene::load() {
     SceneLoader::applyScene(m_config["scene"], m_background, m_backgroundStops, m_animated);
     LOGTO("<<< applyScene");
 
-    m_tileWorker = std::make_unique<TileWorker>(m_platform, m_options.numTileWorkers);
-    m_tileManager = std::make_unique<TileManager>(m_platform, *m_tileWorker);
     m_tileManager->setTileSources(m_tileSources);
 
     /// Scene is ready to load tiles for initial view

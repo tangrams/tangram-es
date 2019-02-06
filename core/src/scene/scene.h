@@ -94,7 +94,7 @@ class Scene {
 public:
     enum animate { yes, no, none };
 
-    Scene(Platform& platform, SceneOptions&& = SceneOptions{""});
+    Scene(Platform& _platform, SceneOptions&& = {});
     ~Scene();
 
     Scene(const Scene& _other) = delete;
@@ -167,9 +167,6 @@ public:
     /// Cancel scene loading and all TileManager tasks
     void cancelTasks();
 
-    /// Cancel all scene tasks and wait for TileWorker thread to join
-    void dispose();
-
     /// Returns true when scene finished loading and completeScene() suceeded.
     bool isReady() const { return m_state == State::ready; };
     bool isPendingCompletion() const { return m_state == State::pending_completion; };
@@ -207,7 +204,6 @@ protected:
         pending_completion,  // set end of Scene::load()
         ready,               // set on main thread when Scene::complete() succeeded
         canceled,            // should stop any scene- or tile-loading tasks
-        disposed
     };
 
     State m_state = State::initial;

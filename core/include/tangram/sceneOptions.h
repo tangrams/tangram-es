@@ -32,7 +32,7 @@ public:
         : yaml(_yaml), url(_resources), updates(_updates),
           useScenePosition(_useScenePosition) {}
 
-    SceneOptions() {}
+    SceneOptions() : numTileWorkers(0) {}
 
     /// Scene as yaml string
     std::string yaml;

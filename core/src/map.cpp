@@ -140,9 +140,7 @@ SceneID Map::loadScene(SceneOptions&& _sceneOptions, bool _async) {
 
 SceneID Map::Impl::loadScene(SceneOptions&& _sceneOptions) {
 
-    /// Avoid to keep loading old scene and tiles
-    scene->dispose();
-
+    // NB: This also disposes old scene which might be blocking
     scene = std::make_shared<Scene>(platform, std::move(_sceneOptions));
 
     scene->load();
@@ -156,11 +154,11 @@ SceneID Map::Impl::loadScene(SceneOptions&& _sceneOptions) {
 
 SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
 
-    /// Avoid to keep loading old scene and tiles
+    // Avoid to keep loading old scene and tiles
     auto oldScene = std::move(scene);
     oldScene->cancelTasks();
 
-    /// Add callback for tile prefetching
+    // Add callback for tile prefetching
     _sceneOptions.asyncCallback = [&](Scene* _scene) {
         jobQueue.add([&, _scene]() {
             if (_scene == scene.get()) {
@@ -173,28 +171,18 @@ SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
     scene = std::make_shared<Scene>(platform, std::move(_sceneOptions));
 
     asyncWorker->enqueue([this, newScene = scene]() {
-        LOG("ASYNC LOAD >>>");
-
         newScene->load();
 
         if (onSceneReady) {
             onSceneReady(newScene->id, newScene->errors());
         }
 
-        /// Check if another Scene is already queued
-        if (newScene != scene) {
-            newScene->dispose();
-        }
-
         platform.requestRender();
-
-        LOG("ASYNC LOAD <<<");
     });
 
-    /// Disposing TileWorker is blocking: Do this async just in case
+    // Disposing TileWorker is blocking: Do this async just in case
     asyncWorker->enqueue([s = std::move(oldScene)]() mutable {
-        LOG("ASYNC DISPOSE OLD SCENE");
-        s->dispose();
+        LOG("ASYNC DISPOSE OF OLD SCENE - %d", s.use_count() == 1);
     });
 
     return scene->id;
