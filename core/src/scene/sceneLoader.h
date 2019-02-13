@@ -33,10 +33,8 @@ struct SceneLoader {
 
     static SceneError applyUpdates(Node& config, const std::vector<SceneUpdate>& updates);
 
-
     /// Global
     static void applyGlobals(Node& config);
-
 
     /// Scene
     static void applyScene(const Node& sceneNode, Color& background, Stops& backgroundStops,
@@ -47,23 +45,19 @@ struct SceneLoader {
     static void loadCameras(const Node& camerasNode, SceneCamera& camera);
     static void loadCamera(const Node& cameraNode, SceneCamera& camera);
 
-
     /// Lights
     static Scene::Lights applyLights(const Node& lightsNode);
     static std::unique_ptr<Light> loadLight(const std::pair<Node, Node>& light);
     static void parseLightPosition(const Node& positionNode, PointLight& light);
-
 
     /// Textures
     static void applyTextures(const Node& texturesNode, SceneTextures& textures);
     static void loadTexture(const std::pair<Node, Node>& texture, SceneTextures& textures);
     static bool parseTexFiltering(const Node& filteringNode, TextureOptions& options);
 
-
     /// Fonts
     static void applyFonts(const Node& fontsNode, SceneFonts& fonts);
     static void loadFontDescription(const Node& font, const std::string& family, SceneFonts& fonts);
-
 
     /// Sources
     static Scene::TileSources applySources(const Node& config, const SceneOptions& options, Platform& platform);
@@ -96,9 +90,6 @@ struct SceneLoader {
     /// Layers
     static Scene::Layers applyLayers(const Node& layersNode, SceneFunctions& functions, SceneStops& stops,
                                      DrawRuleNames& ruleNames);
-
-    static void loadLayer(const std::pair<Node, Node>& layer, SceneFunctions& functions, SceneStops& stops,
-                          DrawRuleNames& ruleNames);
 
     static SceneLayer loadSublayer(const Node& layer, const std::string& name, SceneFunctions& functions,
                                    SceneStops& stops, DrawRuleNames& ruleNames);
