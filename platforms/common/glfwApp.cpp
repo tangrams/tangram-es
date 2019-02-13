@@ -188,7 +188,7 @@ void create(std::unique_ptr<Platform> p, int w, int h) {
     glfwMakeContextCurrent(main_window);
     glfwSwapInterval(1); // Enable vsync
 
-#ifdef _WIN32
+#ifdef TANGRAM_WINDOWS
     gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
 #endif
 
