@@ -25,6 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol TGMapViewDelegate;
 @protocol TGRecognizerDelegate;
+@protocol TGCustomRenderer;
 @protocol TGURLHandler;
 
 /**
@@ -332,6 +333,27 @@ TG_EXPORT
  Access the Markers added to the map.
  */
 @property (readonly, nonatomic) NSArray<TGMarker *>* markers;
+
+#pragma mark CustomRenderer
+
+/**
+ Adds a custom renderer to the map.
+ Helps accomplish any client specific rendering.
+
+ @note: Adding custom renderer with the same identifier, will override the previous one.
+
+ @param customRenderer An instance for `TGCustomRenderer`
+ @param identifier Used as a key to map `TGCustomRenderer` and help prune when removed.
+ @param layer Reference layer before which custom renderer will draw
+ */
+- (void)addCustomRenderer:(id<TGCustomRenderer>)customRenderer withIdentifier:(NSString *)identifier beforeLayer:(NSString *)layer;
+
+/**
+ Remove a custom renderer from the map
+
+ @param identifier Identifier associated with a `TGCustomRenderer`
+ */
+- (void)removeCustomRendererWithIdentifier:(NSString *)identifier;
 
 #pragma mark File Handling
 

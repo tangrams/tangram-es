@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		301EFC3521000CD6005427D6 /* DemoTGCustomRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 301EFC3421000CD6005427D6 /* DemoTGCustomRenderer.m */; };
 		D20C4A55212B6D94005BDB9A /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D20C4A54212B6D93005BDB9A /* GLKit.framework */; };
 		D298723520D05F6F009A0AB8 /* MapViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723120D05F6E009A0AB8 /* MapViewController.m */; };
 		D298723620D05F6F009A0AB8 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723220D05F6E009A0AB8 /* main.m */; };
@@ -45,6 +46,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		301EFC3321000BD8005427D6 /* DemoTGCustomRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DemoTGCustomRenderer.h; sourceTree = "<group>"; };
+		301EFC3421000CD6005427D6 /* DemoTGCustomRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DemoTGCustomRenderer.m; sourceTree = "<group>"; };
 		D20C4A54212B6D93005BDB9A /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
 		D222B92321642BCA007E6FD6 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../../../build/ios/Info.plist; sourceTree = "<group>"; };
 		D298721620D05D8E009A0AB8 /* TangramDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TangramDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -132,6 +135,8 @@
 				D298723220D05F6E009A0AB8 /* main.m */,
 				D298723320D05F6E009A0AB8 /* AppDelegate.m */,
 				D298723420D05F6E009A0AB8 /* MapViewController.h */,
+				301EFC3321000BD8005427D6 /* DemoTGCustomRenderer.h */,
+				301EFC3421000CD6005427D6 /* DemoTGCustomRenderer.m */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -253,6 +258,7 @@
 				D298723620D05F6F009A0AB8 /* main.m in Sources */,
 				D298723520D05F6F009A0AB8 /* MapViewController.m in Sources */,
 				D298723720D05F6F009A0AB8 /* AppDelegate.m in Sources */,
+				301EFC3521000CD6005427D6 /* DemoTGCustomRenderer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

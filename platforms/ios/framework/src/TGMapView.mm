@@ -13,6 +13,8 @@
 #import "TGLabelPickResult.h"
 #import "TGLabelPickResult+Internal.h"
 #import "TGMapData.h"
+#import "TGCustomRenderer.h"
+#import "TGWrapIOSCustomRenderer.h"
 #import "TGMapData+Internal.h"
 #import "TGMapViewDelegate.h"
 #import "TGMarkerPickResult.h"
@@ -64,6 +66,7 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
 @property (strong, nonatomic) CADisplayLink *displayLink;
 @property (strong, nonatomic) NSMutableDictionary<NSString *, TGMarker *> *markersById;
 @property (strong, nonatomic) NSMutableDictionary<NSString *, TGMapData *> *dataLayersByName;
+@property (strong, nonatomic) NSMutableDictionary<NSString *, TGWrapIOSCustomRenderer*> *customRendererById;
 @property (nonatomic, copy, nullable) void (^cameraAnimationCallback)(BOOL);
 @property TGMapRegionChangeState currentState;
 @property BOOL prevCameraEasing;
@@ -146,6 +149,7 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
     _continuous = NO;
     _preferredFramesPerSecond = 60;
     _markersById = [[NSMutableDictionary alloc] init];
+    _customRendererById = [[NSMutableDictionary alloc] init];
     _dataLayersByName = [[NSMutableDictionary alloc] init];
     _resourceRoot = [[NSBundle mainBundle] resourceURL];
     _currentState = TGMapRegionIdle;
@@ -438,6 +442,24 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
     }
     [self.markersById removeAllObjects];
     self.map->markerRemoveAll();
+}
+
+#pragma mark CustomRenderer
+
+- (void)addCustomRenderer:(id<TGCustomRenderer>)customRenderer withIdentifier:(NSString *)identifier beforeLayer:(NSString *)layer
+{
+    TGWrapIOSCustomRenderer* wCustomRenderer = [[TGWrapIOSCustomRenderer alloc] initWithTGCustomRenderer:customRenderer];
+    self.map->addCustomRenderer([wCustomRenderer getNativeCustomRenderer], std::string([layer UTF8String]));
+    self.customRendererById[identifier] = wCustomRenderer;
+}
+
+- (void)removeCustomRendererWithIdentifier:(NSString *)identifier
+{
+    TGWrapIOSCustomRenderer* wCustomRenderer = [self.customRendererById objectForKey:identifier];
+    if (wCustomRenderer != nil) {
+        self.map->removeCustomRenderer([wCustomRenderer getNativeCustomRenderer]);
+        [self.customRendererById removeObjectForKey:identifier];
+    }
 }
 
 #pragma mark Debugging

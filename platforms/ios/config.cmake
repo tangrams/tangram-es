@@ -25,6 +25,7 @@ endif()
 set(TANGRAM_FRAMEWORK_HEADERS
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TangramMap.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGCameraPosition.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGCustomRenderer.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGExport.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeometry.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolygon.h
@@ -52,6 +53,10 @@ set(TANGRAM_FRAMEWORK_SOURCES
   platforms/ios/framework/src/TGCameraPosition.mm
   platforms/ios/framework/src/TGGeoPolygon.mm
   platforms/ios/framework/src/TGGeoPolyline.mm
+  platforms/ios/framework/src/IOSCustomRenderer.mm
+  platforms/ios/framework/src/IOSCustomRenderer.h
+  platforms/ios/framework/src/TGWrapIOSCustomRenderer.mm
+  platforms/ios/framework/src/TGWrapIOSCustomRenderer.h
   platforms/ios/framework/src/TGLabelPickResult.mm
   platforms/ios/framework/src/TGLabelPickResult+Internal.h
   platforms/ios/framework/src/TGMapData.mm
