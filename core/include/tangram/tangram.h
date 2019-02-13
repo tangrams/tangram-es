@@ -18,6 +18,7 @@
 #include "util/types.h"
 #include "util/url.h"
 #include "util/variant.h"
+#include "customRenderer.h"
 #include "log.h"
 #include "map.h"
 #include "platform.h"

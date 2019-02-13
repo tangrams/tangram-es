@@ -19,6 +19,7 @@
 #include "selection/selectionQuery.h"
 #include "style/material.h"
 #include "style/style.h"
+#include "style/customStyle.h"
 #include "text/fontContext.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
@@ -96,6 +97,8 @@ public:
 
     SceneReadyCallback onSceneReady = nullptr;
     CameraAnimationCallback cameraAnimationListener = nullptr;
+
+    std::vector<CustomStyle> customStyles;
 
     void sceneLoadBegin() {
         sceneLoadTasks++;
@@ -572,8 +575,16 @@ bool Map::render() {
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
+        auto customStyle = impl->customStyles.begin();
+
         // Loop over all styles
         for (const auto& style : impl->scene->styles()) {
+
+            while (customStyle != impl->customStyles.end() &&
+                   customStyle->beforeId() == style->getID()) {
+                customStyle->draw(impl->renderState, impl->view);
+                ++customStyle;
+            }
 
             bool styleDrawn = style->draw(impl->renderState,
                                 impl->view, *(impl->scene),
@@ -581,6 +592,11 @@ bool Map::render() {
                                 impl->markerManager.markers());
 
             drawnAnimatedStyle |= (styleDrawn && style->isAnimated());
+        }
+
+        while (customStyle != impl->customStyles.end()) {
+            customStyle->draw(impl->renderState, impl->view);
+            customStyle++;
         }
     }
 
@@ -966,6 +982,33 @@ void Map::clearTileSource(TileSource& _source, bool _data, bool _tiles) {
     if (_data) { _source.clearData(); }
 
     platform->requestRender();
+}
+
+
+void Map::addCustomRenderer(CustomRenderer* _renderer, const std::string& _renderBeforeStyle) {
+    // We create a new CustomStyle instance here which delegates rendering to the CustomRenderer.
+    // This CustomStyle has no name and so it cannot be used as an "anchor" for other CustomRenderers.
+    // We could use names for each renderer and its style, but then we risk shadowing style names
+    // from the scene file, which can be hard to always know ahead of time.
+
+    auto style = impl->scene->findStyle(_renderBeforeStyle);
+    if (style) {
+        auto beforeId = style->getID();
+        auto it = std::find_if(impl->customStyles.begin(), impl->customStyles.end(),
+                               [&](auto& s){ return s.beforeId() > beforeId; });
+        impl->customStyles.emplace(it, _renderer, beforeId);
+    } else {
+        // In this case we should still add the custom renderer and render it after everything else.
+        auto beforeId = std::numeric_limits<StyleID>::max();
+        impl->customStyles.emplace(impl->customStyles.end(), _renderer, beforeId);
+    }
+}
+
+void Map::removeCustomRenderer(CustomRenderer* _renderer) {
+    // FIXME this may deinitialize on current thread which might not have gl context!
+    auto it = std::remove_if(impl->customStyles.begin(), impl->customStyles.end(),
+                   [&](auto& style) { return style.renderer() == _renderer; });
+    impl->customStyles.erase(it, impl->customStyles.end());
 }
 
 MarkerID Map::markerAdd() {

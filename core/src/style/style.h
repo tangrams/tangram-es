@@ -31,6 +31,8 @@ struct DrawRule;
 struct LightUniforms;
 struct MaterialUniforms;
 
+using StyleID = uint32_t;
+
 enum class StyleType : uint8_t {
     none,
     debug,
@@ -39,6 +41,7 @@ enum class StyleType : uint8_t {
     polyline,
     raster,
     text,
+    custom,
 };
 
 enum class LightingType : uint8_t {
@@ -123,7 +126,7 @@ protected:
 
     /* Unique name for a style instance */
     std::string m_name;
-    uint32_t m_id = 0;
+    StyleID m_id = 0;
 
     std::unique_ptr<ShaderSource> m_shaderSource;
 
@@ -302,14 +305,14 @@ public:
 
     bool genTexCoords() const { return m_texCoordsGeneration; }
 
-    void setID(uint32_t _id) { m_id = _id; }
+    void setID(StyleID _id) { m_id = _id; }
 
     Material& getMaterial() { return *m_material.material; }
 
     ShaderSource& getShaderSource() const { return *m_shaderSource; }
 
     const std::string& getName() const { return m_name; }
-    const uint32_t& getID() const { return m_id; }
+    StyleID getID() const { return m_id; }
 
     virtual size_t dynamicMeshSize() const { return 0; }
 
