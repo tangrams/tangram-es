@@ -2,6 +2,7 @@
 
 #include "map.h"
 #include "platform.h"
+#include "androidCustomRenderer.h"
 #include "jniWorker.h"
 #include "util/asyncWorker.h"
 
@@ -43,6 +44,9 @@ public:
 
     void onUrlComplete(JNIEnv* jniEnv, jlong jRequestHandle, jbyteArray jBytes, jstring jError);
 
+    void addCustomRenderer(JNIEnv* jniEnv, Map* map, jobject jrenderer, jstring jrenderBeforeStyle);
+    void removeCustomRenderer(JNIEnv* jniEnv, Map* map, jobject jrenderer);
+
     static void bindJniEnvToThread(JNIEnv* jniEnv);
     static jint jniOnLoad(JavaVM* javaVM);
     static void jniOnUnload(JavaVM* javaVM);
@@ -59,6 +63,8 @@ private:
 
     mutable JniWorker m_jniWorker;
     AsyncWorker m_fileWorker;
+
+    std::vector<std::unique_ptr<AndroidCustomRenderer>> m_customRenderers;
 };
 
 class AndroidMap : public Map {

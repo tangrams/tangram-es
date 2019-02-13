@@ -24,6 +24,7 @@ import com.mapzen.tangram.networking.DefaultHttpHandler;
 import com.mapzen.tangram.networking.HttpHandler;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -1465,5 +1466,35 @@ public class MapController {
     private synchronized native void nativeSetDebugFlag(int flag, boolean on);
 
     private native void nativeOnUrlComplete(long mapPtr, long requestHandle, byte[] rawDataBytes, String errorMessage);
+
+
+    public void lngLatToScreenPositionBatch(float[] inputBuffer, float[] outputBuffer, int size) {
+        checkPointer(mapPointer);
+        nativeLngLatToScreenPositionBatch(mapPointer, inputBuffer, outputBuffer, size);
+    }
+
+   public void addCustomRenderer(final CustomRenderer renderer, final String renderBeforeStyle) {
+        queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                checkPointer(mapPointer);
+                nativeAddCustomRenderer(mapPointer, renderer, renderBeforeStyle);
+            }
+        });
+   }
+
+   public void removeCustomRenderer(final CustomRenderer renderer) {
+       // NOTE: GL View (GLSurfaceView) in client code could be "removed" before going through its destruction lifecycle hence
+       // causing nativeDispose to not get executed since GLThread associated with GLSurfaceView is stopped by doing
+       // a premature removeView call. This inability to execute nativeDispose results in leaking of MapController reference.
+       //
+       // To avoid this, we HAVE to call nativeRemoveCustomRenderer on the UI Thread and not queue it on the GL thread
+       nativeRemoveCustomRenderer(mapPointer, renderer);
+   }
+
+   private synchronized native void nativeAddCustomRenderer(long mapPtr, CustomRenderer renderer, String renderBeforeStyle);
+   private synchronized native void nativeRemoveCustomRenderer(long mapPtr, CustomRenderer renderer);
+
+   private synchronized native void nativeLngLatToScreenPositionBatch(long mapPtr, float[] input, float[] output, int size);
 
 }

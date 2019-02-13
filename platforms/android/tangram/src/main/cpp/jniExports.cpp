@@ -32,7 +32,6 @@ JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved) {
     AndroidPlatform::jniOnUnload(vm);
 }
 
-
 #define FUNC(CLASS, NAME) JNIEXPORT JNICALL Java_com_mapzen_tangram_ ## CLASS ## _native ## NAME
 
 #define auto_map(ptr) assert(ptr); auto map = reinterpret_cast<Tangram::AndroidMap*>(mapPtr)
@@ -560,6 +559,32 @@ void MapController(ClearTileSource)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, j
     map->clearTileSource(*source, true, true);
 }
 
+void MapController(AddCustomRenderer)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jobject jrenderer, jstring jrenderBeforeStyle) {
+    auto_map(mapPtr);
+    auto& platform = static_cast<AndroidPlatform&>(map->getPlatform());
+    platform.addCustomRenderer(jniEnv, map, jrenderer, jrenderBeforeStyle);
+}
+
+void MapController(RemoveCustomRenderer)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jobject jrenderer) {
+    auto_map(mapPtr);
+    auto& platform = static_cast<AndroidPlatform&>(map->getPlatform());
+    platform.removeCustomRenderer(jniEnv, map, jrenderer);
+}
+
+void MapController(LngLatToScreenPositionBatch)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloatArray jinputBuffer, jfloatArray joutputBuffer, jint size) {
+    auto_map(mapPtr);
+    jfloat* input = jniEnv->GetFloatArrayElements(jinputBuffer, NULL);
+    jfloat output[size];
+    double x = 0, y = 0;
+    for (int i = 0; i < size; i += 2) {
+        // Input buffer contains coordinates in lat, lng order.
+        map->lngLatToScreenPosition(input[i + 1], input[i], &x, &y);
+        output[i] = (float)x;
+        output[i + 1] = (float)y;
+    }
+    jniEnv->SetFloatArrayRegion(joutputBuffer, 0, size, output);
+    jniEnv->ReleaseFloatArrayElements(jinputBuffer, input, 0);
+}
 
 #define MapData(NAME) FUNC(MapData, NAME)
 
@@ -584,11 +609,11 @@ void MapData(AddFeature)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jdoubleAr
         jniEnv->DeleteLocalRef(jvalue);
     }
 
-    auto* coordinates = jniEnv->GetDoubleArrayElements(jcoordinates, NULL);
+    auto *coordinates = jniEnv->GetDoubleArrayElements(jcoordinates, NULL);
 
     if (n_rings > 0) {
         // If rings are defined, this is a polygon feature.
-        auto* rings = jniEnv->GetIntArrayElements(jrings, NULL);
+        auto *rings = jniEnv->GetIntArrayElements(jrings, NULL);
         std::vector<std::vector<Tangram::LngLat>> polygon;
         size_t ring_start = 0, ring_end = 0;
         for (size_t i = 0; i < n_rings; ++i) {

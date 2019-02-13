@@ -470,4 +470,25 @@ void AndroidMap::pickMarker(float posX, float posY) {
     });
 }
 
+void AndroidPlatform::addCustomRenderer(JNIEnv *jniEnv, Map *map, jobject jrenderer,
+                                        jstring jrenderBeforeStyle) {
+    auto renderer = std::make_unique<AndroidCustomRenderer>(jniEnv, jrenderer);
+    auto renderBeforeStyle = stringFromJString(jniEnv, jrenderBeforeStyle);
+    map->addCustomRenderer(renderer.get(), renderBeforeStyle);
+    m_customRenderers.push_back(std::move(renderer));
+}
+
+void AndroidPlatform::removeCustomRenderer(JNIEnv *jniEnv, Map *map, jobject jrenderer) {
+    for (auto it = m_customRenderers.begin(); it != m_customRenderers.end();) {
+        if (jniEnv->IsSameObject((*it)->renderer(), jrenderer)) {
+            auto androidCustomRenderer = it->get();
+            map->removeCustomRenderer(androidCustomRenderer);
+            androidCustomRenderer->dispose(jniEnv);
+            it = m_customRenderers.erase(it);
+        } else {
+            it++;
+        }
+    }
+}
+
 } // namespace Tangram

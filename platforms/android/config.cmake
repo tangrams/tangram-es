@@ -13,6 +13,7 @@ add_library(tangram SHARED
   platforms/common/platform_gl.cpp
   platforms/android/tangram/src/main/cpp/jniExports.cpp
   platforms/android/tangram/src/main/cpp/androidPlatform.cpp
+  platforms/android/tangram/src/main/cpp/androidCustomRenderer.cpp
 )
 
 if(TANGRAM_MBTILES_DATASOURCE)
