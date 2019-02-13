@@ -57,23 +57,10 @@ std::vector<FontSourceHandle> WindowsPlatform::systemFontFallbacksHandle() const
 }
 
 bool WindowsPlatform::startUrlRequestImpl(const Url& _url, const UrlRequestHandle _request, UrlRequestId& _id) {
-    if (_url.hasHttpScheme()) {
-        auto onRequestResponse = [this, _request](UrlResponse&& response) {
-            onUrlResponse(_request, std::move(response));
-        };
-        _id = m_urlClient->addRequest(_url.string(), onRequestResponse);
-        return true;
-    }
-    auto fileWorkerTask = [this, path = _url.path(), _request](){
-        UrlResponse response;
-        auto allocator = [&](size_t size) {
-            response.content.resize(size);
-            return response.content.data();
-        };
-        Platform::bytesFromFileSystem(path.c_str(), allocator);
+    auto onURLResponse = [this, _request](UrlResponse&& response) {
         onUrlResponse(_request, std::move(response));
     };
-    m_fileWorker.enqueue(fileWorkerTask);
+    _id = m_urlClient->addRequest(_url.string(), onURLResponse);
     return false;
 }
 

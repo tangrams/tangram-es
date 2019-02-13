@@ -2,7 +2,6 @@
 
 #include "platform.h"
 #include "urlClient.h"
-#include "util/asyncWorker.h"
 
 namespace Tangram {
 
@@ -21,7 +20,6 @@ public:
 
 protected:
     std::unique_ptr<UrlClient> m_urlClient;
-    AsyncWorker m_fileWorker;
 };
 
 } // namespace Tangram
