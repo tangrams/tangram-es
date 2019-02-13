@@ -169,14 +169,9 @@ public:
 
     /// Returns true when scene finished loading and completeScene() suceeded.
     bool isReady() const { return m_state == State::ready; };
-    bool isPendingCompletion() const { return m_state == State::pending_completion; };
 
     /// Scene ID
     const int32_t id;
-
-    friend struct SceneLoader;
-    friend class Importer;
-    friend class Map;
 
     using Lights = std::vector<std::unique_ptr<Light>>;
     using LightShaderBlocks = std::map<std::string, std::string>;
@@ -185,9 +180,6 @@ public:
     using Layers = std::vector<DataLayer>;
 
 protected:
-
-    Platform& platform() { return m_platform; }
-    void pushError(SceneError&& error) { m_errors.push_back(std::move(error)); }
 
     Platform& m_platform;
 
