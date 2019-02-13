@@ -82,8 +82,10 @@ if (TANGRAM_MBTILES_DATASOURCE)
   if (ANDROID)
     target_compile_definitions(sqlite3 PRIVATE _FILE_OFFSET_BITS=32)
   endif()
-  target_compile_options(SQLiteCpp PRIVATE -fno-stack-protector)
-  target_compile_options(sqlite3 PRIVATE -fno-stack-protector)
+  if (WIN32)
+    target_compile_options(SQLiteCpp PRIVATE -fno-stack-protector)
+    target_compile_options(sqlite3 PRIVATE -fno-stack-protector)
+  endif()
 endif()
 
 ## double-conversion ##
