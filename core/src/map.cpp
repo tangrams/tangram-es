@@ -255,15 +255,14 @@ bool Map::update(float _dt) {
 
     view.update();
 
-    bool tilesLoading, animateLabels, animateMarkers;
-    std::tie(tilesLoading, animateLabels, animateMarkers) = scene.update(view, _dt);
+    auto state = scene.update(view, _dt);
 
-    if (tilesLoading || animateLabels || animateMarkers) {
+    if (state.tilesLoading || state.animateLabels || state.animateMarkers) {
         viewComplete = false;
     }
 
     // Request render if labels are in fading states or markers are easing.
-    if (impl->isCameraEasing || animateLabels || animateMarkers) {
+    if (impl->isCameraEasing || state.animateLabels || state.animateMarkers) {
         platform->requestRender();
     }
 

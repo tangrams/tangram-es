@@ -125,11 +125,11 @@ public:
     float pixelScale() const { return m_pixelScale; }
     void setPixelScale(float _scale);
 
-    /// Update TileManager, Labels and Markers for current View, returns:
-    /// - hasLoadingTiles
-    /// - labelsNeedUpdate
-    /// - markersNeedUpdate
-    std::tuple<bool,bool,bool> update(const View& _view, float _dt);
+    /// Update TileManager, Labels and Markers for current View
+    struct UpdateState {
+        bool tilesLoading, animateLabels, animateMarkers;
+    };
+    UpdateState update(const View& _view, float _dt);
 
     void renderBeginFrame(RenderState& _rs);
     bool render(RenderState& _rs, View& _view);

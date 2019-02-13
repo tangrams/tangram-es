@@ -498,7 +498,7 @@ void Scene::runFontTasks() {
     }
 }
 
-std::tuple<bool,bool,bool> Scene::update(const View& _view, float _dt) {
+Scene::UpdateState Scene::update(const View& _view, float _dt) {
 
     m_time += _dt;
 
