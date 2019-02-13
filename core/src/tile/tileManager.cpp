@@ -173,8 +173,6 @@ TileManager::~TileManager() {
 
 void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>& _sources) {
 
-    LOG("setTileSources %d", _sources.size());
-
     m_tileCache->clear();
 
     // Remove all (non-client datasources) sources and respective tileSets not present in the
