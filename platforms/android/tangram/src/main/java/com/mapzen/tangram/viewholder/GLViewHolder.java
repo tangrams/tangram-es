@@ -67,7 +67,7 @@ public interface GLViewHolder {
 
     /**
      * Can be used by the client to get access to the underlying view to pass any view controls
-     * @return {@link GLSurfaceView} or Client provided implementation for a view held by {@link GLViewHolder}
+     * @return gl view held by {@link GLViewHolder}
      */
     @NonNull
     View getView();
