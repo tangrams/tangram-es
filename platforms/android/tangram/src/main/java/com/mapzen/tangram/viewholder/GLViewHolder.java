@@ -2,7 +2,6 @@ package com.mapzen.tangram.viewholder;
 
 import android.opengl.GLSurfaceView;
 import android.support.annotation.NonNull;
-import android.view.TextureView;
 import android.view.View;
 
 
@@ -68,8 +67,7 @@ public interface GLViewHolder {
 
     /**
      * Can be used by the client to get access to the underlying view to pass any view controls
-     * @return {@link GLSurfaceView} or {@link TextureView} or Client provided implementation for
-     * a view held by {@link GLViewHolder}
+     * @return gl view held by {@link GLViewHolder}
      */
     @NonNull
     View getView();
