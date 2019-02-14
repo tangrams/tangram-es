@@ -38,7 +38,7 @@ cmake --build build --target install
 ```
 From the curl source directory:
 ``` bat
-cmake -H. -Bbuild -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX=c:/cmake-install -DCMAKE_USE_WINSSL=ON
+cmake -H. -Bbuild -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX=c:/cmake-install -DBUILD_CURL_EXE=OFF -DBUILD_TESTING=OFF -DCMAKE_USE_WINSSL=ON
 cmake --build build
 cmake --build build --target install
 ```
