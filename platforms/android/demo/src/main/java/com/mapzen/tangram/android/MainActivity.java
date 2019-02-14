@@ -73,6 +73,8 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     String pointStylingPath = "layers.touch.point.draw.icons";
     ArrayList<Marker> pointMarkers = new ArrayList<>();
 
+    OverlayRenderer overlayRenderer = new OverlayRenderer();
+
     boolean showTileInfo = false;
 
     @Override
@@ -223,56 +225,15 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
     @Override
     public boolean onSingleTapConfirmed(float x, float y) {
-        LngLat tappedPoint = map.screenPositionToLngLat(new PointF(x, y));
-
-        if (lastTappedPoint != null) {
-            Map<String, String> props = new HashMap<>();
-            props.put("type", "line");
-            props.put("color", "#D2655F");
-
-            List<LngLat> line = new ArrayList<>();
-            line.add(lastTappedPoint);
-            line.add(tappedPoint);
-            markers.addPolyline(line, props);
-
-            Marker p = map.addMarker();
-            p.setStylingFromPath(pointStylingPath);
-            p.setPoint(tappedPoint);
-            pointMarkers.add(p);
-        }
-
-        lastTappedPoint = tappedPoint;
-
-        map.pickFeature(x, y);
-        map.pickLabel(x, y);
-        map.pickMarker(x, y);
-
-        map.updateCameraPosition(CameraUpdateFactory.setPosition(tappedPoint), 1000, new MapController.CameraAnimationCallback() {
-            @Override
-            public void onFinish() {
-                Log.d("Tangram","finished!");
-            }
-
-            @Override
-            public void onCancel() {
-                Log.d("Tangram","canceled!");
-            }
-        });
-
+        map.addCustomRenderer(overlayRenderer, "heightglow");
+        map.requestRender();
         return true;
     }
 
     @Override
     public boolean onDoubleTap(float x, float y) {
-
-        LngLat tapped = map.screenPositionToLngLat(new PointF(x, y));
-        CameraPosition camera = map.getCameraPosition();
-
-        camera.longitude = .5 * (tapped.longitude + camera.longitude);
-        camera.latitude = .5 * (tapped.latitude + camera.latitude);
-        camera.zoom += 1;
-        map.updateCameraPosition(CameraUpdateFactory.newCameraPosition(camera),
-                    500, MapController.EaseType.CUBIC);
+        map.removeCustomRenderer(overlayRenderer);
+        map.requestRender();
         return true;
     }
 
