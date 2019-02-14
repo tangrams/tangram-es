@@ -1,4 +1,5 @@
 #include "glfwApp.h"
+#include "overlayRenderer.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -66,6 +67,8 @@ bool show_gui = true;
 Tangram::MarkerID marker = 0;
 Tangram::MarkerID poiMarker = 0;
 Tangram::MarkerID polyline = 0;
+
+Tangram::OverlayRenderer* overlayRenderer = nullptr;
 
 void loadSceneFile(bool setPosition) {
     std::vector<SceneUpdate> updates;
@@ -174,6 +177,8 @@ void create(std::unique_ptr<Platform> p, int w, int h) {
     glfwGetFramebufferSize(main_window, &fWidth, &fHeight);
     framebufferResizeCallback(main_window, fWidth, fHeight);
 
+    overlayRenderer = new OverlayRenderer();
+
     // Setup ImGui binding
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -264,6 +269,10 @@ void destroy() {
     if (main_window) {
         glfwDestroyWindow(main_window);
         main_window = nullptr;
+    }
+    if (overlayRenderer) {
+        delete overlayRenderer;
+        overlayRenderer = nullptr;
     }
     glfwTerminate();
 }
@@ -501,6 +510,12 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 break;
             case GLFW_KEY_W:
                 map->onMemoryWarning();
+                break;
+            case GLFW_KEY_V:
+                map->addCustomRenderer(overlayRenderer, "heightglow");
+                break;
+            case GLFW_KEY_C:
+                map->removeCustomRenderer(overlayRenderer);
                 break;
         default:
                 break;
