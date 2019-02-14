@@ -6,6 +6,7 @@
 //
 
 #import "MapViewController.h"
+#import "DemoTGCustomRenderer.h"
 #import <CoreLocation/CoreLocation.h>
 
 @interface MapViewController ()  <CLLocationManagerDelegate>
@@ -162,6 +163,9 @@
         markerPoint.point = coordinates;
     }
 
+    DemoTGCustomRenderer* demoTGCustomRenderer = [[DemoTGCustomRenderer alloc] init];
+    [view addCustomRenderer:demoTGCustomRenderer withIdentifier:@"testCustomRenderer" beforeLayer:@"buildings"];
+
     // Request feature picking
     [view pickFeatureAt:location];
     [view pickLabelAt:location];
@@ -176,6 +180,8 @@
 
 - (void)mapView:(TGMapView *)mapView recognizer:(UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location
 {
+    [mapView removeCustomRendererWithIdentifier:@"testCustomRenderer"];
+    [mapView requestRender];
     NSLog(@"Did long press at %f %f", location.x, location.y);
 }
 
@@ -230,6 +236,7 @@
     self.locationManager.delegate = self;
     // Enable for Location Tracking
 //     [self.locationManager requestAlwaysAuthorization];
+
 }
 
 - (void)beginBackgroundLocationTracking {
