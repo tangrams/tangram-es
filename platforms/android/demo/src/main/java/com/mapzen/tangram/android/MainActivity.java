@@ -297,7 +297,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
     @Override
     public void onFeaturePick(Map<String, String> properties, float positionX, float positionY) {
-        if (properties.isEmpty()) {
+        if (properties == null) {
             Log.d(TAG, "Empty selection");
             return;
         }
