@@ -617,4 +617,10 @@ void MapData(AddGeoJson)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jstring g
     source->addData(data);
 }
 
+void MapData(GenerateTiles)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr) {
+    auto_source(sourcePtr);
+
+    source->generateTiles();
+}
+
 } // extern "C"
