@@ -152,9 +152,14 @@ void RasterSource::addRasterTask(TileTask& _task) {
 
     TileID subTileID = _task.tileId();
 
-    // get tile for lower zoom if we are past max zoom
-    if (subTileID.z > maxZoom()) {
-        subTileID = subTileID.withMaxSourceZoom(maxZoom());
+    // apply apt downsampling for raster tiles depending on difference
+    // in zoomBias (which also takes zoom offset into account)
+    auto zoomDiff = m_zoomOptions.zoomBias - _task.source()->zoomBias();
+
+    if (zoomDiff > 0) {
+        subTileID = subTileID.zoomBiasAdjusted(zoomDiff).withMaxSourceZoom(m_zoomOptions.maxZoom);
+    } else {
+        subTileID = subTileID.withMaxSourceZoom(m_zoomOptions.maxZoom);
     }
 
     auto rasterTask = createRasterTask(subTileID, true);

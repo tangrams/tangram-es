@@ -945,6 +945,7 @@ void SceneLoader::loadSource(Platform& platform, const std::string& name,
     int32_t maxDisplayZoom = -1;
     int32_t maxZoom = 18;
     int32_t zoomBias = 0;
+    int32_t zoomOffset = 0;
     bool generateCentroids = false;
 
     if (auto typeNode = source["type"]) {
@@ -962,11 +963,18 @@ void SceneLoader::loadSource(Platform& platform, const std::string& name,
     if (auto maxZoomNode = source["max_zoom"]) {
         YamlUtil::getInt(maxZoomNode, maxZoom);
     }
+    if (auto zoomOffsetNode = source["zoom_offset"]) {
+        YamlUtil::getInt(zoomOffsetNode, zoomOffset);
+    }
     if (auto tileSizeNode = source["tile_size"]) {
         int tileSize = 0;
         if (YamlUtil::getInt(tileSizeNode, tileSize)) {
             zoomBias = TileSource::zoomBiasFromTileSize(tileSize);
         }
+    }
+
+    if (zoomOffset >= 0) {
+        zoomBias += zoomOffset;
     }
 
     // Parse and append any URL parameters.
