@@ -94,7 +94,9 @@ class Scene {
 public:
     enum animate { yes, no, none };
 
-    Scene(Platform& _platform, SceneOptions&& = {});
+    Scene(Platform& _platform, SceneOptions&& = {},
+          std::function<void(Scene*)> _prefetchCallback = nullptr);
+
     ~Scene();
 
     Scene(const Scene& _other) = delete;
@@ -184,6 +186,8 @@ protected:
     Platform& m_platform;
 
     SceneOptions m_options;
+    std::function<void(Scene*)> m_tilePrefetchCallback;
+
     std::unique_ptr<Importer> m_importer;
 
     /// Only SceneUpdate errors for now

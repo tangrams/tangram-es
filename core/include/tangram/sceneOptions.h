@@ -58,8 +58,6 @@ public:
     /// 16MB default in-memory DataSource cache
     size_t memoryTileCacheSize = CACHE_SIZE;
 
-    std::function<void(Scene*)> asyncCallback = nullptr;
-
 private:
     static constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 

@@ -33,10 +33,11 @@ namespace Tangram {
 static std::atomic<int32_t> s_serial;
 
 
-Scene::Scene(Platform& _platform, SceneOptions&& _options) :
+Scene::Scene(Platform& _platform, SceneOptions&& _options, std::function<void(Scene*)> _prefetchCallback) :
     id(s_serial++),
     m_platform(_platform),
-    m_options(std::move(_options)) {
+    m_options(std::move(_options)),
+    m_tilePrefetchCallback(_prefetchCallback) {
 
     m_tileWorker = std::make_unique<TileWorker>(_platform, m_options.numTileWorkers);
     m_tileManager = std::make_unique<TileManager>(_platform, *m_tileWorker);
@@ -136,8 +137,8 @@ bool Scene::load() {
     m_tileManager->setTileSources(m_tileSources);
 
     /// Scene is ready to load tiles for initial view
-    if (m_options.prefetchTiles && m_options.asyncCallback) {
-        m_options.asyncCallback(this);
+    if (m_options.prefetchTiles && m_tilePrefetchCallback) {
+        m_tilePrefetchCallback(this);
     }
 
     m_fontContext = std::make_unique<FontContext>(m_platform);
@@ -242,10 +243,10 @@ bool Scene::load() {
         });
 
         /// Ready to build tiles?
-        if (startTileWorker && canBuildTiles && m_options.asyncCallback) {
+        if (startTileWorker && canBuildTiles && m_tilePrefetchCallback) {
             m_readyToBuildTiles = true;
             startTileWorker = false;
-            m_options.asyncCallback(this);
+            m_tilePrefetchCallback(this);
         }
 
         /// All done?

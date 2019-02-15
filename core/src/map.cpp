@@ -159,7 +159,7 @@ SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
     oldScene->cancelTasks();
 
     // Add callback for tile prefetching
-    _sceneOptions.asyncCallback = [&](Scene* _scene) {
+    auto prefetchCallback = [&](Scene* _scene) {
         jobQueue.add([&, _scene]() {
             if (_scene == scene.get()) {
                 scene->prefetchTiles(view);
@@ -168,7 +168,7 @@ SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
         platform.requestRender();
     };
 
-    scene = std::make_shared<Scene>(platform, std::move(_sceneOptions));
+    scene = std::make_shared<Scene>(platform, std::move(_sceneOptions), prefetchCallback);
 
     asyncWorker->enqueue([this, newScene = scene]() {
         newScene->load();
