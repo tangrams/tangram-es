@@ -95,10 +95,10 @@ public:
     const auto& spriteAtlas() const { return m_spriteAtlas; }
     void setSpriteAtlas(std::unique_ptr<SpriteAtlas> sprites);
 
-protected:
-
     // Resize the texture
     void resize(int width, int height);
+
+protected:
 
     // Bytes per pixel for current PixelFormat options
     size_t bpp() const;

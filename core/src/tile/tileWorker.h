@@ -23,7 +23,7 @@ public:
 
     TileWorker(Platform& _platform, int _numWorker);
 
-    ~TileWorker();
+    virtual ~TileWorker();
 
     virtual void enqueue(std::shared_ptr<TileTask> task) override;
 
@@ -31,7 +31,11 @@ public:
 
     bool isRunning() const { return m_running; }
 
-    void setScene(std::shared_ptr<Scene>& _scene);
+    /// Set Scene and initialize TileBuilders
+    void setScene(Scene& _scene);
+
+    /// Start jobs when scene is complete.
+    void startJobs();
 
 private:
 
@@ -43,6 +47,9 @@ private:
     void run(Worker* instance);
 
     bool m_running;
+
+    /// Set true by startJobs()
+    bool m_sceneComplete = false;
 
     std::vector<std::unique_ptr<Worker>> m_workers;
 

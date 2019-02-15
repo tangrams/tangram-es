@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene/drawRule.h"
+#include "scene/scene.h"
 #include "util/ease.h"
 #include "util/fastmap.h"
 #include "util/types.h"
@@ -12,7 +13,6 @@ namespace Tangram {
 
 class MapProjection;
 class Marker;
-class Scene;
 class StyleBuilder;
 class StyleContext;
 class View;
@@ -21,10 +21,8 @@ class MarkerManager {
 
 public:
 
-    MarkerManager();
+    explicit MarkerManager(const Scene& scene);
     ~MarkerManager();
-    // Set the Scene object whose styling information will be used to build markers.
-    void setScene(std::shared_ptr<Scene> scene);
 
     // Create a new, empty marker and return its ID. An ID of 0 indicates an invalid marker.
     MarkerID add();
@@ -87,8 +85,12 @@ private:
     bool buildStyling(Marker& marker);
     bool buildMesh(Marker& marker, int zoom);
 
+    const Scene& m_scene;
+    // Custom functions and stops from styling strings
+    SceneStops m_stops;
+    SceneFunctions m_functions;
+
     std::unique_ptr<StyleContext> m_styleContext;
-    std::shared_ptr<Scene> m_scene;
     std::vector<std::unique_ptr<Marker>> m_markers;
     std::vector<std::string> m_jsFnList;
     fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilders;

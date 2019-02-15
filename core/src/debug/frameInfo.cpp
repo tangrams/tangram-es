@@ -52,7 +52,7 @@ void FrameInfo::beginFrame() {
 }
 
 
-void FrameInfo::draw(RenderState& rs, const View& _view, TileManager& _tileManager) {
+void FrameInfo::draw(RenderState& rs, const View& _view, const TileManager& _tileManager) {
 
     if (getDebugFlag(DebugFlags::tangram_infos) || getDebugFlag(DebugFlags::tangram_stats)) {
         static int cpt = 0;

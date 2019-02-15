@@ -2,6 +2,7 @@
 
 #include "data/properties.h"
 #include "util/types.h"
+#include "sceneOptions.h"
 
 #include <array>
 #include <functional>
@@ -14,6 +15,7 @@ namespace Tangram {
 class Platform;
 class TileSource;
 class Scene;
+class SceneOptions;
 
 enum LabelType {
     icon,
@@ -57,13 +59,6 @@ struct MarkerPickResult {
 
 // Returns a pointer to the selected marker pick result or null, only valid on the callback scope
 using MarkerPickCallback = std::function<void(const MarkerPickResult*)>;
-
-struct SceneUpdate {
-    std::string path;
-    std::string value;
-    SceneUpdate(std::string p, std::string v) : path(p), value(v) {}
-    SceneUpdate() {}
-};
 
 enum Error {
     none,
@@ -145,31 +140,37 @@ public:
     explicit Map(std::unique_ptr<Platform> _platform);
     ~Map();
 
+
+    // Load the scene with the given SceneOptions
+    SceneID loadScene(SceneOptions&& _sceneOptions, bool _async = true);
+
+
+    // Load the scene at the given absolute file path synchronously
+    SceneID loadScene(const std::string& _scenePath, bool _useScenePosition = false,
+                      const std::vector<SceneUpdate>& _sceneUpdates = {}) {
+        return loadScene(SceneOptions{Url(_scenePath), _useScenePosition, _sceneUpdates}, false);
+
+    }
+
     // Load the scene at the given absolute file path asynchronously.
-    SceneID loadSceneAsync(const std::string& _scenePath,
-                           bool _useScenePosition = false,
-                           const std::vector<SceneUpdate>& _sceneUpdates = {});
+    SceneID loadSceneAsync(const std::string& _scenePath, bool _useScenePosition = false,
+                      const std::vector<SceneUpdate>& _sceneUpdates = {}) {
+        return loadScene(SceneOptions{Url(_scenePath), _useScenePosition, _sceneUpdates}, true);
+    }
 
     // Load the scene provided an explicit yaml scene string
     SceneID loadSceneYaml(const std::string& _yaml, const std::string& _resourceRoot,
                           bool _useScenePosition = false,
-                          const std::vector<SceneUpdate>& _sceneUpdates = {});
+                          const std::vector<SceneUpdate>& _sceneUpdates = {}) {
+        return loadScene(SceneOptions{_yaml, Url(_resourceRoot), _useScenePosition, _sceneUpdates}, false);
+    }
 
+    // Load the scene provided an explicit yaml scene string
     SceneID loadSceneYamlAsync(const std::string& _yaml, const std::string& _resourceRoot,
-                               bool _useScenePosition = false,
-                               const std::vector<SceneUpdate>& _sceneUpdates = {});
-
-    // Load the scene at the given absolute file path synchronously
-    SceneID loadScene(const std::string& _scenePath,
-                      bool _useScenePosition = false,
-                      const std::vector<SceneUpdate>& sceneUpdates = {});
-
-    // Request updates to the current scene configuration. This reloads the
-    // scene with the updated configuration.
-    // The SceneUpdate path is a series of yaml keys separated by a '.' and the
-    // value is a string of yaml to replace the current value at the given path
-    // in the scene.
-    SceneID updateSceneAsync(const std::vector<SceneUpdate>& sceneUpdates);
+                          bool _useScenePosition = false,
+                          const std::vector<SceneUpdate>& _sceneUpdates = {}) {
+        return loadScene(SceneOptions{_yaml, Url(_resourceRoot), _useScenePosition, _sceneUpdates}, true);
+    }
 
     // Set listener for scene load events. The callback receives the SceneID
     // of the loaded scene and SceneError in case loading was not successful.
@@ -177,9 +178,6 @@ public:
     void setSceneReadyListener(SceneReadyCallback _onSceneReady);
 
     void setCameraAnimationListener(CameraAnimationCallback _cb);
-
-    // Set an MBTiles SQLite database file for a DataSource in the scene.
-    void setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath);
 
     // Initialize graphics resources; OpenGL context must be created prior to calling this
     void setupGL();
@@ -301,7 +299,8 @@ public:
     // and removed, otherwise returns false.
     bool removeTileSource(TileSource& _source);
 
-    void clearTileSource(TileSource& _source, bool _data, bool _tiles);
+    // Returns true if the source was found and cleared, otherwise returns false.
+    bool clearTileSource(TileSource& _source, bool _data, bool _tiles);
 
     // Add a marker object to the map and return an ID for it; an ID of 0 indicates an invalid marker;
     // the marker will not be drawn until both styling and geometry are set using the functions below.
@@ -423,12 +422,6 @@ public:
 protected:
 
     std::unique_ptr<Platform> platform;
-
-    SceneID loadSceneAsync(std::shared_ptr<Scene> _scene,
-                           const std::vector<SceneUpdate>& _sceneUpdates = {});
-
-    SceneID loadScene(std::shared_ptr<Scene> _scene,
-                      const std::vector<SceneUpdate>& _sceneUpdates = {});
 
 private:
 

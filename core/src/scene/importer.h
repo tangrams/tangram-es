@@ -1,11 +1,12 @@
 #pragma once
 
-#include "scene/scene.h"
-#include "util/url.h"
+#include "platform.h"
 
 #include "yaml-cpp/yaml.h"
 
+#include <atomic>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -13,19 +14,23 @@
 
 namespace Tangram {
 
-class Platform;
+class AsyncWorker;
+class SceneOptions;
+class ZipArchive;
+class Url;
 
 class Importer {
-
 public:
 
     using Node = YAML::Node;
 
-    // Create an importer to operate on the given scene.
-    Importer(std::shared_ptr<Scene> scene);
+    Importer();
+    ~Importer();
 
     // Loads the main scene with deep merging dependent imported scenes.
-    Node applySceneImports(Platform& platform);
+    Node loadSceneData(Platform& platform, const Url& sceneUrl, const std::string& sceneYaml = "");
+
+    void cancelLoading(Platform& _platform);
 
     static bool isZipArchiveUrl(const Url& url);
 
@@ -37,6 +42,18 @@ public:
     // nodes that represent URLs, replaces the contents with that URL resolved
     // against the given base URL.
     static void resolveSceneUrls(Node& root, const Url& base);
+
+    // Start an asynchronous request for the scene resource at the given URL.
+    // In addition to the URL types supported by the platform instance, this
+    // also supports a custom ZIP URL scheme. ZIP URLs are of the form:
+    //   zip://path/to/file.txt#http://host.com/some/archive.zip
+    // The fragment (#http...) of the URL is the location of the archive and the
+    // relative portion of the URL (path/...) is the path of the target file
+    // within the archive (this allows relative path operations on URLs to work
+    // as expected within zip archives). This function expects that all required
+    // zip archives will be added to the scene with addZipArchive before being
+    // requested.
+    UrlRequestHandle readFromZip(const Url& url, UrlCallback callback);
 
 protected:
 
@@ -55,8 +72,6 @@ protected:
 
     void mergeMapFields(Node& target, const Node& import);
 
-    // Importer holds a pointer to the scene it is operating on.
-    std::shared_ptr<Scene> m_scene;
 
     // Scene files must be parsed into YAML nodes to find further imports.
     // The parsed scenes are stored in a map with their URLs to be merged once
@@ -67,7 +82,21 @@ protected:
     };
     std::unordered_map<Url, SceneNode> m_sceneNodes = {};
 
-    std::vector<Url> m_sceneQueue;
+    std::vector<Url> m_sceneQueue = {};
+
+    // Container for any zip archives needed for the scene. For each entry, the
+    // key is the original URL from which the zip archive was retrieved and the
+    // value is a ZipArchive initialized with the compressed archive data.
+    std::unique_ptr<AsyncWorker> m_zipWorker;
+    std::unordered_map<Url, std::shared_ptr<ZipArchive>> m_zipArchives;
+
+    // Keep track of UrlRequests for cancellation. NB we don't care to remove
+    // handles when requests finished: Calling cancel on a finished request has
+    // not much overhead and is going to be rarely used.
+    std::vector<UrlRequestHandle> m_urlRequests;
+    std::atomic<bool> m_canceled{false};
+    std::mutex m_sceneMutex;
+
 };
 
 }

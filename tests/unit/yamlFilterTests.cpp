@@ -21,13 +21,11 @@ Context ctx;
 
 Feature civic, bmw1, bike;
 
-std::unique_ptr<Platform> platform = std::make_unique<MockPlatform>();
-
 Filter load(const std::string& filterYaml) {
-    Scene scene(*platform, Url());
+    SceneFunctions fns;
     YAML::Node node = YAML::Load(filterYaml);
-    auto filter = SceneLoader::generateFilter(node["filter"], scene);
-    ctx.initFunctions(scene);
+    auto filter = SceneLoader::generateFilter(fns, node["filter"]);
+    ctx.setFunctions(fns);
     return filter;
 }
 

@@ -2,85 +2,101 @@
 
 #include "log.h"
 #include "platform.h"
-#include "scene/sceneLoader.h"
+#include "util/asyncWorker.h"
 #include "util/zipArchive.h"
 
 #include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <condition_variable>
-#include <mutex>
 
 using YAML::Node;
 using YAML::NodeType;
 
 namespace Tangram {
 
-Importer::Importer(std::shared_ptr<Scene> scene)
-    : m_scene(scene) {
-}
+Importer::Importer() {}
+Importer::~Importer() {}
 
-Node Importer::applySceneImports(Platform& platform) {
-
-    Url sceneUrl = m_scene->url();
+Node Importer::loadSceneData(Platform& _platform, const Url& _sceneUrl, const std::string& _sceneYaml) {
 
     Url nextUrlToImport;
 
-    if (!m_scene->yaml().empty()) {
+    if (!_sceneYaml.empty()) {
         // Load scene from yaml string.
-
-        addSceneYaml(sceneUrl, m_scene->yaml().data(), m_scene->yaml().length());
+        addSceneYaml(_sceneUrl, _sceneYaml.data(), _sceneYaml.length());
     } else {
         // Load scene from yaml file.
-        m_sceneQueue.push_back(sceneUrl);
+        m_sceneQueue.push_back(_sceneUrl);
     }
 
     std::atomic_uint activeDownloads(0);
-    std::mutex sceneMutex;
     std::condition_variable condition;
 
     while (true) {
         {
-            std::unique_lock<std::mutex> lock(sceneMutex);
+            std::unique_lock<std::mutex> lock(m_sceneMutex);
 
-            if (m_sceneQueue.empty()) {
+            if (m_sceneQueue.empty() || m_canceled) {
                 if (activeDownloads == 0) {
                     break;
                 }
                 condition.wait(lock);
             }
 
-            if (!m_sceneQueue.empty()) {
-                nextUrlToImport = m_sceneQueue.back();
-                m_sceneQueue.pop_back();
-            } else {
+            if (m_sceneQueue.empty() || m_canceled) {
                 continue;
             }
+
+            nextUrlToImport = m_sceneQueue.back();
+            m_sceneQueue.pop_back();
 
             // Mark Url as going-to-be-imported to prevent duplicate work.
             m_sceneNodes.emplace(nextUrlToImport, SceneNode{});
         }
 
-        activeDownloads++;
-        m_scene->startUrlRequest(platform, nextUrlToImport, [&, nextUrlToImport](UrlResponse&& response) {
-            std::unique_lock<std::mutex> lock(sceneMutex);
+        auto cb = [&, nextUrlToImport](UrlResponse&& response) {
+            std::unique_lock<std::mutex> lock(m_sceneMutex);
             if (response.error) {
-                LOGE("Unable to retrieve '%s': %s", nextUrlToImport.string().c_str(), response.error);
+                LOGE("Unable to retrieve '%s': %s", nextUrlToImport.string().c_str(),
+                     response.error);
             } else {
                 addSceneData(nextUrlToImport, std::move(response.content));
             }
             activeDownloads--;
-            condition.notify_all();
-        });
+            condition.notify_one();
+        };
+
+        activeDownloads++;
+
+        if (nextUrlToImport.scheme() == "zip") {
+            readFromZip(nextUrlToImport, cb);
+        } else {
+            auto handle = _platform.startUrlRequest(nextUrlToImport, cb);
+
+            std::unique_lock<std::mutex> lock(m_sceneMutex);
+            m_urlRequests.push_back(handle);
+        }
     }
 
-    Node root;
+    if (m_canceled) { return Node(); }
 
     LOGD("Processing scene import Stack:");
     std::unordered_set<Url> imported;
-    importScenesRecursive(root, sceneUrl, imported);
+    Node root;
+    importScenesRecursive(root, _sceneUrl, imported);
+
+    m_sceneNodes.clear();
 
     return root;
+}
+
+void Importer::cancelLoading(Platform& _platform) {
+    std::unique_lock<std::mutex> lock(m_sceneMutex);
+    m_canceled = true;
+    for (auto handle : m_urlRequests) {
+        _platform.cancelUrlRequest(handle);
+    }
 }
 
 void Importer::addSceneData(const Url& sceneUrl, std::vector<char>&& sceneData) {
@@ -90,7 +106,8 @@ void Importer::addSceneData(const Url& sceneUrl, std::vector<char>&& sceneData) 
         addSceneYaml(sceneUrl, sceneData.data(), sceneData.size());
         return;
     }
-    // We're loading a scene from a zip archive!
+
+    // We're loading a scene from a zip archive
     // First, create an archive from the data.
     auto zipArchive = std::make_shared<ZipArchive>();
     zipArchive->loadFromMemory(std::move(sceneData));
@@ -111,8 +128,43 @@ void Importer::addSceneData(const Url& sceneUrl, std::vector<char>&& sceneData) 
             break;
         }
     }
-    // Add the archive to the scene.
-    m_scene->addZipArchive(sceneUrl, zipArchive);
+
+    m_zipArchives.emplace(sceneUrl, zipArchive);
+}
+
+UrlRequestHandle Importer::readFromZip(const Url& url, UrlCallback callback) {
+
+    if (!m_zipWorker) {
+        m_zipWorker = std::make_unique<AsyncWorker>();
+        m_zipWorker->waitForCompletion();
+    }
+
+    m_zipWorker->enqueue([=](){
+        UrlResponse response;
+        // URL for a file in a zip archive, get the encoded source URL.
+        auto source = Importer::getArchiveUrlForZipEntry(url);
+        // Search for the source URL in our archive map.
+        auto it = m_zipArchives.find(source);
+        if (it != m_zipArchives.end()) {
+            auto& archive = it->second;
+            // Found the archive! Now create a response for the request.
+            auto zipEntryPath = url.path().substr(1);
+            auto entry = archive->findEntry(zipEntryPath);
+            if (entry) {
+                response.content.resize(entry->uncompressedSize);
+                bool success = archive->decompressEntry(entry, response.content.data());
+                if (!success) {
+                    response.error = "Unable to decompress zip archive file.";
+                }
+            } else {
+                response.error = "Did not find zip archive entry.";
+            }
+        } else {
+            response.error = "Could not find zip archive.";
+        }
+        callback(std::move(response));
+    });
+    return 0;
 }
 
 void Importer::addSceneYaml(const Url& sceneUrl, const char* sceneYaml, size_t length) {

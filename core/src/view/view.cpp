@@ -21,9 +21,9 @@ View::View(int _width, int _height) :
     m_width(0),
     m_height(0),
     m_type(CameraType::perspective),
-    m_changed(false),
     m_dirtyMatrices(true),
-    m_dirtyTiles(true) {
+    m_dirtyTiles(true),
+    m_changed(false) {
 
     auto bounds = MapProjection::mapProjectedMetersBounds();
     m_constraint.setLimitsY(bounds.min.y, bounds.max.y);
@@ -40,6 +40,32 @@ void View::setPixelScale(float _pixelsPerPoint) {
     m_dirtyTiles = true;
     m_dirtyWorldBoundsMinZoom = true;
 
+}
+
+void View::setCamera(const Camera& _camera) {
+    setCameraType(_camera.type);
+
+    switch (_camera.type) {
+    case CameraType::perspective:
+        setVanishingPoint(_camera.vanishingPoint.x, _camera.vanishingPoint.y);
+        if (_camera.fovStops) {
+            setFieldOfViewStops(_camera.fovStops);
+        } else {
+            setFieldOfView(_camera.fieldOfView);
+        }
+        break;
+    case CameraType::isometric:
+        setObliqueAxis(_camera.obliqueAxis.x, _camera.obliqueAxis.y);
+        break;
+    case CameraType::flat:
+        break;
+    }
+
+    if (_camera.maxTiltStops) {
+        setMaxPitchStops(_camera.maxTiltStops);
+    } else {
+        setMaxPitch(_camera.maxTilt);
+    }
 }
 
 void View::setCameraType(CameraType _type) {

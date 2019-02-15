@@ -575,20 +575,6 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     return self.map->loadSceneYamlAsync([yaml UTF8String], [[url absoluteString] UTF8String], false, sceneUpdates);
 }
 
-- (int)updateSceneAsync:(NSArray<TGSceneUpdate *> *)updates
-{
-    if (!self.map) { return -1; }
-
-    if (!updates || ![updates count]) {
-        return -1;
-    }
-
-    auto sceneUpdates = unpackSceneUpdates(updates);
-
-    self.map->setSceneReadyListener([self sceneReadyListener]);
-    return self.map->updateSceneAsync(sceneUpdates);
-}
-
 #pragma mark Coordinate Conversions
 
 - (CGPoint)viewPositionFromCoordinate:(CLLocationCoordinate2D)coordinate

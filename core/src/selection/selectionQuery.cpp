@@ -2,7 +2,7 @@
 
 #include "gl/framebuffer.h"
 #include "labels/label.h"
-#include "labels/labels.h"
+#include "labels/labelManager.h"
 #include "marker/marker.h"
 #include "marker/markerManager.h"
 #include "tile/tileManager.h"
@@ -21,7 +21,7 @@ QueryType SelectionQuery::type() const {
 }
 
 void SelectionQuery::process(const View& _view, const FrameBuffer& _framebuffer, const MarkerManager& _markerManager,
-                             const TileManager& _tileManager, const Labels& _labels, std::vector<SelectionColorRead>& _colorCache) const {
+                             const TileManager& _tileManager, const LabelManager& _labels, std::vector<SelectionColorRead>& _colorCache) const {
 
     float radius = m_radius * _view.pixelScale();
     glm::vec2 windowCoordinates = _view.normalizedWindowCoordinates(m_position.x - radius, m_position.y + radius);

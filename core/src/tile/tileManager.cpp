@@ -12,7 +12,7 @@
 
 #include <algorithm>
 
-#define DBG(...) // LOGD(__VA_ARGS__)
+#define DBG(...) LOG(__VA_ARGS__)
 
 namespace Tangram {
 
@@ -201,7 +201,7 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
                          [&](const TileSet& a) {
                              return a.source->name() == source->name();
                          }) == m_tileSets.end()) {
-            LOGN("add source %s", source->name().c_str());
+            LOGW("add source %s", source->name().c_str());
             m_tileSets.push_back({ source, false });
         } else {
             LOGW("Duplicate named datasource (not added): %s", source->name().c_str());
@@ -209,31 +209,47 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
     }
 }
 
-std::shared_ptr<TileSource> TileManager::getClientTileSource(int32_t sourceID) {
-    for (const auto& tileSet : m_tileSets) {
-        if (tileSet.clientTileSource && tileSet.source->id() == sourceID) {
-            return tileSet.source;
-        }
+std::shared_ptr<TileSource> TileManager::getClientTileSource(int32_t _sourceId) {
+    auto it = std::find_if(m_tileSets.begin(), m_tileSets.end(),
+         [&](auto& ts) { return ts.source->id() == _sourceId; });
+
+    if (it != m_tileSets.end()) {
+        return it->source;
     }
     return nullptr;
 }
 
 void TileManager::addClientTileSource(std::shared_ptr<TileSource> _tileSource) {
-    m_tileSets.push_back({ _tileSource, true });
+    auto it = std::find_if(m_tileSets.begin(), m_tileSets.end(),
+        [&](auto& ts) { return ts.source->id() == _tileSource->id(); });
+
+    if (it == m_tileSets.end()) {
+        m_tileSets.emplace_back(_tileSource, true);
+    }
 }
 
-bool TileManager::removeClientTileSource(TileSource& _tileSource) {
-    bool removed = false;
-    for (auto it = m_tileSets.begin(); it != m_tileSets.end();) {
-        if (it->source.get() == &_tileSource) {
-            // Remove the tile set associated with this tile source
-            it = m_tileSets.erase(it);
-            removed = true;
-        } else {
-            ++it;
-        }
+bool TileManager::removeClientTileSource(int32_t _sourceId) {
+
+    auto it = std::find_if(m_tileSets.begin(), m_tileSets.end(),
+                           [&](auto& ts) { return ts.source->id() == _sourceId; });
+
+    if (it != m_tileSets.end()) {
+        m_tileSets.erase(it);
+        return true;
     }
-    return removed;
+    return false;
+}
+
+void TileManager::cancelTileTasks() {
+
+    for (auto& tileSet : m_tileSets) {
+        for (auto& tile : tileSet.tiles) {
+            tile.second.clearTask();
+        }
+        tileSet.source->clearData();
+    }
+
+    m_tileCache->clear();
 }
 
 void TileManager::clearTileSets(bool clearSourceCaches) {
@@ -455,7 +471,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
     for (auto& it : tiles) {
         auto& entry = it.second;
 
-#if LOG_LEVEL >= 3
+#if 0 && LOG_LEVEL >= 3
         size_t rasterLoading = 0;
         size_t rasterDone = 0;
         if (entry.task) {
@@ -464,7 +480,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
                 else { rasterLoading++; }
             }
         }
-        DBG("> %s - ready:%d proxy:%d/%d loading:%d rDone:%d rLoading:%d rPending:%d canceled:%d",
+        DBG("> %s - ready:%d proxy:%d/%d loading:%d rDone:%d rLoading:%d canceled:%d",
              it.first.toString().c_str(),
              bool(entry.tile),
              entry.getProxyCounter(),
@@ -472,7 +488,6 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
              entry.task && !entry.task->isReady(),
              rasterDone,
              rasterLoading,
-             entry.rastersPending(),
              entry.task && entry.task->isCanceled());
 #endif
 
@@ -522,11 +537,14 @@ void TileManager::loadTiles() {
         auto& entry = tileIt->second;
 
         tileSet.source->loadTileData(entry.task, m_dataCallback);
+
+        LOGTO("Load Tile: %s", tileId.toString().c_str());
+
     }
 
-    DBG("loading:%d pending:%d cache: %fMB",
-        m_loadTasks.size(), m_loadPending,
-        (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
+    // DBG("loading:%d cache: %fMB",
+    //     m_loadTasks.size(),
+    //     (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
 
     m_loadTasks.clear();
 }
