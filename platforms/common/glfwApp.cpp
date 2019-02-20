@@ -236,7 +236,11 @@ void run() {
         lastTime = currentTime;
 
         // Render
-        map->update(delta);
+        MapState state = map->update(delta);
+        if (state.isAnimating()) {
+            map->getPlatform().requestRender();
+        }
+
         const bool wireframe = wireframe_mode;
         if(wireframe) {
             glPolygonMode(GL_FRONT, GL_LINE);

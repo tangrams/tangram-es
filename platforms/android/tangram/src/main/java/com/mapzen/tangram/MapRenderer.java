@@ -22,6 +22,13 @@ class MapRenderer implements GLSurfaceView.Renderer {
 
     @Override
     public void onDrawFrame(final GL10 gl) {
+        // MapState constants: View is complete when no other flags are set.
+        final int VIEW_COMPLETE =    0;
+        final int VIEW_CHANGING =    1 << 0;
+        //final int LABELS_CHANGING =  1 << 1;
+        //final int TILES_LOADING =    1 << final int SCENE_PENDING =    1 << 4;
+        final int VIEW_ANIMATING =   1 << 5;
+
         final long newTime = System.nanoTime();
         final float delta = (newTime - time) / 1000000000.0f;
         time = newTime;
@@ -34,21 +41,33 @@ class MapRenderer implements GLSurfaceView.Renderer {
 
         boolean mapViewComplete;
         boolean isCameraEasing;
+        boolean isAnimating;
 
         synchronized(map) {
-            mapViewComplete = nativeUpdate(mapPointer, delta);
-            isCameraEasing = nativeRender(mapPointer);
+            int state = nativeUpdate(mapPointer, delta);
+
+            nativeRender(mapPointer);
+
+            mapViewComplete = (state == VIEW_COMPLETE);
+            isCameraEasing = (state & VIEW_CHANGING) != 0;
+            isAnimating = (state & VIEW_ANIMATING) != 0;
         }
 
         if (isCameraEasing) {
-            uiThreadHandler.post(setMapRegionAnimatingRunnable);
+            if (!isPrevCameraEasing) {
+                uiThreadHandler.post(setMapRegionAnimatingRunnable);
+            }
         } else if (isPrevCameraEasing) {
             uiThreadHandler.post(setMapRegionIdleRunnable);
         }
 
-        boolean viewComplete = mapViewComplete && !isPrevMapViewComplete;
+        if (isAnimating) {
+            map.requestRender();
+        }
 
-        if (viewComplete && map.mapChangeListener != null) {
+        boolean viewCompleted = mapViewComplete && !isPrevMapViewComplete;
+
+        if (viewCompleted && map.mapChangeListener != null) {
             uiThreadHandler.post(viewCompleteRunnable);
         }
 
@@ -56,7 +75,7 @@ class MapRenderer implements GLSurfaceView.Renderer {
             final MapController.FrameCaptureCallback cb = frameCaptureCallback;
             frameCaptureCallback = null;
 
-            if (!frameCaptureAwaitCompleteView || viewComplete) {
+            if (!frameCaptureAwaitCompleteView || viewCompleted) {
                 final Bitmap screenshot = capture();
                 uiThreadHandler.post(new Runnable() {
                     @Override
@@ -139,8 +158,8 @@ class MapRenderer implements GLSurfaceView.Renderer {
 
     private native void nativeSetupGL(long mapPtr);
     private native void nativeResize(long mapPtr, int width, int height);
-    private native boolean nativeUpdate(long mapPtr, float dt);
-    private native boolean nativeRender(long mapPtr);
+    private native int nativeUpdate(long mapPtr, float dt);
+    private native void nativeRender(long mapPtr);
     private native void nativeCaptureSnapshot(long mapPtr, int[] buffer);
 
     private MapController.FrameCaptureCallback frameCaptureCallback;
