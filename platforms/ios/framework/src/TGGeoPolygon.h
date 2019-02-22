@@ -10,7 +10,7 @@
 #import <CoreLocation/CoreLocation.h>
 #import <Foundation/Foundation.h>
 #import "TGExport.h"
-#import "TGGeoPoints.h"
+#import "TGGeoPolyline.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -21,17 +21,14 @@ NS_ASSUME_NONNULL_BEGIN
  GeoJSON specification</a>.
  */
 TG_EXPORT
-@interface TGGeoPolygon : TGGeoPoints
+@interface TGGeoPolygon : NSObject
 
 /**
  Inits a polygon and allocates enough memory to hold `size` geographic coordinates in the polygon paths.
  */
-- (instancetype)initWithCoordinates:(CLLocationCoordinate2D *)coordinates count:(NSUInteger)count;
+- (instancetype)initWithRings:(NSArray<TGGeoPolyline *> *)rings;
 
-
-- (instancetype)initWithCoordinates:(CLLocationCoordinate2D *)coordinates count:(NSUInteger)count interiorPolygons:(NSArray<TGGeoPolygon *> *)interiorPolygons;
-
-@property(readonly) NSArray<TGGeoPolygon *> *interiorPolygons;
+@property(readonly) NSArray<TGGeoPolyline *> *rings;
 
 @end
 

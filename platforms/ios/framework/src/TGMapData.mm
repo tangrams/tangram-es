@@ -81,20 +81,12 @@ static inline void TGFeaturePropertiesConvertToCoreProperties(TGFeaturePropertie
 
             TGGeoPolygon *polygon = [(TGMapPolygonFeature *)feature polygon];
             Tangram::PolygonBuilder builder;
-            size_t numberOfPolygons = 0;
-            if (polygon.interiorPolygons != nil) {
-                numberOfPolygons += polygon.interiorPolygons.count;
-            }
-            builder.beginPolygon(numberOfPolygons);
-            for (size_t j = 0; j < numberOfPolygons; j++) {
-                TGGeoPolygon *currentPolygon = polygon;
-                if (j > 0) {
-                    currentPolygon = polygon.interiorPolygons[j - 1];
-                }
-                size_t numberOfPoints = currentPolygon.count;
+            builder.beginPolygon(polygon.rings.count);
+            for (TGGeoPolyline *ring in polygon.rings) {
+                size_t numberOfPoints = ring.count;
                 builder.beginRing(numberOfPoints);
                 for (size_t i = 0; i < numberOfPoints; i++) {
-                    builder.addPoint(TGConvertCLLocationCoordinate2DToCoreLngLat(currentPolygon.coordinates[i]));
+                    builder.addPoint(TGConvertCLLocationCoordinate2DToCoreLngLat(ring.coordinates[i]));
                 }
             }
             dataSource->addPolygonFeature(std::move(properties), std::move(builder));

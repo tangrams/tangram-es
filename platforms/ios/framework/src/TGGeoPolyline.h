@@ -10,7 +10,6 @@
 #import <CoreLocation/CoreLocation.h>
 #import <Foundation/Foundation.h>
 #import "TGExport.h"
-#import "TGGeoPoints.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -23,12 +22,26 @@ NS_ASSUME_NONNULL_BEGIN
  successfully updated, otherwise returns false.
  */
 TG_EXPORT
-@interface TGGeoPolyline : TGGeoPoints
+@interface TGGeoPolyline : NSObject
 
 /**
  Inits a `TGGeoPolyline` and allocate enough memory to hold `size` geographic coordinates.
  */
 - (instancetype)initWithCoordinates:(const CLLocationCoordinate2D *)coordinates count:(NSUInteger)count;
+
+/**
+ Gets a pointer to the geographic coordinates describing this poyline of array length `-[TGGeoPolyline count:]`.
+
+ @return a pointer to the list of geographic coordinates describing this polyline
+ */
+@property(readonly) CLLocationCoordinate2D *coordinates;
+
+/**
+ Gets the number of geographic coordinates describing this polyline.
+
+ @return the number of geographic coordinates in this polyline
+ */
+@property(readonly, nonatomic) NSUInteger count;
 
 @end
 

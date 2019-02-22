@@ -8,23 +8,15 @@
 //
 
 #import "TGGeoPolygon.h"
-#import "TGGeoPoints+Internal.h"
 
 @implementation TGGeoPolygon
 
-- (instancetype)initWithCoordinates:(CLLocationCoordinate2D *)coordinates count:(NSUInteger)count
+- (instancetype)initWithRings:(NSArray<TGGeoPolyline *> *)rings
 {
-    self = [super initWithCoordinates:coordinates count:count];
-
-    return self;
-}
-
--(instancetype)initWithCoordinates:(CLLocationCoordinate2D *)coordinates count:(NSUInteger)count interiorPolygons:(NSArray<TGGeoPolygon *> *)interiorPolygons
-{
-    self = [self initWithCoordinates:coordinates count:count];
+    self = [super init];
 
     if (self) {
-        _interiorPolygons = interiorPolygons;
+        _rings = rings;
     }
 
     return self;

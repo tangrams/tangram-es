@@ -138,7 +138,8 @@ static const NSUInteger MAX_TAPPED_LOCATIONS = 8;
             _markerPolygon.stylingString = @"{ style: 'polygons', color: 'blue', order: 500 }";
         }
         if (_tappedLocationCount > 2) {
-            TGGeoPolygon *polygon = [[TGGeoPolygon alloc] initWithCoordinates:_tappedLocations count:_tappedLocationCount];
+            TGGeoPolyline *ring = [[TGGeoPolyline alloc] initWithCoordinates:_tappedLocations count:_tappedLocationCount];
+            TGGeoPolygon *polygon = [[TGGeoPolygon alloc] initWithRings:[NSArray arrayWithObject:ring]];
             _markerPolygon.polygon = polygon;
         }
 

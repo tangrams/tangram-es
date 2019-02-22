@@ -126,24 +126,17 @@
     [self clearGeometry];
     _polygon = polygon;
 
-    CLLocationCoordinate2D *coordinates = polygon.coordinates;
-    size_t numberOfPoints = polygon.count;
-    std::vector<Tangram::LngLat> lngLatCoords(numberOfPoints);
-    for (size_t i = 0; i < numberOfPoints; i++) {
-        lngLatCoords[i] = TGConvertCLLocationCoordinate2DToCoreLngLat(coordinates[i]);
-    }
-    std::vector<int> rings;
-    rings.push_back(static_cast<int>(numberOfPoints));
-    if (polygon.interiorPolygons != nil) {
-        for (TGGeoPolygon *interiorPolygon in polygon.interiorPolygons) {
-            rings.push_back(static_cast<int>(interiorPolygon.count));
-            for (size_t i = 0; i < interiorPolygon.count; i++) {
-                lngLatCoords.push_back(TGConvertCLLocationCoordinate2DToCoreLngLat(interiorPolygon.coordinates[i]));
-            }
+    std::vector<Tangram::LngLat> coordinates;
+    std::vector<int> ringCounts;
+    for (TGGeoPolyline *ring in polygon.rings) {
+        ringCounts.push_back(static_cast<int>(ring.count));
+        size_t numberOfPoints = ring.count;
+        for (size_t i = 0; i < numberOfPoints; i++) {
+            coordinates.push_back(TGConvertCLLocationCoordinate2DToCoreLngLat(ring.coordinates[i]));
         }
     }
 
-    if (!tangramInstance->markerSetPolygon(self.identifier, lngLatCoords.data(), rings.data(), static_cast<int>(rings.size()))) {
+    if (!tangramInstance->markerSetPolygon(self.identifier, coordinates.data(), ringCounts.data(), static_cast<int>(ringCounts.size()))) {
         [self createNSError];
     }
 }
