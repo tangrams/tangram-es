@@ -28,6 +28,7 @@ import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
 import com.mapzen.tangram.geometry.Geometry;
+import com.mapzen.tangram.geometry.Polygon;
 import com.mapzen.tangram.geometry.Polyline;
 import com.mapzen.tangram.networking.DefaultHttpHandler;
 import com.mapzen.tangram.networking.HttpHandler;
@@ -241,9 +242,10 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
             props.put("color", "#D2655F");
 
             Polyline polyline = new Polyline(tappedPoints, props);
-            mapData.setFeatures(Collections.singletonList((Geometry)polyline));
 
+            Polygon polygon = new Polygon(Collections.singletonList(tappedPoints), props);
 
+            mapData.setFeatures(Arrays.asList(polyline, polygon));
         }
 
         Marker p = map.addMarker();
