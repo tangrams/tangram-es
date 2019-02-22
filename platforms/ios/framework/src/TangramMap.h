@@ -21,6 +21,7 @@ FOUNDATION_EXPORT const unsigned char TangramMapVersionString[];
 #import "TGGeoPolyline.h"
 #import "TGLabelPickResult.h"
 #import "TGMapData.h"
+#import "TGMapFeature.h"
 #import "TGMapView.h"
 #import "TGMapViewDelegate.h"
 #import "TGMarker.h"

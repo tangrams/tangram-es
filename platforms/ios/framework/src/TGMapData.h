@@ -10,12 +10,7 @@
 #import <CoreLocation/CoreLocation.h>
 #import <Foundation/Foundation.h>
 #import "TGExport.h"
-
-
-/**
- Dictionary of feature properties keyed by their property name
- */
-typedef NSDictionary<NSString *, NSString *> TGFeatureProperties;
+#import "TGMapFeature.h"
 
 @class TGMapView;
 @class TGGeoPolygon;
@@ -63,28 +58,9 @@ TG_EXPORT
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- Adds a point coordinate to the data source.
-
- @param point the geographic coordinates of the point to add to the data source
- @param properties the feature properties
+ * TODO
  */
-- (void)addPoint:(CLLocationCoordinate2D)point withProperties:(TGFeatureProperties *)properties;
-
-/**
- Adds a polygon geometry to the data source.
-
- @param polygon the polygon geometry to add to the data source
- @param properties the feature properties
- */
-- (void)addPolygon:(TGGeoPolygon *)polygon withProperties:(TGFeatureProperties *)properties;
-
-/**
- Adds a polyline to the data source.
-
- @param polyline the polyline geometry to add to the data source
- @param properties the feature properties
- */
-- (void)addPolyline:(TGGeoPolyline *)polyline withProperties:(TGFeatureProperties *)properties;
+- (void)setFeatures:(NSArray<TGMapFeature *> *)features;
 
 /**
  Adds features described in a GeoJSON string to the data source. The string must be formatted according
@@ -92,12 +68,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param data the GeoJSON formatted string to add to the data source
  */
-- (void)addGeoJson:(NSString *)data;
-
-/**
- Clears the data source from all the added features.
- */
-- (void)clear;
+- (void)setGeoJson:(NSString *)data;
 
 /**
  Definitely removes the data source from the map view.

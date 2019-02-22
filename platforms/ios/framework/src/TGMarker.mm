@@ -127,13 +127,23 @@
     _polygon = polygon;
 
     CLLocationCoordinate2D *coordinates = polygon.coordinates;
-    size_t count = polygon.count;
-    std::vector<Tangram::LngLat> lngLatCoords(count);
-    for (size_t i = 0; i < count; i++) {
+    size_t numberOfPoints = polygon.count;
+    std::vector<Tangram::LngLat> lngLatCoords(numberOfPoints);
+    for (size_t i = 0; i < numberOfPoints; i++) {
         lngLatCoords[i] = TGConvertCLLocationCoordinate2DToCoreLngLat(coordinates[i]);
     }
+    std::vector<int> rings;
+    rings.push_back(static_cast<int>(numberOfPoints));
+    if (polygon.interiorPolygons != nil) {
+        for (TGGeoPolygon *interiorPolygon in polygon.interiorPolygons) {
+            rings.push_back(static_cast<int>(interiorPolygon.count));
+            for (size_t i = 0; i < interiorPolygon.count; i++) {
+                lngLatCoords.push_back(TGConvertCLLocationCoordinate2DToCoreLngLat(interiorPolygon.coordinates[i]));
+            }
+        }
+    }
 
-    if (!tangramInstance->markerSetPolygon(self.identifier, lngLatCoords.data(), polygon.rings, static_cast<int>(polygon.ringsCount))) {
+    if (!tangramInstance->markerSetPolygon(self.identifier, lngLatCoords.data(), rings.data(), static_cast<int>(rings.size()))) {
         [self createNSError];
     }
 }
