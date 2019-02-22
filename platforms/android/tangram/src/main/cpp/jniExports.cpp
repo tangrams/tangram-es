@@ -561,13 +561,13 @@ void MapData(AddFeature)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jdoubleAr
 
     auto_source(sourcePtr);
 
-    size_t n_points = jniEnv->GetArrayLength(jcoordinates) / 2;
-    size_t n_rings = (jrings == NULL) ? 0 : jniEnv->GetArrayLength(jrings);
-    size_t n_properties = (jproperties == NULL) ? 0 : jniEnv->GetArrayLength(jproperties) / 2;
+    size_t nPoints = jniEnv->GetArrayLength(jcoordinates) / 2;
+    size_t nRings = (jrings == NULL) ? 0 : jniEnv->GetArrayLength(jrings);
+    size_t nProperties = (jproperties == NULL) ? 0 : jniEnv->GetArrayLength(jproperties) / 2;
 
-    Tangram::Properties properties;
+    Properties properties;
 
-    for (size_t i = 0; i < n_properties; ++i) {
+    for (size_t i = 0; i < nProperties; ++i) {
         jstring jkey = (jstring) (jniEnv->GetObjectArrayElement(jproperties, 2 * i));
         jstring jvalue = (jstring) (jniEnv->GetObjectArrayElement(jproperties, 2 * i + 1));
         auto key = stringFromJString(jniEnv, jkey);
@@ -579,32 +579,33 @@ void MapData(AddFeature)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jdoubleAr
 
     auto* coordinates = jniEnv->GetDoubleArrayElements(jcoordinates, NULL);
 
-    if (n_rings > 0) {
+    if (nRings > 0) {
         // If rings are defined, this is a polygon feature.
         auto* rings = jniEnv->GetIntArrayElements(jrings, NULL);
-        std::vector<std::vector<Tangram::LngLat>> polygon;
-        size_t ring_start = 0, ring_end = 0;
-        for (size_t i = 0; i < n_rings; ++i) {
-            ring_end += rings[i];
-            std::vector<Tangram::LngLat> ring;
-            for (; ring_start < ring_end; ++ring_start) {
-                ring.push_back({coordinates[2 * ring_start], coordinates[2 * ring_start + 1]});
+        Tangram::PolygonBuilder builder;
+        builder.beginPolygon(nRings);
+        size_t offset = 0;
+        for (size_t j = 0; j < nRings; j++) {
+            size_t nPointsInRing = rings[j];
+            builder.beginRing(nPointsInRing);
+            for (size_t i = 0; i < nPointsInRing; i++) {
+                builder.addPoint(LngLat(coordinates[2 * (offset + i)], coordinates[2 * (offset + i) + 1]));
             }
-            polygon.push_back(std::move(ring));
+            offset += nPointsInRing;
         }
-        source->addPoly(properties, polygon);
+        source->addPolygonFeature(std::move(properties), std::move(builder));
         jniEnv->ReleaseIntArrayElements(jrings, rings, JNI_ABORT);
-    } else if (n_points > 1) {
+    } else if (nPoints > 1) {
         // If no rings defined but multiple points, this is a polyline feature.
-        std::vector<Tangram::LngLat> polyline;
-        for (size_t i = 0; i < n_points; ++i) {
-            polyline.push_back({coordinates[2 * i], coordinates[2 * i + 1]});
+        Tangram::PolylineBuilder builder;
+        builder.beginPolyline(nPoints);
+        for (size_t i = 0; i < nPoints; i++) {
+            builder.addPoint(LngLat(coordinates[2 * i], coordinates[2 * i + 1]));
         }
-        source->addLine(properties, polyline);
+        source->addPolylineFeature(std::move(properties), std::move(builder));
     } else {
         // This is a point feature.
-        auto point = Tangram::LngLat(coordinates[0], coordinates[1]);
-        source->addPoint(properties, point);
+        source->addPointFeature(std::move(properties), LngLat(coordinates[0], coordinates[1]));
     }
 
     jniEnv->ReleaseDoubleArrayElements(jcoordinates, coordinates, JNI_ABORT);
