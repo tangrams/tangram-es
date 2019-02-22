@@ -5,7 +5,6 @@
 
 #include <mutex>
 
-
 namespace Tangram {
 
 class Platform;
@@ -13,6 +12,27 @@ class Platform;
 struct Properties;
 
 struct ClientGeoJsonData;
+
+struct PolylineBuilderData;
+
+struct PolylineBuilder {
+    PolylineBuilder();
+    ~PolylineBuilder();
+    void beginPolyline(size_t numberOfPoints);
+    void addPoint(LngLat point);
+    std::unique_ptr<PolylineBuilderData> data;
+};
+
+struct PolygonBuilderData;
+
+struct PolygonBuilder {
+    PolygonBuilder();
+    ~PolygonBuilder();
+    void beginPolygon(size_t numberOfRings);
+    void beginRing(size_t numberOfPoints);
+    void addPoint(LngLat point);
+    std::unique_ptr<PolygonBuilderData> data;
+};
 
 class ClientGeoJsonSource : public TileSource {
 
@@ -29,9 +49,12 @@ public:
 
     // Add geometry from a GeoJSON string
     void addData(const std::string& _data);
-    void addPoint(const Properties& _tags, LngLat _point);
-    void addLine(const Properties& _tags, const Coordinates& _line);
-    void addPoly(const Properties& _tags, const std::vector<Coordinates>& _poly);
+
+    void addPointFeature(Properties&& properties, LngLat coordinates);
+
+    void addPolylineFeature(Properties&& properties, PolylineBuilder&& polyline);
+
+    void addPolygonFeature(Properties&& properties, PolygonBuilder&& polygon);
 
     // Transform added feature data into tiles.
     void generateTiles();
