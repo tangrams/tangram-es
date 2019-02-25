@@ -9,10 +9,10 @@ using namespace Tangram;
 
 
 std::vector<Tangram::SceneUpdate> unpackSceneUpdates(JNIEnv* jniEnv, jobjectArray updateStrings) {
-    size_t nUpdateStrings = (updateStrings == NULL)? 0 : jniEnv->GetArrayLength(updateStrings);
+    int nUpdateStrings = (updateStrings == NULL)? 0 : jniEnv->GetArrayLength(updateStrings);
 
     std::vector<Tangram::SceneUpdate> sceneUpdates;
-    for (size_t i = 0; i < nUpdateStrings;) {
+    for (int i = 0; i < nUpdateStrings;) {
         jstring path = (jstring) (jniEnv->GetObjectArrayElement(updateStrings, i++));
         jstring value = (jstring) (jniEnv->GetObjectArrayElement(updateStrings, i++));
         sceneUpdates.emplace_back(stringFromJString(jniEnv, path), stringFromJString(jniEnv, value));
@@ -446,11 +446,11 @@ jboolean MapController(MarkerSetPolyline)(JNIEnv* jniEnv, jobject obj, jlong map
                                           jdoubleArray jcoordinates, jint count) {
     auto_map(mapPtr);
 
-    if (!jcoordinates || count == 0) { return false; }
+    if (!jcoordinates || count == 0) { return static_cast<jboolean>(false); }
 
     auto* coordinates = jniEnv->GetDoubleArrayElements(jcoordinates, NULL);
     std::vector<Tangram::LngLat> polyline;
-    polyline.reserve(count);
+    polyline.reserve(static_cast<size_t>(count));
 
     for (size_t i = 0; i < count; ++i) {
         polyline.emplace_back(coordinates[2 * i], coordinates[2 * i + 1]);
@@ -464,17 +464,17 @@ jboolean MapController(MarkerSetPolygon)(JNIEnv* jniEnv, jobject obj, jlong mapP
                                          jdoubleArray jcoordinates, jintArray jcounts, jint rings) {
     auto_map(mapPtr);
 
-    if (!jcoordinates || !jcounts || rings == 0) { return false; }
+    if (!jcoordinates || !jcounts || rings == 0) { return static_cast<jboolean>(false); }
 
     auto* coordinates = jniEnv->GetDoubleArrayElements(jcoordinates, NULL);
     auto* counts = jniEnv->GetIntArrayElements(jcounts, NULL);
 
     std::vector<Tangram::LngLat> polygonCoords;
 
-    size_t coordsCount = 0;
-    for (size_t i = 0; i < rings; i++) {
-        size_t ringCount = *(counts+i);
-        for (size_t j = 0; j < ringCount; j++) {
+    int coordsCount = 0;
+    for (int i = 0; i < rings; i++) {
+        int ringCount = *(counts+i);
+        for (int j = 0; j < ringCount; j++) {
             polygonCoords.emplace_back(coordinates[coordsCount + 2 * j],
                                        coordinates[coordsCount + 2 * j + 1]);
         }
@@ -561,13 +561,13 @@ void MapData(AddFeature)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jdoubleAr
 
     auto_source(sourcePtr);
 
-    size_t nPoints = jniEnv->GetArrayLength(jcoordinates) / 2;
-    size_t nRings = (jrings == NULL) ? 0 : jniEnv->GetArrayLength(jrings);
-    size_t nProperties = (jproperties == NULL) ? 0 : jniEnv->GetArrayLength(jproperties) / 2;
+    int nPoints = jniEnv->GetArrayLength(jcoordinates) / 2;
+    int nRings = (jrings == NULL) ? 0 : jniEnv->GetArrayLength(jrings);
+    int nProperties = (jproperties == NULL) ? 0 : jniEnv->GetArrayLength(jproperties) / 2;
 
     Properties properties;
 
-    for (size_t i = 0; i < nProperties; ++i) {
+    for (int i = 0; i < nProperties; ++i) {
         jstring jkey = (jstring) (jniEnv->GetObjectArrayElement(jproperties, 2 * i));
         jstring jvalue = (jstring) (jniEnv->GetObjectArrayElement(jproperties, 2 * i + 1));
         auto key = stringFromJString(jniEnv, jkey);
@@ -583,11 +583,11 @@ void MapData(AddFeature)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jdoubleAr
         // If rings are defined, this is a polygon feature.
         auto* rings = jniEnv->GetIntArrayElements(jrings, NULL);
         Tangram::PolygonBuilder builder;
-        builder.beginPolygon(nRings);
-        size_t offset = 0;
-        for (size_t j = 0; j < nRings; j++) {
-            size_t nPointsInRing = rings[j];
-            builder.beginRing(nPointsInRing);
+        builder.beginPolygon(static_cast<size_t>(nRings));
+        int offset = 0;
+        for (int j = 0; j < nRings; j++) {
+            int nPointsInRing = rings[j];
+            builder.beginRing(static_cast<size_t>(nPointsInRing));
             for (size_t i = 0; i < nPointsInRing; i++) {
                 builder.addPoint(LngLat(coordinates[2 * (offset + i)], coordinates[2 * (offset + i) + 1]));
             }
@@ -598,7 +598,7 @@ void MapData(AddFeature)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jdoubleAr
     } else if (nPoints > 1) {
         // If no rings defined but multiple points, this is a polyline feature.
         Tangram::PolylineBuilder builder;
-        builder.beginPolyline(nPoints);
+        builder.beginPolyline(static_cast<size_t>(nPoints));
         for (size_t i = 0; i < nPoints; i++) {
             builder.addPoint(LngLat(coordinates[2 * i], coordinates[2 * i + 1]));
         }

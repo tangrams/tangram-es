@@ -118,10 +118,7 @@ struct add_centroid {
     bool operator()(const geometry::polygon<double>& geom) {
         if (geom.empty()) { return false; }
         pt = centroid(geom.front().begin(), geom.front().end()-1);
-        if (std::isnan(pt.x) || std::isnan(pt.y)) {
-            return false;
-        }
-        return true;
+        return !(std::isnan(pt.x) || std::isnan(pt.y));
     }
 
     bool operator()(const geometry::multi_polygon<double>& geom) {
@@ -152,7 +149,7 @@ struct prop_visitor {
     Properties& props;
     std::string& key;
     void operator()(std::string v) {
-        props.set(key, v);
+        props.set(key, std::move(v));
     }
     void operator()(bool v) {
         props.set(key, double(v));
