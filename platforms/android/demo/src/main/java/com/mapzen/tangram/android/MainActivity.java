@@ -126,7 +126,6 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         p.setStylingFromPath(pointStylingPath);
         p.setPoint(startPoint);
         pointMarkers.add(p);
-        lastTappedPoint = startPoint;
 
         TouchInput touchInput = map.getTouchInput();
         touchInput.setTapResponder(this);
