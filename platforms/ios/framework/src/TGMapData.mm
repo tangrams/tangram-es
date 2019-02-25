@@ -61,14 +61,12 @@ static inline void TGFeaturePropertiesConvertToCoreProperties(TGFeaturePropertie
         Tangram::Properties properties;
         TGFeaturePropertiesConvertToCoreProperties(feature.properties, properties);
 
-        if ([feature isKindOfClass:[TGMapPointFeature class]]) {
+        if (CLLocationCoordinate2D *point = [feature point]) {
 
-            CLLocationCoordinate2D point = [(TGMapPointFeature *)feature point];
-            dataSource->addPointFeature(std::move(properties), TGConvertCLLocationCoordinate2DToCoreLngLat(point));
+            dataSource->addPointFeature(std::move(properties), TGConvertCLLocationCoordinate2DToCoreLngLat(*point));
 
-        } else if ([feature isKindOfClass:[TGMapPolylineFeature class]]) {
+        } else if (TGGeoPolyline *polyline = [feature polyline]) {
 
-            TGGeoPolyline *polyline = [(TGMapPolylineFeature *)feature polyline];
             Tangram::PolylineBuilder builder;
             size_t numberOfPoints = polyline.count;
             builder.beginPolyline(numberOfPoints);
@@ -77,9 +75,8 @@ static inline void TGFeaturePropertiesConvertToCoreProperties(TGFeaturePropertie
             }
             dataSource->addPolylineFeature(std::move(properties), std::move(builder));
 
-        } else if ([feature isKindOfClass:[TGMapPolygonFeature class]]) {
+        } else if (TGGeoPolygon *polygon = [feature polygon]) {
 
-            TGGeoPolygon *polygon = [(TGMapPolygonFeature *)feature polygon];
             Tangram::PolygonBuilder builder;
             builder.beginPolygon(polygon.rings.count);
             for (TGGeoPolyline *ring in polygon.rings) {

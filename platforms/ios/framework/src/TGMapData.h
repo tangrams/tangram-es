@@ -17,39 +17,43 @@
 @class TGGeoPolyline;
 
 /**
- A `TGMapData` is a convenience class to display point, polygons or polylines from a dynamic data layer.
- The data layer will be styled according to the scene file using the provided data layer name.
+ A `TGMapData` enables you to dynamically create map features to be rendered in the current map scene.
 
- In your stylesheet, add a layer with the name of the data layer you want to add in your client application:
+ To render features from a `TGMapData` in your map scene, add a layer in your scene file with a data source set to a new
+ source name. This source name will correspond to the name of your `TGMapData` instance.
 
- ```
+ Example:
+ ```yaml
  layers:
-     mz_route_line_transit:
-        data: { source: mz_route_line_transit }
-     draw:
-        polylines:
-            color: function() { return feature.color || '#06a6d4'; }
-            order: 500
-            width: 10px
+     route_line_transit:
+        data: { source: route_line_transit_data }
+        draw:
+            lines:
+                color: function() { return feature.color || '#06a6d4'; }
+                order: 500
+                width: 10px
  ```
 
- In your implementation, to add a polyline fitting under the `mz_route_line_transit` layer:
+ In your application, create a `TGMapData` instance with the same name using
+ `-[TGMapView addDataLayer:generateCentroid:]` and assign map features to it.
 
+ Example (Objective-C):
+ ```
+ CLLocationCoordinate2D polylinePoints[] = { ... };
+ TGGeoPolyline *polyline = [[TGGeoPolyline alloc] initWithCoordinates:polylinePoints count:polylinePointCount];
+ TGFeatureProperties *properties = @{ @"type" : @"line", @"color" : @"#D2655F" };
+ TGMapFeature *feature = [TGMapFeature mapFeatureWithPolyline:polyline properties:properties];
+ TGMapData *mapData = [mapView addDataLayer:@"route_line_transit_data", generateCentroid:NO];
+ [mapData setFeatures:@[feature]];
+ ```
+
+ Example (Swift):
  ```swift
- // Create a data layer in the TGMapView mapView
- var dataLayer = mapView.addDataLayer(name: "mz_Route_line_transit");
-
- var line = TGGeoPolyline()
-
- // Add some coordinates to the polyline
- line.addPoint(point: CLLocationCoordinate2DMake(longitude0, latitude0))
- line.addPoint(point: CLLocationCoordinate2DMake(longitude1, latitude1))
-
- // Set the data properties
- var properties = ["type": "line", "color": "#D2655F"]
-
- // Add the line to the data layer
- dataLayer.add(polyline: line, properties: properties);
+ var polyline = TGGeoPolyline(coordinates: polylinePoints, count: polylinePointCount);
+ var properties = ["type": "line", "color": "#D2655F"];
+ var feature = TGMapFeature(polyline: polyline, properties: properties);
+ var mapData = mapView.addDataLayer(name: "mz_route_line_transit_data");
+ mapData.setFeatures([feature]);
  ```
  */
 TG_EXPORT
@@ -58,32 +62,39 @@ TG_EXPORT
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * TODO
+ Sets the contents of this map data to the specified array of features.
+
+ This replaces any previously assigned contents.
+
+ @param features The array of features to assign.
  */
 - (void)setFeatures:(NSArray<TGMapFeature *> *)features;
 
 /**
- Adds features described in a GeoJSON string to the data source. The string must be formatted according
- to the <a href="http://geojson.org/geojson-spec.html">GeoJSON specifications</a>.
+ Sets the contents of this map data to the features defined in a
+ <a href="http://geojson.org/geojson-spec.html">GeoJSON</a> string.
 
- @param data the GeoJSON formatted string to add to the data source
+ This replaces any previously assigned contents.
+
+ @param data A GeoJSON-formatted string.
  */
 - (void)setGeoJson:(NSString *)data;
 
 /**
- Definitely removes the data source from the map view.
- Any future usage of this `MapData` object will be a no-op.
+ Permanently removes this map data from the map view.
 
- @return `YES` if removal was successful
+ Any future use of this object will do nothing.
+
+ @return `YES` if removal was successful.
  */
 - (BOOL)remove;
 
-/// The name of the data source
+/// The name of the data source.
 @property (readonly, nonatomic) NSString* name;
 
 NS_ASSUME_NONNULL_END
 
-/// The map view this data source is on
+/// The map view that created this map data.
 @property (readonly, weak, nonatomic) TGMapView* _Nullable mapView;
 
 @end

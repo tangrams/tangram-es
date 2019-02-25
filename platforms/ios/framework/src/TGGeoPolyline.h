@@ -14,33 +14,25 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- Helper class to contain a polyline geometry for use in `-[TGMarker polyline]`.
+ A shape made of connected line segments.
 
- Set the geometry of a marker to a polyline along the given coordinates; _coordinates is a
- pointer to a sequence of _count LngLats; markers can have their geometry set multiple times
- with possibly different geometry types; returns true if the marker ID was found and
- successfully updated, otherwise returns false.
+ The shape is defined by an ordered list of geographic coordinates.
  */
 TG_EXPORT
 @interface TGGeoPolyline : NSObject
 
 /**
- Inits a `TGGeoPolyline` and allocate enough memory to hold `size` geographic coordinates.
+ Initializes a polyline with the specified coordinates.
+
+ @param coordinates The array of coordinates defining the polyline. This data is copied into the new object.
+ @return An initialized polyline.
  */
 - (instancetype)initWithCoordinates:(const CLLocationCoordinate2D *)coordinates count:(NSUInteger)count;
 
-/**
- Gets a pointer to the geographic coordinates describing this poyline of array length `-[TGGeoPolyline count:]`.
-
- @return a pointer to the list of geographic coordinates describing this polyline
- */
+/// The array of coordinates defining this polyline.
 @property(readonly) CLLocationCoordinate2D *coordinates;
 
-/**
- Gets the number of geographic coordinates describing this polyline.
-
- @return the number of geographic coordinates in this polyline
- */
+/// The number of coordinates in the polyline.
 @property(readonly, nonatomic) NSUInteger count;
 
 @end

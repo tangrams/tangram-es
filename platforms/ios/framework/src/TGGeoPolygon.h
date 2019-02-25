@@ -15,19 +15,24 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- Helper class to contain a polygon geometry for use in `-[TGMarker polygon]`.
+ A closed polygon with optional holes.
 
- The polygon winding order and internal polygons must be set according to the <a href="http://geojson.org/geojson-spec.html#polygon">
- GeoJSON specification</a>.
+ The polygon is defined by a list of rings. Each ring is represented with a `TGGeoPolyline`. The first and last points
+ in each ring are joined to form a closed shape. The first ring represents the exterior of the polygon and any
+ subsequent rings become holes that are cut out of the polygon.
  */
 TG_EXPORT
 @interface TGGeoPolygon : NSObject
 
 /**
- Inits a polygon and allocates enough memory to hold `size` geographic coordinates in the polygon paths.
+ Initializes a polygon from the specified list of rings.
+
+ @param rings The list of rings defining the polygon.
+ @return An initialized polygon.
  */
 - (instancetype)initWithRings:(NSArray<TGGeoPolyline *> *)rings;
 
+/// The array of rings defining this polygon.
 @property(readonly) NSArray<TGGeoPolyline *> *rings;
 
 @end

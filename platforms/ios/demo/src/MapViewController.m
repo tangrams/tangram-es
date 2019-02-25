@@ -126,7 +126,7 @@ static const NSUInteger MAX_TAPPED_LOCATIONS = 8;
 
         if (_tappedLocationCount > 1) {
             TGGeoPolyline* polyline = [[TGGeoPolyline alloc] initWithCoordinates:_tappedLocations count:_tappedLocationCount];
-            TGMapPolylineFeature *feature = [[TGMapPolylineFeature alloc] initWithPolyline:polyline properties:properties];
+            TGMapFeature *feature = [TGMapFeature mapFeatureWithPolyline:polyline properties:properties];
             [_mapData setFeatures:@[feature]];
         }
     }
