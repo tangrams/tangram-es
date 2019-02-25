@@ -20,7 +20,7 @@ The demo application uses the Nextzen vector tile service, so you will need a Ne
 
 ## Build
 
-  The **only** supported toolchain to build Tangram ES on Windows is currently MinGW (MinGW GCC, POSIX threads).
+  The **only** supported toolchain to build Tangram ES on Windows is currently MinGW (MinGW GCC, POSIX threads). Once you  have installed MinGW, make sure that the MinGW bin folder is added to your `PATH` environment variable.
 
  1. Download zlib sources from https://zlib.net/
 
@@ -29,6 +29,7 @@ The demo application uses the Nextzen vector tile service, so you will need a Ne
 ### Zlib and Curl under MinGW-w64
 
 CMake typically installs everything under Program Files, which requires elevated privileges. It is encouraged you to make dedicated directory, e.g. `c:/cmake-install`. To make it work, set `CMAKE_PREFIX_PATH` env var to this directory. The build has been tested with curl 7.63 and zlib 1.2.
+Make sure that this "cmake install" bin folder is added to your `PATH` environment variable.
 
 From the zlib source directory:
 ``` bat
