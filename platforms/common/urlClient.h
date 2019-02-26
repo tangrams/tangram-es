@@ -45,7 +45,6 @@ private:
     struct Task;
 
     void curlLoop();
-    void curlWakeUp();
 
     void startPendingRequests();
 

@@ -3,8 +3,6 @@
 #include "log.h"
 #include "map.h"
 #include <memory>
-#include <signal.h>
-#include <stdlib.h>
 #include <direct.h> // _getcwd
 
 using namespace Tangram;

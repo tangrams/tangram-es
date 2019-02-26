@@ -4,9 +4,6 @@
 #include <cassert>
 #include <cstring>
 #include <curl/curl.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <time.h>
 
 constexpr char const* requestCancelledError = "Request cancelled";
 
@@ -17,7 +14,7 @@ constexpr char const* requestCancelledError = "Request cancelled";
     if (err != CURLM_OK) \
         LOGE("%s", curl_multi_strerror(err)); \
     assert(err == CURLM_OK); \
-    } while (0)
+} while (0)
 #else
 #define CURL_CHECK(STMT) do { STMT; } while (0)
 #define CURLM_CHECK(STMT) do { STMT; } while (0)
