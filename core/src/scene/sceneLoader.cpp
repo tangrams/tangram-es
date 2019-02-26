@@ -1526,6 +1526,7 @@ std::vector<DataLayer> SceneLoader::applyLayers(const Node& _node,  SceneFunctio
 
             auto sublayer = loadSublayer(layer.second, name, _functions, _stops, _ruleNames);
 
+
             if (const Node& data = layer.second["data"]) {
 
                 const Node& data_source = data["source"];
@@ -1551,6 +1552,7 @@ std::vector<DataLayer> SceneLoader::applyLayers(const Node& _node,  SceneFunctio
                 collections.push_back(name);
             }
             dataLayers.emplace_back(std::move(sublayer), source, collections);
+            dataLayers.back().sortSublayers();
 
         }
         catch (const YAML::RepresentationException& e) {
@@ -1567,6 +1569,8 @@ SceneLayer SceneLoader::loadSublayer(const Node& _layer, const std::string& _lay
     std::vector<DrawRuleData> rules;
     Filter filter;
     bool enabled = true;
+    bool exclusive = false;
+    int priority = std::numeric_limits<int>::max();
 
     for (const auto& member : _layer) {
 
@@ -1588,7 +1592,7 @@ SceneLayer SceneLoader::loadSublayer(const Node& _layer, const std::string& _lay
             filter = generateFilter(_functions, member.second);
             if (!filter.isValid()) {
                 LOGNode("Invalid 'filter' in layer '%s'", member.second, _layerName.c_str());
-                return { _layerName, {}, {}, {}, false };
+                return { _layerName, {}, {}, {}, priority, false, exclusive};
             }
         } else if (key == "visible") {
             if (!_layer["enabled"].IsDefined()) {
@@ -1596,13 +1600,18 @@ SceneLayer SceneLoader::loadSublayer(const Node& _layer, const std::string& _lay
             }
         } else if (key == "enabled") {
             YAML::convert<bool>::decode(member.second, enabled);
+        } else if (key == "exclusive") {
+            YAML::convert<bool>::decode(member.second, exclusive);
+        } else if (key == "priority") {
+            priority = YamlUtil::getIntOrDefault(member.second, priority);
         } else {
             // Member is a sublayer
             sublayers.push_back(loadSublayer(member.second, (_layerName + DELIMITER + key),
                                              _functions, _stops, _ruleNames));
+            sublayers.back().sortSublayers();
         }
     }
-    return { _layerName, std::move(filter), rules, std::move(sublayers), enabled };
+    return { _layerName, std::move(filter), rules, std::move(sublayers), priority, enabled, exclusive };
 }
 
 void printFilters(const SceneLayer& layer, int indent){

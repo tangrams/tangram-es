@@ -148,6 +148,9 @@ bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, 
 
             if (sublayer.filter().eval(_feature, _ctx)) {
                 m_queuedLayers.push_back(&sublayer);
+                if (sublayer.exclusive()) {
+                    break;
+                }
             }
         }
     }
