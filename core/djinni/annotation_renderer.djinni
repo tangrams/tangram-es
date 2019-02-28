@@ -1,0 +1,27 @@
+lng_lat = record {
+	longitude: f64;
+	latitude: f64; 
+}
+
+projected_meters = record {
+	x: f64;
+	y: f64;
+}
+
+annotation_view_state = interface +c {
+	
+	lngLatToProjectedMeters(lngLat: lng_lat): projected_meters;
+
+	originInProjectedMeters(): projected_meters;
+
+	viewProjectionMatrix(): list<f64>;
+}
+
+annotation_renderer = interface +j +o {
+	
+	initialize();
+
+	render(view: annotation_view_state);
+
+	deinitialize();
+}
