@@ -2,7 +2,7 @@
 // Created by Matt Blair on 5/21/18.
 //
 #pragma once
-#include "customRenderer.h"
+#include "annotation/annotationRenderer.h"
 #include <jni.h>
 
 namespace Tangram {

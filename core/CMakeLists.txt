@@ -122,8 +122,8 @@ add_library(tangram-core
   src/selection/featureSelection.cpp
   src/selection/selectionQuery.h
   src/selection/selectionQuery.cpp
-  src/style/customStyle.h
-  src/style/customStyle.cpp
+  src/annotation/annotation.h
+  src/annotation/annotation.cpp
   src/style/debugStyle.h
   src/style/debugStyle.cpp
   src/style/debugTextStyle.h

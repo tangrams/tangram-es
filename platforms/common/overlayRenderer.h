@@ -1,6 +1,6 @@
 #pragma once
 
-#include "customRenderer.h"
+#include "annotation/annotationRenderer.h"
 
 #define GLFW_INCLUDE_GLEXT
 #define GL_GLEXT_PROTOTYPES
@@ -11,7 +11,7 @@
 
 namespace Tangram {
 
-class OverlayRenderer : public CustomRenderer {
+class OverlayRenderer : public AnnotationRenderer {
 
 public:
     OverlayRenderer() = default;
@@ -20,7 +20,7 @@ public:
 
     void initialize() override;
 
-    void render(const CustomRenderContext& context) override;
+    void render(const AnnotationViewState& context) override;
 
     void deinitialize() override;
 
@@ -97,7 +97,7 @@ void OverlayRenderer::initialize() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 }
 
-void OverlayRenderer::render(const CustomRenderContext& context) {
+void OverlayRenderer::render(const AnnotationViewState& context) {
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);

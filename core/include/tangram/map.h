@@ -11,7 +11,7 @@
 
 namespace Tangram {
 
-class CustomRenderer;
+class AnnotationRenderer;
 class Platform;
 class TileSource;
 class Scene;
@@ -308,12 +308,12 @@ public:
     // renderBeforeStyle in the render loop, or at the end if no style with that name is found; All
     // custom renderers are removed when the scene is changed or updated, add them again if needed;
     // must be called from the main rendering thread.
-    void addCustomRenderer(CustomRenderer* _renderer, const std::string& _renderBeforeStyle);
+    void addCustomRenderer(AnnotationRenderer* _renderer, const std::string& _renderBeforeStyle);
 
     // Remove a custom renderer that was previously added to the map; if the same renderer has been
     // added to the map more than once, all instances will be removed; must be called from the main
     // rendering thread.
-    void removeCustomRenderer(CustomRenderer* _renderer);
+    void removeCustomRenderer(AnnotationRenderer* _renderer);
 
     // Add a marker object to the map and return an ID for it; an ID of 0 indicates an invalid marker;
     // the marker will not be drawn until both styling and geometry are set using the functions below.

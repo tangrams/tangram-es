@@ -19,7 +19,7 @@
 #include "selection/selectionQuery.h"
 #include "style/material.h"
 #include "style/style.h"
-#include "style/customStyle.h"
+#include "annotation/annotation.h"
 #include "text/fontContext.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
@@ -98,7 +98,7 @@ public:
     SceneReadyCallback onSceneReady = nullptr;
     CameraAnimationCallback cameraAnimationListener = nullptr;
 
-    std::vector<CustomStyle> customStyles;
+    std::vector<Annotation> customStyles;
 
     void sceneLoadBegin() {
         sceneLoadTasks++;
@@ -985,7 +985,7 @@ void Map::clearTileSource(TileSource& _source, bool _data, bool _tiles) {
 }
 
 
-void Map::addCustomRenderer(CustomRenderer* _renderer, const std::string& _renderBeforeStyle) {
+void Map::addCustomRenderer(AnnotationRenderer* _renderer, const std::string& _renderBeforeStyle) {
     // We create a new CustomStyle instance here which delegates rendering to the CustomRenderer.
     // This CustomStyle has no name and so it cannot be used as an "anchor" for other CustomRenderers.
     // We could use names for each renderer and its style, but then we risk shadowing style names
@@ -1004,7 +1004,7 @@ void Map::addCustomRenderer(CustomRenderer* _renderer, const std::string& _rende
     }
 }
 
-void Map::removeCustomRenderer(CustomRenderer* _renderer) {
+void Map::removeCustomRenderer(AnnotationRenderer* _renderer) {
     // FIXME this may deinitialize on current thread which might not have gl context!
     auto it = std::remove_if(impl->customStyles.begin(), impl->customStyles.end(),
                    [&](auto& style) { return style.renderer() == _renderer; });
