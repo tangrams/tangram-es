@@ -103,16 +103,19 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: textures uniform value", 
 
     StyleUniform uniformValues;
     SceneTextures textures;
+    auto tex0 = textures.get("img/cross.png");
+    auto tex1 = textures.get("img/normals.jpg");
+    auto tex2 = textures.get("img/sem.jpg");
 
     REQUIRE(SceneLoader::parseStyleUniforms(node["u_tex"], uniformValues, textures));
-    REQUIRE(uniformValues.value.is<std::string>());
-    REQUIRE(uniformValues.value.get<std::string>() == "img/cross.png");
+    REQUIRE(uniformValues.value.is<UniformTexture>());
+    REQUIRE(uniformValues.value.get<UniformTexture>() == tex0);
     REQUIRE(uniformValues.type == "sampler2D");
 
     REQUIRE(SceneLoader::parseStyleUniforms(node["u_tex2"], uniformValues, textures));
     REQUIRE(uniformValues.value.is<UniformTextureArray>());
-    REQUIRE(uniformValues.value.get<UniformTextureArray>().names.size() == 3);
-    REQUIRE(uniformValues.value.get<UniformTextureArray>().names[0] == "img/cross.png");
-    REQUIRE(uniformValues.value.get<UniformTextureArray>().names[1] == "img/normals.jpg");
-    REQUIRE(uniformValues.value.get<UniformTextureArray>().names[2] == "img/sem.jpg");
+    REQUIRE(uniformValues.value.get<UniformTextureArray>().textures.size() == 3);
+    REQUIRE(uniformValues.value.get<UniformTextureArray>().textures[0] == tex0);
+    REQUIRE(uniformValues.value.get<UniformTextureArray>().textures[1] == tex1);
+    REQUIRE(uniformValues.value.get<UniformTextureArray>().textures[2] == tex2);
 }

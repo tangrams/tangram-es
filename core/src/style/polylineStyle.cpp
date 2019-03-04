@@ -92,8 +92,8 @@ void PolylineStyle::constructVertexLayout() {
     }
 }
 
-void PolylineStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
-    Style::onBeginDrawFrame(rs, _view, _scene);
+void PolylineStyle::onBeginDrawFrame(RenderState& rs, const View& _view) {
+    Style::onBeginDrawFrame(rs, _view);
 
     if (m_texture && m_texture->width() > 0) {
         GLuint textureUnit = rs.nextAvailableTextureUnit();
