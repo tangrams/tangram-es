@@ -102,6 +102,7 @@ static inline void TGFeaturePropertiesConvertToCoreProperties(TGFeaturePropertie
     std::string sourceData = std::string([data UTF8String]);
     dataSource->clearData();
     dataSource->addData(sourceData);
+    dataSource->generateTiles();
 }
 
 - (BOOL)remove
