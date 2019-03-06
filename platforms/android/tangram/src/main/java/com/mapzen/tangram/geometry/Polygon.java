@@ -15,6 +15,15 @@ import java.util.Map;
 @Keep
 public class Polygon extends Geometry {
 
+    /**
+     * Create a polygon geometry with properties.
+     * @param polygon A list of rings describing the shape of the feature. Each
+     * ring is a list of coordinates in which the first point is the same as the last point. The
+     * first ring is taken as the "exterior" of the polygon and rings with opposite winding are
+     * considered "holes".
+     * @param properties The properties of the feature, used for filtering and styling according to
+     * the scene file used by the map; may be null.
+     */
     public Polygon(@NonNull final List<List<LngLat>> polygon, @Nullable final Map<String, String> properties) {
         this.rings = new int[polygon.size()];
         int i = 0;

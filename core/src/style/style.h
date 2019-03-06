@@ -185,10 +185,10 @@ protected:
 
     /* Set uniform values when @_updateUniforms is true,
      */
-    void setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBlock& _uniformBlock);
+    void setupSceneShaderUniforms(RenderState& rs, UniformBlock& _uniformBlock);
 
     void setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view,
-                             Scene& _scene, UniformBlock& _uniformBlock);
+                             UniformBlock& _uniformBlock);
 
     struct LightHandle {
         LightHandle(Light* _light, std::unique_ptr<LightUniforms> _uniforms);
@@ -263,12 +263,12 @@ public:
     /* Perform any setup needed before drawing each frame
      * _textUnit is the next available texture unit
      */
-    virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene);
+    virtual void onBeginDrawFrame(RenderState& rs, const View& _view);
 
-    virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene);
+    virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view);
 
     /* Perform any unsetup needed after drawing each frame */
-    virtual void onEndDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {}
+    virtual void onEndDrawFrame(RenderState& rs, const View& _view) {}
 
     /* Draws the geometry associated with this <Style>
      * returns true when meshes associated with this style are successfully drawn,
@@ -278,11 +278,11 @@ public:
 
     virtual bool draw(RenderState& rs, const Marker& _marker);
 
-    virtual bool draw(RenderState& rs, const View& _view, Scene& _scene,
+    virtual bool draw(RenderState& rs, const View& _view,
                       const std::vector<std::shared_ptr<Tile>>& _tiles,
                       const std::vector<std::unique_ptr<Marker>>& _markers);
 
-    void drawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene,
+    void drawSelectionFrame(RenderState& rs, const View& _view,
                             const std::vector<std::shared_ptr<Tile>>& _tiles,
                             const std::vector<std::unique_ptr<Marker>>& _markers);
 

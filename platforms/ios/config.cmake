@@ -31,6 +31,7 @@ set(TANGRAM_FRAMEWORK_HEADERS
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolyline.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGLabelPickResult.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapData.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapFeature.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapView.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapViewDelegate.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMarker.h
@@ -50,12 +51,14 @@ set(TANGRAM_FRAMEWORK_SOURCES
   platforms/ios/framework/src/iosPlatform.mm
   platforms/ios/framework/src/TGCameraPosition+Internal.h
   platforms/ios/framework/src/TGCameraPosition.mm
-  platforms/ios/framework/src/TGGeoPolygon.mm
-  platforms/ios/framework/src/TGGeoPolyline.mm
+  platforms/ios/framework/src/TGGeoPolygon.m
+  platforms/ios/framework/src/TGGeoPolyline.m
   platforms/ios/framework/src/TGLabelPickResult.mm
   platforms/ios/framework/src/TGLabelPickResult+Internal.h
-  platforms/ios/framework/src/TGMapData.mm
   platforms/ios/framework/src/TGMapData+Internal.h
+  platforms/ios/framework/src/TGMapData.mm
+  platforms/ios/framework/src/TGMapFeature+Internal.h
+  platforms/ios/framework/src/TGMapFeature.m
   platforms/ios/framework/src/TGMapView.mm
   platforms/ios/framework/src/TGMapView+Internal.h
   platforms/ios/framework/src/TGMarker.mm

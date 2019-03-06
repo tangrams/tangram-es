@@ -151,20 +151,14 @@ void Style::setLightingType(LightingType _type) {
     m_lightingType = _type;
 }
 
-void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBlock& _uniformBlock) {
+void Style::setupSceneShaderUniforms(RenderState& rs, UniformBlock& _uniformBlock) {
     for (auto& uniformPair : _uniformBlock.styleUniforms) {
         const auto& name = uniformPair.first;
         auto& value = uniformPair.second;
 
-        if (value.is<std::string>()) {
-            std::string textureName = value.get<std::string>();
-            std::shared_ptr<Texture> texture = _scene.getTexture(textureName);
-
-            if (!texture) {
-                LOGN("Texture with texture name %s is not available to be sent as uniform",
-                    textureName.c_str());
-                continue;
-            }
+        if (value.is<UniformTexture>()) {
+            auto& texture  = value.get<UniformTexture>();
+            if (!texture) { continue; }
 
             texture->bind(rs, rs.nextAvailableTextureUnit());
 
@@ -185,14 +179,8 @@ void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBloc
             UniformTextureArray& textureUniformArray = value.get<UniformTextureArray>();
             textureUniformArray.slots.clear();
 
-            for (const auto& textureName : textureUniformArray.names) {
-                std::shared_ptr<Texture> texture = _scene.getTexture(textureName);
-
-                if (!texture) {
-                    LOGN("Texture with texture name %s is not available to be sent as uniform",
-                         textureName.c_str());
-                    continue;
-                }
+            for (const auto& texture : textureUniformArray.textures) {
+                if (!texture) { continue; }
 
                 texture->bind(rs, rs.nextAvailableTextureUnit());
 
@@ -205,13 +193,13 @@ void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBloc
 }
 
 void Style::setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view,
-                                Scene& _scene, UniformBlock& _uniforms) {
+                                UniformBlock& _uniforms) {
 
     // Reset the currently used texture unit to 0
     rs.resetTextureUnit();
 
     // Set time uniforms style's shader programs
-    _program.setUniformf(rs, _uniforms.uTime, _scene.time());
+    _program.setUniformf(rs, _uniforms.uTime, rs.frameTime());
 
     _program.setUniformf(rs, _uniforms.uDevicePixelRatio, m_pixelScale);
 
@@ -235,13 +223,13 @@ void Style::setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const 
     _program.setUniformMatrix4f(rs, _uniforms.uView, _view.getViewMatrix());
     _program.setUniformMatrix4f(rs, _uniforms.uProj, _view.getProjectionMatrix());
 
-    setupSceneShaderUniforms(rs, _scene, _uniforms);
+    setupSceneShaderUniforms(rs, _uniforms);
 
 }
 
-void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
+void Style::onBeginDrawFrame(RenderState& rs, const View& _view) {
 
-    setupShaderUniforms(rs, *m_shaderProgram, _view, _scene, m_mainUniforms);
+    setupShaderUniforms(rs, *m_shaderProgram, _view, m_mainUniforms);
 
     // Configure render state
     switch (m_blend) {
@@ -287,23 +275,23 @@ void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) 
     }
 }
 
-void Style::drawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene,
+void Style::drawSelectionFrame(RenderState& rs, const View& _view,
                                const std::vector<std::shared_ptr<Tile>>& _tiles,
                                const std::vector<std::unique_ptr<Marker>>& _markers) {
 
-    onBeginDrawSelectionFrame(rs, _view, _scene);
+    onBeginDrawSelectionFrame(rs, _view);
 
     for (const auto& tile : _tiles) { drawSelectionFrame(rs, *tile); }
     for (const auto& marker : _markers) { drawSelectionFrame(rs, *marker); }
 }
 
-void Style::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) {
+void Style::onBeginDrawSelectionFrame(RenderState& rs, const View& _view) {
 
     if (!m_selection) {
         return;
     }
 
-    setupShaderUniforms(rs, *m_selectionProgram, _view, _scene, m_selectionUniforms);
+    setupShaderUniforms(rs, *m_selectionProgram, _view, m_selectionUniforms);
 
     // Configure render state
     rs.blending(GL_FALSE);
@@ -374,7 +362,7 @@ void Style::drawSelectionFrame(Tangram::RenderState& rs, const Tangram::Tile &_t
 
 }
 
-bool Style::draw(RenderState& rs, const View& _view, Scene& _scene,
+bool Style::draw(RenderState& rs, const View& _view,
                  const std::vector<std::shared_ptr<Tile>>& _tiles,
                  const std::vector<std::unique_ptr<Marker>>& _markers) {
 
@@ -392,7 +380,7 @@ bool Style::draw(RenderState& rs, const View& _view, Scene& _scene,
         return false;
     }
 
-    onBeginDrawFrame(rs, _view, _scene);
+    onBeginDrawFrame(rs, _view);
 
     if (m_blend == Blending::translucent) {
         rs.colorMask(false, false, false, false);
@@ -423,7 +411,7 @@ bool Style::draw(RenderState& rs, const View& _view, Scene& _scene,
         }
     }
 
-    onEndDrawFrame(rs, _view, _scene);
+    onEndDrawFrame(rs, _view);
 
     return meshDrawn;
 }

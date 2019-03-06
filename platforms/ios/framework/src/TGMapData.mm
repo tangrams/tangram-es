@@ -17,10 +17,14 @@
 
 #include "tangram.h"
 #include <memory>
-#include <vector>
 
-typedef std::vector<Tangram::LngLat> Line;
-typedef std::vector<Line> Polygon;
+static inline void TGFeaturePropertiesConvertToCoreProperties(TGFeatureProperties* properties, Tangram::Properties& tgProperties)
+{
+    for (NSString* key in properties) {
+        NSString* value = [properties objectForKey:key];
+        tgProperties.set(std::string([key UTF8String]), [value UTF8String]);
+    }
+}
 
 @interface TGMapData () {
     std::shared_ptr<Tangram::ClientGeoJsonSource> dataSource;
@@ -30,14 +34,6 @@ typedef std::vector<Line> Polygon;
 @property (weak, nonatomic) TGMapView* map;
 
 @end
-
-static inline void tangramProperties(TGFeatureProperties* properties, Tangram::Properties& tgProperties)
-{
-    for (NSString* key in properties) {
-        NSString* value = [properties objectForKey:key];
-        tgProperties.set(std::string([key UTF8String]), [value UTF8String]);
-    }
-}
 
 @implementation TGMapData
 
@@ -54,84 +50,59 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
     return self;
 }
 
-- (void)addPoint:(CLLocationCoordinate2D)point withProperties:(TGFeatureProperties *)properties
+- (void)setFeatures:(NSArray<TGMapFeature *> *)features
 {
     if (!self.map) {
         return;
     }
 
-    Tangram::Properties tgProperties;
-    tangramProperties(properties, tgProperties);
+    dataSource->clearData();
+    for (TGMapFeature *feature in features) {
+        Tangram::Properties properties;
+        TGFeaturePropertiesConvertToCoreProperties(feature.properties, properties);
 
-    Tangram::LngLat lngLat(point.longitude, point.latitude);
-    dataSource->addPoint(tgProperties, lngLat);
-}
+        if (CLLocationCoordinate2D *point = [feature point]) {
 
-- (void)addPolygon:(TGGeoPolygon *)polygon withProperties:(TGFeatureProperties *)properties
-{
-    if (!self.map) {
-        return;
-    }
+            dataSource->addPointFeature(std::move(properties), TGConvertCLLocationCoordinate2DToCoreLngLat(*point));
 
-    Tangram::Properties tgProperties;
-    tangramProperties(properties, tgProperties);
+        } else if (TGGeoPolyline *polyline = [feature polyline]) {
 
-    Polygon tgPolygon;
-    CLLocationCoordinate2D* coordinates = polygon.coordinates;
-    int* rings = polygon.rings;
-    size_t ringsCount = polygon.ringsCount;
-    size_t ringStart = 0;
-    size_t ringEnd = 0;
+            Tangram::PolylineBuilder builder;
+            size_t numberOfPoints = polyline.count;
+            builder.beginPolyline(numberOfPoints);
+            for (size_t i = 0; i < numberOfPoints; i++) {
+                builder.addPoint(TGConvertCLLocationCoordinate2DToCoreLngLat(polyline.coordinates[i]));
+            }
+            dataSource->addPolylineFeature(std::move(properties), std::move(builder));
 
-    for (size_t i = 0; i < ringsCount; ++i) {
-        tgPolygon.emplace_back();
-        auto& polygonRing = tgPolygon.back();
+        } else if (TGGeoPolygon *polygon = [feature polygon]) {
 
-        ringEnd += rings[i];
-        for (auto i = ringStart; i < ringEnd; i++) {
-            polygonRing.push_back(TGConvertCLLocationCoordinate2DToCoreLngLat(coordinates[i]));
+            Tangram::PolygonBuilder builder;
+            builder.beginPolygon(polygon.rings.count);
+            for (TGGeoPolyline *ring in polygon.rings) {
+                size_t numberOfPoints = ring.count;
+                builder.beginRing(numberOfPoints);
+                for (size_t i = 0; i < numberOfPoints; i++) {
+                    builder.addPoint(TGConvertCLLocationCoordinate2DToCoreLngLat(ring.coordinates[i]));
+                }
+            }
+            dataSource->addPolygonFeature(std::move(properties), std::move(builder));
+
         }
-        ringStart = ringEnd + 1;
     }
-
-    dataSource->addPoly(tgProperties, tgPolygon);
+    dataSource->generateTiles();
 }
 
-- (void)addPolyline:(TGGeoPolyline *)polyline withProperties:(TGFeatureProperties *)properties
-{
-    if (!self.map) {
-        return;
-    }
-
-    Tangram::Properties tgProperties;
-    tangramProperties(properties, tgProperties);
-
-    Line tgPolyline;
-    CLLocationCoordinate2D* coordinates = polyline.coordinates;
-    size_t count = polyline.count;
-    for (size_t i = 0; i < count; i++) {
-        tgPolyline.push_back(TGConvertCLLocationCoordinate2DToCoreLngLat(coordinates[i]));
-    }
-    dataSource->addLine(tgProperties, tgPolyline);
-}
-
-- (void)addGeoJson:(NSString *)data
+- (void)setGeoJson:(NSString *)data
 {
     if (!self.map) {
         return;
     }
 
     std::string sourceData = std::string([data UTF8String]);
+    dataSource->clearData();
     dataSource->addData(sourceData);
-}
-
-- (void)clear
-{
-    if (!self.map) {
-        return;
-    }
-
-    [self.map clearDataSource:dataSource];
+    dataSource->generateTiles();
 }
 
 - (BOOL)remove
