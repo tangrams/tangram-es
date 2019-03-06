@@ -8,7 +8,12 @@
 #import "MapViewController.h"
 #import <CoreLocation/CoreLocation.h>
 
-@interface MapViewController ()  <CLLocationManagerDelegate>
+static const NSUInteger MAX_TAPPED_LOCATIONS = 8;
+
+@interface MapViewController ()  <CLLocationManagerDelegate> {
+    CLLocationCoordinate2D _tappedLocations[MAX_TAPPED_LOCATIONS];
+    NSUInteger _tappedLocationCount;
+}
 
 @property (assign, nonatomic) TGMarker* markerPolygon;
 @property (strong, nonatomic) TGMapData* mapData;
@@ -111,41 +116,33 @@
 
     CLLocationCoordinate2D coordinates = [view coordinateFromViewPosition:location];
 
-    // Add polyline data layer
+    if (_tappedLocationCount < MAX_TAPPED_LOCATIONS) {
+        _tappedLocations[_tappedLocationCount++] = coordinates;
+    }
+
+    // Add polyline feature
     {
         TGFeatureProperties* properties = @{ @"type" : @"line", @"color" : @"#D2655F" };
-        static CLLocationCoordinate2D lastCoordinates = {NAN, NAN};
 
-        if (!isnan(lastCoordinates.latitude)) {
-            TGGeoPolyline* line = [[TGGeoPolyline alloc] init];
-
-            [line addPoint:lastCoordinates];
-            [line addPoint:coordinates];
-
-            [self.mapData addPolyline:line withProperties:properties];
+        if (_tappedLocationCount > 1) {
+            TGGeoPolyline* polyline = [[TGGeoPolyline alloc] initWithCoordinates:_tappedLocations count:_tappedLocationCount];
+            TGMapFeature *feature = [TGMapFeature mapFeatureWithPolyline:polyline properties:properties];
+            [_mapData setFeatures:@[feature]];
         }
-
-        lastCoordinates = coordinates;
     }
 
     // Add polygon marker
     {
-        if (!self.markerPolygon) {
-            self.markerPolygon = [view markerAdd];
-            self.markerPolygon.stylingString = @"{ style: 'polygons', color: 'blue', order: 500 }";
+        if (!_markerPolygon) {
+            _markerPolygon = [view markerAdd];
+            _markerPolygon.stylingString = @"{ style: 'polygons', color: 'blue', order: 500 }";
         }
-        static TGGeoPolygon* polygon = nil;
-        if (!polygon) { polygon = [[TGGeoPolygon alloc] init]; }
+        if (_tappedLocationCount > 2) {
+            TGGeoPolyline *ring = [[TGGeoPolyline alloc] initWithCoordinates:_tappedLocations count:_tappedLocationCount];
+            TGGeoPolygon *polygon = [[TGGeoPolygon alloc] initWithRings:[NSArray arrayWithObject:ring]];
+            _markerPolygon.polygon = polygon;
+        }
 
-        if ([polygon count] == 0) {
-            [polygon startPath:coordinates withSize:5];
-        } else if ([polygon count] % 5 == 0) {
-            self.markerPolygon.polygon = polygon;
-            [polygon removeAll];
-            [polygon startPath:coordinates withSize:5];
-        } else {
-            [polygon addPoint:coordinates];
-        }
     }
 
     // Add point marker

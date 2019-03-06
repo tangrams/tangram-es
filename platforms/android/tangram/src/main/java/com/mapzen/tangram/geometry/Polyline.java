@@ -15,6 +15,12 @@ import java.util.Map;
 @Keep
 public class Polyline extends Geometry {
 
+    /**
+     * Create a polyline geometry with properties.
+     * @param polyline A list of coordinates that define the line segments of the feature.
+     * @param properties The properties of the feature, used for filtering and styling according to
+     * the scene file used by the map; may be null.
+     */
     public Polyline(@NonNull final List<LngLat> polyline, @Nullable final Map<String, String> properties) {
         this.coordinates = new double[polyline.size() * 2];
         int i = 0;

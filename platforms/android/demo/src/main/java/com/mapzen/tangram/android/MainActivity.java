@@ -27,15 +27,14 @@ import com.mapzen.tangram.TouchInput;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
+import com.mapzen.tangram.geometry.Geometry;
+import com.mapzen.tangram.geometry.Polygon;
+import com.mapzen.tangram.geometry.Polyline;
 import com.mapzen.tangram.networking.DefaultHttpHandler;
 import com.mapzen.tangram.networking.HttpHandler;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Cache;
@@ -65,8 +64,8 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
     MapController map;
     MapView view;
-    LngLat lastTappedPoint;
-    MapData markers;
+    MapData mapData;
+    List<LngLat> tappedPoints = new ArrayList<>();
 
     PresetSelectionTextView sceneSelector;
 
@@ -127,7 +126,6 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         p.setStylingFromPath(pointStylingPath);
         p.setPoint(startPoint);
         pointMarkers.add(p);
-        lastTappedPoint = startPoint;
 
         TouchInput touchInput = map.getTouchInput();
         touchInput.setTapResponder(this);
@@ -162,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
         map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
 
-        markers = map.addDataLayer("touch");
+        mapData = map.addDataLayer("touch");
     }
 
     @Override
@@ -235,23 +233,24 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     public boolean onSingleTapConfirmed(float x, float y) {
         LngLat tappedPoint = map.screenPositionToLngLat(new PointF(x, y));
 
-        if (lastTappedPoint != null) {
+        tappedPoints.add(tappedPoint);
+
+        if (tappedPoints.size() > 1) {
             Map<String, String> props = new HashMap<>();
             props.put("type", "line");
             props.put("color", "#D2655F");
 
-            List<LngLat> line = new ArrayList<>();
-            line.add(lastTappedPoint);
-            line.add(tappedPoint);
-            markers.addPolyline(line, props);
+            Polyline polyline = new Polyline(tappedPoints, props);
 
-            Marker p = map.addMarker();
-            p.setStylingFromPath(pointStylingPath);
-            p.setPoint(tappedPoint);
-            pointMarkers.add(p);
+            Polygon polygon = new Polygon(Collections.singletonList(tappedPoints), props);
+
+            mapData.setFeatures(Arrays.asList(polyline, polygon));
         }
 
-        lastTappedPoint = tappedPoint;
+        Marker p = map.addMarker();
+        p.setStylingFromPath(pointStylingPath);
+        p.setPoint(tappedPoint);
+        pointMarkers.add(p);
 
         map.pickFeature(x, y);
         map.pickLabel(x, y);
@@ -290,14 +289,15 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     public void onLongPress(float x, float y) {
         map.removeAllMarkers();
         pointMarkers.clear();
-        markers.clear();
+        tappedPoints.clear();
+        mapData.clear();
         showTileInfo = !showTileInfo;
         map.setDebugFlag(MapController.DebugFlag.TILE_INFOS, showTileInfo);
     }
 
     @Override
     public void onFeaturePick(Map<String, String> properties, float positionX, float positionY) {
-        if (properties.isEmpty()) {
+        if (properties == null) {
             Log.d(TAG, "Empty selection");
             return;
         }
