@@ -12,6 +12,7 @@
 
 namespace Tangram {
 
+class OnFrameListener;
 class Platform;
 class TileSource;
 class Scene;
@@ -320,6 +321,12 @@ public:
 
     // Returns true if the source was found and cleared, otherwise returns false.
     bool clearTileSource(TileSource& _source, bool _data, bool _tiles);
+
+    // TODO
+    void addOnFrameListener(std::shared_ptr<OnFrameListener> _listener);
+
+    // TODO
+    void removeOnFrameListener(OnFrameListener& _listener);
 
     // Add a marker object to the map and return an ID for it; an ID of 0 indicates an invalid marker;
     // the marker will not be drawn until both styling and geometry are set using the functions below.

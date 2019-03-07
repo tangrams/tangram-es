@@ -12,6 +12,7 @@
 #include "labels/labelManager.h"
 #include "marker/marker.h"
 #include "marker/markerManager.h"
+#include "onFrameListener.h"
 #include "platform.h"
 #include "scene/scene.h"
 #include "scene/sceneLoader.h"
@@ -95,6 +96,8 @@ public:
     std::mutex tileSourceMutex;
 
     std::map<int32_t, ClientTileSource> clientTileSources;
+
+    std::vector<std::shared_ptr<OnFrameListener>> onFrameListeners;
 
     // TODO MapOption
     Color background{0xffffffff};
@@ -322,6 +325,10 @@ void Map::render() {
     }
 
     FrameInfo::draw(renderState, view, *scene.tileManager());
+
+    for (auto& listener : impl->onFrameListeners) {
+        listener->onFrame();
+    }
 }
 
 int Map::getViewportHeight() {
@@ -736,6 +743,20 @@ void Map::Impl::syncClientTileSources(bool _firstUpdate) {
             tileManager.clearTileSet(it->first);
         }
         ++it;
+    }
+}
+
+void Map::addOnFrameListener(std::shared_ptr<OnFrameListener> _listener) {
+    _listener->onAdded();
+    impl->onFrameListeners.emplace_back(std::move(_listener));
+}
+
+void Map::removeOnFrameListener(OnFrameListener& _listener) {
+    auto& listeners = impl->onFrameListeners;
+    auto it = std::find_if(listeners.begin(), listeners.end(), [&](auto entry){ return entry.get() == &_listener; });
+    if (it != listeners.end()) {
+        (*it)->onRemoved();
+        listeners.erase(it);
     }
 }
 
