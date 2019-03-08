@@ -8,6 +8,8 @@ target_link_libraries(platform_test
   -lpthread
 )
 
+set_property(TARGET platform_test PROPERTY CXX_STANDARD ${TANGRAM_CXX_STANDARD})
+
 target_include_directories(platform_test
   PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/catch
@@ -61,6 +63,7 @@ if(TANGRAM_BUNDLE_TESTS)
   set_target_properties(${EXECUTABLE_NAME}
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+    CXX_STANDARD ${TANGRAM_CXX_STANDARD}
   )
 
   # Copy resources into output directory (only needs to be performed for one target)
@@ -88,6 +91,7 @@ else()
     set_target_properties(${EXECUTABLE_NAME}
       PROPERTIES
       RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+      CXX_STANDARD ${TANGRAM_CXX_STANDARD}
     )
     # Copy resources into output directory (only needs to be performed for one target)
     add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes" "res")

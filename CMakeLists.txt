@@ -37,6 +37,11 @@ endif()
 
 include(cmake/utils.cmake)
 
+if(NOT TANGRAM_CXX_STANDARD)
+    message(STATUS "CXX STANDARD NOT SET. Setting to c++14")
+    set(TANGRAM_CXX_STANDARD 14)
+endif()
+
 # If target platform isn't specified, use the local platform.
 if(NOT TANGRAM_PLATFORM)
   message(STATUS "No platform target specified. Choose a target with -DTANGRAM_PLATFORM=platform.")
@@ -83,6 +88,7 @@ if(TANGRAM_BUILD_BENCHMARKS OR TANGRAM_BUILD_TESTS)
     tests/src/mockPlatform.cpp
     tests/src/gl_mock.cpp
   )
+  set_property(TARGET platform_mock PROPERTY CXX_STANDARD ${TANGRAM_CXX_STANDARD})
   target_include_directories(platform_mock PUBLIC tests/src)
   target_compile_definitions(platform_mock PUBLIC -DUNIT_TESTS)
   target_link_libraries(platform_mock PUBLIC tangram-core)
