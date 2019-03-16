@@ -10,14 +10,14 @@
 #import "TGMapData.h"
 #import <Foundation/Foundation.h>
 
-#include "data/clientGeoJsonSource.h"
+#include "data/clientDataSource.h"
 #include <memory>
 
 @interface TGMapData ()
 
 NS_ASSUME_NONNULL_BEGIN
 
-- (instancetype)initWithMapView:(__weak TGMapView *)mapView name:(NSString *)name source:(std::shared_ptr<Tangram::ClientGeoJsonSource>)source;
+- (instancetype)initWithMapView:(__weak TGMapView *)mapView name:(NSString *)name source:(std::shared_ptr<Tangram::ClientDataSource>)source;
 
 NS_ASSUME_NONNULL_END
 

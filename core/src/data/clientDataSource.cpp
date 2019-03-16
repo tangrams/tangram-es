@@ -1,4 +1,4 @@
-#include "data/clientGeoJsonSource.h"
+#include "data/clientDataSource.h"
 
 #include "log.h"
 #include "platform.h"
@@ -34,64 +34,68 @@ geojsonvt::Options options() {
     return opt;
 }
 
-struct ClientGeoJsonData {
+struct ClientDataSource::Storage {
     std::unique_ptr<geojsonvt::GeoJSONVT> tiles;
     geometry::feature_collection<double> features;
     std::vector<Properties> properties;
 };
 
-struct PolylineBuilderData : mapbox::geometry::line_string<double> {};
+struct ClientDataSource::PolylineBuilderData : mapbox::geometry::line_string<double> {
+    virtual ~PolylineBuilderData() = default;
+};
 
-PolylineBuilder::PolylineBuilder() {
+ClientDataSource::PolylineBuilder::PolylineBuilder() {
     data = std::make_unique<PolylineBuilderData>();
 }
 
-PolylineBuilder::~PolylineBuilder() = default;
+ClientDataSource::PolylineBuilder::~PolylineBuilder() = default;
 
-void PolylineBuilder::beginPolyline(size_t numberOfPoints) {
+void ClientDataSource::PolylineBuilder::beginPolyline(size_t numberOfPoints) {
     data->reserve(numberOfPoints);
 }
 
-void PolylineBuilder::addPoint(Tangram::LngLat point) {
+void ClientDataSource::PolylineBuilder::addPoint(Tangram::LngLat point) {
     data->emplace_back(point.longitude, point.latitude);
 }
 
-struct PolygonBuilderData : mapbox::geometry::polygon<double> {};
+struct ClientDataSource::PolygonBuilderData : mapbox::geometry::polygon<double> {
+    virtual ~PolygonBuilderData() = default;
+};
 
-PolygonBuilder::PolygonBuilder() {
+ClientDataSource::PolygonBuilder::PolygonBuilder() {
     data = std::make_unique<PolygonBuilderData>();
 }
 
-PolygonBuilder::~PolygonBuilder() = default;
+ClientDataSource::PolygonBuilder::~PolygonBuilder() = default;
 
-void PolygonBuilder::beginPolygon(size_t numberOfRings) {
+void ClientDataSource::PolygonBuilder::beginPolygon(size_t numberOfRings) {
     data->reserve(numberOfRings);
 }
 
-void PolygonBuilder::beginRing(size_t numberOfPoints) {
+void ClientDataSource::PolygonBuilder::beginRing(size_t numberOfPoints) {
     data->emplace_back();
     data->back().reserve(numberOfPoints);
 }
 
-void PolygonBuilder::addPoint(LngLat point) {
+void ClientDataSource::PolygonBuilder::addPoint(LngLat point) {
     data->back().emplace_back(point.longitude, point.latitude);
 }
 
-std::shared_ptr<TileTask> ClientGeoJsonSource::createTask(TileID _tileId) {
+std::shared_ptr<TileTask> ClientDataSource::createTask(TileID _tileId) {
     return std::make_shared<TileTask>(_tileId, shared_from_this());
 }
 
 // TODO: pass scene's resourcePath to constructor to be used with `stringFromFile`
-ClientGeoJsonSource::ClientGeoJsonSource(Platform& _platform, const std::string& _name,
-                                         const std::string& _url, bool _generateCentroids,
-                                         TileSource::ZoomOptions _zoomOptions)
+ClientDataSource::ClientDataSource(Platform& _platform, const std::string& _name,
+                                   const std::string& _url, bool _generateCentroids,
+                                   TileSource::ZoomOptions _zoomOptions)
 
     : TileSource(_name, nullptr, _zoomOptions),
       m_generateCentroids(_generateCentroids),
       m_platform(_platform) {
 
     m_generateGeometry = true;
-    m_store = std::make_unique<ClientGeoJsonData>();
+    m_store = std::make_unique<Storage>();
 
     if (!_url.empty()) {
         UrlCallback onUrlFinished = [&, this](UrlResponse&& response) {
@@ -109,7 +113,7 @@ ClientGeoJsonSource::ClientGeoJsonSource(Platform& _platform, const std::string&
 
 }
 
-ClientGeoJsonSource::~ClientGeoJsonSource() = default;
+ClientDataSource::~ClientDataSource() = default;
 
 struct add_centroid {
 
@@ -170,7 +174,7 @@ struct prop_visitor {
     }
 };
 
-void ClientGeoJsonSource::generateTiles() {
+void ClientDataSource::generateTiles() {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 
@@ -192,7 +196,7 @@ void ClientGeoJsonSource::generateTiles() {
     m_generation++;
 }
 
-void ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
+void ClientDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
 
     if (m_hasPendingData) {
         return;
@@ -208,7 +212,7 @@ void ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask> _task, TileTask
     TileSource::loadTileData(_task, _cb);
 }
 
-void ClientGeoJsonSource::clearData() {
+void ClientDataSource::clearData() {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 
@@ -219,7 +223,7 @@ void ClientGeoJsonSource::clearData() {
     m_generation++;
 }
 
-void ClientGeoJsonSource::addData(const std::string& _data) {
+void ClientDataSource::addData(const std::string& _data) {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 
@@ -245,7 +249,7 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
                              std::make_move_iterator(features.end()));
 }
 
-void ClientGeoJsonSource::addPointFeature(Properties&& properties, LngLat coordinates) {
+void ClientDataSource::addPointFeature(Properties&& properties, LngLat coordinates) {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 
@@ -256,7 +260,7 @@ void ClientGeoJsonSource::addPointFeature(Properties&& properties, LngLat coordi
     m_store->properties.emplace_back(properties);
 }
 
-void ClientGeoJsonSource::addPolylineFeature(Properties&& properties, PolylineBuilder&& polyline) {
+void ClientDataSource::addPolylineFeature(Properties&& properties, PolylineBuilder&& polyline) {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 
@@ -266,7 +270,7 @@ void ClientGeoJsonSource::addPolylineFeature(Properties&& properties, PolylineBu
     m_store->properties.emplace_back(properties);
 }
 
-void ClientGeoJsonSource::addPolygonFeature(Properties&& properties, PolygonBuilder&& polygon) {
+void ClientDataSource::addPolygonFeature(Properties&& properties, PolygonBuilder&& polygon) {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 
@@ -340,7 +344,7 @@ struct add_geometry {
     }
 };
 
-std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task) const {
+std::shared_ptr<TileData> ClientDataSource::parse(const TileTask& _task) const {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 

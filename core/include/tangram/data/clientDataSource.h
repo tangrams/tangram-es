@@ -11,38 +11,36 @@ class Platform;
 
 struct Properties;
 
-struct ClientGeoJsonData;
-
-struct PolylineBuilderData;
-
-struct PolylineBuilder {
-    PolylineBuilder();
-    ~PolylineBuilder();
-    void beginPolyline(size_t numberOfPoints);
-    void addPoint(LngLat point);
-    std::unique_ptr<PolylineBuilderData> data;
-};
-
-struct PolygonBuilderData;
-
-struct PolygonBuilder {
-    PolygonBuilder();
-    ~PolygonBuilder();
-    void beginPolygon(size_t numberOfRings);
-    void beginRing(size_t numberOfPoints);
-    void addPoint(LngLat point);
-    std::unique_ptr<PolygonBuilderData> data;
-};
-
-class ClientGeoJsonSource : public TileSource {
+class ClientDataSource : public TileSource {
 
 public:
 
-    ClientGeoJsonSource(Platform& _platform, const std::string& _name,
+    ClientDataSource(Platform& _platform, const std::string& _name,
                         const std::string& _url, bool generateCentroids = false,
                         TileSource::ZoomOptions _zoomOptions = {});
 
-    ~ClientGeoJsonSource() override;
+    ~ClientDataSource() override;
+
+    struct PolylineBuilderData;
+
+    struct PolylineBuilder {
+        PolylineBuilder();
+        ~PolylineBuilder();
+        void beginPolyline(size_t numberOfPoints);
+        void addPoint(LngLat point);
+        std::unique_ptr<PolylineBuilderData> data;
+    };
+
+    struct PolygonBuilderData;
+
+    struct PolygonBuilder {
+        PolygonBuilder();
+        ~PolygonBuilder();
+        void beginPolygon(size_t numberOfRings);
+        void beginRing(size_t numberOfPoints);
+        void addPoint(LngLat point);
+        std::unique_ptr<PolygonBuilderData> data;
+    };
 
     // http://www.iana.org/assignments/media-types/application/geo+json
     const char* mimeType() const override { return "application/geo+json"; };
@@ -54,7 +52,8 @@ public:
 
     void addPolylineFeature(Properties&& properties, PolylineBuilder&& polyline);
 
-    void addPolygonFeature(Properties&& properties, PolygonBuilder&& polygon);
+    void addPolygonFeature(Properties&& properties, PolygonBuilder
+        && polygon);
 
     // Transform added feature data into tiles.
     void generateTiles();
@@ -69,7 +68,8 @@ protected:
 
     std::shared_ptr<TileData> parse(const TileTask& _task) const override;
 
-    std::unique_ptr<ClientGeoJsonData> m_store;
+    struct Storage;
+    std::unique_ptr<Storage> m_store;
 
     mutable std::mutex m_mutexStore;
     bool m_hasPendingData = false;

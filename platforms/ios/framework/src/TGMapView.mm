@@ -24,6 +24,7 @@
 #import "TGTypes+Internal.h"
 #import <GLKit/GLKit.h>
 
+#include "data/clientDataSource.h"
 #include "data/propertyItem.h"
 #include "iosPlatform.h"
 #include "map.h"
@@ -477,7 +478,7 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
     if (!self.map) { return nil; }
 
     std::string dataLayerName = std::string([name UTF8String]);
-    auto source = std::make_shared<Tangram::ClientGeoJsonSource>(self.map->getPlatform(),
+    auto source = std::make_shared<Tangram::ClientDataSource>(self.map->getPlatform(),
                     dataLayerName, "", generateCentroid);
     self.map->addTileSource(source);
 
