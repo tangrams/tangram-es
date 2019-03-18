@@ -305,6 +305,7 @@ bool AndroidPlatform::startUrlRequestImpl(const Url& _url, const UrlRequestHandl
 
         // Call the MapController method to start the URL request.
         jniEnv->CallVoidMethod(m_tangramInstance, startUrlRequestMID, jUrl, jRequestHandle);
+        jniEnv->DeleteLocalRef(jUrl);
     });
 
     return true;
