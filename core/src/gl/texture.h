@@ -3,6 +3,7 @@
 #include "gl.h"
 #include "scene/spriteAtlas.h"
 
+#include <cstdlib>
 #include <vector>
 #include <memory>
 #include <string>
