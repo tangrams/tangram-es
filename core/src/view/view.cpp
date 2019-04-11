@@ -16,37 +16,21 @@ double invLodFunc(double d) {
     return exp2(d) - 1.0;
 }
 
-View::View(int _width, int _height, ProjectionType _projType) :
+View::View(int _width, int _height) :
     m_obliqueAxis(0, 1),
     m_width(0),
     m_height(0),
     m_type(CameraType::perspective),
+    m_dirtyMatrices(true),
+    m_dirtyTiles(true),
     m_changed(false) {
 
-    setMapProjection(_projType);
+    auto bounds = MapProjection::mapProjectedMetersBounds();
+    m_constraint.setLimitsY(bounds.min.y, bounds.max.y);
+
     setSize(_width, _height);
     setZoom(m_zoom);
     setPosition(0.0, 0.0);
-}
-
-void View::setMapProjection(ProjectionType _projType) {
-
-    switch(_projType) {
-        case ProjectionType::mercator:
-            m_projection.reset(new MercatorProjection());
-            break;
-        default:
-            LOGE("Not a valid map projection specified.\n Setting map projection to mercator by default");
-            m_projection.reset(new MercatorProjection());
-            break;
-    }
-
-    auto bounds = m_projection->MapBounds();
-    m_constraint.setLimitsY(bounds.min.y, bounds.max.y);
-
-    m_dirtyMatrices = true;
-    m_dirtyTiles = true;
-
 }
 
 void View::setPixelScale(float _pixelsPerPoint) {
@@ -54,7 +38,34 @@ void View::setPixelScale(float _pixelsPerPoint) {
     m_pixelScale = _pixelsPerPoint;
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
+    m_dirtyWorldBoundsMinZoom = true;
 
+}
+
+void View::setCamera(const Camera& _camera) {
+    setCameraType(_camera.type);
+
+    switch (_camera.type) {
+    case CameraType::perspective:
+        setVanishingPoint(_camera.vanishingPoint.x, _camera.vanishingPoint.y);
+        if (_camera.fovStops) {
+            setFieldOfViewStops(_camera.fovStops);
+        } else {
+            setFieldOfView(_camera.fieldOfView);
+        }
+        break;
+    case CameraType::isometric:
+        setObliqueAxis(_camera.obliqueAxis.x, _camera.obliqueAxis.y);
+        break;
+    case CameraType::flat:
+        break;
+    }
+
+    if (_camera.maxTiltStops) {
+        setMaxPitchStops(_camera.maxTiltStops);
+    } else {
+        setMaxPitch(_camera.maxTilt);
+    }
 }
 
 void View::setCameraType(CameraType _type) {
@@ -68,14 +79,13 @@ void View::setCameraType(CameraType _type) {
 ViewState View::state() const {
 
     return {
-        m_projection.get(),
         m_changed,
-        glm::dvec2(m_pos.x, -m_pos.y),
+        glm::dvec2(m_pos.x, m_pos.y),
         m_zoom,
         powf(2.f, m_zoom),
         m_zoom - std::floor(m_zoom),
         glm::vec2(m_vpWidth, m_vpHeight),
-        s_pixelsPerTile * m_pixelScale
+        (float)MapProjection::tileSize() * m_pixelScale
     };
 }
 
@@ -86,6 +96,7 @@ void View::setSize(int _width, int _height) {
     m_aspect = (float)m_vpWidth/ (float)m_vpHeight;
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
+    m_dirtyWorldBoundsMinZoom = true;
 
     // Screen space orthographic projection matrix, top left origin, y pointing down
     m_orthoViewport = glm::ortho(0.f, (float)m_vpWidth, (float)m_vpHeight, 0.f, -1.f, 1.f);
@@ -140,6 +151,21 @@ float View::getFocalLength() const {
 
 }
 
+void View::setMinZoom(float minZoom) {
+
+    m_minZoom = std::max(minZoom, 0.f);
+    m_maxZoom = std::max(minZoom, m_maxZoom);
+    // Set the current zoom again to validate it.
+    setZoom(m_zoom);
+}
+
+void View::setMaxZoom(float maxZoom) {
+
+    m_maxZoom = std::min(maxZoom, 20.5f);
+    m_minZoom = std::min(maxZoom, m_minZoom);
+    // Set the current zoom again to validate it.
+    setZoom(m_zoom);
+}
 
 void View::setMaxPitch(float degrees) {
 
@@ -165,20 +191,40 @@ float View::getMaxPitch() const {
 
 }
 
+void View::setConstrainToWorldBounds(bool constrainToWorldBounds) {
+
+    m_worldBoundsMinZoom = 0.f;
+    m_constrainToWorldBounds = constrainToWorldBounds;
+    if (m_constrainToWorldBounds) {
+        applyWorldBounds();
+    }
+
+}
 
 void View::setPosition(double _x, double _y) {
-
-    m_pos.x = _x;
-    m_pos.y = _y;
+    // Wrap horizontal position around the 180th meridian, which corresponds to +/- HALF_CIRCUMFERENCE meters.
+    m_pos.x = _x - std::round(_x / MapProjection::EARTH_CIRCUMFERENCE_METERS) * MapProjection::EARTH_CIRCUMFERENCE_METERS;
+    // Clamp vertical position to the span of the map, which is +/- HALF_CIRCUMFERENCE meters.
+    m_pos.y = glm::clamp(_y, -MapProjection::EARTH_HALF_CIRCUMFERENCE_METERS, MapProjection::EARTH_HALF_CIRCUMFERENCE_METERS);
     m_dirtyTiles = true;
+    if (m_constrainToWorldBounds) {
+        applyWorldBounds();
+    }
+}
 
+void View::setCenterCoordinates(Tangram::LngLat center) {
+    auto meters = MapProjection::lngLatToProjectedMeters({center.longitude, center.latitude});
+    setPosition(meters.x, meters.y);
 }
 
 void View::setZoom(float _z) {
     // ensure zoom value is allowed
-    m_zoom = glm::clamp(_z, s_minZoom, s_maxZoom);
+    m_zoom = glm::clamp(_z, m_minZoom, m_maxZoom);
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
+    if (m_constrainToWorldBounds) {
+        applyWorldBounds();
+    }
 }
 
 void View::setRoll(float _roll) {
@@ -221,16 +267,31 @@ void View::pitch(float _dpitch) {
 
 }
 
-void View::update(bool _constrainToWorldBounds) {
+LngLat View::getCenterCoordinates() const {
+    auto center = MapProjection::projectedMetersToLngLat({m_pos.x, m_pos.y});
+    return center;
+}
+
+void View::applyWorldBounds() {
+    // Approximate the view diameter in pixels by taking the maximum dimension.
+    double viewDiameterPixels = std::fmax(getWidth(), getHeight()) / pixelScale();
+    if (m_dirtyWorldBoundsMinZoom) {
+        // Approximate the minimum zoom that keeps with view span within the drawable projection area. [1]
+        m_worldBoundsMinZoom = static_cast<float>(std::log(viewDiameterPixels / MapProjection::tileSize() + 2) / std::log(2));
+        m_dirtyWorldBoundsMinZoom = false;
+    }
+    if (m_zoom < m_worldBoundsMinZoom) {
+        m_zoom = m_worldBoundsMinZoom;
+    }
+    // Constrain by moving map center to keep view in bounds.
+    m_constraint.setRadius(0.5 * viewDiameterPixels / pixelsPerMeter());
+    m_pos.x = m_constraint.getConstrainedX(m_pos.x);
+    m_pos.y = m_constraint.getConstrainedY(m_pos.y);
+}
+
+void View::update() {
 
     m_changed = false;
-
-    if (_constrainToWorldBounds) {
-        m_constraint.setRadius(0.5 * std::fmax(getWidth(), getHeight()) / pixelsPerMeter() / pixelScale());
-        m_pos.x = m_constraint.getConstrainedX(m_pos.x);
-        m_pos.y = m_constraint.getConstrainedY(m_pos.y);
-        m_zoom -= std::log(m_constraint.getConstrainedScale()) / std::log(2);
-    }
 
     // Ensure valid pitch angle.
     {
@@ -319,7 +380,7 @@ double View::screenToGroundPlaneInternal(double& _screenX, double& _screenY) con
     // Determine the maximum distance from the view position at which tiles can be drawn; If the projected point
     // is farther than this maximum or if the point is above the horizon (t < 0) then we set the distance of the
     // point to always be this maximum distance.
-    double maxTileDistance = invLodFunc(MAX_LOD + 1) * 2.0 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
+    double maxTileDistance = invLodFunc(MAX_LOD + 1) * 2.0 * MapProjection::EARTH_HALF_CIRCUMFERENCE_METERS * pow(2, -m_zoom);
     double rayDistanceXY = sqrt(ray_world.x * ray_world.x + ray_world.y * ray_world.y);
     if (rayDistanceXY > maxTileDistance || t < 0) {
         ray_world *= maxTileDistance / rayDistanceXY;
@@ -333,8 +394,8 @@ double View::screenToGroundPlaneInternal(double& _screenX, double& _screenY) con
 
 float View::pixelsPerMeter() const {
 
-    double metersPerTile = 2.0 * MapProjection::HALF_CIRCUMFERENCE * exp2(-m_zoom);
-    return s_pixelsPerTile / metersPerTile;
+    double metersPerTile = MapProjection::EARTH_CIRCUMFERENCE_METERS * exp2(-m_zoom);
+    return MapProjection::tileSize() / metersPerTile;
 }
 
 float View::focalLengthToFieldOfView(float length) {
@@ -348,10 +409,10 @@ float View::fieldOfViewToFocalLength(float radians) {
 void View::updateMatrices() {
 
     // find dimensions of tiles in world space at new zoom level
-    float worldTileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
+    float worldTileSize = MapProjection::EARTH_CIRCUMFERENCE_METERS * exp2(-m_zoom);
 
     // viewport height in world space is such that each tile is [m_pixelsPerTile] px square in screen space
-    float screenTileSize = s_pixelsPerTile * m_pixelScale;
+    float screenTileSize = MapProjection::tileSize() * m_pixelScale;
     m_height = (float)m_vpHeight * worldTileSize / screenTileSize;
     m_width = m_height * m_aspect;
 
@@ -426,21 +487,46 @@ void View::updateMatrices() {
 
 }
 
-glm::vec2 View::lonLatToScreenPosition(double lon, double lat, bool& clipped) const {
-    glm::dvec2 meters = m_projection->LonLatToMeters({lon, lat});
-    glm::dvec4 lonLat(meters, 0.0, 1.0);
+glm::vec2 View::lngLatToScreenPosition(double lng, double lat, bool& clipped) {
 
-    lonLat.x = lonLat.x - m_pos.x;
-    lonLat.y = lonLat.y - m_pos.y;
+    if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
 
-    glm::vec2 screenPosition = worldToScreenSpace(m_viewProj, lonLat, {m_vpWidth, m_vpHeight}, clipped);
+    glm::dvec2 absoluteMeters = MapProjection::lngLatToProjectedMeters({lng, lat});
+    glm::dvec2 relativeMeters = getRelativeMeters(absoluteMeters);
+    glm::dvec4 worldPosition(relativeMeters, 0.0, 1.0);
+
+    glm::vec2 screenPosition = worldToScreenSpace(m_viewProj, worldPosition, {m_vpWidth, m_vpHeight}, clipped);
 
     return screenPosition;
 }
 
+LngLat View::screenPositionToLngLat(float x, float y, bool& _intersection) {
+
+    if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
+
+    double dx = x, dy = y;
+    double distance = screenToGroundPlaneInternal(dx, dy);
+    _intersection = (distance >= 0);
+    glm::dvec2 meters(dx + m_pos.x, dy + m_pos.y);
+    LngLat lngLat = MapProjection::projectedMetersToLngLat(meters);
+    return lngLat.wrapped();
+}
+
+glm::dvec2 View::getRelativeMeters(glm::dvec2 projectedMeters) const {
+    double dx = projectedMeters.x - m_pos.x;
+    double dy = projectedMeters.y - m_pos.y;
+    // If the position is closer when wrapped around the 180th meridian, then wrap it.
+    if (dx > MapProjection::EARTH_HALF_CIRCUMFERENCE_METERS) {
+        dx -= MapProjection::EARTH_CIRCUMFERENCE_METERS;
+    } else if (dx < -MapProjection::EARTH_HALF_CIRCUMFERENCE_METERS) {
+        dx += MapProjection::EARTH_CIRCUMFERENCE_METERS;
+    }
+    return {dx, dy};
+}
+
 void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
 
-    int zoom = int(m_zoom);
+    int zoom = getIntegerZoom();
     int maxTileIndex = 1 << zoom;
 
     // Bounds of view trapezoid in world space (i.e. view frustum projected onto z = 0 plane)
@@ -460,8 +546,8 @@ void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
     }
 
     // Transformation from world space to tile space
-    double hc = MapProjection::HALF_CIRCUMFERENCE;
-    double invTileSize = double(maxTileIndex) / (hc * 2);
+    double hc = MapProjection::EARTH_HALF_CIRCUMFERENCE_METERS;
+    double invTileSize = double(maxTileIndex) / MapProjection::EARTH_CIRCUMFERENCE_METERS;
     glm::dvec2 tileSpaceOrigin(-hc, hc);
     glm::dvec2 tileSpaceAxes(invTileSize, -invTileSize);
 
@@ -480,10 +566,10 @@ void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
     // Scan options - avoid heap allocation for std::function
     // [1] http://www.drdobbs.com/cpp/efficient-use-of-lambda-expressions-and/232500059?pgno=2
     struct ScanParams {
-        explicit ScanParams(int _zoom) : zoom(_zoom) {}
+        explicit ScanParams(int _zoom, int _maxZoom) : zoom(_zoom), maxZoom(_maxZoom) {}
 
         int zoom;
-        int maxZoom = int(s_maxZoom);
+        int maxZoom;
 
         // Distance thresholds in tile space for levels of detail:
         // Element [n] in each array is the minimum tile index at which level-of-detail n
@@ -496,7 +582,7 @@ void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
         glm::ivec4 last = glm::ivec4{-1};
     };
 
-    ScanParams opt{ zoom };
+    ScanParams opt{ zoom, static_cast<int>(m_maxZoom) };
 
     if (m_type == CameraType::perspective) {
 
@@ -532,12 +618,11 @@ void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
         // Wrap x to the range [0, (1 << z))
         tile.x = x & ((1 << tile.z) - 1);
         tile.y = y;
-        tile.w = (x - tile.x) >> opt.zoom; // wrap
 
         if (tile != opt.last) {
             opt.last = tile;
 
-            _tileCb(TileID(tile.x, tile.y, tile.z, tile.z, tile.w));
+            _tileCb(TileID(tile.x, tile.y, tile.z, tile.z));
         }
     };
 
@@ -552,3 +637,14 @@ void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
 }
 
 }
+
+// [1]
+// The maximum visible span horizontally is the span covered by 2^z - 2 tiles. We consider one tile to be
+// effectively not visible because at the 180th meridian it will be drawn on one side or the other, not half
+// on both sides. Tile coverage is calculated from the floor() of our zoom value but here we operate on the
+// continuous zoom value, so we remove one more tile to under-approximate the coverage. Algebraically we get:
+// (span of view in meters) = (view diameter in pixels) * (earth circumference) / ((tile size in pixels) * 2^z)
+// If we substitute the desired view span at the minimum zoom:
+// (span of view in meters) = (earth circumference) * (2^z - 2) / 2^z
+// We can solve for the minimum zoom:
+// z = log2((view diameter in pixels) / (tile size in pixels) + 2)

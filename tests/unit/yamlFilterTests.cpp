@@ -22,10 +22,10 @@ Context ctx;
 Feature civic, bmw1, bike;
 
 Filter load(const std::string& filterYaml) {
-    Scene scene(std::make_shared<MockPlatform>(), Url());
+    SceneFunctions fns;
     YAML::Node node = YAML::Load(filterYaml);
-    auto filter = SceneLoader::generateFilter(node["filter"], scene);
-    ctx.initFunctions(scene);
+    auto filter = SceneLoader::generateFilter(fns, node["filter"]);
+    ctx.setFunctions(fns);
     return filter;
 }
 

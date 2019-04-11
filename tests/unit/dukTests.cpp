@@ -1,9 +1,7 @@
 #include "catch.hpp"
 
-#include "mockPlatform.h"
 #include "scene/filters.h"
 #include "scene/sceneLoader.h"
-#include "scene/scene.h"
 #include "scene/styleContext.h"
 #include "util/builders.h"
 
@@ -240,20 +238,20 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::text_source", "[Duktape][evalStyle
 }
 
 TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFilter]") {
-    Scene scene(std::make_shared<MockPlatform>(), Url());
+    SceneFunctions fns;
     YAML::Node n0 = YAML::Load(R"(filter: function() { return feature.sort_key === 2; })");
     YAML::Node n1 = YAML::Load(R"(filter: function() { return feature.name === 'test'; })");
 
-    Filter filter0 = SceneLoader::generateFilter(n0["filter"], scene);
-    Filter filter1 = SceneLoader::generateFilter(n1["filter"], scene);
+    Filter filter0 = SceneLoader::generateFilter(fns, n0["filter"]);
+    Filter filter1 = SceneLoader::generateFilter(fns, n1["filter"]);
 
-    REQUIRE(scene.functions().size() == 2);
+    REQUIRE(fns.size() == 2);
 
     REQUIRE(filter0.data.is<Filter::Function>());
     REQUIRE(filter1.data.is<Filter::Function>());
 
     StyleContext ctx;
-    ctx.initFunctions(scene);
+    ctx.setFunctions(fns);
 
     Feature feat1;
     feat1.props.set("sort_key", 2);
@@ -282,7 +280,9 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
 }
 
 TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][evalStyle]") {
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>(std::make_shared<MockPlatform>(), Url());
+    SceneStops stops;
+    SceneFunctions fns;
+
     YAML::Node n0 = YAML::Load(R"(
             draw:
                 color: function() { return '#ffff00ff'; }
@@ -290,20 +290,19 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
                 cap: function() { return 'round'; }
             )");
 
-    std::vector<StyleParam> styles;
 
-    SceneLoader::parseStyleParams(n0["draw"], scene, "", styles);
+    auto params = SceneLoader::parseStyleParams(n0["draw"], stops, fns);
 
-    REQUIRE(scene->functions().size() == 3);
+    REQUIRE(fns.size() == 3);
 
     // for (auto& str : scene.functions()) {
     //     logMsg("F: '%s'\n", str.c_str());
     // }
 
     StyleContext ctx;
-    ctx.initFunctions(*scene);
+    ctx.setFunctions(fns);
 
-    for (auto& style : styles) {
+    for (auto& style : params) {
         //logMsg("S: %d - '%s' %d\n", style.key, style.toString().c_str(), style.function);
 
         if (style.key == StyleParamKey::color) {
@@ -330,7 +329,6 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
 }
 
 TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>(std::make_shared<MockPlatform>(), Url());
     YAML::Node n0 = YAML::Load(R"(
             global:
                 width: 2
@@ -346,18 +344,17 @@ TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
                 text_source: function() { return global.mapNode.test; }
             )");
 
-    std::vector<StyleParam> styles;
+    SceneStops stops;
+    SceneFunctions fns;
+    auto params = SceneLoader::parseStyleParams(n0["draw"], stops, fns);
 
-    scene->config() = n0;
-
-    SceneLoader::parseStyleParams(n0["draw"], scene, "", styles);
-
-    REQUIRE(scene->functions().size() == 4);
+    REQUIRE(fns.size() == 4);
 
     StyleContext ctx;
-    ctx.initFunctions(*scene);
+    ctx.setSceneGlobals(n0["global"]);
+    ctx.setFunctions(fns);
 
-    for (auto& style : styles) {
+    for (auto& style : params) {
         if (style.key == StyleParamKey::color) {
             StyleParam::Value value;
             REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);

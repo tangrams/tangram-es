@@ -2,6 +2,7 @@
 
 #include "data/properties.h"
 #include "util/types.h"
+#include "sceneOptions.h"
 
 #include <array>
 #include <functional>
@@ -14,6 +15,7 @@ namespace Tangram {
 class Platform;
 class TileSource;
 class Scene;
+class SceneOptions;
 
 enum LabelType {
     icon,
@@ -58,13 +60,6 @@ struct MarkerPickResult {
 // Returns a pointer to the selected marker pick result or null, only valid on the callback scope
 using MarkerPickCallback = std::function<void(const MarkerPickResult*)>;
 
-struct SceneUpdate {
-    std::string path;
-    std::string value;
-    SceneUpdate(std::string p, std::string v) : path(p), value(v) {}
-    SceneUpdate() {}
-};
-
 enum Error {
     none,
     scene_update_path_not_found,
@@ -83,6 +78,8 @@ using SceneID = int32_t;
 // Function type for a sceneReady callback
 using SceneReadyCallback = std::function<void(SceneID id, const SceneError*)>;
 
+using CameraAnimationCallback = std::function<void(bool finished)>;
+
 enum class EaseType : char {
     linear = 0,
     cubic,
@@ -90,47 +87,117 @@ enum class EaseType : char {
     sine,
 };
 
+struct CameraPosition {
+    double longitude = 0;
+    double latitude = 0;
+    float zoom = 0;
+    float rotation = 0;
+    float tilt = 0;
+};
+
+struct EdgePadding {
+    int left = 0;
+    int top = 0;
+    int right = 0;
+    int bottom = 0;
+
+    EdgePadding() {}
+
+    EdgePadding(int left, int top, int right, int bottom)
+        : left(left), top(top), right(right), bottom(bottom) {}
+};
+
+struct CameraUpdate {
+    enum Flags {
+        set_lnglat =      1 << 0,
+        set_zoom =        1 << 1,
+        set_zoom_by =     1 << 2,
+        set_rotation =    1 << 3,
+        set_rotation_by = 1 << 4,
+        set_tilt =        1 << 5,
+        set_tilt_by =     1 << 6,
+        set_bounds =      1 << 7,
+        set_camera =      1 << 8,
+    };
+    int set = 0;
+
+    LngLat lngLat;
+    float zoom = 0;
+    float zoomBy = 0;
+    float rotation = 0;
+    float rotationBy = 0;
+    float tilt = 0;
+    float tiltBy = 0;
+    std::array<LngLat,2> bounds;
+    EdgePadding padding;
+};
+
+struct MapState {
+    enum Flags {
+        // NB: View is complete when no other flags are set.
+        view_complete =    0,
+        view_changing =    1 << 0,
+        labels_changing =  1 << 1,
+        tiles_loading =    1 << 3,
+        scene_loading =    1 << 4,
+        is_animating =     1 << 5,
+    };
+    uint32_t flags = 0;
+
+    bool viewComplete() { return flags == 0; }
+    bool viewChanging() { return flags & view_changing; }
+    bool labelsChanging() { return flags & labels_changing; }
+    bool tilesLoading() { return flags & tiles_loading; }
+    bool sceneLoading() { return flags & scene_loading; }
+    bool isAnimating() { return flags & is_animating; }
+};
+
 class Map {
 
 public:
 
     // Create an empty map object. To display a map, call either loadScene() or loadSceneAsync().
-    Map(std::shared_ptr<Platform> _platform);
+    explicit Map(std::unique_ptr<Platform> _platform);
     ~Map();
 
+
+    // Load the scene with the given SceneOptions
+    SceneID loadScene(SceneOptions&& _sceneOptions, bool _async = true);
+
+
+    // Load the scene at the given absolute file path synchronously
+    SceneID loadScene(const std::string& _scenePath, bool _useScenePosition = false,
+                      const std::vector<SceneUpdate>& _sceneUpdates = {}) {
+        return loadScene(SceneOptions{Url(_scenePath), _useScenePosition, _sceneUpdates}, false);
+
+    }
+
     // Load the scene at the given absolute file path asynchronously.
-    SceneID loadSceneAsync(const std::string& _scenePath,
-                           bool _useScenePosition = false,
-                           const std::vector<SceneUpdate>& _sceneUpdates = {});
+    SceneID loadSceneAsync(const std::string& _scenePath, bool _useScenePosition = false,
+                      const std::vector<SceneUpdate>& _sceneUpdates = {}) {
+        return loadScene(SceneOptions{Url(_scenePath), _useScenePosition, _sceneUpdates}, true);
+    }
 
     // Load the scene provided an explicit yaml scene string
     SceneID loadSceneYaml(const std::string& _yaml, const std::string& _resourceRoot,
                           bool _useScenePosition = false,
-                          const std::vector<SceneUpdate>& _sceneUpdates = {});
+                          const std::vector<SceneUpdate>& _sceneUpdates = {}) {
+        return loadScene(SceneOptions{_yaml, Url(_resourceRoot), _useScenePosition, _sceneUpdates}, false);
+    }
 
+    // Load the scene provided an explicit yaml scene string
     SceneID loadSceneYamlAsync(const std::string& _yaml, const std::string& _resourceRoot,
-                               bool _useScenePosition = false,
-                               const std::vector<SceneUpdate>& _sceneUpdates = {});
-
-    // Load the scene at the given absolute file path synchronously
-    SceneID loadScene(const std::string& _scenePath,
-                      bool _useScenePosition = false,
-                      const std::vector<SceneUpdate>& sceneUpdates = {});
-
-    // Request updates to the current scene configuration. This reloads the
-    // scene with the updated configuration.
-    // The SceneUpdate path is a series of yaml keys separated by a '.' and the
-    // value is a string of yaml to replace the current value at the given path
-    // in the scene.
-    SceneID updateSceneAsync(const std::vector<SceneUpdate>& sceneUpdates);
+                          bool _useScenePosition = false,
+                          const std::vector<SceneUpdate>& _sceneUpdates = {}) {
+        return loadScene(SceneOptions{_yaml, Url(_resourceRoot), _useScenePosition, _sceneUpdates}, true);
+    }
 
     // Set listener for scene load events. The callback receives the SceneID
     // of the loaded scene and SceneError in case loading was not successful.
     // The callback may be be called from the main or worker thread.
     void setSceneReadyListener(SceneReadyCallback _onSceneReady);
 
-    // Set an MBTiles SQLite database file for a DataSource in the scene.
-    void setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath);
+    void setCameraAnimationListener(CameraAnimationCallback _cb);
 
     // Initialize graphics resources; OpenGL context must be created prior to calling this
     void setupGL();
@@ -138,10 +205,9 @@ public:
     // Resize the map view to a new width and height (in pixels)
     void resize(int _newWidth, int _newHeight);
 
-    // Update the map state with the time interval since the last update, returns
-    // true when the current view is completely loaded (all tiles are available and
-    // no animation in progress)
-    bool update(float _dt);
+    // Update the map state with the time interval since the last update.
+    // Return MapState with flags set to determine whether the view is complete or changing.
+    MapState update(float _dt);
 
     // Render a new frame of the map view (if needed)
     void render();
@@ -166,50 +232,73 @@ public:
     // Each unsigned int corresponds to an RGBA pixel value
     void captureSnapshot(unsigned int* _data);
 
-    // Set the position of the map view in degrees longitude and latitude; if duration
-    // (in seconds) is provided, position eases to the set value over the duration;
-    // calling either version of the setter overrides all previous calls
+    // Set the position of the map view in degrees longitude and latitude
     void setPosition(double _lon, double _lat);
-    void setPositionEased(double _lon, double _lat, float _duration, EaseType _e = EaseType::quint);
 
     // Set the values of the arguments to the position of the map view in degrees
     // longitude and latitude
     void getPosition(double& _lon, double& _lat);
 
-    // Set the fractional zoom level of the view; if duration (in seconds) is provided,
-    // zoom eases to the set value over the duration; calling either version of the setter
-    // overrides all previous calls
+    // Set the fractional zoom level of the view
     void setZoom(float _z);
-    void setZoomEased(float _z, float _duration, EaseType _e = EaseType::quint);
 
     // Get the fractional zoom level of the view
     float getZoom();
 
+    // Set the minimum zoom level for the view; values less than 0 will be
+    // clamped to 0; values greater than the current maximum zoom level will set
+    // the maximum zoom to this value.
+    void setMinZoom(float _minZoom);
+
+    // Get the minimum zoom level for the view.
+    float getMinZoom();
+
+    // Set the maximum zoom level for the view; values greater than 20.5 will be
+    // clamped to 20.5; values less than the current minimum zoom level will set
+    // the minimum zoom to this value.
+    void setMaxZoom(float _maxZoom);
+
+    // Get the maximum zoom level for the view.
+    float getMaxZoom();
+
     // Set the counter-clockwise rotation of the view in radians; 0 corresponds to
-    // North pointing up; if duration (in seconds) is provided, rotation eases to the
-    // the set value over the duration; calling either version of the setter overrides
-    // all previous calls
+    // North pointing up
     void setRotation(float _radians);
-    void setRotationEased(float _radians, float _duration, EaseType _e = EaseType::quint);
 
     // Get the counter-clockwise rotation of the view in radians; 0 corresponds to
     // North pointing up
     float getRotation();
 
-    // Set the tilt angle of the view in radians; 0 corresponds to straight down;
-    // if duration (in seconds) is provided, tilt eases to the set value over the
-    // duration; calling either version of the setter overrides all previous calls
+    // Set the tilt angle of the view in radians; 0 corresponds to straight down
     void setTilt(float _radians);
-    void setTiltEased(float _radians, float _duration, EaseType _e = EaseType::quint);
 
     // Get the tilt angle of the view in radians; 0 corresponds to straight down
     float getTilt();
+
+    // Get the CameraPosition that encloses the bounds given by _a and _b and
+    // leaves at least the given amount of padding on each side (in logical pixels).
+    CameraPosition getEnclosingCameraPosition(LngLat _a, LngLat _b, EdgePadding _pad);
+
+    // Run flight animation to change postion and zoom  of the map
+    // If _duration is 0, speed is used as factor to change the duration that is
+    // calculated for the duration of the flight path. (Recommended range 0.1 - 2.0)
+    void flyTo(const CameraPosition& _camera, float _duration, float _speed = 1.0f);
 
     // Set the camera type (0 = perspective, 1 = isometric, 2 = flat)
     void setCameraType(int _type);
 
     // Get the camera type (0 = perspective, 1 = isometric, 2 = flat)
     int getCameraType();
+
+    CameraPosition getCameraPosition();
+
+    void setCameraPosition(const CameraPosition& _camera);
+
+    void setCameraPositionEased(const CameraPosition& _camera, float duration, EaseType _e = EaseType::quint);
+
+    void updateCameraPosition(const CameraUpdate& _update, float duration = 0.f, EaseType _e = EaseType::quint);
+
+    void cancelCameraAnimation();
 
     // Given coordinates in screen space (x right, y down), set the output longitude and
     // latitude to the geographic location corresponding to that point; returns false if
@@ -229,7 +318,8 @@ public:
     // and removed, otherwise returns false.
     bool removeTileSource(TileSource& _source);
 
-    void clearTileSource(TileSource& _source, bool _data, bool _tiles);
+    // Returns true if the source was found and cleared, otherwise returns false.
+    bool clearTileSource(TileSource& _source, bool _data, bool _tiles);
 
     // Add a marker object to the map and return an ID for it; an ID of 0 indicates an invalid marker;
     // the marker will not be drawn until both styling and geometry are set using the functions below.
@@ -252,7 +342,7 @@ public:
     // Set a bitmap to use as the image for a point marker; _data is a buffer of RGBA pixel data with
     // length of _width * _height; pixels are in row-major order beginning from the bottom-left of the
     // image; returns true if the marker ID was found and successfully updated, otherwise returns false.
-    bool markerSetBitmap(MarkerID _marker, int _width, int _height, const unsigned int* _data);
+    bool markerSetBitmap(MarkerID _marker, int _width, int _height, const unsigned int* _data, float _density = 1.f);
 
     // Set the geometry of a marker to a point at the given coordinates; markers can have their
     // geometry set multiple times with possibly different geometry types; returns true if the
@@ -346,22 +436,16 @@ public:
     // r, g, b must be between 0.0 and 1.0
     void setDefaultBackgroundColor(float r, float g, float b);
 
-    std::shared_ptr<Platform>& getPlatform();
+    Platform& getPlatform();
+
+protected:
+
+    std::unique_ptr<Platform> platform;
 
 private:
 
     class Impl;
     std::unique_ptr<Impl> impl;
-
-protected:
-
-    std::shared_ptr<Platform> platform;
-
-    SceneID loadSceneAsync(std::shared_ptr<Scene> _scene,
-                       const std::vector<SceneUpdate>& _sceneUpdates = {});
-
-    SceneID loadScene(std::shared_ptr<Scene> _scene,
-                  const std::vector<SceneUpdate>& _sceneUpdates = {});
 
 };
 

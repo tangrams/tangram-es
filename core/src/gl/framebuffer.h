@@ -4,14 +4,13 @@
 #include <vector>
 
 #include "glm/vec4.hpp"
-#include "gl/disposer.h"
 #include "gl.h"
 #include "util/color.h"
 
 namespace Tangram {
 
-class Texture;
 class RenderState;
+class RenderTexture;
 
 class FrameBuffer {
 
@@ -48,9 +47,9 @@ private:
 
     void init(RenderState& _rs);
 
-    std::unique_ptr<Texture> m_texture;
+    std::unique_ptr<RenderTexture> m_texture;
 
-    Disposer m_disposer;
+    RenderState* m_rs = nullptr;
 
     GLuint m_glFrameBufferHandle;
 

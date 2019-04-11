@@ -27,7 +27,7 @@ struct PointStyleBuilder : public StyleBuilder {
         std::string sprite;
         std::string spriteDefault;
         std::string texture;
-        glm::vec2 size;
+        glm::vec2 size = { 16.f, 16.f };
         uint32_t color = 0xffffffff;
         float outlineWidth = 0.f;
         uint32_t outlineColor = 0x00000000;
@@ -36,7 +36,7 @@ struct PointStyleBuilder : public StyleBuilder {
         LabelProperty::Placement placement = LabelProperty::Placement::vertex;
         float extrudeScale = 1.f;
         float placementMinLengthRatio = 1.0f;
-        float placementSpacing = 80.f;
+        float placementSpacing = PointStyle::DEFAULT_PLACEMENT_SPACING;
     };
 
     const PointStyle& m_style;
@@ -59,9 +59,7 @@ struct PointStyleBuilder : public StyleBuilder {
         m_textStyleBuilder = m_style.textStyle().createBuilder();
     }
 
-    bool getUVQuad(Parameters& _params, glm::vec4& _quad, Texture** _texture) const;
-
-    Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
+    Parameters applyRule(const DrawRule& _rule) const;
 
     // Gets points for label placement and appropriate angle for each label (if `auto` angle is set)
     void labelPointsPlacing(const Line& _line, const glm::vec4& _quad, Texture* _texture,
@@ -76,6 +74,26 @@ struct PointStyleBuilder : public StyleBuilder {
 
 private:
 
+    /*
+     * Resolves the apt texture used by the point style builder
+     * Texture could be specified by:
+     * - explicit marker texture
+     * - texture name specified in the draw rules
+     * - default texture specified for the style
+     */
+    bool getTexture(const Parameters& _params, Texture** _texture) const;
+
+    /*
+     * Evaluates the size the point sprite can be drawn with:
+     * - size specified in the draw rule
+     * - Texture density information could be required if:
+     *      - no size is specified in the draw rule
+     *      - draw rule size uses '%' units, which scale the sprite texture based on the texture density
+     * - size specified in the draw rule uses "auto" which means width/height of the sprite is evaluated, keeping the
+     * same aspect ratio.
+     */
+    bool evalSizeParam(const DrawRule& _rule, Parameters& _params, const Texture* _texture) const;
+    bool getUVQuad(Parameters& _params, glm::vec4& _quad, const Texture* _texture) const;
 
     std::vector<std::unique_ptr<Label>> m_labels;
     std::vector<SpriteQuad> m_quads;

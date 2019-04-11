@@ -1,15 +1,15 @@
-module: Mapzen
+module: Tangram iOS SDK
 author: Mapzen
 theme: fullwidth
 author_url: https://www.mapzen.com/
 output: ../../build/ios-docs/
 github_url: https://github.com/tangrams/tangram-es
-copyright: '© 2017 [Mapzen](https://www.mapzen.com/).'
+copyright: '<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/80x15.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.'
 head: |
     <link rel='shortcut icon' href='https://mapzen.com/common/styleguide/images/favicon.ico' type='image/x-icon' />
 objc: Yes
-framework_root: ./src/
+framework_root: ./framework/src
 sdk: iphonesimulator
-umbrella_header: ./framework/TangramMap.h
+umbrella_header: ./framework/src/TangramMap.h
 skip_undocumented: Yes
 #hide_documentation_coverage: Yes

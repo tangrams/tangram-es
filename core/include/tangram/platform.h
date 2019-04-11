@@ -2,15 +2,17 @@
 
 #include "util/url.h"
 
+#include <atomic>
 #include <functional>
+#include <mutex>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace Tangram {
 
-
-// Identifier type for URL requests. This handle is interpreted differently for
-// each platform type, so do not perform any application logic with its value.
+// Handle for URL requests.
+// This is the handle which Platform uses to identify an UrlRequest.
 using UrlRequestHandle = uint64_t;
 
 // Result of a URL request. If the request could not be completed or if the
@@ -24,7 +26,7 @@ struct UrlResponse {
 };
 
 // Function type for receiving data from a URL request.
-using UrlCallback = std::function<void(UrlResponse)>;
+using UrlCallback = std::function<void(UrlResponse&&)>;
 
 using FontSourceLoader = std::function<std::vector<char>()>;
 
@@ -61,6 +63,9 @@ public:
     Platform();
     virtual ~Platform();
 
+    // Subclasses must call Platform::shutdown() when overriding shutdown
+    virtual void shutdown();
+
     // Request that a new frame be rendered by the windowing system
     virtual void requestRender() const = 0;
 
@@ -74,25 +79,46 @@ public:
     // finished, the callback _callback will be run with the data or error that
     // was retrieved from the URL _url. The callback may run on a different
     // thread than the original call to startUrlRequest.
-    virtual UrlRequestHandle startUrlRequest(Url _url, UrlCallback _callback) = 0;
+    UrlRequestHandle startUrlRequest(Url _url, UrlCallback&& _callback);
 
     // Stop retrieving data from a URL that was previously requested. When a
     // request is canceled its callback will still be run, but the response
     // will have an error string and the data may not be complete.
-    virtual void cancelUrlRequest(UrlRequestHandle _request) = 0;
+    void cancelUrlRequest(UrlRequestHandle _request);
 
     virtual FontSourceHandle systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const;
 
     virtual std::vector<FontSourceHandle> systemFontFallbacksHandle() const;
 
 protected:
+    // Platform implementation specific id for URL requests. This id is
+    // interpreted differently for each platform type, so do not perform any
+    // application logic with its value.
+    // It's purpose is to be able to cancel UrlRequests
+    using UrlRequestId = uint64_t;
+
+    // To be called by implementations to pass UrlResponse
+    void onUrlResponse(UrlRequestHandle _request, UrlResponse&& _response);
+
+    virtual void cancelUrlRequestImpl(UrlRequestId _id) = 0;
+
+    // Return true when UrlRequestId has been set (i.e. when request is async and can be canceled)
+    virtual bool startUrlRequestImpl(const Url& _url, UrlRequestHandle _request, UrlRequestId& _id) = 0;
 
     static bool bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator);
 
-private:
+    std::atomic<bool> m_shutdown{false};
 
     bool m_continuousRendering;
 
+    std::mutex m_callbackMutex;
+    struct UrlRequestEntry {
+        UrlCallback callback;
+        UrlRequestId id;
+        bool cancelable;
+    };
+    std::unordered_map<UrlRequestHandle, UrlRequestEntry> m_urlCallbacks;
+    std::atomic_uint_fast64_t m_urlRequestCount = {0};
 };
 
 } // namespace Tangram

@@ -16,6 +16,27 @@ struct nth<1, Tangram::Point> {
 };
 }}
 
+namespace {
+// Tests if a line segment (from point A to B) is outside the edge of a tile
+bool isOutsideTile(const glm::vec2& _a, const glm::vec2& _b) {
+
+    // tweak this adjust if catching too few/many line segments near tile edges
+    // TODO: make tolerance configurable by source if necessary
+    float tolerance = 0.0005;
+    float tile_min = 0.0 + tolerance;
+    float tile_max = 1.0 - tolerance;
+
+    if ( (_a.x < tile_min && _b.x < tile_min) ||
+         (_a.x > tile_max && _b.x > tile_max) ||
+         (_a.y < tile_min && _b.y < tile_min) ||
+         (_a.y > tile_max && _b.y > tile_max) ) {
+        return true;
+    }
+
+    return false;
+}
+}
+
 namespace Tangram {
 
 CapTypes CapTypeFromString(const std::string& str) {
@@ -115,9 +136,12 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
 
         for (size_t i = 0; i < lineSize - 1; i++) {
 
-            glm::vec3 a(line[i]);
-            glm::vec3 b(line[i+1]);
+            glm::vec3 a(line[i], 0.f);
+            glm::vec3 b(line[i+1], 0.f);
 
+            if (!_ctx.keepTileEdges && isOutsideTile(a, b)) {
+                continue;
+            }
             normalVector = glm::cross(upVector, b - a);
             normalVector = glm::normalize(normalVector);
 
@@ -160,12 +184,12 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
 }
 
 // Get 2D perpendicular of two points
-glm::vec2 perp2d(const glm::vec3& _v1, const glm::vec3& _v2 ){
+glm::vec2 perp2d(const glm::vec2& _v1, const glm::vec2& _v2 ){
     return glm::vec2(_v2.y - _v1.y, _v1.x - _v2.x);
 }
 
 // Helper function for polyline tesselation
-inline void addPolyLineVertex(const glm::vec3& _coord, const glm::vec2& _normal, const glm::vec2& _uv, PolyLineBuilder& _ctx) {
+inline void addPolyLineVertex(const glm::vec2& _coord, const glm::vec2& _normal, const glm::vec2& _uv, PolyLineBuilder& _ctx) {
     _ctx.numVertices++;
     _ctx.addVertex(_coord, _normal, _uv);
 }
@@ -188,7 +212,7 @@ void indexPairs( int _nPairs, int _nVertices, std::vector<uint16_t>& _indicesOut
 //  and interpolating their UVs               \ p /
 //                                             \./
 //                                              C
-void addFan(const glm::vec3& _pC,
+void addFan(const glm::vec2& _pC,
             const glm::vec2& _nA, const glm::vec2& _nB, const glm::vec2& _nC,
             const glm::vec2& _uA, const glm::vec2& _uB, const glm::vec2& _uC,
             int _numTriangles, PolyLineBuilder& _ctx) {
@@ -227,7 +251,7 @@ void addFan(const glm::vec3& _pC,
 }
 
 // Function to add the vertices for line caps
-void addCap(const glm::vec3& _coord, const glm::vec2& _normal, int _numCorners, bool _isBeginning, PolyLineBuilder& _ctx) {
+void addCap(const glm::vec2& _coord, const glm::vec2& _normal, int _numCorners, bool _isBeginning, PolyLineBuilder& _ctx) {
 
     float v = _isBeginning ? 0.f : 1.f; // length-wise tex coord
 
@@ -256,25 +280,6 @@ void addCap(const glm::vec3& _coord, const glm::vec2& _normal, int _numCorners, 
     addFan(_coord, nA, nB, nC, uA, uB, uC, _numCorners, _ctx);
 }
 
-// Tests if a line segment (from point A to B) is outside the edge of a tile
-bool isOutsideTile(const glm::vec3& _a, const glm::vec3& _b) {
-
-    // tweak this adjust if catching too few/many line segments near tile edges
-    // TODO: make tolerance configurable by source if necessary
-    float tolerance = 0.0005;
-    float tile_min = 0.0 + tolerance;
-    float tile_max = 1.0 - tolerance;
-
-    if ( (_a.x < tile_min && _b.x < tile_min) ||
-         (_a.x > tile_max && _b.x > tile_max) ||
-         (_a.y < tile_min && _b.y < tile_min) ||
-         (_a.y > tile_max && _b.y > tile_max) ) {
-        return true;
-    }
-
-    return false;
-}
-
 void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx, size_t _startIndex,
                           size_t _endIndex, bool endCap = true) {
 
@@ -288,9 +293,9 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx, size_t _star
                    (origLineSize - _startIndex + _endIndex));
     if (lineSize < 2) { return; }
 
-    glm::vec3 coordCurr(_line[_startIndex]);
+    glm::vec2 coordCurr(_line[_startIndex]);
     // get the Point using wrapped index in the original line geometry
-    glm::vec3 coordNext(_line[(_startIndex + 1) % origLineSize]);
+    glm::vec2 coordNext(_line[(_startIndex + 1) % origLineSize]);
     glm::vec2 normPrev, normNext, miterVec;
 
     int cornersOnCap = (int)_ctx.cap;
@@ -411,8 +416,8 @@ void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx) {
 
         // Determine cuts
         for (size_t i = 0; i < lineSize - 1; i++) {
-            const glm::vec3& coordCurr = _line[i];
-            const glm::vec3& coordNext = _line[i+1];
+            const glm::vec2& coordCurr = _line[i];
+            const glm::vec2& coordNext = _line[i+1];
             if (isOutsideTile(coordCurr, coordNext)) {
                 if (cut == 0) {
                     firstCutEnd = i + 1;

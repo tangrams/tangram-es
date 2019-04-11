@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gl.h"
-#include "gl/disposer.h"
 #include "gl/shaderSource.h"
 #include "gl/uniform.h"
 #include "util/fastmap.h"
@@ -108,6 +107,8 @@ private:
     }
 
     GLuint m_glProgram = 0;
+    GLuint m_glFragmentShader = 0;
+    GLuint m_glVertexShader = 0;
 
     fastmap<std::string, GLint> m_attribMap;
     fastmap<GLint, UniformValue> m_uniformCache;
@@ -120,7 +121,7 @@ private:
 
     bool m_needsBuild = true;
 
-    Disposer m_disposer;
+    RenderState* m_rs = nullptr;
 
 };
 

@@ -10,11 +10,11 @@ ZipArchive::~ZipArchive() {
     reset();
 }
 
-bool ZipArchive::loadFromMemory(std::vector<char> compressedArchiveData) {
+bool ZipArchive::loadFromMemory(std::vector<char>&& compressedArchiveData) {
     // Reset to an empty state.
     reset();
     // Initialize the buffer and archive with the input data.
-    buffer.swap(compressedArchiveData);
+    buffer = std::move(compressedArchiveData);
     if (!mz_zip_reader_init_mem(&minizData, buffer.data(), buffer.size(), 0)) {
         return false;
     }

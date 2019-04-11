@@ -15,7 +15,7 @@
 using namespace Tangram;
 
 glm::vec2 screenSize(500.f, 500.f);
-TextStyle dummyStyle("textStyle", nullptr);
+TextStyle dummyStyle("textStyle");
 TextLabels dummy(dummyStyle);
 Label::AABB bounds(0.f, 0.f, 500.f, 500.f);
 
@@ -43,10 +43,10 @@ TextLabel makeLabel(glm::vec2 _transform, Label::Type _type) {
 
 View makeView() {
     View view(256, 256);
-
+    view.setConstrainToWorldBounds(false);
     view.setPosition(0, 0);
     view.setZoom(0);
-    view.update(false);
+    view.update();
 
     return view;
 }

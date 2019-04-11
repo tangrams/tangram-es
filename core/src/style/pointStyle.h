@@ -19,17 +19,23 @@ class PointStyle : public Style {
 
 public:
 
-    PointStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
-               Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES, bool _selection = true);
+    constexpr static float DEFAULT_PLACEMENT_SPACING = 80.f;
+
+    PointStyle(std::string _name, Blending _blendMode = Blending::overlay,
+               GLenum _drawMode = GL_TRIANGLES, bool _selection = true);
 
     virtual ~PointStyle();
 
     virtual void onBeginUpdate() override;
-    virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
+    virtual void onBeginDrawFrame(RenderState& rs, const View& _view) override;
     virtual void onBeginFrame(RenderState& rs) override;
-    virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) override;
-    virtual void draw(RenderState& rs, const Tile& _tile) override {}
-    virtual void draw(RenderState& rs, const Marker& _marker) override {}
+    virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view) override;
+    virtual bool draw(RenderState& rs, const Tile& _tile) override { return false; }
+    virtual bool draw(RenderState& rs, const Marker& _marker) override { return false; }
+
+    void setFontContext(FontContext& _fontContext) {
+        if (m_textStyle) { m_textStyle->setFontContext(_fontContext); }
+    }
 
     void setTextures(const std::unordered_map<std::string, std::shared_ptr<Texture>>& _textures) {
         m_textures = &_textures;

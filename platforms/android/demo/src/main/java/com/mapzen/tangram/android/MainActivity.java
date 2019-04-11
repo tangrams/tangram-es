@@ -2,43 +2,50 @@ package com.mapzen.tangram.android;
 
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Window;
 import android.widget.Toast;
 
-import com.mapzen.tangram.CachePolicy;
-import com.mapzen.tangram.HttpHandler;
+import com.mapzen.tangram.CameraPosition;
+import com.mapzen.tangram.CameraUpdateFactory;
+import com.mapzen.tangram.FeaturePickListener;
+import com.mapzen.tangram.LabelPickListener;
 import com.mapzen.tangram.LabelPickResult;
 import com.mapzen.tangram.LngLat;
+import com.mapzen.tangram.MapChangeListener;
 import com.mapzen.tangram.MapController;
-import com.mapzen.tangram.MapController.FeaturePickListener;
-import com.mapzen.tangram.MapController.LabelPickListener;
-import com.mapzen.tangram.MapController.MarkerPickListener;
-import com.mapzen.tangram.MapController.ViewCompleteListener;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.Marker;
+import com.mapzen.tangram.MarkerPickListener;
 import com.mapzen.tangram.MarkerPickResult;
 import com.mapzen.tangram.SceneError;
 import com.mapzen.tangram.SceneUpdate;
+import com.mapzen.tangram.TouchInput;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
+import com.mapzen.tangram.geometry.Geometry;
+import com.mapzen.tangram.geometry.Polygon;
+import com.mapzen.tangram.geometry.Polyline;
+import com.mapzen.tangram.networking.DefaultHttpHandler;
+import com.mapzen.tangram.networking.HttpHandler;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Cache;
 import okhttp3.CacheControl;
 import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
 public class MainActivity extends AppCompatActivity implements MapController.SceneLoadListener, TapResponder,
-        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener {
+        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener,
+        MapView.MapReadyCallback {
 
     private static final String NEXTZEN_API_KEY = BuildConfig.NEXTZEN_API_KEY;
 
@@ -57,13 +64,13 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
     MapController map;
     MapView view;
-    LngLat lastTappedPoint;
-    MapData markers;
+    MapData mapData;
+    List<LngLat> tappedPoints = new ArrayList<>();
 
     PresetSelectionTextView sceneSelector;
 
     String pointStylingPath = "layers.touch.point.draw.icons";
-    ArrayList<Marker> pointMarkers = new ArrayList<Marker>();
+    ArrayList<Marker> pointMarkers = new ArrayList<>();
 
     boolean showTileInfo = false;
 
@@ -98,35 +105,62 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
         // Grab a reference to our map view.
         view = (MapView)findViewById(R.id.map);
+        view.getMapAsync(this, getHttpHandler());
     }
 
     @Override
-    public void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        // The AutoCompleteTextView preserves its contents from previous instances, so if a URL was
-        // set previously we want to apply it again. The text is restored in onRestoreInstanceState,
-        // which occurs after onCreate and onStart, but before onPostCreate, so we get the URL here.
+    public void onMapReady(@Nullable MapController mapController) {
+        if (mapController == null) {
+            return;
+        }
+        map = mapController;
         String sceneUrl = sceneSelector.getCurrentString();
+        map.setSceneLoadListener(this);
 
-        map = view.getMap(this);
-        map.loadSceneFile(sceneUrl, sceneUpdates);
+        LngLat startPoint = new LngLat(-74.00976419448854, 40.70532700869127);
+        map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(startPoint, 16));
+        Log.d("Tangram", "START SCENE LOAD");
+        map.loadSceneFileAsync(sceneUrl, sceneUpdates);
 
-        map.setZoom(16);
-        map.setPosition(new LngLat(-74.00976419448854, 40.70532700869127));
-        map.setHttpHandler(getHttpHandler());
-        map.setTapResponder(this);
-        map.setDoubleTapResponder(this);
-        map.setLongPressResponder(this);
+        Marker p = map.addMarker();
+        p.setStylingFromPath(pointStylingPath);
+        p.setPoint(startPoint);
+        pointMarkers.add(p);
+
+        TouchInput touchInput = map.getTouchInput();
+        touchInput.setTapResponder(this);
+        touchInput.setDoubleTapResponder(this);
+        touchInput.setLongPressResponder(this);
+
         map.setFeaturePickListener(this);
         map.setLabelPickListener(this);
         map.setMarkerPickListener(this);
 
-        map.setViewCompleteListener(new ViewCompleteListener() {
+        map.setMapChangeListener(new MapChangeListener() {
+            @Override
             public void onViewComplete() {
                 Log.d(TAG, "View complete");
-            }});
+            }
 
-        markers = map.addDataLayer("touch");
+            @Override
+            public void onRegionWillChange(boolean animated) {
+                Log.d(TAG, "On Region Will Change Animated: " + animated);
+            }
+
+            @Override
+            public void onRegionIsChanging() {
+                Log.d(TAG, "On Region Is Changing");
+            }
+
+            @Override
+            public void onRegionDidChange(boolean animated) {
+                Log.d(TAG, "On Region Did Change Animated: " + animated);
+            }
+        });
+
+        map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
+
+        mapData = map.addDataLayer("touch");
     }
 
     @Override
@@ -172,21 +206,22 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     }
 
     HttpHandler getHttpHandler() {
-        File cacheDir = getExternalCacheDir();
-        if (cacheDir != null && cacheDir.exists()) {
-            CachePolicy cachePolicy = new CachePolicy() {
-                CacheControl tileCacheControl = new CacheControl.Builder().maxStale(7, TimeUnit.DAYS).build();
-                @Override
-                public CacheControl apply(HttpUrl url) {
-                    if (url.host().equals("tile.mapzen.com")) {
-                        return tileCacheControl;
-                    }
-                    return null;
+        return new DefaultHttpHandler() {
+            @Override
+            protected void configureClient(OkHttpClient.Builder builder) {
+                File cacheDir = getExternalCacheDir();
+                if (cacheDir != null && cacheDir.exists()) {
+                    builder.cache(new Cache(cacheDir, 16 * 1024 * 1024));
                 }
-            };
-            return new HttpHandler(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024, cachePolicy);
-        }
-        return new HttpHandler();
+            }
+            CacheControl tileCacheControl = new CacheControl.Builder().maxStale(7, TimeUnit.DAYS).build();
+            @Override
+            protected void configureRequest(HttpUrl url, Request.Builder builder) {
+                if ("tile.nextzen.com".equals(url.host())) {
+                    builder.cacheControl(tileCacheControl);
+                }
+            }
+        };
     }
 
     @Override
@@ -198,42 +233,55 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     public boolean onSingleTapConfirmed(float x, float y) {
         LngLat tappedPoint = map.screenPositionToLngLat(new PointF(x, y));
 
-        if (lastTappedPoint != null) {
+        tappedPoints.add(tappedPoint);
+
+        if (tappedPoints.size() > 1) {
             Map<String, String> props = new HashMap<>();
             props.put("type", "line");
             props.put("color", "#D2655F");
 
-            List<LngLat> line = new ArrayList<>();
-            line.add(lastTappedPoint);
-            line.add(tappedPoint);
-            markers.addPolyline(line, props);
+            Polyline polyline = new Polyline(tappedPoints, props);
 
-            Marker p = map.addMarker();
-            p.setStylingFromPath(pointStylingPath);
-            p.setPoint(tappedPoint);
-            pointMarkers.add(p);
+            Polygon polygon = new Polygon(Collections.singletonList(tappedPoints), props);
+
+            mapData.setFeatures(Arrays.asList(polyline, polygon));
         }
 
-        lastTappedPoint = tappedPoint;
+        Marker p = map.addMarker();
+        p.setStylingFromPath(pointStylingPath);
+        p.setPoint(tappedPoint);
+        pointMarkers.add(p);
 
         map.pickFeature(x, y);
         map.pickLabel(x, y);
         map.pickMarker(x, y);
 
-        map.setPositionEased(tappedPoint, 1000);
+        map.updateCameraPosition(CameraUpdateFactory.setPosition(tappedPoint), 1000, new MapController.CameraAnimationCallback() {
+            @Override
+            public void onFinish() {
+                Log.d("Tangram","finished!");
+            }
+
+            @Override
+            public void onCancel() {
+                Log.d("Tangram","canceled!");
+            }
+        });
 
         return true;
     }
 
     @Override
     public boolean onDoubleTap(float x, float y) {
-        map.setZoomEased(map.getZoom() + 1.f, 500);
+
         LngLat tapped = map.screenPositionToLngLat(new PointF(x, y));
-        LngLat current = map.getPosition();
-        LngLat next = new LngLat(
-                .5 * (tapped.longitude + current.longitude),
-                .5 * (tapped.latitude + current.latitude));
-        map.setPositionEased(next, 500);
+        CameraPosition camera = map.getCameraPosition();
+
+        camera.longitude = .5 * (tapped.longitude + camera.longitude);
+        camera.latitude = .5 * (tapped.latitude + camera.latitude);
+        camera.zoom += 1;
+        map.updateCameraPosition(CameraUpdateFactory.newCameraPosition(camera),
+                    500, MapController.EaseType.CUBIC);
         return true;
     }
 
@@ -241,14 +289,15 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     public void onLongPress(float x, float y) {
         map.removeAllMarkers();
         pointMarkers.clear();
-        markers.clear();
+        tappedPoints.clear();
+        mapData.clear();
         showTileInfo = !showTileInfo;
         map.setDebugFlag(MapController.DebugFlag.TILE_INFOS, showTileInfo);
     }
 
     @Override
     public void onFeaturePick(Map<String, String> properties, float positionX, float positionY) {
-        if (properties.isEmpty()) {
+        if (properties == null) {
             Log.d(TAG, "Empty selection");
             return;
         }

@@ -16,11 +16,13 @@
 
 namespace Tangram {
 
-PointStyle::PointStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
-                       Blending _blendMode, GLenum _drawMode, bool _selection)
+PointStyle::PointStyle(std::string _name, Blending _blendMode, GLenum _drawMode, bool _selection)
     : Style(_name, _blendMode, _drawMode, _selection) {
 
-    m_textStyle = std::make_unique<TextStyle>(_name, _fontContext, true, _blendMode, _drawMode);
+    m_type = StyleType::point;
+    m_lightingType = LightingType::none;
+
+    m_textStyle = std::make_unique<TextStyle>(_name, true, _blendMode, _drawMode);
 }
 
 PointStyle::~PointStyle() {}
@@ -47,8 +49,7 @@ void PointStyle::constructVertexLayout() {
 }
 
 void PointStyle::constructShaderProgram() {
-    m_shaderSource->setSourceStrings(SHADER_SOURCE(point_fs),
-                                     SHADER_SOURCE(point_vs));
+    m_shaderSource->setSourceStrings(point_fs, point_vs);
 }
 
 void PointStyle::onBeginUpdate() {
@@ -63,8 +64,8 @@ void PointStyle::onBeginFrame(RenderState& rs) {
     m_textStyle->onBeginFrame(rs);
 }
 
-void PointStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
-    Style::onBeginDrawFrame(rs, _view, _scene);
+void PointStyle::onBeginDrawFrame(RenderState& rs, const View& _view) {
+    Style::onBeginDrawFrame(rs, _view);
 
     auto texUnit = rs.nextAvailableTextureUnit();
 
@@ -81,32 +82,29 @@ void PointStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _sc
 
         m_shaderProgram->setUniformi(rs, m_mainUniforms.uSpriteMode, bool(tex) ? 1 : 0);
 
-        if (tex) {
-            tex->update(rs, texUnit);
-            tex->bind(rs, texUnit);
-        }
+        if (tex) { tex->bind(rs, texUnit); }
 
         m_mesh->drawRange(rs, *m_shaderProgram, vertexPos, batch.vertexCount);
 
         vertexPos += batch.vertexCount;
     }
 
-    m_textStyle->onBeginDrawFrame(rs, _view, _scene);
+    m_textStyle->onBeginDrawFrame(rs, _view);
 }
 
-void PointStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) {
+void PointStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view) {
     if (!m_selection) { return; }
 
     m_mesh->upload(rs);
 
-    Style::onBeginDrawSelectionFrame(rs, _view, _scene);
+    Style::onBeginDrawSelectionFrame(rs, _view);
 
     m_selectionProgram->setUniformMatrix4f(rs, m_selectionUniforms.uOrtho,
                                            _view.getOrthoViewportMatrix());
 
     m_mesh->draw(rs, *m_selectionProgram, false);
 
-    m_textStyle->onBeginDrawSelectionFrame(rs, _view, _scene);
+    m_textStyle->onBeginDrawSelectionFrame(rs, _view);
 }
 
 std::unique_ptr<StyleBuilder> PointStyle::createBuilder() const {

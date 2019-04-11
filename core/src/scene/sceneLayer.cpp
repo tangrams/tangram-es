@@ -1,8 +1,11 @@
 #include "scene/sceneLayer.h"
 
 #include <algorithm>
+#include <type_traits>
 
 namespace Tangram {
+
+static_assert(std::is_move_constructible<SceneLayer>::value, "check");
 
 SceneLayer::SceneLayer(std::string _name, Filter _filter,
                        std::vector<DrawRuleData> _rules,

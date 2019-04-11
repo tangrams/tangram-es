@@ -13,8 +13,9 @@ namespace YAML {
 namespace Tangram {
 
 class MapProjection;
+struct SpriteNode;
 
-using StopValue = variant<none_type, float, Color, glm::vec2>;
+using StopValue = variant<none_type, float, Color, glm::vec2, StyleParam::SizeValue>;
 
 struct Stops {
 
@@ -24,14 +25,15 @@ struct Stops {
         Frame(float _k, float _v) : key(_k), value(_v) {}
         Frame(float _k, Color _c) : key(_k), value(_c) {}
         Frame(float _k, glm::vec2 _v) : key(_k), value(_v) {}
+        Frame(float _k, StyleParam::SizeValue sizeValue) : key(_k), value(sizeValue) {}
     };
 
     std::vector<Frame> frames;
     static Stops Colors(const YAML::Node& _node);
-    static Stops Widths(const YAML::Node& _node, const MapProjection& _projection, const std::vector<Unit>& _units);
+    static Stops Widths(const YAML::Node& _node, UnitSet _units);
     static Stops FontSize(const YAML::Node& _node);
-    static Stops Sizes(const YAML::Node& _node, const std::vector<Unit>& _units);
-    static Stops Offsets(const YAML::Node& _node, const std::vector<Unit>& _units);
+    static Stops Sizes(const YAML::Node& _node, UnitSet _units);
+    static Stops Offsets(const YAML::Node& _node, UnitSet _units);
     static Stops Numbers(const YAML::Node& node);
 
     Stops(const std::vector<Frame>& _frames) : frames(_frames) {}
@@ -43,7 +45,7 @@ struct Stops {
     auto evalColor(float _key) const -> uint32_t;
     auto evalVec2(float _key) const -> glm::vec2;
     auto evalExpVec2(float _key) const -> glm::vec2;
-    auto evalSize(float _key) const -> StyleParam::Value;
+    auto evalSize(float _key, const glm::vec2& cssSize) const -> glm::vec2;
     auto nearestHigherFrame(float _key) const -> std::vector<Frame>::const_iterator;
 
     static void eval(const Stops& _stops, StyleParamKey _key, float _zoom, StyleParam::Value& _result);

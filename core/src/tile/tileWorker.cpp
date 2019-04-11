@@ -4,6 +4,7 @@
 #include "log.h"
 #include "map.h"
 #include "platform.h"
+#include "scene/scene.h"
 #include "tile/tileBuilder.h"
 #include "tile/tileID.h"
 #include "tile/tileTask.h"
@@ -14,7 +15,7 @@
 
 namespace Tangram {
 
-TileWorker::TileWorker(std::shared_ptr<Platform> _platform, int _numWorker) : m_platform(_platform) {
+TileWorker::TileWorker(Platform& _platform, int _numWorker) : m_platform(_platform) {
     m_running = true;
 
     for (int i = 0; i < _numWorker; i++) {
@@ -42,21 +43,23 @@ void TileWorker::run(Worker* instance) {
         {
             std::unique_lock<std::mutex> lock(m_mutex);
 
-            m_condition.wait(lock, [&, this]{
-                    return !m_running || !m_queue.empty();
-                });
+            m_condition.wait(lock, [&] {
+                return (!m_queue.empty() && m_sceneComplete) || !m_running || instance->tileBuilder;
+            });
 
             if (instance->tileBuilder) {
+                LOGTInit();
                 builder = std::move(instance->tileBuilder);
-                LOG("Passed new TileBuilder to TileWorker");
+                builder->init();
+                LOGT("Took init of TileBuilder");
             }
-
             // Check if thread should stop
             if (!m_running) {
                 break;
             }
 
-            if (!builder) {
+            if (!builder || !m_sceneComplete) {
+                if (builder) LOGTO("Waiting for Scene to become ready");
                 continue;
             }
 
@@ -76,7 +79,7 @@ void TileWorker::run(Worker* instance) {
                     if (a->isProxy() != b->isProxy()) {
                         return !a->isProxy();
                     }
-                    if (a->source().id() == b->source().id() &&
+                    if (a->sourceId() == b->sourceId() &&
                         a->sourceGeneration() != b->sourceGeneration()) {
                         return a->sourceGeneration() < b->sourceGeneration();
                     }
@@ -87,40 +90,55 @@ void TileWorker::run(Worker* instance) {
             m_queue.erase(it);
         }
 
-        if (task->isCanceled()) {
-            continue;
-        }
+        if (task->isCanceled()) { continue; }
 
+        LOGTInit(">>> process %s", task->tileId().toString().c_str());
         task->process(*builder);
+        LOGT("<<< process %s", task->tileId().toString().c_str());
 
-        m_platform->requestRender();
+        m_platform.requestRender();
     }
 }
 
-void TileWorker::setScene(std::shared_ptr<Scene>& _scene) {
-    for (auto& worker : m_workers) {
-        worker->tileBuilder = std::make_unique<TileBuilder>(_scene);
+void TileWorker::setScene(Scene& _scene) {
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        for (auto& worker : m_workers) {
+            worker->tileBuilder = std::make_unique<TileBuilder>(_scene);
+        }
+        m_condition.notify_all();
     }
 }
 
 void TileWorker::enqueue(std::shared_ptr<TileTask> task) {
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        if (!m_running) {
-            return;
-        }
+        if (!m_running) { return; }
+        LOGTO("--- %d enqueue %s", m_queue.size()+1, task->tileId().toString().c_str());
         m_queue.push_back(std::move(task));
+
+        m_condition.notify_all();
     }
-    m_condition.notify_one();
+}
+
+void TileWorker::startJobs() {
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_sceneComplete = true;
+
+        LOGTO("Poking TileWorker - enqueued %d", m_queue.size());
+        if (!m_running || m_queue.empty()) { return; }
+
+        m_condition.notify_all();
+    }
 }
 
 void TileWorker::stop() {
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         m_running = false;
+        m_condition.notify_all();
     }
-
-    m_condition.notify_all();
 
     for (auto& worker : m_workers) {
         worker->thread.join();

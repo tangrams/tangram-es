@@ -8,25 +8,32 @@
 #include "scene/dataLayer.h"
 #include "scene/scene.h"
 #include "selection/featureSelection.h"
-#include "style/style.h"
 #include "tile/tile.h"
 #include "util/mapProjection.h"
 #include "view/view.h"
 
 namespace Tangram {
 
-TileBuilder::TileBuilder(std::shared_ptr<Scene> _scene)
-    : m_scene(_scene) {
-
-    m_styleContext.initFunctions(*_scene);
-
-    // Initialize StyleBuilders
-    for (auto& style : _scene->styles()) {
-        m_styleBuilder[style->getName()] = style->createBuilder();
-    }
+TileBuilder::TileBuilder(const Scene& _scene)
+    : m_scene(_scene),
+      m_styleContext(std::make_unique<StyleContext>()) {
 }
 
-TileBuilder::~TileBuilder() {}
+TileBuilder::TileBuilder(const Scene& _scene, StyleContext* _styleContext)
+    : m_scene(_scene),
+      m_styleContext(std::unique_ptr<StyleContext>(_styleContext)) {
+}
+
+void TileBuilder::init() {
+    m_styleContext->initFunctions(m_scene);
+
+    // Initialize StyleBuilders
+    for (const auto& style : m_scene.styles()) {
+        if (auto builder = style->createBuilder()) {
+            m_styleBuilder[style->getName()] = std::move(builder);
+        }
+    }
+}
 
 StyleBuilder* TileBuilder::getStyleBuilder(const std::string& _name) {
     auto it = m_styleBuilder.find(_name);
@@ -38,7 +45,7 @@ StyleBuilder* TileBuilder::getStyleBuilder(const std::string& _name) {
 void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer) {
 
     // If no rules matched the feature, return immediately
-    if (!m_ruleSet.match(_feature, _layer, m_styleContext)) { return; }
+    if (!m_ruleSet.match(_feature, _layer, *m_styleContext)) { return; }
 
     uint32_t selectionColor = 0;
     bool added = false;
@@ -54,20 +61,20 @@ void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer
             continue;
         }
 
-        // Apply defaul draw rules defined for this style
+        // Apply default draw rules defined for this style
         style->style().applyDefaultDrawRules(rule);
 
-        if (!m_ruleSet.evaluateRuleForContext(rule, m_styleContext)) {
+        if (!m_ruleSet.evaluateRuleForContext(rule, *m_styleContext)) {
             continue;
         }
 
         bool interactive = false;
         if (rule.get(StyleParamKey::interactive, interactive) && interactive) {
             if (selectionColor == 0) {
-                selectionColor = m_scene->featureSelection()->nextColorIdentifier();
+                selectionColor = m_scene.featureSelection()->nextColorIdentifier();
             }
             rule.selectionColor = selectionColor;
-            rule.featureSelection = m_scene->featureSelection().get();
+            rule.featureSelection = m_scene.featureSelection().get();
         } else {
             rule.selectionColor = 0;
         }
@@ -95,22 +102,21 @@ void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer
     }
 }
 
-std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData, const TileSource& _source) {
+std::unique_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData, const TileSource& _source) {
 
     m_selectionFeatures.clear();
 
-    auto tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
+    auto tile = std::make_unique<Tile>(_tileID, _source.id(), _source.generation());
 
-    tile->initGeometry(m_scene->styles().size());
+    tile->initGeometry(int(m_scene.styles().size()));
 
-    m_styleContext.setKeywordZoom(_tileID.s);
+    m_styleContext->setKeywordZoom(_tileID.s);
 
     for (auto& builder : m_styleBuilder) {
-        if (builder.second)
-            builder.second->setup(*tile);
+        if (builder.second) { builder.second->setup(*tile); }
     }
 
-    for (const auto& datalayer : m_scene->layers()) {
+    for (const auto& datalayer : m_scene.layers()) {
 
         if (datalayer.source() != _source.name()) { continue; }
 
@@ -135,7 +141,7 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
         builder.second->addLayoutItems(m_labelLayout);
     }
 
-    float tileSize = m_scene->mapProjection()->TileSize() * m_scene->pixelScale();
+    float tileSize = MapProjection::tileSize() * m_scene.pixelScale();
 
     m_labelLayout.process(_tileID, tile->getInverseScale(), tileSize);
 

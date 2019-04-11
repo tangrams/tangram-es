@@ -94,9 +94,12 @@ public:
     // Get the ordering of this marker relative to other markers.
     int drawOrder() const;
 
-    // Get the length of the maximum dimension of the bounds of this marker. This is used as
-    // the scale in the model matrix.
+    // Get the length of the maximum dimension of the bounds of this marker.
+    // This is used to calculate modelScale.
     float extent() const;
+
+    // Get the scale for the model matrix. Depends on extent().
+    float modelScale() const;
 
     StyledMesh* mesh() const;
 
@@ -143,7 +146,7 @@ protected:
 
     uint32_t m_styleId = 0;
 
-    int m_builtZoomLevel = 0;
+    int m_builtZoomLevel = -1;
 
     uint32_t m_selectionColor = 0;
 

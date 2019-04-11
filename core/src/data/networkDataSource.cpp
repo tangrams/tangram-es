@@ -5,8 +5,8 @@
 
 namespace Tangram {
 
-NetworkDataSource::NetworkDataSource(std::shared_ptr<Platform> _platform, const std::string& _urlTemplate,
-        std::vector<std::string>&& _urlSubdomains, bool isTms) :
+NetworkDataSource::NetworkDataSource(Platform& _platform, const std::string& _urlTemplate,
+                                     std::vector<std::string>&& _urlSubdomains, bool isTms) :
     m_platform(_platform),
     m_urlTemplate(_urlTemplate),
     m_urlSubdomains(std::move(_urlSubdomains)),
@@ -58,59 +58,43 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
         m_urlSubdomainIndex = (m_urlSubdomainIndex + 1) % m_urlSubdomains.size();
     }
 
-    UrlCallback onRequestFinish = [this, callback, task, url](UrlResponse response) mutable {
-
-        removePending(task->tileId(), false);
+    LOGTInit(">>> %s", task->tileId().toString().c_str());
+    UrlCallback onRequestFinish = [=](UrlResponse&& response) mutable {
+        auto source = task->source();
+        if (!source) {
+            LOGW("URL Callback for deleted TileSource '%s'", url.string().c_str());
+            return;
+        }
+        LOGT("<<< %s -- canceled:%d", task->tileId().toString().c_str(), task->isCanceled());
 
         if (task->isCanceled()) {
             return;
         }
 
         if (response.error) {
-            LOGE("Error for URL request '%s': %s", url.string().c_str(), response.error);
-            return;
-        }
+            LOGD("URL request '%s': %s", url.string().c_str(), response.error);
 
-        if (!response.content.empty()) {
+        } else if (!response.content.empty()) {
             auto& dlTask = static_cast<BinaryTileTask&>(*task);
             dlTask.rawTileData = std::make_shared<std::vector<char>>(std::move(response.content));
         }
-        callback.func(task);
+        callback.func(std::move(task));
     };
 
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        auto requestHandle = m_platform->startUrlRequest(url, onRequestFinish);
-        m_pending.push_back({ tileId, requestHandle });
-    }
+    auto& dlTask = static_cast<BinaryTileTask&>(*task);
+    dlTask.urlRequestHandle = m_platform.startUrlRequest(url, std::move(onRequestFinish));
+    dlTask.urlRequestStarted = true;
 
     return true;
 }
 
-void NetworkDataSource::removePending(const TileID& tile, bool cancelRequest) {
-    UrlRequestHandle pendingRequestToCancel = 0;
-    bool foundRequest = false;
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        for (auto it = m_pending.begin(); it != m_pending.end(); ++it) {
-            if (it->tile == tile) {
-                pendingRequestToCancel = it->request;
-                foundRequest = true;
-                // This invalidates our iterators, so we break immediately.
-                m_pending.erase(it);
-                break;
-            }
-        }
-    }
-    // Cancelling a request will run its callback, which can call into this function again,
-    // so we must perform the cancellation outside the mutex lock or we'll deadlock.
-    if (cancelRequest && foundRequest) {
-        m_platform->cancelUrlRequest(pendingRequestToCancel);
-    }
-}
+void NetworkDataSource::cancelLoadingTile(TileTask& task) {
+    auto& dlTask = static_cast<BinaryTileTask&>(task);
+    if (dlTask.urlRequestStarted) {
+        dlTask.urlRequestStarted = false;
 
-void NetworkDataSource::cancelLoadingTile(const TileID& tile) {
-    removePending(tile, true);
+        m_platform.cancelUrlRequest(dlTask.urlRequestHandle);
+    }
 }
 
 }

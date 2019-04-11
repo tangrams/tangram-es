@@ -31,6 +31,16 @@ struct DrawRule;
 struct LightUniforms;
 struct MaterialUniforms;
 
+enum class StyleType : uint8_t {
+    none,
+    debug,
+    point,
+    polygon,
+    polyline,
+    raster,
+    text,
+};
+
 enum class LightingType : uint8_t {
     none,
     vertex,
@@ -149,7 +159,7 @@ protected:
 
     bool m_selection;
 
-private:
+    StyleType m_type = StyleType::none;
 
     struct UniformBlock {
         UniformLocation uTime{"u_time"};
@@ -175,10 +185,10 @@ private:
 
     /* Set uniform values when @_updateUniforms is true,
      */
-    void setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBlock& _uniformBlock);
+    void setupSceneShaderUniforms(RenderState& rs, UniformBlock& _uniformBlock);
 
     void setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view,
-                             Scene& _scene, UniformBlock& _uniformBlock);
+                             UniformBlock& _uniformBlock);
 
     struct LightHandle {
         LightHandle(Light* _light, std::unique_ptr<LightUniforms> _uniforms);
@@ -201,6 +211,8 @@ public:
     Style(std::string _name, Blending _blendMode, GLenum _drawMode, bool _selection);
 
     virtual ~Style();
+
+    StyleType type() { return m_type; }
 
     static bool compare(std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
 
@@ -251,23 +263,26 @@ public:
     /* Perform any setup needed before drawing each frame
      * _textUnit is the next available texture unit
      */
-    virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene);
+    virtual void onBeginDrawFrame(RenderState& rs, const View& _view);
 
-    virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene);
+    virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view);
 
     /* Perform any unsetup needed after drawing each frame */
-    virtual void onEndDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {}
+    virtual void onEndDrawFrame(RenderState& rs, const View& _view) {}
 
-    /* Draws the geometry associated with this <Style> */
-    virtual void draw(RenderState& rs, const Tile& _tile);
+    /* Draws the geometry associated with this <Style>
+     * returns true when meshes associated with this style are successfully drawn,
+     * false otherwise.
+     */
+    virtual bool draw(RenderState& rs, const Tile& _tile);
 
-    virtual void draw(RenderState& rs, const Marker& _marker);
+    virtual bool draw(RenderState& rs, const Marker& _marker);
 
-    virtual void draw(RenderState& rs, const View& _view, Scene& _scene,
+    virtual bool draw(RenderState& rs, const View& _view,
                       const std::vector<std::shared_ptr<Tile>>& _tiles,
                       const std::vector<std::unique_ptr<Marker>>& _markers);
 
-    void drawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene,
+    void drawSelectionFrame(RenderState& rs, const View& _view,
                             const std::vector<std::shared_ptr<Tile>>& _tiles,
                             const std::vector<std::unique_ptr<Marker>>& _markers);
 
@@ -299,8 +314,6 @@ public:
     virtual size_t dynamicMeshSize() const { return 0; }
 
     virtual bool hasRasters() const { return m_rasterType != RasterType::none; }
-
-    void setupRasters(const std::vector<std::shared_ptr<TileSource>>& _sources);
 
     std::vector<StyleUniform>& styleUniforms() { return m_mainUniforms.styleUniforms; }
 

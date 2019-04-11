@@ -33,7 +33,7 @@ public:
     // archive is successfully loaded this returns true, otherwise returns
     // false. The data is moved out of the input vector and retained until other
     // data is loaded or the archive is destroyed.
-    bool loadFromMemory(std::vector<char> compressedArchiveData);
+    bool loadFromMemory(std::vector<char>&& compressedArchiveData);
 
     // Empty the archive.
     void reset();

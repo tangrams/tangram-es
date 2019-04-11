@@ -24,9 +24,7 @@ Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode, bool _sel
     m_shaderSource(std::make_unique<ShaderSource>()),
     m_blend(_blendMode),
     m_drawMode(_drawMode),
-    m_selection(_selection) {
-    m_material.material = std::make_shared<Material>();
-}
+    m_selection(_selection) {}
 
 Style::~Style() {}
 
@@ -77,7 +75,26 @@ void Style::build(const Scene& _scene) {
         }
     }
 
-    setupRasters(_scene.tileSources());
+    if (m_rasterType != RasterType::none) {
+        int numRasterSource = 0;
+        for (const auto& source : _scene.tileSources()) {
+            if (source->isRaster()) { numRasterSource++; }
+        }
+        if (numRasterSource > 0) {
+            // Inject shader defines for raster sampling and uniforms
+            if (m_rasterType == RasterType::normal) {
+                m_shaderSource->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_NORMAL\n", false);
+            } else if (m_rasterType == RasterType::color) {
+                m_shaderSource->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_COLOR\n", false);
+            }
+
+            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_NUM_RASTER_SOURCES "
+                                           + std::to_string(numRasterSource) + "\n", false);
+            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
+
+            m_shaderSource->addSourceBlock("raster", rasters_glsl);
+        }
+    }
 
     const auto& blocks = m_shaderSource->getSourceBlocks();
     if (blocks.find("color") != blocks.end() ||
@@ -134,23 +151,16 @@ void Style::setLightingType(LightingType _type) {
     m_lightingType = _type;
 }
 
-void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBlock& _uniformBlock) {
+void Style::setupSceneShaderUniforms(RenderState& rs, UniformBlock& _uniformBlock) {
     for (auto& uniformPair : _uniformBlock.styleUniforms) {
         const auto& name = uniformPair.first;
         auto& value = uniformPair.second;
 
-        if (value.is<std::string>()) {
-            std::string textureName = value.get<std::string>();
-            std::shared_ptr<Texture> texture = _scene.getTexture(textureName);
+        if (value.is<UniformTexture>()) {
+            auto& texture  = value.get<UniformTexture>();
+            if (!texture) { continue; }
 
-            if (!texture) {
-                LOGN("Texture with texture name %s is not available to be sent as uniform",
-                    textureName.c_str());
-                continue;
-            }
-
-            texture->update(rs, rs.nextAvailableTextureUnit());
-            texture->bind(rs, rs.currentTextureUnit());
+            texture->bind(rs, rs.nextAvailableTextureUnit());
 
             m_shaderProgram->setUniformi(rs, name, rs.currentTextureUnit());
         } else if (value.is<bool>()) {
@@ -169,17 +179,10 @@ void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBloc
             UniformTextureArray& textureUniformArray = value.get<UniformTextureArray>();
             textureUniformArray.slots.clear();
 
-            for (const auto& textureName : textureUniformArray.names) {
-                std::shared_ptr<Texture> texture = _scene.getTexture(textureName);
+            for (const auto& texture : textureUniformArray.textures) {
+                if (!texture) { continue; }
 
-                if (!texture) {
-                    LOGN("Texture with texture name %s is not available to be sent as uniform",
-                         textureName.c_str());
-                    continue;
-                }
-
-                texture->update(rs, rs.nextAvailableTextureUnit());
-                texture->bind(rs, rs.currentTextureUnit());
+                texture->bind(rs, rs.nextAvailableTextureUnit());
 
                 textureUniformArray.slots.push_back(rs.currentTextureUnit());
             }
@@ -189,45 +192,14 @@ void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBloc
     }
 }
 
-void Style::setupRasters(const std::vector<std::shared_ptr<TileSource>>& _sources) {
-    if (!hasRasters()) {
-        return;
-    }
-
-    int numRasterSource = 0;
-    for (const auto& source : _sources) {
-        if (source->isRaster()) {
-            numRasterSource++;
-        }
-    }
-
-    if (numRasterSource == 0) {
-        return;
-    }
-
-    // Inject shader defines for raster sampling and uniforms
-    if (m_rasterType == RasterType::normal) {
-        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_NORMAL\n", false);
-    } else if (m_rasterType == RasterType::color) {
-        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_COLOR\n", false);
-    }
-
-    m_shaderSource->addSourceBlock("defines", "#define TANGRAM_NUM_RASTER_SOURCES "
-            + std::to_string(numRasterSource) + "\n", false);
-    m_shaderSource->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
-
-    m_shaderSource->addSourceBlock("raster", SHADER_SOURCE(rasters_glsl));
-}
-
-
 void Style::setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view,
-                                Scene& _scene, UniformBlock& _uniforms) {
+                                UniformBlock& _uniforms) {
 
     // Reset the currently used texture unit to 0
     rs.resetTextureUnit();
 
     // Set time uniforms style's shader programs
-    _program.setUniformf(rs, _uniforms.uTime, _scene.time());
+    _program.setUniformf(rs, _uniforms.uTime, rs.frameTime());
 
     _program.setUniformf(rs, _uniforms.uDevicePixelRatio, m_pixelScale);
 
@@ -251,13 +223,13 @@ void Style::setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const 
     _program.setUniformMatrix4f(rs, _uniforms.uView, _view.getViewMatrix());
     _program.setUniformMatrix4f(rs, _uniforms.uProj, _view.getProjectionMatrix());
 
-    setupSceneShaderUniforms(rs, _scene, _uniforms);
+    setupSceneShaderUniforms(rs, _uniforms);
 
 }
 
-void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
+void Style::onBeginDrawFrame(RenderState& rs, const View& _view) {
 
-    setupShaderUniforms(rs, *m_shaderProgram, _view, _scene, m_mainUniforms);
+    setupShaderUniforms(rs, *m_shaderProgram, _view, m_mainUniforms);
 
     // Configure render state
     switch (m_blend) {
@@ -303,23 +275,23 @@ void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) 
     }
 }
 
-void Style::drawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene,
+void Style::drawSelectionFrame(RenderState& rs, const View& _view,
                                const std::vector<std::shared_ptr<Tile>>& _tiles,
                                const std::vector<std::unique_ptr<Marker>>& _markers) {
 
-    onBeginDrawSelectionFrame(rs, _view, _scene);
+    onBeginDrawSelectionFrame(rs, _view);
 
     for (const auto& tile : _tiles) { drawSelectionFrame(rs, *tile); }
     for (const auto& marker : _markers) { drawSelectionFrame(rs, *marker); }
 }
 
-void Style::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) {
+void Style::onBeginDrawSelectionFrame(RenderState& rs, const View& _view) {
 
     if (!m_selection) {
         return;
     }
 
-    setupShaderUniforms(rs, *m_selectionProgram, _view, _scene, m_selectionUniforms);
+    setupShaderUniforms(rs, *m_selectionProgram, _view, m_selectionUniforms);
 
     // Configure render state
     rs.blending(GL_FALSE);
@@ -390,7 +362,7 @@ void Style::drawSelectionFrame(Tangram::RenderState& rs, const Tangram::Tile &_t
 
 }
 
-void Style::draw(RenderState& rs, const View& _view, Scene& _scene,
+bool Style::draw(RenderState& rs, const View& _view,
                  const std::vector<std::shared_ptr<Tile>>& _tiles,
                  const std::vector<std::unique_ptr<Marker>>& _markers) {
 
@@ -400,77 +372,86 @@ void Style::draw(RenderState& rs, const View& _view, Scene& _scene,
     auto markerIt = std::find_if(std::begin(_markers), std::end(_markers),
                                [this](const auto& m){ return m->styleId() == this->m_id && m->mesh(); });
 
+    bool meshDrawn = false;
+
     // Skip when no mesh is to be rendered.
     // This also compiles shaders when they are first used.
     if (tileIt == std::end(_tiles) && markerIt == std::end(_markers)) {
-        return;
+        return false;
     }
 
-    onBeginDrawFrame(rs, _view, _scene);
+    onBeginDrawFrame(rs, _view);
 
     if (m_blend == Blending::translucent) {
         rs.colorMask(false, false, false, false);
     }
 
-    for (const auto& tile : _tiles) { draw(rs, *tile); }
-    for (const auto& marker : _markers) { draw(rs, *marker); }
-
-    if (m_blend == Blending::translucent) {
-        rs.colorMask(true, true, true, true);
-        GL::depthFunc(GL_EQUAL);
-
-        GL::enable(GL_STENCIL_TEST);
-        GL::clear(GL_STENCIL_BUFFER_BIT);
-        GL::stencilFunc(GL_EQUAL, GL_ZERO, 0xFF);
-        GL::stencilOp(GL_KEEP, GL_KEEP, GL_INCR);
-
-        for (const auto& tile : _tiles) { draw(rs, *tile); }
-        for (const auto& marker : _markers) { draw(rs, *marker); }
-
-        GL::disable(GL_STENCIL_TEST);
-        GL::depthFunc(GL_LESS);
+    for (const auto& tile : _tiles) {
+        meshDrawn |= draw(rs, *tile);
+    }
+    for (const auto& marker : _markers) {
+        meshDrawn |= draw(rs, *marker);
     }
 
-    onEndDrawFrame(rs, _view, _scene);
+    if (meshDrawn) {
+        if (m_blend == Blending::translucent) {
+            rs.colorMask(true, true, true, true);
+            GL::depthFunc(GL_EQUAL);
+
+            GL::enable(GL_STENCIL_TEST);
+            GL::clear(GL_STENCIL_BUFFER_BIT);
+            GL::stencilFunc(GL_EQUAL, GL_ZERO, 0xFF);
+            GL::stencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+
+            for (const auto &tile : _tiles) { draw(rs, *tile); }
+            for (const auto &marker : _markers) { draw(rs, *marker); }
+
+            GL::disable(GL_STENCIL_TEST);
+            GL::depthFunc(GL_LESS);
+        }
+    }
+
+    onEndDrawFrame(rs, _view);
+
+    return meshDrawn;
 }
 
 
-void Style::draw(RenderState& rs, const Tile& _tile) {
+bool Style::draw(RenderState& rs, const Tile& _tile) {
 
     auto& styleMesh = _tile.getMesh(*this);
 
-    if (!styleMesh) { return; }
+    if (!styleMesh) { return false; }
 
+    bool styleMeshDrawn = true;
     TileID tileID = _tile.getID();
 
-    if (hasRasters() && !_tile.rasters().empty()) {
+    if (hasRasters()) {
         UniformTextureArray textureIndexUniform;
         UniformArray2f rasterSizeUniform;
         UniformArray3f rasterOffsetsUniform;
 
         for (auto& raster : _tile.rasters()) {
-            if (raster.isValid()) {
-                auto& texture = raster.texture;
-                auto texUnit = rs.nextAvailableTextureUnit();
-                texture->update(rs, texUnit);
-                texture->bind(rs, texUnit);
 
-                textureIndexUniform.slots.push_back(texUnit);
-                rasterSizeUniform.push_back({texture->getWidth(), texture->getHeight()});
+            auto& texture = raster.texture;
+            auto texUnit = rs.nextAvailableTextureUnit();
+            texture->bind(rs, texUnit);
 
-                if (tileID.z > raster.tileID.z) {
-                    float dz = tileID.z - raster.tileID.z;
-                    float dz2 = powf(2.f, dz);
+            textureIndexUniform.slots.push_back(texUnit);
+            rasterSizeUniform.push_back({texture->width(), texture->height()});
 
-                    rasterOffsetsUniform.push_back({
-                            fmodf(tileID.x, dz2) / dz2,
-                                (dz2 - 1.f - fmodf(tileID.y, dz2)) / dz2,
-                                1.f / dz2
-                                });
-                } else {
-                    rasterOffsetsUniform.push_back({0, 0, 1});
-                }
+            float x = 0.f;
+            float y = 0.f;
+            float z = 1.f;
+
+            if (tileID.z > raster.tileID.z) {
+                float dz = tileID.z - raster.tileID.z;
+                float dz2 = powf(2.f, dz);
+                x = fmodf(tileID.x, dz2) / dz2;
+                y = (dz2 - 1.f - fmodf(tileID.y, dz2)) / dz2;
+                z = 1.f / dz2;
             }
+            rasterOffsetsUniform.emplace_back(x, y, z);
         }
 
         m_shaderProgram->setUniformi(rs, m_mainUniforms.uRasters, textureIndexUniform);
@@ -488,6 +469,7 @@ void Style::draw(RenderState& rs, const Tile& _tile) {
 
     if (!styleMesh->draw(rs, *m_shaderProgram)) {
         LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
+        styleMeshDrawn = false;
     }
 
     if (hasRasters()) {
@@ -497,15 +479,18 @@ void Style::draw(RenderState& rs, const Tile& _tile) {
             }
         }
     }
+
+    return styleMeshDrawn;
 }
 
-void Style::draw(RenderState& rs, const Marker& marker) {
+bool Style::draw(RenderState& rs, const Marker& marker) {
 
-    if (marker.styleId() != m_id || !marker.isVisible()) { return; }
+    if (marker.styleId() != m_id || !marker.isVisible()) { return false; }
 
     auto* mesh = marker.mesh();
 
-    if (!mesh) { return; }
+    if (!mesh) { return false; }
+    bool styleMeshDrawn = true;
 
     m_shaderProgram->setUniformMatrix4f(rs, m_mainUniforms.uModel, marker.modelMatrix());
     m_shaderProgram->setUniformf(rs, m_mainUniforms.uTileOrigin,
@@ -514,7 +499,10 @@ void Style::draw(RenderState& rs, const Marker& marker) {
 
     if (!mesh->draw(rs, *m_shaderProgram)) {
         LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
+        styleMeshDrawn = false;
     }
+
+    return styleMeshDrawn;
 }
 
 void Style::setDefaultDrawRule(std::unique_ptr<DrawRuleData>&& _rule) {

@@ -16,10 +16,11 @@
 
 namespace Tangram {
 
-TextStyle::TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
-                     bool _sdf, Blending _blendMode, GLenum _drawMode, bool _selection)
-    : Style(_name, _blendMode, _drawMode, _selection), m_sdf(_sdf),
-      m_context(_fontContext) {}
+TextStyle::TextStyle(std::string _name, bool _sdf, Blending _blendMode, GLenum _drawMode, bool _selection)
+    : Style(_name, _blendMode, _drawMode, _selection), m_sdf(_sdf) {
+    m_type = StyleType::text;
+    m_lightingType = LightingType::none;
+}
 
 TextStyle::~TextStyle() {}
 
@@ -38,11 +39,9 @@ void TextStyle::constructVertexLayout() {
 void TextStyle::constructShaderProgram() {
 
     if (m_sdf) {
-        m_shaderSource->setSourceStrings(SHADER_SOURCE(sdf_fs),
-                                         SHADER_SOURCE(text_vs));
+        m_shaderSource->setSourceStrings(sdf_fs, text_vs);
     } else {
-        m_shaderSource->setSourceStrings(SHADER_SOURCE(text_fs),
-                                         SHADER_SOURCE(text_vs));
+        m_shaderSource->setSourceStrings(text_fs, text_vs);
     }
 
     m_shaderSource->addSourceBlock("defines", "#define TANGRAM_TEXT\n");
@@ -70,9 +69,9 @@ void TextStyle::onBeginFrame(RenderState& rs) {
     }
 }
 
-void TextStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
+void TextStyle::onBeginDrawFrame(RenderState& rs, const View& _view) {
 
-    Style::onBeginDrawFrame(rs, _view, _scene);
+    Style::onBeginDrawFrame(rs, _view);
 
     auto texUnit = rs.nextAvailableTextureUnit();
 
@@ -104,12 +103,12 @@ void TextStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _sce
     }
 }
 
-void TextStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) {
+void TextStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view) {
     if (!m_selection) { return; }
 
     for (auto& mesh : m_meshes) { mesh->upload(rs); }
 
-    Style::onBeginDrawSelectionFrame(rs, _view, _scene);
+    Style::onBeginDrawSelectionFrame(rs, _view);
 
     m_selectionProgram->setUniformMatrix4f(rs, m_selectionUniforms.uOrtho,
                                            _view.getOrthoViewportMatrix());

@@ -1,9 +1,9 @@
 #pragma once
 
 #include "gl.h"
-#include "gl/disposer.h"
 #include "scene/spriteAtlas.h"
 
+#include <cstdlib>
 #include <vector>
 #include <memory>
 #include <string>
@@ -12,123 +12,132 @@ namespace Tangram {
 
 class RenderState;
 
-struct TextureFiltering {
-    GLenum min;
-    GLenum mag;
+enum class TextureMinFilter : GLenum {
+    NEAREST = GL_NEAREST,
+    LINEAR = GL_LINEAR,
+    NEAREST_MIPMAP_NEAREST = GL_NEAREST_MIPMAP_NEAREST,
+    LINEAR_MIPMAP_NEAREST = GL_LINEAR_MIPMAP_NEAREST,
+    NEAREST_MIPMAP_LINEAR = GL_NEAREST_MIPMAP_LINEAR,
+    LINEAR_MIPMAP_LINEAR = GL_LINEAR_MIPMAP_LINEAR,
 };
 
-struct TextureWrapping {
-    GLenum wraps;
-    GLenum wrapt;
+enum class TextureMagFilter : GLenum {
+    NEAREST = GL_NEAREST,
+    LINEAR = GL_LINEAR,
+};
+
+enum class TextureWrap : GLenum {
+    CLAMP_TO_EDGE = GL_CLAMP_TO_EDGE,
+    REPEAT = GL_REPEAT,
+};
+
+enum class PixelFormat : GLenum {
+    ALPHA = GL_ALPHA,
+    LUMINANCE = GL_LUMINANCE,
+    LUMINANCE_ALPHA = GL_LUMINANCE_ALPHA,
+    RGB = GL_RGB,
+    RGBA = GL_RGBA,
 };
 
 struct TextureOptions {
-    GLenum internalFormat;
-    GLenum format;
-    TextureFiltering filtering;
-    TextureWrapping wrapping;
-};
+    TextureMinFilter minFilter = TextureMinFilter::LINEAR;
+    TextureMagFilter magFilter = TextureMagFilter::LINEAR;
+    TextureWrap wrapS = TextureWrap::CLAMP_TO_EDGE;
+    TextureWrap wrapT = TextureWrap::CLAMP_TO_EDGE;
+    PixelFormat pixelFormat = PixelFormat::RGBA;
+    float displayScale = 1.f; // 0.5 for a "@2x" image.
+    bool generateMipmaps = false;
 
-#define DEFAULT_TEXTURE_OPTION \
-    {GL_ALPHA, GL_ALPHA, \
-    {GL_LINEAR, GL_LINEAR}, \
-    {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}}
+    int bytesPerPixel() const {
+        switch (pixelFormat) {
+        case PixelFormat::ALPHA:
+        case PixelFormat::LUMINANCE:
+            return 1;
+        case PixelFormat::LUMINANCE_ALPHA:
+            return 2;
+        case PixelFormat::RGB:
+            return 3;
+        default:
+            break;
+        }
+        return 4;
+    }
+};
 
 class Texture {
 
 public:
 
-    Texture(unsigned int _width, unsigned int _height, TextureOptions _options = DEFAULT_TEXTURE_OPTION,
-            bool _generateMipmaps = false, float _density = 1.f);
+    explicit Texture(TextureOptions _options);
 
-    Texture(const std::vector<char>& _data, TextureOptions _options = DEFAULT_TEXTURE_OPTION,
-            bool _generateMipmaps = false, float _density = 1.f);
-
-    Texture(Texture&& _other);
-    Texture& operator=(Texture&& _other);
+    Texture(const uint8_t* data, size_t length, TextureOptions _options);
 
     virtual ~Texture();
 
-    /* Perform texture updates, should be called at least once and after adding data or resizing */
-    virtual void update(RenderState& rs, GLuint _textureSlot);
+    bool loadImageFromMemory(const uint8_t* data, size_t length);
 
-    virtual void update(RenderState& rs, GLuint _textureSlot, const GLuint* data);
+    // Sets texture pixel data
+    bool setPixelData(int _width, int _height, int _bytesPerPixel, const GLubyte* _data, size_t _length);
 
-    /* Resize the texture */
-    void resize(const unsigned int _width, const unsigned int _height);
+    // Binds texture to texture unit _unit and uploads new texture data when it has changed.
+    // Returns false when no data has been set or when the requested size is greater than
+    // supported by the driver.
+    virtual bool bind(RenderState& rs, GLuint _unit);
 
-    /* Width and Height texture getters */
-    unsigned int getWidth() const { return m_width; }
-    unsigned int getHeight() const { return m_height; }
+    // Width and Height texture getters
+    int width() const { return m_width; }
+    int height() const { return m_height; }
 
-    void bind(RenderState& rs, GLuint _unit);
+    // Size of texture data in bytes
+    size_t bufferSize() const { return m_bufferSize; }
 
-    void setDirty(size_t yOffset, size_t height);
+    float displayScale() const { return m_options.displayScale; }
 
-    GLuint getGlHandle() { return m_glHandle; }
+    const auto& spriteAtlas() const { return m_spriteAtlas; }
+    void setSpriteAtlas(std::unique_ptr<SpriteAtlas> sprites);
 
-    /* Sets texture data
-     *
-     * Has less priority than set sub data
-     */
-    void setData(const GLuint* _data, unsigned int _dataSize);
-
-    /* Update a region of the texture */
-    void setSubData(const GLuint* _subData, uint16_t _xoff, uint16_t _yoff,
-                    uint16_t _width, uint16_t _height, uint16_t _stride);
-
-    /* Checks whether the texture has valid data and has been successfully uploaded to GPU */
-    bool isValid() const;
-
-    typedef std::pair<GLuint, GLuint> TextureSlot;
-
-    static void invalidateAllTextures();
-
-    static bool isRepeatWrapping(TextureWrapping _wrapping);
-
-    bool loadImageFromMemory(const std::vector<char>& _data);
-
-    static void flipImageData(unsigned char *result, int w, int h, int depth);
-    static void flipImageData(GLuint *result, int w, int h);
-
-    size_t bytesPerPixel();
-    size_t bufferSize();
-
-    auto& spriteAtlas() { return m_spriteAtlas; }
-
-    float invDensity() const { return m_invDensity; }
+    // Resize the texture
+    void resize(int width, int height);
 
 protected:
 
+    // Bytes per pixel for current PixelFormat options
+    size_t bpp() const;
+
     void generate(RenderState& rs, GLuint _textureUnit);
 
+    bool upload(RenderState& rs, GLuint _textureUnit);
+
+    bool sanityCheck(size_t _width, size_t _height, size_t _bytesPerPixel, size_t _length) const;
+
+    void setBufferData(GLubyte* buffer, size_t size) {
+        if (m_buffer.get() == buffer) { return; }
+        m_buffer.reset(buffer);
+    }
+
     TextureOptions m_options;
-    std::vector<GLuint> m_data;
-    GLuint m_glHandle;
 
-    struct DirtyRange {
-        size_t min;
-        size_t max;
-    };
-    std::vector<DirtyRange> m_dirtyRanges;
+    struct malloc_deleter { void operator()(GLubyte* x) { std::free(x); } };
+    using TextureData = std::unique_ptr<GLubyte, malloc_deleter>;
+    TextureData m_buffer = nullptr;
 
-    bool m_shouldResize;
+    size_t m_bufferSize = 0;
 
-    unsigned int m_width;
-    unsigned int m_height;
+    GLuint m_glHandle = 0;
 
-    GLenum m_target;
+    bool m_shouldResize = false;
+    // Dipose buffer after texture upload
+    bool m_disposeBuffer = true;
 
-    Disposer m_disposer;
+    int m_width = 0;
+    int m_height = 0;
+
+    RenderState* m_rs = nullptr;
 
 private:
-
-    bool m_generateMipmaps;
-    // used to determine css size by using as a multiplier with the defined texture size/sprite size
-    float m_invDensity = 1.f;
 
     std::unique_ptr<SpriteAtlas> m_spriteAtlas;
 
 };
 
-}
+} // namespace Tangram

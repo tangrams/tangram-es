@@ -2,14 +2,20 @@
 
 #include "map.h"
 #include "platform.h"
+#include "stops.h"
+#include "sceneOptions.h"
+#include "text/fontContext.h" // For FontDescription
+#include "tile/tileManager.h"
 #include "util/color.h"
 #include "util/url.h"
-#include "util/yamlHelper.h"
+#include "util/yamlPath.h"
 #include "view/view.h"
 
 #include <atomic>
-#include <list>
+#include <forward_list>
+#include <functional>
 #include <memory>
+#include <condition_variable>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -24,185 +30,230 @@ namespace Tangram {
 class DataLayer;
 class FeatureSelection;
 class FontContext;
+class FrameBuffer;
+class Importer;
+class LabelManager;
 class Light;
 class MapProjection;
+class MarkerManager;
 class Platform;
 class SceneLayer;
+class SelectionQuery;
 class Style;
 class Texture;
 class TileSource;
-class ZipArchive;
-struct Stops;
+struct SceneLoader;
 
-// Delimiter used in sceneloader for style params and layer-sublayer naming
-const std::string DELIMITER = ":";
+struct SceneCamera : public Camera {
+    glm::dvec3 startPosition;
+};
 
-/* Singleton container of <Style> information
- *
- * Scene is a singleton containing the styles, lighting, and interactions defining a map scene
- */
+using SceneFunctions = std::vector<std::string>;
+
+using SceneStops = std::list<Stops>;
+
+using DrawRuleNames = std::vector<std::string>;
+
+struct SceneTextures {
+    struct Task {
+        Task(Url url, std::shared_ptr<Texture> texture) : url(url), texture(texture) {}
+        bool started = false;
+        bool done = false;
+        Url url;
+        std::shared_ptr<Texture> texture;
+        UrlRequestHandle requestHandle = 0;
+    };
+
+    std::unordered_map<std::string, std::shared_ptr<Texture>> textures;
+
+    std::forward_list<Task> tasks;
+
+    std::shared_ptr<Texture> add(const std::string& name, const Url& url,
+                                 const TextureOptions& options);
+
+    std::shared_ptr<Texture> get(const std::string& name);
+};
+
+struct SceneFonts {
+    struct Task {
+        Task(Url url, FontDescription ft) : url(url), ft(ft) {}
+        bool started = false;
+        bool done = false;
+        Url url;
+        FontDescription ft;
+        UrlRequestHandle requestHandle = 0;
+        UrlResponse response;
+    };
+    std::forward_list<Task> tasks;
+
+    void add(const std::string& _uri, const std::string& _family,
+             const std::string& _style, const std::string& _weight);
+};
 
 class Scene {
 public:
+    enum animate { yes, no, none };
 
-    struct Camera {
-        CameraType type = CameraType::perspective;
-
-        float maxTilt = 90.f;
-        std::shared_ptr<Stops> maxTiltStops;
-
-        // perspective
-        glm::vec2 vanishingPoint = {0, 0};
-        float fieldOfView = 0.25 * PI;
-        std::shared_ptr<Stops> fovStops;
-
-        // isometric
-        glm::vec2 obliqueAxis = {0, 1};
-    };
-
-    Camera m_camera;
-
-    enum animate {
-        yes, no, none
-    };
-
-    Scene();
-    Scene(std::shared_ptr<const Platform> _platform, const Url& _url);
-    Scene(std::shared_ptr<const Platform> _platform, const std::string& _yaml, const Url& _url);
-    Scene(const Scene& _other) = delete;
+    Scene(Platform& _platform, SceneOptions&& = {},
+          std::function<void(Scene*)> _prefetchCallback = nullptr);
 
     ~Scene();
 
-    const int32_t id;
+    Scene(const Scene& _other) = delete;
+    Scene(Scene&& _other) = delete;
 
-    void copyConfig(const Scene& _other);
+    /// Load the whole Scene
+    bool load();
 
-    auto& camera() { return m_camera; }
-    auto& config() { return m_config; }
-    auto& tileSources() { return m_tileSources; }
-    auto& layers() { return m_layers; }
-    auto& styles() { return m_styles; }
-    auto& lights() { return m_lights; }
-    auto& lightBlocks() { return m_lightShaderBlocks; }
-    auto& textures() { return m_textures; }
-    auto& functions() { return m_jsFunctions; }
-    auto& stops() { return m_stops; }
-    auto& background() { return m_background; }
-    auto& fontContext() { return m_fontContext; }
-    auto& globalRefs() { return m_globalRefs; }
-    auto& featureSelection() { return m_featureSelection; }
-    Style* findStyle(const std::string& _name);
+    auto& tileSources() const { return m_tileSources; }
+    auto& featureSelection() const { return m_featureSelection; }
+    auto& fontContext() const { return m_fontContext; }
 
-    const auto& url() const { return m_url; }
-    const auto& yaml() { return m_yaml; }
     const auto& config() const { return m_config; }
-    const auto& tileSources() const { return m_tileSources; }
-    const auto& layers() const { return m_layers; }
-    const auto& styles() const { return m_styles; }
-    const auto& lights() const { return m_lights; }
-    const auto& lightBlocks() const { return m_lightShaderBlocks; }
     const auto& functions() const { return m_jsFunctions; }
-    const auto& mapProjection() const { return m_mapProjection; }
-    const auto& fontContext() const { return m_fontContext; }
-    const auto& globalRefs() const { return m_globalRefs; }
-    const auto& featureSelection() const { return m_featureSelection; }
+    const auto& layers() const { return m_layers; }
+    const auto& lightBlocks() const { return m_lightShaderBlocks; }
+    const auto& lights() const { return m_lights; }
+    const auto& options() const { return m_options; }
+    const auto& styles() const { return m_styles; }
+    const auto& textures() const { return m_textures.textures; }
 
-    const Style* findStyle(const std::string& _name) const;
-
-    const Light* findLight(const std::string& _name) const;
-
-    // Start an asynchronous request for the scene resource at the given URL.
-    // In addition to the URL types supported by the platform instance, this
-    // also supports a custom ZIP URL scheme. ZIP URLs are of the form:
-    //   zip://path/to/file.txt#http://host.com/some/archive.zip
-    // The fragment (#http...) of the URL is the location of the archive and the
-    // relative portion of the URL (path/...) is the path of the target file
-    // within the archive (this allows relative path operations on URLs to work
-    // as expected within zip archives). This function expects that all required
-    // zip archives will be added to the scene with addZipArchive before being
-    // requested.
-    UrlRequestHandle startUrlRequest(std::shared_ptr<Platform> platform, Url url, UrlCallback callback);
-
-    void addZipArchive(Url url, std::shared_ptr<ZipArchive> zipArchive);
-
-    void updateTime(float _dt) { m_time += _dt; }
-    float time() const { return m_time; }
-
-    int addIdForName(const std::string& _name);
-    int getIdForName(const std::string& _name) const;
-
-    int addJsFunction(const std::string& _function);
-
-    bool useScenePosition = true;
-    glm::dvec2 startPosition = { 0, 0 };
-    float startZoom = 0;
-
-    void animated(bool animated) { m_animated = animated ? yes : no; }
-    animate animated() const { return m_animated; }
-
-    std::shared_ptr<TileSource> getTileSource(int32_t id);
-    std::shared_ptr<TileSource> getTileSource(const std::string& name);
-
+    std::shared_ptr<TileSource> getTileSource(int32_t id) const;
     std::shared_ptr<Texture> getTexture(const std::string& name) const;
 
-    float pixelScale() { return m_pixelScale; }
+    animate animated() const { return m_animated; }
+
+    float pixelScale() const { return m_pixelScale; }
     void setPixelScale(float _scale);
 
-    std::atomic_ushort pendingTextures{0};
-    std::atomic_ushort pendingFonts{0};
+    /// Update TileManager, Labels and Markers for current View
+    struct UpdateState {
+        bool tilesLoading, animateLabels, animateMarkers;
+    };
+    UpdateState update(const View& _view, float _dt);
 
-    std::vector<SceneError> errors;
+    void renderBeginFrame(RenderState& _rs);
+    bool render(RenderState& _rs, View& _view);
+    void renderSelection(RenderState& _rs, View& _view,
+                         FrameBuffer& _selectionBuffer,
+                         std::vector<SelectionQuery>& _selectionQueries);
 
-private:
+    Color backgroundColor(int _zoom) const;
 
-    // The URL from which this scene was loaded
-    Url m_url;
+    /// Used for FrameInfo debug
+    TileManager* tileManager() const { return m_tileManager.get(); }
 
-    std::string m_yaml;
+    MarkerManager* markerManager() const { return m_markerManager.get(); }
 
-    // The root node of the YAML scene configuration
+    const SceneError* errors() const {
+        return (m_errors.empty() ? nullptr : &m_errors.front());
+    }
+
+    /// When Scene is async loading this function can be run from
+    /// main-thread to start loading tiles for the current view.
+    /// - Copy current View width,height,pixelscale and position
+    ///   (unless options.useScenePosition is set)
+    /// - Start tile-loading for this View.
+    void prefetchTiles(const View& view);
+
+    /// Returns true when scene-loading could be completed,
+    /// false when resources for tile-building and rendering
+    /// are still pending.
+    /// Does the finishing touch when everything is available:
+    /// - Sets Scene camera to View
+    /// - Update Styles and FontContext to current pixelScale
+    /// - Sets platform continuousRendering mode
+    bool completeScene(View& view);
+
+    /// Cancel scene loading and all TileManager tasks
+    void cancelTasks();
+
+    /// Returns true when scene finished loading and completeScene() suceeded.
+    bool isReady() const { return m_state == State::ready; };
+
+    /// Scene ID
+    const int32_t id;
+
+    using Lights = std::vector<std::unique_ptr<Light>>;
+    using LightShaderBlocks = std::map<std::string, std::string>;
+    using TileSources = std::vector<std::shared_ptr<TileSource>>;
+    using Styles = std::vector<std::unique_ptr<Style>>;
+    using Layers = std::vector<DataLayer>;
+
+protected:
+
+    Platform& m_platform;
+
+    SceneOptions m_options;
+    std::function<void(Scene*)> m_tilePrefetchCallback;
+
+    std::unique_ptr<Importer> m_importer;
+
+    /// Only SceneUpdate errors for now
+    std::vector<SceneError> m_errors;
+
+    enum class State {
+        initial,
+        loading,             // set at start of Scene::load()
+        pending_resources,   // set while waiting for (async) resource loading tasks
+        pending_completion,  // set end of Scene::load()
+        ready,               // set on main thread when Scene::complete() succeeded
+        canceled,            // should stop any scene- or tile-loading tasks
+    };
+
+    State m_state = State::initial;
+
+    /// ---------------------------------------------------------------///
+    /// Loaded Scene Data
+    /// The root node of the YAML scene configuration
     YAML::Node m_config;
 
-    std::unique_ptr<MapProjection> m_mapProjection;
+    SceneCamera m_camera;
 
-    std::vector<DataLayer> m_layers;
-    std::vector<std::shared_ptr<TileSource>> m_tileSources;
-    std::vector<std::unique_ptr<Style>> m_styles;
+    Layers m_layers;
+    TileSources m_tileSources;
+    Styles m_styles;
 
-    std::vector<std::unique_ptr<Light>> m_lights;
-    std::map<std::string, std::string> m_lightShaderBlocks;
+    Lights m_lights;
+    LightShaderBlocks m_lightShaderBlocks;
 
-    std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
+    void runTextureTasks();
+    SceneTextures m_textures;
 
-    // Container for any zip archives needed for the scene. For each entry, the
-    // key is the original URL from which the zip archive was retrieved and the
-    // value is a ZipArchive initialized with the compressed archive data.
-    std::unordered_map<Url, std::shared_ptr<ZipArchive>> m_zipArchives;
+    void runFontTasks();
+    SceneFonts m_fonts;
 
-    // Records the YAML Nodes for which global values have been swapped; keys are
-    // nodes that referenced globals, values are nodes of globals themselves.
-    std::vector<std::pair<YamlPath, YamlPath>> m_globalRefs;
+    /// Container of all strings used in styling rules; these need to be
+    /// copied and compared frequently when applying styling, so rules use
+    /// integer indices into this container to represent strings
+    DrawRuleNames m_names;
 
-    // Container of all strings used in styling rules; these need to be
-    // copied and compared frequently when applying styling, so rules use
-    // integer indices into this container to represent strings
-    std::vector<std::string> m_names;
-
-    std::vector<std::string> m_jsFunctions;
-    std::list<Stops> m_stops;
+    SceneFunctions m_jsFunctions;
+    SceneStops m_stops;
 
     Color m_background;
-
-    std::shared_ptr<FontContext> m_fontContext;
-
-    std::unique_ptr<FeatureSelection> m_featureSelection;
-
+    Stops m_backgroundStops;
     animate m_animated = none;
 
+    /// ---------------------------------------------------------------///
+    /// Runtime Data
     float m_pixelScale = 1.0f;
-
     float m_time = 0.0;
 
+    /// Set true when all resources for TileBuilder are available
+    bool m_readyToBuildTiles = false;
+
+    std::unique_ptr<FontContext> m_fontContext;
+    std::unique_ptr<FeatureSelection> m_featureSelection;
+    std::unique_ptr<TileWorker> m_tileWorker;
+    std::unique_ptr<TileManager> m_tileManager;
+    std::unique_ptr<MarkerManager> m_markerManager;
+    std::unique_ptr<LabelManager> m_labelManager;
+
+    std::mutex m_sceneLoadMutex;
+    std::mutex m_taskMutex;
+    std::atomic_uint m_tasksActive{0};
+    std::condition_variable m_taskCondition;
 };
 
 }

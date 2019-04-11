@@ -1,110 +1,99 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.2)
 
 project(tangram)
 
 # Options
+option(TANGRAM_USE_JSCORE "Use system libraries for JavaScriptCore and enable it on iOS and macOS" OFF)
+option(TANGRAM_USE_JSCORE_STATIC "Build with pre-compiled static libraries for JavaScriptCore" OFF)
+
 option(TANGRAM_USE_SYSTEM_FONT_LIBS "Use system libraries Freetype, ICU and Harfbuzz via pkgconfig" OFF)
 option(TANGRAM_USE_SYSTEM_GLFW_LIBS "Use system libraries for GLFW3 via pkgconfig" OFF)
+option(TANGRAM_USE_SYSTEM_SQLITE_LIBS "Use system libraries for SQLite via pkgconfig" OFF)
+option(TANGRAM_MBTILES_DATASOURCE "Build MBTiles Datasource" ON)
 
-if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "")
-    message(STATUS "Build type configuration " ${CMAKE_BUILD_TYPE})
-else()
-    set(CMAKE_BUILD_TYPE Release)
-endif()
+option(TANGRAM_BUILD_TESTS "Build unit tests" OFF)
+option(TANGRAM_BUNDLE_TESTS "Compile all tests into a single binary" ON)
+option(TANGRAM_BUILD_BENCHMARKS "Build benchmarks" OFF)
+option(TANGRAM_DEV_MODE "For developers only: Don't omit the frame pointer" OFF)
 
+message(STATUS "Build type configuration: ${CMAKE_BUILD_TYPE}")
+
+# Check that submodules are present.
 if(NOT EXISTS "${PROJECT_SOURCE_DIR}/core/deps/harfbuzz-icu-freetype/harfbuzz/README")
-    message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init'")
-    return()
+  message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init'")
+  return()
 endif()
 
-set(TANGRAM_APPLICATION ON)
-
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
-include(${PROJECT_SOURCE_DIR}/toolchains/utils.cmake)
-
-# platform lookup
-set(SUPPORTED_TARGETS darwin ios android raspberrypi linux tizen ios.framework)
-
-if(NOT PLATFORM_TARGET)
-    string(TOLOWER "${CMAKE_SYSTEM_NAME}" varplatform)
-    string(TOUPPER "${CMAKE_SYSTEM_NAME}" VARPLATFORM)
-
-    message(STATUS "No target defined (give as parameter -DPLATFORM_TARGET=platform_name).")
-    message(STATUS "Targets available: ${SUPPORTED_TARGETS}.")
-    message(STATUS "Will use your OS: ${varplatform}.")
-
-    set(PLATFORM_TARGET ${varplatform})
-else()
-    string(TOLOWER "${PLATFORM_TARGET}" varplatform)
-    string(TOUPPER "${PLATFORM_TARGET}" VARPLATFORM)
-
-    message(STATUS "Platform chosen : ${VARPLATFORM}")
-endif()
-
-list(FIND SUPPORTED_TARGETS ${varplatform} target_in_list)
-
-if(target_in_list EQUAL -1)
-    message(SEND_ERROR "${varplatform} not in supported targets: ${SUPPORTED_TARGETS}")
-    return()
-endif()
-
-# setting up cache variable platform
-set(PLATFORM ${varplatform} CACHE INTERNAL "platform" FORCE)
-
-# cmake output configuration
-if(NOT ${PLATFORM_TARGET} STREQUAL android)
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-endif()
-
-if (CMAKE_BUILD_TYPE MATCHES Debug)
+if(CMAKE_BUILD_TYPE MATCHES Debug)
   add_definitions(-DDEBUG)
   add_definitions(-DLOG_LEVEL=3)
 else()
   add_definitions(-DLOG_LEVEL=2)
 endif()
 
-# cmake inclusions and definitions
-set(CMAKE_TARGET_FILE ${PROJECT_SOURCE_DIR}/toolchains/${PLATFORM_TARGET}.cmake)
-
-message(STATUS "Including ${varplatform} dependent cmake file : ${CMAKE_TARGET_FILE}")
-
-set(EXTERNAL_LIBS_DIR ${CMAKE_SOURCE_DIR}/external/exports/${PLATFORM_TARGET}
-    CACHE INTERNAL "external-libs" FORCE)
-
-## set platform configuration, build library and application.
-# adds targets:
-# - core
-# - tangram
-# - copy_resources
-include(${CMAKE_TARGET_FILE})
-
-if(BENCHMARK OR UNIT_TESTS)
-    add_library(platform_mock
-        ${PROJECT_SOURCE_DIR}/tests/src/mockPlatform.cpp
-        ${PROJECT_SOURCE_DIR}/tests/src/gl_mock.cpp)
-
-    target_include_directories(platform_mock
-        PUBLIC ${CORE_LIBRARIES_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/tests/src)
-
-    target_compile_definitions(platform_mock
-        PUBLIC -DUNIT_TESTS)
-
-    target_link_libraries(platform_mock
-        PUBLIC tangramcore)
-
+if($ENV{CIRCLE_BUILD_NUM})
+  add_definitions(-DBUILD_NUM_STRING="\($ENV{CIRCLE_BUILD_NUM}\)")
 endif()
 
-if(UNIT_TESTS)
-    message(STATUS "Build with tests")
-    add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
+include(cmake/utils.cmake)
+
+# If target platform isn't specified, use the local platform.
+if(NOT TANGRAM_PLATFORM)
+  message(STATUS "No platform target specified. Choose a target with -DTANGRAM_PLATFORM=platform.")
+  string(TOLOWER "${CMAKE_SYSTEM_NAME}" SYSTEM_NAME)
+  if (${SYSTEM_NAME} STREQUAL "darwin")
+    set(TANGRAM_PLATFORM "osx")
+  else()
+    set(TANGRAM_PLATFORM ${SYSTEM_NAME})
+  endif()
+  message(STATUS "Using your OS as the platform target: ${TANGRAM_PLATFORM}.")
 endif()
 
-if(BENCHMARK)
-    message(STATUS "Build with benchmarks")
-    add_subdirectory(${PROJECT_SOURCE_DIR}/bench)
+# Configure platform target.
+if(TANGRAM_DEV_MODE AND TANGRAM_BUILD_BENCHMARKS)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer")
+endif()
+
+set(TANGRAM_PLATFORM_CONFIG_FILE "platforms/${TANGRAM_PLATFORM}/config.cmake")
+if(EXISTS "${PROJECT_SOURCE_DIR}/${TANGRAM_PLATFORM_CONFIG_FILE}")
+  message(STATUS "Including platform CMake config file: ${TANGRAM_PLATFORM_CONFIG_FILE}")
+else()
+  message(SEND_ERROR "Cannot find CMake config file for platform: ${TANGRAM_PLATFORM}. Looked for: ${TANGRAM_PLATFORM_CONFIG_FILE}")
+  return()
+endif()
+# Cache platform target.
+set(TANGRAM_PLATFORM ${TANGRAM_PLATFORM} CACHE INTERNAL "Tangram platform target" FORCE)
+# Include the platform config file.
+include(${TANGRAM_PLATFORM_CONFIG_FILE})
+
+# Choose JavaScript implementation.
+if (TANGRAM_IOS OR TANGRAM_OSX OR TANGRAM_USE_JSCORE_STATIC)
+  set(TANGRAM_JSCORE_AVAILABLE ON)
+endif()
+if (TANGRAM_JSCORE_AVAILABLE AND TANGRAM_USE_JSCORE)
+  set(TANGRAM_JSCORE_ENABLED ON)
+endif()
+
+# Add core library.
+add_subdirectory(core)
+
+if(TANGRAM_BUILD_BENCHMARKS OR TANGRAM_BUILD_TESTS)
+  add_library(platform_mock
+    tests/src/mockPlatform.cpp
+    tests/src/gl_mock.cpp
+  )
+  target_include_directories(platform_mock PUBLIC tests/src)
+  target_compile_definitions(platform_mock PUBLIC -DUNIT_TESTS)
+  target_link_libraries(platform_mock PUBLIC tangram-core)
+endif()
+
+if(TANGRAM_BUILD_TESTS)
+  message(STATUS "Building tests")
+  add_subdirectory(tests)
+endif()
+
+if(TANGRAM_BUILD_BENCHMARKS)
+  message(STATUS "Building benchmarks")
+  add_subdirectory(bench)
 endif()

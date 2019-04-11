@@ -21,7 +21,7 @@ public:
     bool isInitialized();
     void bind(unsigned int _index);
     void unbind();
-    void dispose();
+    void dispose(RenderState& rs);
 
 private:
     std::vector<GLuint> m_glVAOs;

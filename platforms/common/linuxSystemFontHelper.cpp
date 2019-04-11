@@ -1,54 +1,78 @@
 #include "linuxSystemFontHelper.h"
+#include "log.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
 
 namespace Tangram {
 
 std::vector<std::string> systemFallbackFonts(FcConfig* fcConfig) {
 
-    std::string style = "Regular";
     std::vector<std::string> fallbackFonts;
 
-    /*
-     * Read system fontconfig to get list of fallback font for each supported language
-     */
-    FcStrSet* fcLangs = FcGetLangs();
-    FcStrList* fcLangList = FcStrListCreate(fcLangs);
-    FcChar8* fcLang;
-    while ((fcLang = FcStrListNext(fcLangList))) {
-        FcValue fcStyleValue, fcLangValue;
+    FcPattern *pat = FcPatternBuild (0,
+                          FC_LANG, FcTypeString, "en",
+                          FC_WIDTH, FcTypeInteger, FC_WIDTH_NORMAL,
+                          FC_WEIGHT, FcTypeInteger, FC_WEIGHT_NORMAL,
+                          FC_SLANT, FcTypeInteger, FC_SLANT_ROMAN,
+                          FC_SCALABLE, FcTypeBool, FcTrue,
+                          (char *) 0);
 
-        fcStyleValue.type = fcLangValue.type = FcType::FcTypeString;
-        fcStyleValue.u.s = reinterpret_cast<const FcChar8*>(style.c_str());
-        fcLangValue.u.s = fcLang;
+    FcConfigSubstitute(fcConfig, pat, FcMatchPattern);
+    FcDefaultSubstitute(pat);
 
-        // create a pattern with style and family font properties
-        FcPattern* pat = FcPatternCreate();
+    FcResult result;
+    FcFontSet *fs = FcFontSort(fcConfig, pat, FcTrue, nullptr, &result);
+    FcPatternDestroy(pat);
 
-        FcPatternAdd(pat, FC_STYLE, fcStyleValue, true);
-        FcPatternAdd(pat, FC_LANG, fcLangValue, true);
-        //FcPatternPrint(pat);
-
-        FcConfigSubstitute(fcConfig, pat, FcMatchPattern);
-        FcDefaultSubstitute(pat);
-
-        FcResult res;
-        FcPattern* font = FcFontMatch(fcConfig, pat, &res);
-        if (font) {
-            FcChar8* file = nullptr;
-            if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
-                // Make sure this font file is not previously added.
-                if (std::find(fallbackFonts.begin(), fallbackFonts.end(),
-                              reinterpret_cast<char*>(file)) == fallbackFonts.end()) {
-                    fallbackFonts.emplace_back(reinterpret_cast<char*>(file));
-                }
-            }
-            FcPatternDestroy(font);
-        }
-        FcPatternDestroy(pat);
+    if (!fs || (result != FcResultMatch)) {
+        return fallbackFonts;
     }
-    FcStrListDone(fcLangList);
+
+    FcLangSet *fls = FcLangSetCreate();
+    FcLangSet *empty = FcLangSetCreate();
+
+    for (int i = 0; i < fs->nfont; i++) {
+        FcPattern *font = fs->fonts[i];
+
+        int w;
+        if (FcPatternGetInteger(font, FC_WEIGHT, 0, &w) != FcResultMatch ||
+            (w != FC_WEIGHT_REGULAR)) { continue; }
+
+        if (FcPatternGetInteger(font, FC_SLANT, 0, &w) != FcResultMatch ||
+            (w != FC_SLANT_ROMAN)) { continue; }
+
+#ifdef FC_COLOR
+        if (FcPatternGetBool(font, FC_COLOR, 0, &w) != FcResultMatch ||
+            (w != FcFalse)) { continue; }
+#endif
+
+        if (FcPatternGetBool(font, FC_SCALABLE, 0, &w) != FcResultMatch ||
+            (w != FcTrue)) { continue; }
+
+        FcChar8 *file = nullptr;
+        if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
+            FcLangSet *ls = nullptr;
+            if (FcPatternGetLangSet(font, FC_LANG, 0, &ls) != FcResultMatch) {
+                continue;
+            }
+
+            FcLangSet *r = FcLangSetSubtract(ls, fls);
+            if (!FcLangSetEqual(r, empty)) {
+                FcLangSet *u = FcLangSetUnion(r, fls);
+                FcLangSetDestroy(fls);
+                fls = u;
+
+                fallbackFonts.emplace_back(reinterpret_cast<char*>(file));
+            }
+            FcLangSetDestroy(r);
+        }
+    }
+
+    FcFontSetDestroy(fs);
+    if (fls) FcLangSetDestroy(fls);
+    if (empty) FcLangSetDestroy(empty);
 
     return fallbackFonts;
 }

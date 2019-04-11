@@ -1,5 +1,7 @@
 #include "androidPlatform.h"
 
+#include "jniThreadBinding.h"
+
 #include "data/properties.h"
 #include "data/propertyItem.h"
 #include "log.h"
@@ -23,12 +25,15 @@
 #include <codecvt>
 #include <locale>
 
+#ifdef TANGRAM_MBTILES_DATASOURCE
 #include "sqlite3ndk.h"
-
+#endif
 
 PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT = 0;
 PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT = 0;
 PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT = 0;
+
+#define TANGRAM_JNI_VERSION JNI_VERSION_1_6
 
 namespace Tangram {
 
@@ -47,32 +52,32 @@ static jmethodID startUrlRequestMID = 0;
 static jmethodID cancelUrlRequestMID = 0;
 static jmethodID getFontFilePath = 0;
 static jmethodID getFontFallbackFilePath = 0;
-static jmethodID onFeaturePickMID = 0;
-static jmethodID onLabelPickMID = 0;
-static jmethodID onMarkerPickMID = 0;
-static jmethodID labelPickResultInitMID = 0;
-static jmethodID markerPickResultInitMID = 0;
+static jmethodID featurePickCallbackMID = 0;
+static jmethodID labelPickCallbackMID = 0;
+static jmethodID markerPickCallbackMID = 0;
 static jmethodID sceneReadyCallbackMID = 0;
-static jmethodID sceneErrorInitMID = 0;
-
-static jclass labelPickResultClass = nullptr;
-static jclass sceneErrorClass = nullptr;
-static jclass markerPickResultClass = nullptr;
+static jmethodID cameraAnimationCallbackMID = 0;
 
 static jclass hashmapClass = nullptr;
 static jmethodID hashmapInitMID = 0;
 static jmethodID hashmapPutMID = 0;
 
-static jmethodID markerByIDMID = 0;
-
 static bool glExtensionsLoaded = false;
+
 
 void AndroidPlatform::bindJniEnvToThread(JNIEnv* jniEnv) {
     jniEnv->GetJavaVM(&jvm);
 }
 
-void AndroidPlatform::setupJniEnv(JNIEnv* jniEnv) {
-    bindJniEnvToThread(jniEnv);
+jint AndroidPlatform::jniOnLoad(JavaVM* javaVM) {
+    // JNI OnLoad is invoked once when the native library is loaded so this is a good place to cache
+    // any method or class IDs that we'll need.
+
+    jvm = javaVM;
+    JNIEnv* jniEnv = nullptr;
+    if (javaVM->GetEnv(reinterpret_cast<void**>(&jniEnv), TANGRAM_JNI_VERSION) != JNI_OK) {
+        return -1;
+    }
 
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/MapController");
     startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)V");
@@ -81,42 +86,30 @@ void AndroidPlatform::setupJniEnv(JNIEnv* jniEnv) {
     getFontFallbackFilePath = jniEnv->GetMethodID(tangramClass, "getFontFallbackFilePath", "(II)Ljava/lang/String;");
     requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
-    sceneReadyCallbackMID = jniEnv->GetMethodID(tangramClass, "sceneReadyCallback", "(ILcom/mapzen/tangram/SceneError;)V");
+    sceneReadyCallbackMID = jniEnv->GetMethodID(tangramClass, "sceneReadyCallback", "(IILjava/lang/String;Ljava/lang/String;)V");
+    cameraAnimationCallbackMID = jniEnv->GetMethodID(tangramClass, "cameraAnimationCallback", "(Z)V");
+    featurePickCallbackMID = jniEnv->GetMethodID(tangramClass, "featurePickCallback", "(Ljava/util/Map;FF)V");
+    labelPickCallbackMID = jniEnv->GetMethodID(tangramClass, "labelPickCallback", "(Ljava/util/Map;FFIDD)V");
+    markerPickCallbackMID = jniEnv->GetMethodID(tangramClass, "markerPickCallback", "(JFFDD)V");
 
-    jclass featurePickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$FeaturePickListener");
-    onFeaturePickMID = jniEnv->GetMethodID(featurePickListenerClass, "onFeaturePick", "(Ljava/util/Map;FF)V");
-    jclass labelPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$LabelPickListener");
-    onLabelPickMID = jniEnv->GetMethodID(labelPickListenerClass, "onLabelPick", "(Lcom/mapzen/tangram/LabelPickResult;FF)V");
-
-    if (labelPickResultClass) {
-        jniEnv->DeleteGlobalRef(labelPickResultClass);
-    }
-    labelPickResultClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/LabelPickResult"));
-    labelPickResultInitMID = jniEnv->GetMethodID(labelPickResultClass, "<init>", "(DDILjava/util/Map;)V");
-
-    if (markerPickResultClass) {
-        jniEnv->DeleteGlobalRef(markerPickResultClass);
-    }
-    markerPickResultClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/MarkerPickResult"));
-    markerPickResultInitMID = jniEnv->GetMethodID(markerPickResultClass, "<init>", "(Lcom/mapzen/tangram/Marker;DD)V");
-
-    if (sceneErrorClass) {
-        jniEnv->DeleteGlobalRef(sceneErrorClass);
-    }
-    sceneErrorClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/SceneError"));
-    sceneErrorInitMID = jniEnv->GetMethodID(sceneErrorClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;I)V");
-
-    if (hashmapClass) {
-        jniEnv->DeleteGlobalRef(hashmapClass);
-    }
+    // We need a reference to the class object later to invoke the constructor. FindClass produces a
+    // local reference that may not be valid later, so create a global reference to the class.
     hashmapClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("java/util/HashMap"));
     hashmapInitMID = jniEnv->GetMethodID(hashmapClass, "<init>", "()V");
     hashmapPutMID = jniEnv->GetMethodID(hashmapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
-    markerByIDMID = jniEnv->GetMethodID(tangramClass, "markerById", "(J)Lcom/mapzen/tangram/Marker;");
+    return TANGRAM_JNI_VERSION;
+}
 
-    jclass markerPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$MarkerPickListener");
-    onMarkerPickMID = jniEnv->GetMethodID(markerPickListenerClass, "onMarkerPick", "(Lcom/mapzen/tangram/MarkerPickResult;FF)V");
+void AndroidPlatform::jniOnUnload(JavaVM *javaVM) {
+    JNIEnv* jniEnv = nullptr;
+    if (javaVM->GetEnv(reinterpret_cast<void**>(&jniEnv), TANGRAM_JNI_VERSION) != JNI_OK) {
+        return;
+    }
+    jniEnv->DeleteGlobalRef(hashmapClass);
+    hashmapClass = nullptr;
+
+    jvm = nullptr;
 }
 
 std::string stringFromJString(JNIEnv* jniEnv, jstring string) {
@@ -135,29 +128,6 @@ jstring jstringFromString(JNIEnv* jniEnv, const std::string& string) {
     return jniEnv->NewString(s, chars.length());
 }
 
-class JniThreadBinding {
-private:
-    JavaVM* jvm;
-    JNIEnv *jniEnv;
-    int status;
-public:
-    JniThreadBinding(JavaVM* _jvm) : jvm(_jvm) {
-        status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
-        if (status == JNI_EDETACHED) { jvm->AttachCurrentThread(&jniEnv, NULL);}
-    }
-    ~JniThreadBinding() {
-        if (status == JNI_EDETACHED) { jvm->DetachCurrentThread(); }
-    }
-
-    JNIEnv* operator->() const {
-        return jniEnv;
-    }
-
-    operator JNIEnv*() const {
-        return jniEnv;
-    }
-};
-
 void logMsg(const char* fmt, ...) {
 
     va_list args;
@@ -165,6 +135,29 @@ void logMsg(const char* fmt, ...) {
     __android_log_vprint(ANDROID_LOG_DEBUG, "Tangram", fmt, args);
     va_end(args);
 
+}
+
+
+AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance)
+    : m_jniWorker(jvm) {
+
+    m_tangramInstance = _jniEnv->NewWeakGlobalRef(_tangramInstance);
+
+    m_assetManager = AAssetManager_fromJava(_jniEnv, _assetManager);
+
+    if (m_assetManager == nullptr) {
+        LOGE("Could not obtain Asset Manager reference");
+        return;
+    }
+
+#ifdef TANGRAM_MBTILES_DATASOURCE
+    sqlite3_ndk_init(m_assetManager);
+#endif
+}
+
+void AndroidPlatform::shutdown() {
+    Platform::shutdown();
+    m_jniWorker.stop();
 }
 
 std::string AndroidPlatform::fontPath(const std::string& _family, const std::string& _weight, const std::string& _style) const {
@@ -183,60 +176,45 @@ std::string AndroidPlatform::fontPath(const std::string& _family, const std::str
     return resultStr;
 }
 
-AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance) {
-    m_tangramInstance = _jniEnv->NewGlobalRef(_tangramInstance);
-
-    m_assetManager = AAssetManager_fromJava(_jniEnv, _assetManager);
-
-    if (m_assetManager == nullptr) {
-        LOGE("Could not obtain Asset Manager reference");
-        return;
-    }
-
-    sqlite3_ndk_init(m_assetManager);
-}
-
-void AndroidPlatform::dispose(JNIEnv* _jniEnv) {
-    _jniEnv->DeleteGlobalRef(m_tangramInstance);
-}
-
 void AndroidPlatform::requestRender() const {
-
-    JniThreadBinding jniEnv(jvm);
-
-    jniEnv->CallVoidMethod(m_tangramInstance, requestRenderMethodID);
-}
-
-std::string AndroidPlatform::fontFallbackPath(int _importance, int _weightHint) const {
-
-    JniThreadBinding jniEnv(jvm);
-
-    jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance, getFontFallbackFilePath, _importance, _weightHint);
-
-    auto resultStr = stringFromJString(jniEnv, returnStr);
-    jniEnv->DeleteLocalRef(returnStr);
-
-    return resultStr;
+    m_jniWorker.enqueue([&](JNIEnv *jniEnv) {
+        jniEnv->CallVoidMethod(m_tangramInstance, requestRenderMethodID);
+    });
 }
 
 std::vector<FontSourceHandle> AndroidPlatform::systemFontFallbacksHandle() const {
+    JniThreadBinding jniEnv(jvm);
+
     std::vector<FontSourceHandle> handles;
 
     int importance = 0;
     int weightHint = 400;
+
+    auto fontFallbackPath = [&](int _importance, int _weightHint) {
+
+        jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance,
+                                                               getFontFallbackFilePath, _importance,
+                                                               _weightHint);
+
+        auto resultStr = stringFromJString(jniEnv, returnStr);
+        jniEnv->DeleteLocalRef(returnStr);
+
+        return resultStr;
+    };
 
     std::string fallbackPath = fontFallbackPath(importance, weightHint);
 
     while (!fallbackPath.empty()) {
         handles.emplace_back(Url(fallbackPath));
 
-        fallbackPath = fontFallbackPath(importance++, weightHint);
+        fallbackPath = fontFallbackPath(++importance, weightHint);
     }
 
     return handles;
 }
 
-FontSourceHandle AndroidPlatform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
+FontSourceHandle AndroidPlatform::systemFont(const std::string& _name, const std::string& _weight,
+                                             const std::string& _face) const {
     std::string path = fontPath(_name, _weight, _face);
 
     if (path.empty()) { return {}; }
@@ -297,51 +275,50 @@ std::vector<char> AndroidPlatform::bytesFromFile(const Url& url) const {
     return data;
 }
 
-UrlRequestHandle AndroidPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
+bool AndroidPlatform::startUrlRequestImpl(const Url& _url, const UrlRequestHandle _request, UrlRequestId& _id) {
 
-    JniThreadBinding jniEnv(jvm);
-
-    // Get the current value of the request counter and add one, atomically.
-    UrlRequestHandle requestHandle = m_urlRequestCount++;
-
-    // If the requested URL does not use HTTP or HTTPS, retrieve it synchronously.
+    // If the requested URL does not use HTTP or HTTPS, retrieve it asynchronously.
     if (!_url.hasHttpScheme()) {
-        UrlResponse response;
-        response.content = bytesFromFile(_url);
-        if (_callback) {
-            _callback(response);
-        }
-        return requestHandle;
+        m_fileWorker.enqueue([=](){
+             UrlResponse response;
+             response.content = bytesFromFile(_url);
+             onUrlResponse(_request, std::move(response));
+        });
+        return false;
     }
 
-    // Store our callback, associated with the request handle.
-    {
-        std::lock_guard<std::mutex> lock(m_callbackMutex);
-        m_callbacks[requestHandle] = _callback;
-    }
+    // We can use UrlRequestHandle to cancel requests. MapController handles the
+    // mapping between UrlRequestHandle and request object
+    _id = _request;
 
-    jlong jRequestHandle = static_cast<jlong>(requestHandle);
+    m_jniWorker.enqueue([=](JNIEnv *jniEnv) {
+        jlong jRequestHandle = static_cast<jlong>(_request);
 
-    // Check that it's safe to convert the UrlRequestHandle to a jlong and back.
-    assert(requestHandle == static_cast<UrlRequestHandle>(jRequestHandle));
+        // Make sure no one changed UrlRequestHandle from being uint64_t,
+        // so that it's safe to convert to jlong and back.
+        static_assert(sizeof(jlong) == sizeof(UrlRequestHandle), "Who changed UrlRequestHandle?!");
+        static_assert(static_cast<jlong>(std::numeric_limits<uint64_t>::max()) ==
+                      static_cast<UrlRequestHandle>(std::numeric_limits<uint64_t>::max()),
+                      "Cannot convert jlong to UrlRequestHandle!");
 
-    jstring jUrl = jstringFromString(jniEnv, _url.string());
+        jstring jUrl = jstringFromString(jniEnv, _url.string());
 
-    // Call the MapController method to start the URL request.
-    jniEnv->CallVoidMethod(m_tangramInstance, startUrlRequestMID, jUrl, jRequestHandle);
+        // Call the MapController method to start the URL request.
+        jniEnv->CallVoidMethod(m_tangramInstance, startUrlRequestMID, jUrl, jRequestHandle);
+        jniEnv->DeleteLocalRef(jUrl);
+    });
 
-    return requestHandle;
+    return true;
 }
 
-void AndroidPlatform::cancelUrlRequest(UrlRequestHandle request) {
+void AndroidPlatform::cancelUrlRequestImpl(const UrlRequestId _id) {
 
-    JniThreadBinding jniEnv(jvm);
+    m_jniWorker.enqueue([=](JNIEnv *jniEnv) {
 
-    jlong jRequestHandle = static_cast<jlong>(request);
+        jlong jRequestHandle = static_cast<jlong>(_id);
 
-    jniEnv->CallVoidMethod(m_tangramInstance, cancelUrlRequestMID, jRequestHandle);
-
-    // We currently don't try to cancel requests for local files.
+        jniEnv->CallVoidMethod(m_tangramInstance, cancelUrlRequestMID, jRequestHandle);
+    });
 }
 
 void AndroidPlatform::onUrlComplete(JNIEnv* _jniEnv, jlong _jRequestHandle, jbyteArray _jBytes, jstring _jError) {
@@ -363,108 +340,20 @@ void AndroidPlatform::onUrlComplete(JNIEnv* _jniEnv, jlong _jRequestHandle, jbyt
         response.error = error.c_str();
     }
 
-    // Find the callback associated with the request.
-    UrlCallback callback;
-    {
-        std::lock_guard<std::mutex> lock(m_callbackMutex);
+    // Handle callbacks on worker thread to not block Java side.
+    // (The calling thread has probably also other work to do)
+    m_fileWorker.enqueue([this, _jRequestHandle, r = std::move(response)]() mutable {
         UrlRequestHandle requestHandle = static_cast<UrlRequestHandle>(_jRequestHandle);
-        auto it = m_callbacks.find(requestHandle);
-        if (it != m_callbacks.end()) {
-            callback = std::move(it->second);
-            m_callbacks.erase(it);
-        }
-    }
-    if (callback) {
-        callback(response);
-    }
+
+        onUrlResponse(requestHandle, std::move(r));
+    });
 }
 
 void setCurrentThreadPriority(int priority) {
-    int  tid = gettid();
-    setpriority(PRIO_PROCESS, tid, priority);
+    setpriority(PRIO_PROCESS, 0, priority);
 }
 
-void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult) {
 
-    JniThreadBinding jniEnv(jvm);
-
-    float position[2] = {0.0, 0.0};
-
-    jobject labelPickResultObject = nullptr;
-
-    if (labelPickResult) {
-        auto properties = labelPickResult->touchItem.properties;
-
-        position[0] = labelPickResult->touchItem.position[0];
-        position[1] = labelPickResult->touchItem.position[1];
-
-        jobject hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
-
-        for (const auto& item : properties->items()) {
-            jstring jkey = jstringFromString(jniEnv, item.key);
-            jstring jvalue = jstringFromString(jniEnv, properties->asString(item.value));
-            jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
-        }
-
-        labelPickResultObject = jniEnv->NewObject(labelPickResultClass, labelPickResultInitMID, labelPickResult->coordinates.longitude,
-            labelPickResult->coordinates.latitude, labelPickResult->type, hashmap);
-    }
-
-    jniEnv->CallVoidMethod(listener, onLabelPickMID, labelPickResultObject, position[0], position[1]);
-    jniEnv->DeleteGlobalRef(listener);
-}
-
-void markerPickCallback(jobject listener, jobject tangramInstance, const Tangram::MarkerPickResult* markerPickResult) {
-
-    JniThreadBinding jniEnv(jvm);
-    float position[2] = {0.0, 0.0};
-
-    jobject markerPickResultObject = nullptr;
-
-    if (markerPickResult) {
-        jobject marker = nullptr;
-
-        position[0] = markerPickResult->position[0];
-        position[1] = markerPickResult->position[1];
-
-        marker = jniEnv->CallObjectMethod(tangramInstance, markerByIDMID, static_cast<jlong>(markerPickResult->id));
-
-        if (marker) {
-            markerPickResultObject = jniEnv->NewObject(markerPickResultClass,
-                                                       markerPickResultInitMID, marker,
-                                                       markerPickResult->coordinates.longitude,
-                                                       markerPickResult->coordinates.latitude);
-        }
-    }
-
-    jniEnv->CallVoidMethod(listener, onMarkerPickMID, markerPickResultObject, position[0], position[1]);
-    jniEnv->DeleteGlobalRef(listener);
-    jniEnv->DeleteGlobalRef(tangramInstance);
-}
-
-void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* featurePickResult) {
-
-    JniThreadBinding jniEnv(jvm);
-
-    jobject hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
-    float position[2] = {0.0, 0.0};
-
-    if (featurePickResult) {
-        auto properties = featurePickResult->properties;
-
-        position[0] = featurePickResult->position[0];
-        position[1] = featurePickResult->position[1];
-
-        for (const auto& item : properties->items()) {
-            jstring jkey = jstringFromString(jniEnv, item.key);
-            jstring jvalue = jstringFromString(jniEnv, properties->asString(item.value));
-            jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
-        }
-    }
-
-    jniEnv->CallVoidMethod(listener, onFeaturePickMID, hashmap, position[0], position[1]);
-    jniEnv->DeleteGlobalRef(listener);
-}
 
 void initGLExtensions() {
     if (glExtensionsLoaded) {
@@ -480,23 +369,106 @@ void initGLExtensions() {
     glExtensionsLoaded = true;
 }
 
-void AndroidPlatform::sceneReadyCallback(SceneID id, const SceneError* sceneError) {
+AndroidMap::AndroidMap(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance)
+        : Map(std::make_unique<AndroidPlatform>(_jniEnv, _assetManager, _tangramInstance)) {
 
-    JniThreadBinding jniEnv(jvm);
+    m_tangramInstance = _jniEnv->NewWeakGlobalRef(_tangramInstance);
 
-    jobject jUpdateErrorStatus = 0;
+    setSceneReadyListener([this](Tangram::SceneID id, const Tangram::SceneError* sceneError) {
+        JniThreadBinding jniEnv(jvm);
 
-    if (sceneError) {
-        jstring jUpdateStatusPath = jstringFromString(jniEnv, sceneError->update.path);
-        jstring jUpdateStatusValue = jstringFromString(jniEnv, sceneError->update.value);
-        jint jError = (jint) sceneError->error;
-        jUpdateErrorStatus = jniEnv->NewObject(sceneErrorClass,
-                                               sceneErrorInitMID,
-                                               jUpdateStatusPath, jUpdateStatusValue,
-                                               jError);
-    }
+        jint jErrorType = -1;
+        jstring jUpdatePath = nullptr;
+        jstring jUpdateValue = nullptr;
 
-    jniEnv->CallVoidMethod(m_tangramInstance, sceneReadyCallbackMID, id, jUpdateErrorStatus);
+        if (sceneError) {
+            jUpdatePath = jstringFromString(jniEnv, sceneError->update.path);
+            jUpdateValue = jstringFromString(jniEnv, sceneError->update.value);
+            jErrorType = (jint)sceneError->error;
+        }
+
+        jniEnv->CallVoidMethod(m_tangramInstance, sceneReadyCallbackMID, id, jErrorType, jUpdatePath, jUpdateValue);
+    });
+
+    setCameraAnimationListener([this](bool finished) {
+        JniThreadBinding jniEnv(jvm);
+
+        jniEnv->CallVoidMethod(m_tangramInstance, cameraAnimationCallbackMID, finished);
+    });
+}
+
+void AndroidMap::pickFeature(float posX, float posY) {
+
+    pickFeatureAt(posX, posY, [this](const auto* featurePickResult) {
+        JniThreadBinding jniEnv(jvm);
+
+        float x = 0.f, y = 0.f;
+        jobject hashmap = nullptr;
+
+        if (featurePickResult) {
+            x = featurePickResult->position[0];
+            y = featurePickResult->position[1];
+
+            hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
+            const auto& properties = featurePickResult->properties;
+            for (const auto& item : properties->items()) {
+                jstring jkey = jstringFromString(jniEnv, item.key);
+                jstring jvalue = jstringFromString(jniEnv, properties->asString(item.value));
+                jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
+            }
+        }
+        jniEnv->CallVoidMethod(m_tangramInstance, featurePickCallbackMID, hashmap, x, y);
+    });
+}
+
+void AndroidMap::pickLabel(float posX, float posY) {
+
+    pickLabelAt(posX, posY, [this](const auto* labelPickResult){
+        JniThreadBinding jniEnv(jvm);
+
+        float x = 0.f, y = 0.f;
+        double lng = 0., lat = 0.;
+        int type = 0;
+        jobject hashmap = nullptr;
+
+        if (labelPickResult) {
+            x = labelPickResult->touchItem.position[0];
+            y = labelPickResult->touchItem.position[1];
+            lng = labelPickResult->coordinates.longitude;
+            lat = labelPickResult->coordinates.latitude;
+            type = labelPickResult->type;
+
+            hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
+            const auto& properties = labelPickResult->touchItem.properties;
+            for (const auto& item : properties->items()) {
+                jstring jkey = jstringFromString(jniEnv, item.key);
+                jstring jvalue = jstringFromString(jniEnv, properties->asString(item.value));
+                jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
+            }
+        }
+        jniEnv->CallVoidMethod(m_tangramInstance, labelPickCallbackMID, hashmap, x, y, lng, lat, type);
+    });
+}
+
+void AndroidMap::pickMarker(float posX, float posY) {
+
+    pickMarkerAt(posX, posY, [this](const auto* markerPickResult) {
+        JniThreadBinding jniEnv(jvm);
+
+        float x = 0.f, y = 0.f;
+        double lng = 0., lat = 0.;
+        long markerID = 0;
+
+        if (markerPickResult) {
+            x = markerPickResult->position[0];
+            y = markerPickResult->position[1];
+            lng = markerPickResult->coordinates.longitude;
+            lat = markerPickResult->coordinates.latitude;
+            markerID = static_cast<long>(markerPickResult->id);
+        }
+
+        jniEnv->CallVoidMethod(m_tangramInstance, markerPickCallbackMID, markerID, x, y, lng, lat);
+    });
 }
 
 } // namespace Tangram

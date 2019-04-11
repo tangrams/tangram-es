@@ -21,9 +21,9 @@ class TileWorker : public TileTaskQueue {
 
 public:
 
-    TileWorker(std::shared_ptr<Platform> _platform, int _numWorker);
+    TileWorker(Platform& _platform, int _numWorker);
 
-    ~TileWorker();
+    virtual ~TileWorker();
 
     virtual void enqueue(std::shared_ptr<TileTask> task) override;
 
@@ -31,7 +31,11 @@ public:
 
     bool isRunning() const { return m_running; }
 
-    void setScene(std::shared_ptr<Scene>& _scene);
+    /// Set Scene and initialize TileBuilders
+    void setScene(Scene& _scene);
+
+    /// Start jobs when scene is complete.
+    void startJobs();
 
 private:
 
@@ -44,6 +48,9 @@ private:
 
     bool m_running;
 
+    /// Set true by startJobs()
+    bool m_sceneComplete = false;
+
     std::vector<std::unique_ptr<Worker>> m_workers;
 
     std::condition_variable m_condition;
@@ -51,7 +58,7 @@ private:
     std::mutex m_mutex;
     std::vector<std::shared_ptr<TileTask>> m_queue;
 
-    std::shared_ptr<Platform> m_platform;
+    Platform& m_platform;
 };
 
 }

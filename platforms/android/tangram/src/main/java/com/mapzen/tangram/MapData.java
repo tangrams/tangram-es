@@ -16,9 +16,10 @@ import java.util.Map;
  */
 public class MapData {
 
-    String name;
-    long pointer = 0;
-    MapController map;
+    final String name;
+
+    private MapController mapController;
+    long pointer;
 
     /**
      * For package-internal use only; create a new {@code MapData}
@@ -29,18 +30,43 @@ public class MapData {
     MapData(final String name, final long pointer, @NonNull final MapController map) {
         this.name = name;
         this.pointer = pointer;
-        this.map = map;
+        this.mapController = map;
     }
 
     /**
-     * Add a geometry feature to this data collection
-     * @param geometry The feature to add
+     * Assign a list of features to this data collection. This replaces any previously assigned feature lists or GeoJSON data.
+     * @param features The features to assign
      */
-    protected void addFeature(@NonNull final Geometry geometry) {
-        map.addFeature(pointer,
-                geometry.getCoordinateArray(),
-                geometry.getRingArray(),
-                geometry.getPropertyArray());
+    public void setFeatures(@NonNull final List<Geometry> features) {
+        final MapController map = mapController;
+        if (map == null) {
+            return;
+        }
+        synchronized (this) {
+            map.clearTileSource(pointer);
+            for (Geometry feature : features) {
+                nativeAddFeature(pointer,
+                        feature.getCoordinateArray(),
+                        feature.getRingArray(),
+                        feature.getPropertyArray());
+            }
+            nativeGenerateTiles(pointer);
+        }
+    }
+
+    /**
+     * Assign features described in a GeoJSON string to this collection. This will replace any previously assigned feature lists or GeoJSON data.
+     * @param data A string containing a <a href="http://geojson.org/">GeoJSON</a> FeatureCollection
+     */
+    public void setGeoJson(final String data) {
+        final MapController map = mapController;
+        if (map != null) {
+            synchronized (this) {
+                map.clearTileSource(pointer);
+                nativeAddGeoJson(pointer, data);
+                nativeGenerateTiles(pointer);
+            }
+        }
     }
 
     /**
@@ -57,72 +83,27 @@ public class MapData {
      * on every {@code MapData} associated with a map when its {@code MapController} is destroyed.
      */
     public void remove() {
+        final MapController map = mapController;
+        if (map == null) {
+            return;
+        }
         map.removeDataLayer(this);
+
+        mapController = null;
         pointer = 0;
-        map = null;
-    }
-
-    /**
-     * Add a point feature to this collection.
-     * @param point The coordinates of the feature.
-     * @param properties The properties of the feature, used for filtering and styling according to
-     * the scene file used by the map; may be null.
-     * @return This object, for chaining.
-     */
-    @NonNull
-    public MapData addPoint(@NonNull final LngLat point, @Nullable final Map<String, String> properties) {
-        addFeature(new Point(point, properties));
-        return this;
-    }
-
-    /**
-     * Add a polyline feature to this collection.
-     * @param polyline A list of coordinates that define the line segments of the feature.
-     * @param properties The properties of the feature, used for filtering and styling according to
-     * the scene file used by the map; may be null.
-     * @return This object, for chaining.
-     */
-    @NonNull
-    public MapData addPolyline(@NonNull final List<LngLat> polyline, @Nullable final Map<String, String> properties) {
-        addFeature(new Polyline(polyline, properties));
-        return this;
-    }
-
-    /**
-     * Add a polygon feature to this collection.
-     * @param polygon A list of rings describing the shape of the feature. Each
-     * ring is a list of coordinates in which the first point is the same as the last point. The
-     * first ring is taken as the "exterior" of the polygon and rings with opposite winding are
-     * considered "holes".
-     * @param properties The properties of the feature, used for filtering and styling according to
-     * the scene file used by the map; may be null.
-     * @return This object, for chaining.
-     */
-    @NonNull
-    public MapData addPolygon(@NonNull final List<List<LngLat>> polygon, @Nullable final Map<String, String> properties) {
-        addFeature(new Polygon(polygon, properties));
-        return this;
-    }
-
-    /**
-     * Add features described in a GeoJSON string to this collection.
-     * @param data A string containing a <a href="http://geojson.org/">GeoJSON</a> FeatureCollection
-     * @return This object, for chaining.
-     */
-    @NonNull
-    public MapData addGeoJson(final String data) {
-        map.addGeoJson(pointer, data);
-        return this;
     }
 
     /**
      * Remove all features from this collection.
-     * @return This object, for chaining.
      */
-    @NonNull
-    public MapData clear() {
-        map.clearTileSource(pointer);
-        return this;
+    public void clear() {
+        final MapController map = mapController;
+        if (map != null) {
+            map.clearTileSource(pointer);
+        }
     }
 
+    private native void nativeAddFeature(long sourcePtr, double[] coordinates, int[] rings, String[] properties);
+    private native void nativeAddGeoJson(long sourcePtr, String geoJson);
+    private native void nativeGenerateTiles(long sourcePtr);
 }

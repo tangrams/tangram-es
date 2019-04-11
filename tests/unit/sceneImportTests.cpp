@@ -2,6 +2,7 @@
 
 #include "mockPlatform.h"
 #include "scene/importer.h"
+#include "scene/scene.h"
 
 #include "yaml-cpp/yaml.h"
 
@@ -11,91 +12,89 @@
 using namespace Tangram;
 using namespace YAML;
 
-std::shared_ptr<MockPlatform> getPlatformWithImportFiles() {
 
-    auto platform = std::make_shared<MockPlatform>();
+struct ImportMockPlatform : public MockPlatform {
+    ImportMockPlatform() {
+        putMockUrlContents("/root/a.yaml", R"END(
+            import: b.yaml
+            value: a
+            has_a: true
+        )END");
 
-    platform->putMockUrlContents("/root/a.yaml", R"END(
-        import: b.yaml
-        value: a
-        has_a: true
-    )END");
+        putMockUrlContents("/root/b.yaml", R"END(
+            value: b
+            has_b: true
+        )END");
 
-    platform->putMockUrlContents("/root/b.yaml", R"END(
-        value: b
-        has_b: true
-    )END");
+        putMockUrlContents("/root/c.yaml", R"END(
+            import: [a.yaml, b.yaml]
+            value: c
+            has_c: true
+        )END");
 
-    platform->putMockUrlContents("/root/c.yaml", R"END(
-        import: [a.yaml, b.yaml]
-        value: c
-        has_c: true
-    )END");
+        putMockUrlContents("/root/cycle_simple.yaml", R"END(
+            import: cycle_simple.yaml
+            value: cyclic
+        )END");
 
-    platform->putMockUrlContents("/root/cycle_simple.yaml", R"END(
-        import: cycle_simple.yaml
-        value: cyclic
-    )END");
+        putMockUrlContents("/root/cycle_tricky.yaml", R"END(
+            import: imports/cycle_tricky.yaml
+            has_cycle_tricky: true
+        )END");
 
-    platform->putMockUrlContents("/root/cycle_tricky.yaml", R"END(
-        import: imports/cycle_tricky.yaml
-        has_cycle_tricky: true
-    )END");
+        putMockUrlContents("/root/imports/cycle_tricky.yaml", R"END(
+            import: ../cycle_tricky.yaml
+            has_imports_cycle_tricky: true
+        )END");
 
-    platform->putMockUrlContents("/root/imports/cycle_tricky.yaml", R"END(
-        import: ../cycle_tricky.yaml
-        has_imports_cycle_tricky: true
-    )END");
+        putMockUrlContents("/root/urls.yaml", R"END(
+            import: imports/urls.yaml
+            fonts: { fontA: { url: https://host/font.woff } }
+            sources: { sourceA: { url: 'https://host/tiles/{z}/{y}/{x}.mvt' } }
+            textures:
+                tex1: { url: "path/to/texture.png" }
+                tex2: { url: "../up_a_directory.png" }
+            styles:
+                styleA:
+                    texture: "path/to/texture.png"
+                    shaders:
+                        uniforms:
+                            u_tex1: "/at_root.png"
+                            u_tex2: ["path/to/texture.png", tex2]
+                            u_tex3: tex3
+                            u_bool: true
+                            u_float: 0.25
+        )END");
 
-    platform->putMockUrlContents("/root/urls.yaml", R"END(
-        import: imports/urls.yaml
-        fonts: { fontA: { url: https://host/font.woff } }
-        sources: { sourceA: { url: 'https://host/tiles/{z}/{y}/{x}.mvt' } }
-        textures:
-            tex1: { url: "path/to/texture.png" }
-            tex2: { url: "../up_a_directory.png" }
-        styles:
-            styleA:
-                texture: "path/to/texture.png"
-                shaders:
-                    uniforms:
-                        u_tex1: "/at_root.png"
-                        u_tex2: ["path/to/texture.png", tex2]
-                        u_tex3: tex3
-                        u_bool: true
-                        u_float: 0.25
-    )END");
+        putMockUrlContents("/root/imports/urls.yaml", R"END(
+            fonts: { fontB: [ { url: fonts/0.ttf }, { url: fonts/1.ttf } ] }
+            sources: { sourceB: { url: "tiles/{z}/{y}/{x}.mvt" } }
+            textures:
+                tex3: { url: "in_imports.png" }
+                tex4: { url: "../not_in_imports.png" }
+                tex5: { url: "/at_root.png" }
+            styles:
+                styleB:
+                    texture: "in_imports.png"
+                    shaders:
+                        uniforms:
+                            u_tex1: "in_imports.png"
+                            u_tex2: tex2
+        )END");
 
-    platform->putMockUrlContents("/root/imports/urls.yaml", R"END(
-        fonts: { fontB: [ { url: fonts/0.ttf }, { url: fonts/1.ttf } ] }
-        sources: { sourceB: { url: "tiles/{z}/{y}/{x}.mvt" } }
-        textures:
-            tex3: { url: "in_imports.png" }
-            tex4: { url: "../not_in_imports.png" }
-            tex5: { url: "/at_root.png" }
-        styles:
-            styleB:
-                texture: "in_imports.png"
-                shaders:
-                    uniforms:
-                        u_tex1: "in_imports.png"
-                        u_tex2: tex2
-    )END");
-
-    platform->putMockUrlContents("/root/globals.yaml", R"END(
-        fonts: { aFont: { url: global.fontUrl } }
-        sources: { aSource: { url: global.sourceUrl } }
-        textures: { aTexture: { url: global.textureUrl } }
-        styles: { aStyle: { texture: global.textureUrl, shaders: { uniforms: { aUniform: global.textureUrl } } } }
-    )END");
-
-    return platform;
-}
+        putMockUrlContents("/root/globals.yaml", R"END(
+            fonts: { aFont: { url: global.fontUrl } }
+            sources: { aSource: { url: global.sourceUrl } }
+            textures: { aTexture: { url: global.textureUrl } }
+            styles: { aStyle: { texture: global.textureUrl, shaders: { uniforms: { aUniform: global.textureUrl } } } }
+        )END");
+    }
+};
 
 TEST_CASE("Imported scenes are merged with the parent scene", "[import][core]") {
-    std::shared_ptr<Platform> platform = getPlatformWithImportFiles();
-    Importer importer(std::make_shared<Scene>(platform, Url("/root/a.yaml")));
-    auto root = importer.applySceneImports(platform);
+    ImportMockPlatform platform;
+    Importer importer;
+    auto root = importer.loadSceneData(platform, Url("/root/a.yaml"));
 
     CHECK(root["value"].Scalar() == "a");
     CHECK(root["has_a"].Scalar() == "true");
@@ -103,9 +102,9 @@ TEST_CASE("Imported scenes are merged with the parent scene", "[import][core]") 
 }
 
 TEST_CASE("Nested imports are merged recursively", "[import][core]") {
-    std::shared_ptr<Platform> platform = getPlatformWithImportFiles();
-    Importer importer(std::make_shared<Scene>(platform, Url("/root/c.yaml")));
-    auto root = importer.applySceneImports(platform);
+    ImportMockPlatform platform;
+    Importer importer;
+    auto root = importer.loadSceneData(platform, Url("/root/c.yaml"));
 
     CHECK(root["value"].Scalar() == "c");
     CHECK(root["has_a"].Scalar() == "true");
@@ -114,23 +113,22 @@ TEST_CASE("Nested imports are merged recursively", "[import][core]") {
 }
 
 TEST_CASE("Imports that would start a cycle are ignored", "[import][core]") {
-    std::shared_ptr<Platform> platform = getPlatformWithImportFiles();
-    Importer importer(std::make_shared<Scene>(platform, Url("/root/cycle_simple.yaml")));
-
+    ImportMockPlatform platform;
+    Importer importer;
     // If import cycles aren't checked for and stopped, this call won't return.
-    auto root = importer.applySceneImports(platform);
+    auto root = importer.loadSceneData(platform, Url("/root/cycle_simple.yaml"));
 
     // Check that the scene values were applied.
     CHECK(root["value"].Scalar() == "cyclic");
 }
 
 TEST_CASE("Tricky import cycles are ignored", "[import][core]") {
-    std::shared_ptr<Platform> platform = getPlatformWithImportFiles();
-    Importer importer(std::make_shared<Scene>(platform, Url("/root/cycle_tricky.yaml")));
+    ImportMockPlatform platform;
+    Importer importer;
 
     // The nested import should resolve to the same path as the original file,
     // and so the importer should break the cycle.
-    auto root = importer.applySceneImports(platform);
+    auto root = importer.loadSceneData(platform, Url("/root/cycle_tricky.yaml"));
 
     // Check that the imported scene values were merged.
     CHECK(root["has_cycle_tricky"].Scalar() == "true");
@@ -138,9 +136,9 @@ TEST_CASE("Tricky import cycles are ignored", "[import][core]") {
 }
 
 TEST_CASE("Scene URLs are resolved against their parent during import", "[import][core]") {
-    std::shared_ptr<Platform> platform = getPlatformWithImportFiles();
-    Importer importer(std::make_shared<Scene>(platform, Url("/root/urls.yaml")));
-    auto root = importer.applySceneImports(platform);
+    ImportMockPlatform platform;
+    Importer importer;
+    auto root = importer.loadSceneData(platform, Url("/root/urls.yaml"));
 
     // Check that global texture URLs are resolved correctly.
 
@@ -193,9 +191,9 @@ TEST_CASE("Scene URLs are resolved against their parent during import", "[import
 }
 
 TEST_CASE("References to globals are not treated like URLs during importing", "[import][core]") {
-    std::shared_ptr<Platform> platform = getPlatformWithImportFiles();
-    Importer importer(std::make_shared<Scene>(platform, Url("/root/globals.yaml")));
-    auto root = importer.applySceneImports(platform);
+    ImportMockPlatform platform;
+    Importer importer;
+    auto root = importer.loadSceneData(platform, Url("/root/globals.yaml"));
 
     // Check that font global references are preserved.
     CHECK(root["fonts"]["aFont"]["url"].Scalar() == "global.fontUrl");
@@ -210,23 +208,23 @@ TEST_CASE("References to globals are not treated like URLs during importing", "[
 }
 
 TEST_CASE("Map overwrites sequence", "[import][core]") {
-    std::shared_ptr<MockPlatform> platform = getPlatformWithImportFiles();
-    platform->putMockUrlContents("/base.yaml", R"END(
+    ImportMockPlatform platform;
+    platform.putMockUrlContents("/base.yaml", R"END(
         import: [roads.yaml, roads-labels.yaml]
     )END");
 
-    platform->putMockUrlContents("/roads.yaml", R"END(
+    platform.putMockUrlContents("/roads.yaml", R"END(
             filter:
                 - kind: highway
                 - $zoom: { min: 8 }
     )END");
 
-    platform->putMockUrlContents("/roads-labels.yaml", R"END(
+    platform.putMockUrlContents("/roads-labels.yaml", R"END(
                 filter: { kind: highway }
     )END");
 
-    Importer importer(std::make_shared<Scene>(platform, Url("/base.yaml")));
-    auto root = importer.applySceneImports(platform);
+    Importer importer;
+    auto root = importer.loadSceneData(platform, Url("/base.yaml"));
 
     CHECK(root["filter"].IsMap());
     CHECK(root["filter"].size() == 1);
@@ -234,54 +232,53 @@ TEST_CASE("Map overwrites sequence", "[import][core]") {
 }
 
 TEST_CASE("Sequence overwrites map", "[import][core]") {
-    std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
-    platform->putMockUrlContents("/base.yaml", R"END(
+    MockPlatform platform;
+    platform.putMockUrlContents("/base.yaml", R"END(
         import: [map.yaml, sequence.yaml]
     )END");
-    platform->putMockUrlContents("/map.yaml", R"END(
+    platform.putMockUrlContents("/map.yaml", R"END(
             a: { b: c }
     )END");
 
-    platform->putMockUrlContents("/sequence.yaml", R"END(
+    platform.putMockUrlContents("/sequence.yaml", R"END(
             a: [ b, c]
     )END");
 
-    Importer importer(std::make_shared<Scene>(platform, Url("/base.yaml")));
-    auto root = importer.applySceneImports(platform);
+    Importer importer;
+    auto root = importer.loadSceneData(platform, Url("/base.yaml"));
 
     CHECK(root["a"].IsSequence());
     CHECK(root["a"].size() == 2);
 }
 
 TEST_CASE("Scalar and null overwrite correctly", "[import][core]") {
-    std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
-    platform->putMockUrlContents("/base.yaml", R"END(
+    MockPlatform platform;
+    platform.putMockUrlContents("/base.yaml", R"END(
         import: [scalar.yaml, null.yaml]
         scalar_at_end: scalar
         null_at_end: null
     )END");
-    platform->putMockUrlContents("/scalar.yaml", R"END(
+    platform.putMockUrlContents("/scalar.yaml", R"END(
             null_at_end: scalar
     )END");
 
-    platform->putMockUrlContents("/null.yaml", R"END(
+    platform.putMockUrlContents("/null.yaml", R"END(
             scalar_at_end: null
     )END");
 
-    Importer importer(std::make_shared<Scene>(platform, Url("/base.yaml")));
-    auto root = importer.applySceneImports(platform);
+    Importer importer;
+    auto root = importer.loadSceneData(platform, Url("/base.yaml"));
 
     CHECK(root["scalar_at_end"].Scalar() == "scalar");
     CHECK(root["null_at_end"].IsNull());
 }
 
 TEST_CASE("Scene load from source string", "[import][core]") {
-    std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
-    std::unordered_map<Url, std::string> testScenes;
-    platform->putMockUrlContents("/resource_root/scalar.yaml", R"END(
+    MockPlatform platform;
+    platform.putMockUrlContents("/resource_root/scalar.yaml", R"END(
             null_at_end: scalar
     )END");
-    platform->putMockUrlContents("/resource_root/null.yaml", R"END(
+    platform.putMockUrlContents("/resource_root/null.yaml", R"END(
             scalar_at_end: null
     )END");
 
@@ -291,12 +288,31 @@ TEST_CASE("Scene load from source string", "[import][core]") {
         null_at_end: null
     )END";
 
-    auto scene = std::make_shared<Scene>(platform, base_yaml, "/resource_root/");
-
-    Importer importer(scene);
-    
-    auto root = importer.applySceneImports(platform);
+    Importer importer;
+    auto root = importer.loadSceneData(platform, Url("/resource_root/"), base_yaml);
 
     CHECK(root["scalar_at_end"].Scalar() == "scalar");
     CHECK(root["null_at_end"].IsNull());
+}
+
+TEST_CASE("Scenes imported more than once are not mutated", "[import][core]") {
+    MockPlatform platform;
+    platform.putMockUrlContents("/duplicate_imports_a.yaml", R"END(
+        key: value_a
+    )END");
+
+    platform.putMockUrlContents("/duplicate_imports_b.yaml", R"END(
+        import: duplicate_imports_a.yaml
+        key: value_b
+    )END");
+
+    platform.putMockUrlContents("/duplicate_imports.yaml", R"END(
+        import: [duplicate_imports_b.yaml, duplicate_imports_a.yaml]
+    )END");
+
+
+    Importer importer;
+    auto root = importer.loadSceneData(platform, Url("/duplicate_imports.yaml"));
+
+    CHECK(root["key"].Scalar() == "value_a");
 }

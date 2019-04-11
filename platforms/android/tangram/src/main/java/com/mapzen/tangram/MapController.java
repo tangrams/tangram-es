@@ -1,41 +1,43 @@
 package com.mapzen.tangram;
 
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
-import android.opengl.GLSurfaceView;
-import android.opengl.GLSurfaceView.Renderer;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
-import android.support.annotation.IntDef;
 import android.support.annotation.IntRange;
 import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.ArrayMap;
 import android.util.DisplayMetrics;
+import android.util.Log;
+import android.util.LongSparseArray;
+import android.view.MotionEvent;
+import android.view.View;
 
 import com.mapzen.tangram.TouchInput.Gestures;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Response;
+import com.mapzen.tangram.viewholder.GLViewHolder;
+import com.mapzen.tangram.networking.DefaultHttpHandler;
+import com.mapzen.tangram.networking.HttpHandler;
 
 import java.io.IOException;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
 
 /**
  * {@code MapController} is the main class for interacting with a Tangram map.
  */
-public class MapController implements Renderer {
+public class MapController {
 
+
+    public boolean handleGesture(View mapView, MotionEvent ev) {
+        return touchInput.onTouch(mapView, ev);
+    }
 
     /**
      * Options for interpolating map parameters
@@ -85,62 +87,10 @@ public class MapController implements Renderer {
         SELECTION_BUFFER,
     }
 
-    /**
-     * Interface for a callback to receive information about features picked from the map
-     * Triggered after a call of {@link #pickFeature(float, float)}
-     * Listener should be set with {@link #setFeaturePickListener(FeaturePickListener)}
-     * The callback will be run on the main (UI) thread.
-     */
-    @Keep
-    public interface FeaturePickListener {
-        /**
-         * Receive information about features found in a call to {@link #pickFeature(float, float)}
-         * @param properties A mapping of string keys to string or number values
-         * @param positionX The horizontal screen coordinate of the picked location
-         * @param positionY The vertical screen coordinate of the picked location
-         */
-        void onFeaturePick(final Map<String, String> properties, final float positionX, final float positionY);
-    }
-    /**
-     * Interface for a callback to receive information about labels picked from the map
-     * Triggered after a call of {@link #pickLabel(float, float)}
-     * Listener should be set with {@link #setLabelPickListener(LabelPickListener)}
-     * The callback will be run on the main (UI) thread.
-     */
-    @Keep
-    public interface LabelPickListener {
-        /**
-         * Receive information about labels found in a call to {@link #pickLabel(float, float)}
-         * @param labelPickResult The {@link LabelPickResult} that has been selected
-         * @param positionX The horizontal screen coordinate of the picked location
-         * @param positionY The vertical screen coordinate of the picked location
-         */
-        void onLabelPick(final LabelPickResult labelPickResult, final float positionX, final float positionY);
-    }
-
-    /**
-     * Interface for a callback to receive the picked {@link Marker}
-     * Triggered after a call of {@link #pickMarker(float, float)}
-     * Listener should be set with {@link #setMarkerPickListener(MarkerPickListener)}
-     * The callback will be run on the main (UI) thread.
-     */
-    @Keep
-    public interface MarkerPickListener {
-        /**
-         * Receive information about marker found in a call to {@link #pickMarker(float, float)}
-         * @param markerPickResult The {@link MarkerPickResult} the marker that has been selected
-         * @param positionX The horizontal screen coordinate of the picked location
-         * @param positionY The vertical screen coordinate of the picked location
-         */
-        void onMarkerPick(final MarkerPickResult markerPickResult, final float positionX, final float positionY);
-    }
-
-    public interface ViewCompleteListener {
-        /**
-         * Called on the UI thread at the end of whenever the view is stationary, fully loaded, and
-         * no animations are running.
-         */
-        void onViewComplete();
+    enum MapRegionChangeState {
+        IDLE,
+        JUMPING,
+        ANIMATING,
     }
 
     /**
@@ -161,12 +111,17 @@ public class MapController implements Renderer {
         void onSceneReady(final int sceneId, final SceneError sceneError);
     }
 
+    public interface CameraAnimationCallback {
+        void onFinish();
+        void onCancel();
+    }
+
     /**
      * Callback for {@link #captureFrame(FrameCaptureCallback, boolean) }
      */
     public interface FrameCaptureCallback {
         /**
-         * Called on the render-thread when a frame was captured.
+         * Called on the ui-thread when a frame was captured.
          */
         void onCaptured(@NonNull final Bitmap bitmap);
     }
@@ -177,118 +132,135 @@ public class MapController implements Renderer {
      *                            no ease- or label-animation is running.
      */
     public void captureFrame(@NonNull final FrameCaptureCallback callback, final boolean waitForCompleteView) {
-        frameCaptureCallback = callback;
-        frameCaptureAwaitCompleteView = waitForCompleteView;
+        mapRenderer.captureFrame(callback, waitForCompleteView);
         requestRender();
     }
 
-    @NonNull
-    private Bitmap capture() {
-        final int w = mapView.getWidth();
-        final int h = mapView.getHeight();
-
-        final int b[] = new int[w * h];
-        final int bt[] = new int[w * h];
-
-        nativeCaptureSnapshot(mapPointer, b);
-
-        for (int i = 0; i < h; i++) {
-            for (int j = 0; j < w; j++) {
-                final int pix = b[i * w + j];
-                final int pb = (pix >> 16) & 0xff;
-                final int pr = (pix << 16) & 0x00ff0000;
-                final int pix1 = (pix & 0xff00ff00) | pr | pb;
-                bt[(h - i - 1) * w + j] = pix1;
-            }
-        }
-
-        return Bitmap.createBitmap(bt, w, h, Bitmap.Config.ARGB_8888);
-    }
-
     /**
-     * Construct a MapController using a custom scene file
-     * @param view GLSurfaceView for the map display; input events from this
-     * view will be handled by the MapController's TouchInput gesture detector.
-     * It also provides the Context in which the map will function; the asset
+     * Construct a MapController
+     * @param context The application Context in which the map will function; the asset
      * bundle for this activity must contain all the local files that the map
      * will need.
      */
-    protected MapController(@NonNull final GLSurfaceView view) {
+    protected MapController(@NonNull Context context) {
         if (Build.VERSION.SDK_INT > 18) {
-            markers = new ArrayMap<>();
             clientTileSources = new ArrayMap<>();
-        }
-        else {
-            markers = new HashMap<>();
+        } else {
             clientTileSources = new HashMap<>();
         }
+        markers = new LongSparseArray<>();
 
-        // Set up MapView
-        mapView = view;
-        view.setRenderer(this);
-        view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-        view.setPreserveEGLContextOnPause(true);
-
-        // Set a default HTTPHandler
-        httpHandler = new HttpHandler();
-
-        touchInput = new TouchInput(view.getContext());
-        view.setOnTouchListener(touchInput);
-
-        setPanResponder(null);
-        setScaleResponder(null);
-        setRotateResponder(null);
-        setShoveResponder(null);
-
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.ROTATE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.ROTATE, Gestures.SHOVE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.SCALE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.PAN, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.LONG_PRESS, false);
-
-        uiThreadHandler = new Handler(view.getContext().getMainLooper());
-    }
-
-    /**
-     * Initialize native Tangram component. This must be called before any use
-     * of the MapController!
-     * This function is separated from MapController constructor to allow
-     * initialization and loading of the Scene on a background thread.
-     */
-    void init() {
         // Get configuration info from application
-        displayMetrics = mapView.getContext().getResources().getDisplayMetrics();
-        assetManager = mapView.getContext().getAssets();
-
-        fontFileParser = new FontFileParser();
+        displayMetrics = context.getResources().getDisplayMetrics();
+        assetManager = context.getAssets();
 
         // Parse font file description
-        fontFileParser.parse();
+        //FontConfig.init();
 
-        mapPointer = nativeInit(this, assetManager);
+        mapPointer = nativeInit(assetManager);
         if (mapPointer <= 0) {
             throw new RuntimeException("Unable to create a native Map object! There may be insufficient memory available.");
         }
+        nativeSetPixelScale(mapPointer, displayMetrics.density);
     }
 
-    void dispose() {
-        // Disposing native resources involves GL calls, so we need to run on the GL thread.
-        queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                // Dispose each data sources by first removing it from the Map values and then
-                // calling remove(), so that we don't improperly modify the Map while iterating.
-                for (final Iterator<MapData> it = clientTileSources.values().iterator(); it.hasNext();) {
-                    final MapData mapData = it.next();
-                    it.remove();
-                    mapData.remove();
-                }
-                nativeDispose(mapPointer);
-                mapPointer = 0;
-                clientTileSources.clear();
-                markers.clear();
-            }
-        });
+    /**
+     * Responsible to configure {@link MapController} configuration on the ui thread.
+     * Must be called from the ui thread post instantiation of {@link MapController}
+     * @param viewHolder GLViewHolder for the map display
+     * @param handler {@link HttpHandler} to initialize httpHandler for network handling
+     */
+    void UIThreadInit(@NonNull final GLViewHolder viewHolder, @Nullable final HttpHandler handler) {
+
+        // Use the DefaultHttpHandler if none is provided
+        if (handler == null) {
+            httpHandler = new DefaultHttpHandler();
+        } else {
+            httpHandler = handler;
+        }
+
+        Context context = viewHolder.getView().getContext();
+
+        uiThreadHandler = new Handler(context.getMainLooper());
+        mapRenderer = new MapRenderer(this, uiThreadHandler);
+
+        // Set up MapView
+        this.viewHolder = viewHolder;
+        viewHolder.setRenderer(mapRenderer);
+        isGLRendererSet = true;
+        viewHolder.setRenderMode(GLViewHolder.RenderMode.RENDER_WHEN_DIRTY);
+
+        touchInput = new TouchInput(context);
+
+        touchInput.setPanResponder(getPanResponder());
+        touchInput.setScaleResponder(getScaleResponder());
+        touchInput.setRotateResponder(getRotateResponder());
+        touchInput.setShoveResponder(getShoveResponder());
+
+        touchInput.setSimultaneousDetectionDisabled(Gestures.SHOVE, Gestures.ROTATE);
+        touchInput.setSimultaneousDetectionDisabled(Gestures.ROTATE, Gestures.SHOVE);
+        touchInput.setSimultaneousDetectionDisabled(Gestures.SHOVE, Gestures.SCALE);
+        touchInput.setSimultaneousDetectionDisabled(Gestures.SHOVE, Gestures.PAN);
+        touchInput.setSimultaneousDetectionDisabled(Gestures.SCALE, Gestures.LONG_PRESS);
+    }
+
+    /**
+     * Responsible to dispose internals of MapController during Map teardown.
+     * If client code extends MapController and overrides this method, then it must call super.dispose()
+     */
+    protected synchronized void dispose() {
+        if (mapPointer == 0) { return; }
+
+        Log.e("TANGRAM", ">>> dispose");
+        nativeShutdown(mapPointer);
+        Log.e("TANGRAM", "<<< http requests: " + httpRequestHandles.size());
+
+        for (MapData mapData : clientTileSources.values()) {
+            mapData.remove();
+        }
+
+        Log.e("TANGRAM", "<<< 1");
+        clientTileSources.clear();
+        Log.e("TANGRAM", "<<< 2");
+        markers.clear();
+        Log.e("TANGRAM", "<<< 3");
+
+        // Dispose all listener and callbacks associated with mapController
+        // This will help prevent leaks of references from the client code, possibly used in these
+        // listener/callbacks
+        touchInput = null;
+        mapChangeListener = null;
+        featurePickListener = null;
+        sceneLoadListener = null;
+        labelPickListener = null;
+        markerPickListener = null;
+        cameraAnimationCallback = null;
+        frameCaptureCallback = null;
+
+        // Prevent any calls to native functions - except dispose.
+        final long pointer = mapPointer;
+        mapPointer = 0;
+
+        // NOTE: It is possible for the MapView held by a ViewGroup to be removed, calling detachFromWindow which
+        // stops the Render Thread associated with GLSurfaceView, possibly resulting in leaks from render thread
+        // queue. Because of the above, destruction lifecycle of the GLSurfaceView will not be triggered.
+        // To avoid the above senario, nativeDispose is called from the UIThread.
+        //
+        // Since all gl resources will be freed when GLSurfaceView is deleted this is safe until
+        // we support sharing gl contexts.
+        nativeDispose(pointer);
+        Log.e("TANGRAM", "<<< disposed");
+
+    }
+
+    /**
+     * Returns the {@link GLViewHolder} instance for the client application, which can be further used to get the underlying
+     * GLSurfaceView or Client provided implementation for GLViewHolder, to forward any explicit view controls, example Transformations, etc.
+     * @return GLViewHolder used by the Map Renderer
+     */
+    @Nullable
+    public GLViewHolder getGLViewHolder() {
+        return viewHolder;
     }
 
     /**
@@ -394,203 +366,199 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Apply SceneUpdates to the current scene asyncronously
-     * If a updates trigger an error, scene updates won't be applied.
-     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
-     * ready.
-     * @param sceneUpdates List of {@code SceneUpdate}
-     * @return new scene ID
+     * Set the camera position of the map view
+     * @param update CameraUpdate to modify current camera position
      */
-    public int updateSceneAsync(@NonNull final List<SceneUpdate> sceneUpdates) {
-        checkPointer(mapPointer);
+    public void updateCameraPosition(@NonNull final CameraUpdate update) {
+        updateCameraPosition(update, 0, DEFAULT_EASE_TYPE,null);
+    }
 
-        if (sceneUpdates == null || sceneUpdates.size() == 0) {
-            throw new IllegalArgumentException("sceneUpdates can not be null or empty in queueSceneUpdates");
+    /**
+     * Animate the camera position of the map view with the default easing function
+     * @param update CameraUpdate to update current camera position
+     * @param duration Time in milliseconds to ease to the updated position
+     */
+    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration) {
+        updateCameraPosition(update, duration, DEFAULT_EASE_TYPE, null);
+    }
+
+    /**
+     * Animate the camera position of the map view with an easing function
+     * @param update CameraUpdate to update current camera position
+     * @param duration Time in milliseconds to ease to the updated position
+     * @param ease Type of easing to use
+     */
+    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease) {
+        updateCameraPosition(update, duration, ease, null);
+    }
+
+    /**
+     * Animate the camera position of the map view and run a callback when the animation completes
+     * @param update CameraUpdate to update current camera position
+     * @param duration Time in milliseconds to ease to the updated position
+     * @param cb Callback that will run when the animation is finished or canceled
+     */
+    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final CameraAnimationCallback cb) {
+        updateCameraPosition(update, duration, DEFAULT_EASE_TYPE, cb);
+    }
+
+    /**
+     * Animate the camera position of the map view with an easing function and run a callback when
+     * the animation completes
+     * @param update CameraUpdate to update current camera position
+     * @param duration Time in milliseconds to ease to the updated position
+     * @param ease Type of easing to use
+     * @param cb Callback that will run when the animation is finished or canceled
+     */
+    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease, @Nullable final CameraAnimationCallback cb) {
+        checkPointer(mapPointer);
+        if (duration > 0) {
+            setMapRegionState(MapRegionChangeState.ANIMATING);
+        } else {
+            setMapRegionState(MapRegionChangeState.JUMPING);
         }
-
-        removeAllMarkers();
-
-        final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-
-        return nativeUpdateScene(mapPointer, updateStrings);
-    }
-
-    /**
-     * Set the {@link HttpHandler} for retrieving remote map resources; a default-constructed
-     * HttpHandler is suitable for most cases, but methods can be extended to modify resource URLs
-     * @param handler the HttpHandler to use
-     */
-    public void setHttpHandler(final HttpHandler handler) {
-        this.httpHandler = handler;
-    }
-
-    /**
-     * Set the geographic position of the center of the map view
-     * @param position LngLat of the position to set
-     */
-    public void setPosition(@NonNull final LngLat position) {
-        checkPointer(mapPointer);
-        nativeSetPosition(mapPointer, position.longitude, position.latitude);
-    }
-
-    /**
-     * Set the geographic position of the center of the map view with default easing
-     * @param position LngLat of the position to set
-     * @param duration Time in milliseconds to ease to the given position
-     */
-    public void setPositionEased(@NonNull final LngLat position, final int duration) {
-        setPositionEased(position, duration, DEFAULT_EASE_TYPE);
-    }
-
-    /**
-     * Set the geographic position of the center of the map view with custom easing
-     * @param position LngLat of the position to set
-     * @param duration Time in milliseconds to ease to the given position
-     * @param ease Type of easing to use
-     */
-    public void setPositionEased(@NonNull final LngLat position, final int duration, @NonNull final EaseType ease) {
-        checkPointer(mapPointer);
+        setPendingCameraAnimationCallback(cb);
         final float seconds = duration / 1000.f;
-        nativeSetPositionEased(mapPointer, position.longitude, position.latitude, seconds, ease.ordinal());
+        nativeUpdateCameraPosition(mapPointer, update.set, update.longitude, update.latitude, update.zoom,
+                update.zoomBy, update.rotation, update.rotationBy, update.tilt, update.tiltBy,
+                update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.padding,
+                seconds, ease.ordinal());
     }
 
     /**
-     * Get the geographic position of the center of the map view
-     * @return The current map position in a LngLat
+     * Smoothly animate over an arc to a new camera position for the map view
+     * FlyTo duration is calculated assuming speed of 1 unit and distance between the current and new positions
+     * @param position CameraPosition of the destination
+     * @param callback Callback that will run when the animation is finished or canceled
+     */
+    public void flyToCameraPosition(@NonNull CameraPosition position, @Nullable final CameraAnimationCallback callback) {
+        flyToCameraPosition(position, 0, callback);
+    }
+
+    /**
+     * Smoothly animate over an arc to a new camera position for the map view in provided time duration
+     * @param position CameraPosition of the destination
+     * @param duration Time in milliseconds of the animation
+     * @param callback Callback that will run when the animation is finished or canceled
+     */
+    public void flyToCameraPosition(@NonNull final CameraPosition position, final int duration, @Nullable final CameraAnimationCallback callback) {
+        flyToCameraPosition(position, duration, callback, 1);
+    }
+
+    /**
+     * Smoothly animate over an arc to a new camera position for the map view
+     * FlyTo duration is calculated using speed and distance between the current and new positions
+     * @param position CameraPosition of the destination
+     * @param callback Callback that will run when the animation is finished or canceled
+     * @param speed Scaling factor for animation duration (recommended range is 0.1 - 10)
+     */
+    public void flyToCameraPosition(@NonNull final CameraPosition position, @Nullable final CameraAnimationCallback callback, final float speed) {
+        flyToCameraPosition(position, -1, callback, speed);
+    }
+
+    private void flyToCameraPosition(@NonNull final CameraPosition position, final int duration, @Nullable final CameraAnimationCallback callback, final float speed) {
+        checkPointer(mapPointer);
+        if (duration == 0) {
+            setMapRegionState(MapRegionChangeState.JUMPING);
+        } else {
+            setMapRegionState(MapRegionChangeState.ANIMATING);
+        }
+        setPendingCameraAnimationCallback(callback);
+        final float seconds = duration / 1000.f;
+        nativeFlyTo(mapPointer, position.longitude, position.latitude, position.zoom, seconds, speed);
+    }
+
+    private void setPendingCameraAnimationCallback(final CameraAnimationCallback callback) {
+        synchronized (cameraAnimationCallbackLock) {
+            // Wrap the callback to run corresponding map change events.
+            pendingCameraAnimationCallback = new CameraAnimationCallback() {
+                @Override
+                public void onFinish() {
+                    setMapRegionState(MapRegionChangeState.IDLE);
+                    if (callback != null) {
+                        callback.onFinish();
+                    }
+                }
+
+                @Override
+                public void onCancel() {
+                    // Possible camera update was cancelled in between, so should account for this map change
+                    setMapRegionState(MapRegionChangeState.IDLE);
+                    if (callback != null) {
+                        callback.onCancel();
+                    }
+                }
+            };
+        }
+    }
+
+    /**
+     * Get the {@link CameraPosition} of the map view
+     * @return The current camera position
      */
     @NonNull
-    public LngLat getPosition() {
-        return getPosition(new LngLat());
+    public CameraPosition getCameraPosition() {
+        return getCameraPosition(new CameraPosition());
     }
 
     /**
-     * Get the geographic position of the center of the map view
-     * @param out LngLat to be reused as the output
-     * @return LngLat of the center of the map view
+     * Get the {@link CameraPosition} of the map view
+     * @param out CameraPosition to be reused as the output
+     * @return the current camera position of the map view
      */
     @NonNull
-    public LngLat getPosition(@NonNull final LngLat out) {
+    public CameraPosition getCameraPosition(@NonNull final CameraPosition out) {
         checkPointer(mapPointer);
-        final double[] tmp = { 0, 0 };
-        nativeGetPosition(mapPointer, tmp);
-        return out.set(tmp[0], tmp[1]);
+        final double[] pos = { 0, 0 };
+        final float[] zrt = { 0, 0, 0 };
+        nativeGetCameraPosition(mapPointer, pos, zrt);
+        out.longitude = pos[0];
+        out.latitude = pos[1];
+        out.zoom = zrt[0];
+        out.rotation = zrt[1];
+        out.tilt = zrt[2];
+        return out;
     }
 
     /**
-     * Set the zoom level of the map view
-     * @param zoom Zoom level; lower values show more area
+     * Cancel current camera animation
      */
-    public void setZoom(final float zoom) {
+    public void cancelCameraAnimation() {
         checkPointer(mapPointer);
-        nativeSetZoom(mapPointer, zoom);
+        nativeCancelCameraAnimation(mapPointer);
     }
 
     /**
-     * Set the zoom level of the map view with default easing
-     * @param zoom Zoom level; lower values show more area
-     * @param duration Time in milliseconds to ease to given zoom
+     * Get the {@link CameraPosition} that that encloses the given bounds with at least the given amount of padding on each side.
+     * @param sw south-west coordinate
+     * @param ne northwest coordinate
+     * @param padding The minimum distance to keep between the bounds and the edges of the view
+     * @return The enclosing camera position
      */
-    public void setZoomEased(final float zoom, final int duration) {
-        setZoomEased(zoom, duration, DEFAULT_EASE_TYPE);
+    @NonNull
+    public CameraPosition getEnclosingCameraPosition(@NonNull LngLat sw, @NonNull LngLat ne, @NonNull Rect padding) {
+        return getEnclosingCameraPosition(sw, ne, padding, new CameraPosition());
     }
 
     /**
-     * Set the zoom level of the map view with custom easing
-     * @param zoom Zoom level; lower values show more area
-     * @param duration Time in milliseconds to ease to given zoom
-     * @param ease Type of easing to use
+     * Get the {@link CameraPosition} that that encloses the given bounds with at least the given amount of padding on each side.
+     * @param sw south-west coordinate
+     * @param ne northwest coordinate
+     * @param padding The minimum distance to keep between the bounds and the edges of the view
+     * @param out CameraPosition to be reused as the output
+     * @return The enclosing camera position
      */
-    public void setZoomEased(final float zoom, final int duration, @NonNull final EaseType ease) {
-        checkPointer(mapPointer);
-        final float seconds = duration / 1000.f;
-        nativeSetZoomEased(mapPointer, zoom, seconds, ease.ordinal());
-    }
-
-    /**
-     * Get the zoom level of the map view
-     * @return Zoom level; lower values show more area
-     */
-    public float getZoom() {
-        checkPointer(mapPointer);
-        return nativeGetZoom(mapPointer);
-    }
-
-    /**
-     * Set the rotation of the view
-     * @param rotation Counter-clockwise rotation in radians; 0 corresponds to North pointing up
-     */
-    public void setRotation(final float rotation) {
-        checkPointer(mapPointer);
-        nativeSetRotation(mapPointer, rotation);
-    }
-
-    /**
-     * Set the rotation of the view with default easing
-     * @param rotation Counter-clockwise rotation in radians; 0 corresponds to North pointing up
-     * @param duration Time in milliseconds to ease to the given rotation
-     */
-    public void setRotationEased(final float rotation, final int duration) {
-        setRotationEased(rotation, duration, DEFAULT_EASE_TYPE);
-    }
-
-    /**
-     * Set the rotation of the view with custom easing
-     * @param rotation Counter-clockwise rotation in radians; 0 corresponds to North pointing up
-     * @param duration Time in milliseconds to ease to the given rotation
-     * @param ease Type of easing to use
-     */
-    public void setRotationEased(final float rotation, final int duration, @NonNull final EaseType ease) {
-        checkPointer(mapPointer);
-        final float seconds = duration / 1000.f;
-        nativeSetRotationEased(mapPointer, rotation, seconds, ease.ordinal());
-    }
-
-    /**
-     * Get the rotation of the view
-     * @return Counter-clockwise rotation in radians; 0 corresponds to North pointing up
-     */
-    public float getRotation() {
-        checkPointer(mapPointer);
-        return nativeGetRotation(mapPointer);
-    }
-
-    /**
-     * Set the tilt angle of the view
-     * @param tilt Tilt angle in radians; 0 corresponds to straight down
-     */
-    public void setTilt(final float tilt) {
-        checkPointer(mapPointer);
-        nativeSetTilt(mapPointer, tilt);
-    }
-
-    /**
-     * Set the tilt angle of the view with default easing
-     * @param tilt Tilt angle in radians; 0 corresponds to straight down
-     * @param duration Time in milliseconds to ease to the given tilt
-     */
-    public void setTiltEased(final float tilt, final int duration) {
-        setTiltEased(tilt, duration, DEFAULT_EASE_TYPE);
-    }
-
-    /**
-     * Set the tilt angle of the view with custom easing
-     * @param tilt Tilt angle in radians; 0 corresponds to straight down
-     * @param duration Time in milliseconds to ease to the given tilt
-     * @param ease Type of easing to use
-     */
-    public void setTiltEased(final float tilt, final int duration, @NonNull final EaseType ease) {
-        checkPointer(mapPointer);
-        final float seconds = duration / 1000.f;
-        nativeSetTiltEased(mapPointer, tilt, seconds, ease.ordinal());
-    }
-
-    /**
-     * Get the tilt angle of the view
-     * @return Tilt angle in radians; 0 corresponds to straight down
-     */
-    public float getTilt() {
-        checkPointer(mapPointer);
-        return nativeGetTilt(mapPointer);
+    @NonNull
+    public CameraPosition getEnclosingCameraPosition(@NonNull LngLat sw, @NonNull LngLat ne, @NonNull Rect padding, @NonNull final CameraPosition out) {
+        int pad[] = new int[]{padding.left, padding.top, padding.right, padding.bottom};
+        double lngLatZoom[] = new double[3];
+        nativeGetEnclosingCameraPosition(mapPointer, sw.longitude, sw.latitude, ne.longitude, ne.latitude, pad, lngLatZoom);
+        out.longitude = lngLatZoom[0];
+        out.latitude = lngLatZoom[1];
+        out.zoom = (float)lngLatZoom[2];
+        out.rotation = 0.f;
+        out.tilt = 0.f;
+        return out;
     }
 
     /**
@@ -609,6 +577,48 @@ public class MapController implements Renderer {
     public CameraType getCameraType() {
         checkPointer(mapPointer);
         return CameraType.values()[nativeGetCameraType(mapPointer)];
+    }
+
+    /**
+     * Get the minimum zoom level of the map view. The default minimum zoom is 0.
+     * @return The zoom level
+     */
+    public float getMinimumZoomLevel() {
+        checkPointer(mapPointer);
+        return nativeGetMinZoom(mapPointer);
+    }
+
+    /**
+     * Set the minimum zoom level of the map view.
+     *
+     * Values less than the default minimum zoom will be clamped. Assigning a value greater than the
+     * current maximum zoom will set the maximum zoom to this value.
+     * @param minimumZoom The zoom level
+     */
+    public void setMinimumZoomLevel(float minimumZoom) {
+        checkPointer(mapPointer);
+        nativeSetMinZoom(mapPointer, minimumZoom);
+    }
+
+    /**
+     * Get the maximum zoom level of the map view. The default maximum zoom is 20.5.
+     * @return The zoom level
+     */
+    public float getMaximumZoomLevel() {
+        checkPointer(mapPointer);
+        return nativeGetMaxZoom(mapPointer);
+    }
+
+    /**
+     * Set the maximum zoom level of the map view.
+     *
+     * Values greater than the default maximum zoom will be clamped. Assigning a value less than the
+     * current minimum zoom will set the minimum zoom to this value.
+     * @param maximumZoom The zoom level
+     */
+    public void setMaximumZoomLevel(float maximumZoom) {
+        checkPointer(mapPointer);
+        nativeSetMaxZoom(mapPointer, maximumZoom);
     }
 
     /**
@@ -698,7 +708,7 @@ public class MapController implements Renderer {
      */
     @Keep
     public void requestRender() {
-        mapView.requestRender();
+        viewHolder.requestRender();
     }
 
     /**
@@ -710,145 +720,150 @@ public class MapController implements Renderer {
      */
     @Keep
     public void setRenderMode(@IntRange(from=0,to=1) final int renderMode) {
-        mapView.setRenderMode(renderMode);
+        switch (renderMode) {
+            case 0:
+                viewHolder.setRenderMode(GLViewHolder.RenderMode.RENDER_WHEN_DIRTY);
+                break;
+            case 1:
+                viewHolder.setRenderMode(GLViewHolder.RenderMode.RENDER_CONTINUOUSLY);
+                break;
+            default:
+        }
     }
 
     /**
-     * Set a responder for tap gestures
-     * @param responder TapResponder to call
+     * Get the {@link TouchInput} for this map.
+     *
+     * {@code TouchInput} allows you to configure how gestures can move the map. You can set custom
+     * responders for any gesture type in {@code TouchInput} to override or extend the default
+     * behavior.
+     *
+     * Note that {@code MapController} assigns the default gesture responders for the pan, rotate,
+     * scale, and shove gestures. If you set custom responders for these gestures, the default
+     * responders will be replaced and those gestures will no longer move the map. To customize
+     * these gesture responders and preserve the default map movement behavior: create a new gesture
+     * responder, get the responder for that gesture from the {@code MapController}, and then in the
+     * new responder call the corresponding methods on the {@code MapController} gesture responder.
+     * @return The {@code TouchInput}.
      */
-    public void setTapResponder(@Nullable final TouchInput.TapResponder responder) {
-        touchInput.setTapResponder(new TouchInput.TapResponder() {
-            @Override
-            public boolean onSingleTapUp(final float x, final float y) {
-                return responder != null && responder.onSingleTapUp(x, y);
-            }
-
-            @Override
-            public boolean onSingleTapConfirmed(final float x, final float y) {
-                return responder != null && responder.onSingleTapConfirmed(x, y);
-            }
-        });
+    public TouchInput getTouchInput() {
+        return touchInput;
     }
 
     /**
-     * Set a responder for double-tap gestures
-     * @param responder DoubleTapResponder to call
+     * Get a responder for pan gestures
      */
-    public void setDoubleTapResponder(@Nullable final TouchInput.DoubleTapResponder responder) {
-        touchInput.setDoubleTapResponder(new TouchInput.DoubleTapResponder() {
+    public TouchInput.PanResponder getPanResponder() {
+        return new TouchInput.PanResponder() {
             @Override
-            public boolean onDoubleTap(final float x, final float y) {
-                return responder != null && responder.onDoubleTap(x, y);
+            public boolean onPanBegin() {
+                setMapRegionState(MapRegionChangeState.JUMPING);
+                return true;
             }
-        });
-    }
 
-    /**
-     * Set a responder for long press gestures
-     * @param responder LongPressResponder to call
-     */
-    public void setLongPressResponder(@Nullable final TouchInput.LongPressResponder responder) {
-        touchInput.setLongPressResponder(new TouchInput.LongPressResponder() {
-            @Override
-            public void onLongPress(final float x, final float y) {
-                if (responder != null) {
-                    responder.onLongPress(x, y);
-                }
-            }
-        });
-    }
-
-    /**
-     * Set a responder for pan gestures
-     * @param responder PanResponder to call; if onPan returns true, normal panning behavior will not occur
-     */
-    public void setPanResponder(@Nullable final TouchInput.PanResponder responder) {
-        touchInput.setPanResponder(new TouchInput.PanResponder() {
             @Override
             public boolean onPan(final float startX, final float startY, final float endX, final float endY) {
-                if (responder == null || !responder.onPan(startX, startY, endX, endY)) {
-                    nativeHandlePanGesture(mapPointer, startX, startY, endX, endY);
-                }
+                setMapRegionState(MapRegionChangeState.JUMPING);
+                nativeHandlePanGesture(mapPointer, startX, startY, endX, endY);
+                return true;
+            }
+
+            @Override
+            public boolean onPanEnd() {
+                setMapRegionState(MapRegionChangeState.IDLE);
                 return true;
             }
 
             @Override
             public boolean onFling(final float posX, final float posY, final float velocityX, final float velocityY) {
-                if (responder == null || !responder.onFling(posX, posY, velocityX, velocityY)) {
-                    nativeHandleFlingGesture(mapPointer, posX, posY, velocityX, velocityY);
-                }
+                nativeHandleFlingGesture(mapPointer, posX, posY, velocityX, velocityY);
                 return true;
             }
-        });
+
+            @Override
+            public boolean onCancelFling() {
+                cancelCameraAnimation();
+                return true;
+            }
+        };
     }
 
     /**
-     * Set a responder for rotate gestures
-     * @param responder RotateResponder to call; if onRotate returns true, normal rotation behavior will not occur
+     * Get a responder for rotate gestures
      */
-    public void setRotateResponder(@Nullable final TouchInput.RotateResponder responder) {
-        touchInput.setRotateResponder(new TouchInput.RotateResponder() {
+    public TouchInput.RotateResponder getRotateResponder() {
+        return new TouchInput.RotateResponder() {
+            @Override
+            public boolean onRotateBegin() {
+                setMapRegionState(MapRegionChangeState.JUMPING);
+                return true;
+            }
+
             @Override
             public boolean onRotate(final float x, final float y, final float rotation) {
-                if (responder == null || !responder.onRotate(x, y, rotation)) {
-                    nativeHandleRotateGesture(mapPointer, x, y, rotation);
-                }
+                setMapRegionState(MapRegionChangeState.JUMPING);
+                nativeHandleRotateGesture(mapPointer, x, y, rotation);
                 return true;
             }
-        });
+
+            @Override
+            public boolean onRotateEnd() {
+                setMapRegionState(MapRegionChangeState.IDLE);
+                return true;
+            }
+        };
     }
 
     /**
-     * Set a responder for scale gestures
-     * @param responder ScaleResponder to call; if onScale returns true, normal scaling behavior will not occur
+     * Get a responder for scale gestures
      */
-    public void setScaleResponder(@Nullable final TouchInput.ScaleResponder responder) {
-        touchInput.setScaleResponder(new TouchInput.ScaleResponder() {
+    public TouchInput.ScaleResponder getScaleResponder() {
+        return new TouchInput.ScaleResponder() {
+            @Override
+            public boolean onScaleBegin() {
+                setMapRegionState(MapRegionChangeState.JUMPING);
+                return true;
+            }
+
             @Override
             public boolean onScale(final float x, final float y, final float scale, final float velocity) {
-                if (responder == null || !responder.onScale(x, y, scale, velocity)) {
-                    nativeHandlePinchGesture(mapPointer, x, y, scale, velocity);
-                }
+                setMapRegionState(MapRegionChangeState.JUMPING);
+                nativeHandlePinchGesture(mapPointer, x, y, scale, velocity);
                 return true;
             }
-        });
+
+            @Override
+            public boolean onScaleEnd() {
+                setMapRegionState(MapRegionChangeState.IDLE);
+                return true;
+            }
+        };
     }
 
     /**
-     * Set a responder for shove (vertical two-finger drag) gestures
-     * @param responder ShoveResponder to call; if onShove returns true, normal tilting behavior will not occur
+     * Get a responder for shove (vertical two-finger drag) gestures
      */
-    public void setShoveResponder(@Nullable final TouchInput.ShoveResponder responder) {
-        touchInput.setShoveResponder(new TouchInput.ShoveResponder() {
+    public TouchInput.ShoveResponder getShoveResponder() {
+        return new TouchInput.ShoveResponder() {
+            @Override
+            public boolean onShoveBegin() {
+                setMapRegionState(MapRegionChangeState.JUMPING);
+                return true;
+            }
+
             @Override
             public boolean onShove(final float distance) {
-                if (responder == null || !responder.onShove(distance)) {
-                    nativeHandleShoveGesture(mapPointer, distance);
-                }
+                setMapRegionState(MapRegionChangeState.JUMPING);
+                nativeHandleShoveGesture(mapPointer, distance);
                 return true;
             }
-        });
-    }
 
-    /**
-     * Set whether the gesture {@code second} can be recognized while {@code first} is in progress
-     * @param first Initial gesture type
-     * @param second Subsequent gesture type
-     * @param allowed True if {@code second} should be recognized, else false
-     */
-    public void setSimultaneousGestureAllowed(final Gestures first, final Gestures second, final boolean allowed) {
-        touchInput.setSimultaneousDetectionAllowed(first, second, allowed);
-    }
-
-    /**
-     * Get whether the gesture {@code second} can be recognized while {@code first} is in progress
-     * @param first Initial gesture type
-     * @param second Subsequent gesture type
-     * @return True if {@code second} will be recognized, else false
-     */
-    public boolean isSimultaneousGestureAllowed(final Gestures first, final Gestures second) {
-        return touchInput.isSimultaneousDetectionAllowed(first, second);
+            @Override
+            public boolean onShoveEnd() {
+                setMapRegionState(MapRegionChangeState.IDLE);
+                return true;
+            }
+        };
     }
 
     /**
@@ -865,17 +880,7 @@ public class MapController implements Renderer {
      * @param listener The {@link FeaturePickListener} to call
      */
     public void setFeaturePickListener(@Nullable final FeaturePickListener listener) {
-        featurePickListener = (listener == null) ? null : new FeaturePickListener() {
-            @Override
-            public void onFeaturePick(final Map<String, String> properties, final float positionX, final float positionY) {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onFeaturePick(properties, positionX, positionY);
-                    }
-                });
-            }
-        };
+        featurePickListener = listener;
     }
 
     /**
@@ -931,7 +936,7 @@ public class MapController implements Renderer {
     public void pickFeature(final float posX, final float posY) {
         if (featurePickListener != null) {
             checkPointer(mapPointer);
-            nativePickFeature(mapPointer, posX, posY, featurePickListener);
+            nativePickFeature(mapPointer, posX, posY);
         }
     }
 
@@ -944,7 +949,7 @@ public class MapController implements Renderer {
     public void pickLabel(final float posX, final float posY) {
         if (labelPickListener != null) {
             checkPointer(mapPointer);
-            nativePickLabel(mapPointer, posX, posY, labelPickListener);
+            nativePickLabel(mapPointer, posX, posY);
         }
     }
 
@@ -957,7 +962,7 @@ public class MapController implements Renderer {
     public void pickMarker(final float posX, final float posY) {
         if (markerPickListener != null) {
             checkPointer(mapPointer);
-            nativePickMarker(this, mapPointer, posX, posY, markerPickListener);
+            nativePickMarker(mapPointer, posX, posY);
         }
     }
 
@@ -971,7 +976,7 @@ public class MapController implements Renderer {
         checkPointer(mapPointer);
         final long markerId = nativeMarkerAdd(mapPointer);
 
-        final Marker marker = new Marker(mapView.getContext(), markerId, this);
+        final Marker marker = new Marker(viewHolder.getView().getContext(), markerId, this);
         markers.put(markerId, marker);
 
         return marker;
@@ -1007,7 +1012,8 @@ public class MapController implements Renderer {
         nativeMarkerRemoveAll(mapPointer);
 
         // Invalidate all markers so their ids are unusable
-        for (final Marker marker : markers.values()) {
+        for (int i = 0; i < markers.size(); i++) {
+            final Marker marker = markers.valueAt(i);
             marker.invalidate();
         }
 
@@ -1015,21 +1021,43 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Set a listener for view complete events.
-     * @param listener The {@link ViewCompleteListener} to call when the view is complete
+     * Set a listener for map change events
+     * @param listener The {@link MapChangeListener} to call when the map change events occur
+     *                due to camera updates or user interaction
      */
-    public void setViewCompleteListener(@Nullable final ViewCompleteListener listener) {
-        viewCompleteListener = (listener == null) ? null : new ViewCompleteListener() {
-            @Override
-            public void onViewComplete() {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onViewComplete();
+    public void setMapChangeListener(@Nullable final MapChangeListener listener) {
+        mapChangeListener = listener;
+    }
+
+
+    void setMapRegionState(MapRegionChangeState state) {
+
+        if (mapChangeListener != null) {
+            switch (currentState) {
+                case IDLE:
+                    if (state == MapRegionChangeState.JUMPING) {
+                        mapChangeListener.onRegionWillChange(false);
+                    } else if (state == MapRegionChangeState.ANIMATING){
+                        mapChangeListener.onRegionWillChange(true);
                     }
-                });
+                    break;
+                case JUMPING:
+                    if (state == MapRegionChangeState.IDLE) {
+                        mapChangeListener.onRegionDidChange(false);
+                    } else if (state == MapRegionChangeState.JUMPING) {
+                        mapChangeListener.onRegionIsChanging();
+                    }
+                    break;
+                case ANIMATING:
+                    if (state == MapRegionChangeState.IDLE) {
+                        mapChangeListener.onRegionDidChange(true);
+                    } else if (state == MapRegionChangeState.ANIMATING) {
+                        mapChangeListener.onRegionIsChanging();
+                    }
+                    break;
             }
-        };
+        }
+        currentState = state;
     }
 
     /**
@@ -1037,7 +1065,7 @@ public class MapController implements Renderer {
      * @param r Runnable to run
      */
     public void queueEvent(@NonNull final Runnable r) {
-        mapView.queueEvent(r);
+        viewHolder.queueEvent(r);
     }
 
     /**
@@ -1090,27 +1118,20 @@ public class MapController implements Renderer {
         nativeClearTileSource(mapPointer, sourcePtr);
     }
 
-    void addFeature(final long sourcePtr, final double[] coordinates, final int[] rings, final String[] properties) {
-        checkPointer(mapPointer);
-        checkPointer(sourcePtr);
-        nativeAddFeature(mapPointer, sourcePtr, coordinates, rings, properties);
-    }
-
-    void addGeoJson(final long sourcePtr, final String geoJson) {
-        checkPointer(mapPointer);
-        checkPointer(sourcePtr);
-        nativeAddGeoJson(mapPointer, sourcePtr, geoJson);
-    }
 
     void checkPointer(final long ptr) {
         if (ptr <= 0) {
-            throw new RuntimeException("Tried to perform an operation on an invalid pointer! This means you may have used an object that has been disposed and is no longer valid.");
+            throw new RuntimeException("Tried to perform an operation on an invalid pointer!"
+                    + " This means you may have used an object that has been disposed and is no"
+                    + " longer valid.");
         }
     }
 
     void checkId(final long id) {
         if (id <= 0) {
-            throw new RuntimeException("Tried to perform an operation on an invalid id! This means you may have used an object that has been disposed and is no longer valid.");
+            throw new RuntimeException("Tried to perform an operation on an invalid id!"
+                    + " This means you may have used an object that has been disposed and is no"
+                    + " longer valid.");
         }
     }
 
@@ -1141,10 +1162,10 @@ public class MapController implements Renderer {
         return nativeMarkerSetStylingFromPath(mapPointer, markerId, path);
     }
 
-    boolean setMarkerBitmap(final long markerId, final int width, final int height, final int[] data) {
+    boolean setMarkerBitmap(final long markerId, Bitmap bitmap, float density) {
         checkPointer(mapPointer);
         checkId(markerId);
-        return nativeMarkerSetBitmap(mapPointer, markerId, width, height, data);
+        return nativeMarkerSetBitmap(mapPointer, markerId, bitmap, density);
     }
 
     boolean setMarkerPoint(final long markerId, final double lng, final double lat) {
@@ -1185,211 +1206,136 @@ public class MapController implements Renderer {
         return nativeMarkerSetDrawOrder(mapPointer, markerId, drawOrder);
     }
 
-    @Keep
-    Marker markerById(final long markerId) {
-        return markers.get(markerId);
-    }
-
-    // Native methods
-    // ==============
-
-    static {
-        System.loadLibrary("c++_shared");
-        System.loadLibrary("tangram");
-    }
-
-    private synchronized native void nativeOnLowMemory(long mapPtr);
-    private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
-    private synchronized native void nativeDispose(long mapPtr);
-    private synchronized native int nativeLoadScene(long mapPtr, String path, String[] updateStrings);
-    private synchronized native int nativeLoadSceneAsync(long mapPtr, String path, String[] updateStrings);
-    private synchronized native int nativeLoadSceneYaml(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
-    private synchronized native int nativeLoadSceneYamlAsync(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
-    private synchronized native void nativeSetupGL(long mapPtr);
-    private synchronized native void nativeResize(long mapPtr, int width, int height);
-    private synchronized native boolean nativeUpdate(long mapPtr, float dt);
-    private synchronized native void nativeRender(long mapPtr);
-    private synchronized native void nativeSetPosition(long mapPtr, double lon, double lat);
-    private synchronized native void nativeSetPositionEased(long mapPtr, double lon, double lat, float seconds, int ease);
-    private synchronized native void nativeGetPosition(long mapPtr, double[] lonLatOut);
-    private synchronized native void nativeSetZoom(long mapPtr, float zoom);
-    private synchronized native void nativeSetZoomEased(long mapPtr, float zoom, float seconds, int ease);
-    private synchronized native float nativeGetZoom(long mapPtr);
-    private synchronized native void nativeSetRotation(long mapPtr, float radians);
-    private synchronized native void nativeSetRotationEased(long mapPtr, float radians, float seconds, int ease);
-    private synchronized native float nativeGetRotation(long mapPtr);
-    private synchronized native void nativeSetTilt(long mapPtr, float radians);
-    private synchronized native void nativeSetTiltEased(long mapPtr, float radians, float seconds, int ease);
-    private synchronized native float nativeGetTilt(long mapPtr);
-    private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
-    private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates);
-    private synchronized native void nativeSetPixelScale(long mapPtr, float scale);
-    private synchronized native void nativeSetCameraType(long mapPtr, int type);
-    private synchronized native int nativeGetCameraType(long mapPtr);
-    private synchronized native void nativeHandleTapGesture(long mapPtr, float posX, float posY);
-    private synchronized native void nativeHandleDoubleTapGesture(long mapPtr, float posX, float posY);
-    private synchronized native void nativeHandlePanGesture(long mapPtr, float startX, float startY, float endX, float endY);
-    private synchronized native void nativeHandleFlingGesture(long mapPtr, float posX, float posY, float velocityX, float velocityY);
-    private synchronized native void nativeHandlePinchGesture(long mapPtr, float posX, float posY, float scale, float velocity);
-    private synchronized native void nativeHandleRotateGesture(long mapPtr, float posX, float posY, float rotation);
-    private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
-    private synchronized native int nativeUpdateScene(long mapPtr, String[] updateStrings);
-    private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
-    private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
-    private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
-    private synchronized native void nativePickMarker(MapController instance, long mapPtr, float posX, float posY, MarkerPickListener listener);
-    private synchronized native long nativeMarkerAdd(long mapPtr);
-    private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
-    private synchronized native boolean nativeMarkerSetStylingFromString(long mapPtr, long markerID, String styling);
-    private synchronized native boolean nativeMarkerSetStylingFromPath(long mapPtr, long markerID, String path);
-    private synchronized native boolean nativeMarkerSetBitmap(long mapPtr, long markerID, int width, int height, int[] data);
-    private synchronized native boolean nativeMarkerSetPoint(long mapPtr, long markerID, double lng, double lat);
-    private synchronized native boolean nativeMarkerSetPointEased(long mapPtr, long markerID, double lng, double lat, float duration, int ease);
-    private synchronized native boolean nativeMarkerSetPolyline(long mapPtr, long markerID, double[] coordinates, int count);
-    private synchronized native boolean nativeMarkerSetPolygon(long mapPtr, long markerID, double[] coordinates, int[] rings, int count);
-    private synchronized native boolean nativeMarkerSetVisible(long mapPtr, long markerID, boolean visible);
-    private synchronized native boolean nativeMarkerSetDrawOrder(long mapPtr, long markerID, int drawOrder);
-    private synchronized native void nativeMarkerRemoveAll(long mapPtr);
-
-    private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
-    private synchronized native void nativeCaptureSnapshot(long mapPtr, int[] buffer);
-
-    private synchronized native void nativeSetDefaultBackgroundColor(long mapPtr, float r, float g, float b);
-
-    private native void nativeOnUrlComplete(long mapPtr, long requestHandle, byte[] rawDataBytes, String errorMessage);
-
-    synchronized native long nativeAddTileSource(long mapPtr, String name, boolean generateCentroid);
-    synchronized native void nativeRemoveTileSource(long mapPtr, long sourcePtr);
-    synchronized native void nativeClearTileSource(long mapPtr, long sourcePtr);
-    synchronized native void nativeAddFeature(long mapPtr, long sourcePtr, double[] coordinates, int[] rings, String[] properties);
-    synchronized native void nativeAddGeoJson(long mapPtr, long sourcePtr, String geoJson);
-
-    native void nativeSetDebugFlag(int flag, boolean on);
-
-    // Private members
-    // ===============
-
-    private long mapPointer;
-    private long time = System.nanoTime();
-    private GLSurfaceView mapView;
-    private AssetManager assetManager;
-    private TouchInput touchInput;
-    private FontFileParser fontFileParser;
-    private DisplayMetrics displayMetrics = new DisplayMetrics();
-    private HttpHandler httpHandler;
-    private FeaturePickListener featurePickListener;
-    private SceneLoadListener sceneLoadListener;
-    private LabelPickListener labelPickListener;
-    private MarkerPickListener markerPickListener;
-    private ViewCompleteListener viewCompleteListener;
-    private FrameCaptureCallback frameCaptureCallback;
-    private boolean frameCaptureAwaitCompleteView;
-    private Map<String, MapData> clientTileSources;
-    private Map<Long, Marker> markers; // Consider change to SparseLongArray<Marker> when drop API < 18
-    private Handler uiThreadHandler;
-
-    // GLSurfaceView.Renderer methods
-    // ==============================
-
-    @Override
-    public void onDrawFrame(final GL10 gl) {
-        final long newTime = System.nanoTime();
-        final float delta = (newTime - time) / 1000000000.0f;
-        time = newTime;
-
-        if (mapPointer <= 0) {
-            // No native instance is initialized, so stop here. This can happen during Activity
-            // shutdown when the map has been disposed but the View hasn't been destroyed yet.
-            return;
-        }
-
-        boolean viewComplete;
-        synchronized(this) {
-            viewComplete = nativeUpdate(mapPointer, delta);
-            nativeRender(mapPointer);
-        }
-
-        if (viewComplete) {
-            if (viewCompleteListener != null) {
-                viewCompleteListener.onViewComplete();
-            }
-        }
-        if (frameCaptureCallback != null) {
-            if (!frameCaptureAwaitCompleteView || viewComplete) {
-                frameCaptureCallback.onCaptured(capture());
-                frameCaptureCallback = null;
-            }
-        }
-    }
-
-    @Override
-    public void onSurfaceChanged(final GL10 gl, final int width, final int height) {
-        if (mapPointer <= 0) {
-            // No native instance is initialized, so stop here. This can happen during Activity
-            // shutdown when the map has been disposed but the View hasn't been destroyed yet.
-            return;
-        }
-
-        nativeSetPixelScale(mapPointer, displayMetrics.density);
-        nativeResize(mapPointer, width, height);
-    }
-
-    @Override
-    public void onSurfaceCreated(final GL10 gl, final EGLConfig config) {
-        if (mapPointer <= 0) {
-            // No native instance is initialized, so stop here. This can happen during Activity
-            // shutdown when the map has been disposed but the View hasn't been destroyed yet.
-            return;
-        }
-
-        nativeSetupGL(mapPointer);
-    }
 
     // Networking methods
     // ==================
+
     @Keep
     void cancelUrlRequest(final long requestHandle) {
-        if (httpHandler == null) {
-            return;
+        Object request = httpRequestHandles.remove(requestHandle);
+        if (request != null) {
+            httpHandler.cancelRequest(request);
         }
-        httpHandler.onCancel(requestHandle);
     }
 
     @Keep
-    void startUrlRequest(final String url, final long requestHandle) {
-        if (httpHandler == null) {
-            return;
-        }
+    void startUrlRequest(@NonNull final String url, final long requestHandle) {
 
-        final Callback callback = new Callback() {
+        final HttpHandler.Callback callback = new HttpHandler.Callback() {
             @Override
-            public void onFailure(final Call call, final IOException e) {
-                nativeOnUrlComplete(mapPointer, requestHandle, null, e.getMessage());
+            public void onFailure(@Nullable final IOException e) {
+                if (httpRequestHandles.remove(requestHandle) == null) { return; }
+                String msg = (e == null) ? "" : e.getMessage();
+                nativeOnUrlComplete(mapPointer, requestHandle, null, msg);
             }
 
             @Override
-            public void onResponse(final Call call, final Response response) throws IOException {
-                if (!response.isSuccessful()) {
-                    nativeOnUrlComplete(mapPointer, requestHandle, null, response.message());
-                    throw new IOException("Unexpected response code: " + response + " for URL: " + url);
+            public void onResponse(final int code, @Nullable final byte[] rawDataBytes) {
+                if (httpRequestHandles.remove(requestHandle) == null) { return; }
+                if (code >= 200 && code < 300) {
+                    nativeOnUrlComplete(mapPointer, requestHandle, rawDataBytes, null);
+                } else {
+                    nativeOnUrlComplete(mapPointer, requestHandle, null,
+                            "Unexpected response code: " + code + " for URL: " + url);
                 }
-                final byte[] bytes = response.body().bytes();
-                nativeOnUrlComplete(mapPointer, requestHandle, bytes, null);
+            }
+
+            @Override
+            public void onCancel() {
+                if (httpRequestHandles.remove(requestHandle) == null) { return; }
+                nativeOnUrlComplete(mapPointer, requestHandle, null, null);
             }
         };
 
-        httpHandler.onRequest(url, callback, requestHandle);
+        Object request = httpHandler.startRequest(url, callback);
+        if (request != null) {
+            httpRequestHandles.put(requestHandle, request);
+        }
     }
 
     // Called from JNI on worker or render-thread.
-    void sceneReadyCallback(final int sceneId, final SceneError error) {
-
-        final SceneLoadListener cb = sceneLoadListener;
-        if (cb != null) {
+    @Keep
+    void sceneReadyCallback(final int sceneId, final int errorType, final String updatePath, final String updateValue) {
+        final SceneLoadListener listener = sceneLoadListener;
+        if (listener != null) {
             uiThreadHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    cb.onSceneReady(sceneId, error);
+                    SceneError error = null;
+                    if (errorType >= 0) {
+                        error = new SceneError(updatePath, updateValue, errorType);
+                    }
+                    listener.onSceneReady(sceneId, error);
+                }
+            });
+        }
+    }
+
+    // Called from JNI on render-thread.
+    @Keep
+    void cameraAnimationCallback(final boolean finished) {
+        final CameraAnimationCallback callback = cameraAnimationCallback;
+        synchronized (cameraAnimationCallbackLock) {
+            cameraAnimationCallback = pendingCameraAnimationCallback;
+            pendingCameraAnimationCallback = null;
+        }
+        if (callback != null) {
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (finished) {
+                        callback.onFinish();
+                    } else {
+                        callback.onCancel();
+                    }
+                }
+            });
+        }
+    }
+
+    @Keep
+    void featurePickCallback(final Map<String, String> properties, final float x, final float y) {
+        final FeaturePickListener listener = featurePickListener;
+        if (listener != null) {
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onFeaturePick(properties, x, y);
+                }
+            });
+        }
+    }
+
+    @Keep
+    void labelPickCallback(final Map<String, String> properties, final float x, final float y, final int type, final double lng, final double lat) {
+        final LabelPickListener listener = labelPickListener;
+        if (listener != null) {
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    LabelPickResult result = null;
+                    if (properties != null) {
+                        result = new LabelPickResult(lng, lat, type, properties);
+                    }
+                    listener.onLabelPick(result, x, y);
+                }
+            });
+        }
+    }
+
+    @Keep
+    void markerPickCallback(final long markerId, final float x, final float y, final double lng, final double lat) {
+        final MarkerPickListener listener = markerPickListener;
+        if (listener != null) {
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    final Marker marker = markers.get(markerId);
+                    MarkerPickResult result = null;
+                    if (marker != null) {
+                        result = new MarkerPickResult(marker, lng, lat);
+                    }
+                    listener.onMarkerPick(result, x, y);
                 }
             });
         }
@@ -1399,12 +1345,102 @@ public class MapController implements Renderer {
     // =============
     @Keep
     String getFontFilePath(final String key) {
-        return fontFileParser.getFontFile(key);
+        return FontConfig.getFontFile(key);
     }
 
     @Keep
     String getFontFallbackFilePath(final int importance, final int weightHint) {
-        return fontFileParser.getFontFallback(importance, weightHint);
+        return FontConfig.getFontFallback(importance, weightHint);
     }
+
+    // Private members
+    // ===============
+
+    long mapPointer;
+    private MapRenderer mapRenderer;
+    private GLViewHolder viewHolder;
+    private MapRegionChangeState currentState = MapRegionChangeState.IDLE;
+    private AssetManager assetManager;
+    private TouchInput touchInput;
+    private DisplayMetrics displayMetrics = new DisplayMetrics();
+    private HttpHandler httpHandler;
+    private final Map<Long, Object> httpRequestHandles = Collections.synchronizedMap(new HashMap());
+    MapChangeListener mapChangeListener;
+    private FeaturePickListener featurePickListener;
+    private SceneLoadListener sceneLoadListener;
+    private LabelPickListener labelPickListener;
+    private MarkerPickListener markerPickListener;
+    private FrameCaptureCallback frameCaptureCallback;
+    private boolean frameCaptureAwaitCompleteView;
+    private Map<String, MapData> clientTileSources;
+    private LongSparseArray<Marker> markers;
+    private Handler uiThreadHandler;
+    private CameraAnimationCallback cameraAnimationCallback;
+    private CameraAnimationCallback pendingCameraAnimationCallback;
+    private final Object cameraAnimationCallbackLock = new Object();
+    private boolean isGLRendererSet = false;
+
+    // Native methods
+    // ==============
+
+    private synchronized native void nativeOnLowMemory(long mapPtr);
+    private synchronized native long nativeInit(AssetManager assetManager);
+    private synchronized native void nativeDispose(long mapPtr);
+    private synchronized native void nativeShutdown(long mapPtr);
+    private synchronized native int nativeLoadScene(long mapPtr, String path, String[] updateStrings);
+    private synchronized native int nativeLoadSceneAsync(long mapPtr, String path, String[] updateStrings);
+    private synchronized native int nativeLoadSceneYaml(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
+    private synchronized native int nativeLoadSceneYamlAsync(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
+
+    private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
+    private synchronized native void nativeUpdateCameraPosition(long mapPtr, int set, double lon, double lat, float zoom, float zoomBy,
+                                                                float rotation, float rotateBy, float tilt, float tiltBy,
+                                                                double b1lon, double b1lat, double b2lon, double b2lat, int[] padding,
+                                                                float duration, int ease);
+    private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
+    private synchronized native void nativeGetEnclosingCameraPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int[] buffer, double[] lngLatZoom);
+    private synchronized native void nativeCancelCameraAnimation(long mapPtr);
+    private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
+    private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates);
+    private synchronized native void nativeSetPixelScale(long mapPtr, float scale);
+    private synchronized native void nativeSetCameraType(long mapPtr, int type);
+    private synchronized native int nativeGetCameraType(long mapPtr);
+    private synchronized native float nativeGetMinZoom(long mapPtr);
+    private synchronized native void nativeSetMinZoom(long mapPtr, float minZoom);
+    private synchronized native float nativeGetMaxZoom(long mapPtr);
+    private synchronized native void nativeSetMaxZoom(long mapPtr, float maxZoom);
+    private synchronized native void nativeHandleTapGesture(long mapPtr, float posX, float posY);
+    private synchronized native void nativeHandleDoubleTapGesture(long mapPtr, float posX, float posY);
+    private synchronized native void nativeHandlePanGesture(long mapPtr, float startX, float startY, float endX, float endY);
+    private synchronized native void nativeHandleFlingGesture(long mapPtr, float posX, float posY, float velocityX, float velocityY);
+    private synchronized native void nativeHandlePinchGesture(long mapPtr, float posX, float posY, float scale, float velocity);
+    private synchronized native void nativeHandleRotateGesture(long mapPtr, float posX, float posY, float rotation);
+    private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
+    private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
+    private synchronized native void nativePickFeature(long mapPtr, float posX, float posY);
+    private synchronized native void nativePickLabel(long mapPtr, float posX, float posY);
+    private synchronized native void nativePickMarker(long mapPtr, float posX, float posY);
+    private synchronized native long nativeMarkerAdd(long mapPtr);
+    private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
+    private synchronized native boolean nativeMarkerSetStylingFromString(long mapPtr, long markerID, String styling);
+    private synchronized native boolean nativeMarkerSetStylingFromPath(long mapPtr, long markerID, String path);
+    private synchronized native boolean nativeMarkerSetBitmap(long mapPtr, long markerID, Bitmap bitmap, float density);
+    private synchronized native boolean nativeMarkerSetPoint(long mapPtr, long markerID, double lng, double lat);
+    private synchronized native boolean nativeMarkerSetPointEased(long mapPtr, long markerID, double lng, double lat, float duration, int ease);
+    private synchronized native boolean nativeMarkerSetPolyline(long mapPtr, long markerID, double[] coordinates, int count);
+    private synchronized native boolean nativeMarkerSetPolygon(long mapPtr, long markerID, double[] coordinates, int[] rings, int count);
+    private synchronized native boolean nativeMarkerSetVisible(long mapPtr, long markerID, boolean visible);
+    private synchronized native boolean nativeMarkerSetDrawOrder(long mapPtr, long markerID, int drawOrder);
+    private synchronized native void nativeMarkerRemoveAll(long mapPtr);
+    private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
+    private synchronized native void nativeSetDefaultBackgroundColor(long mapPtr, float r, float g, float b);
+
+    private synchronized native long nativeAddTileSource(long mapPtr, String name, boolean generateCentroid);
+    private synchronized native void nativeRemoveTileSource(long mapPtr, long sourcePtr);
+    private synchronized native void nativeClearTileSource(long mapPtr, long sourcePtr);
+
+    private synchronized native void nativeSetDebugFlag(int flag, boolean on);
+
+    private native void nativeOnUrlComplete(long mapPtr, long requestHandle, byte[] rawDataBytes, String errorMessage);
 
 }

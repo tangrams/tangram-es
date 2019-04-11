@@ -4,6 +4,7 @@
 #include "data/formats/mvt.h"
 #include "data/formats/topoJson.h"
 #include "data/tileData.h"
+#include "data/rasterSource.h"
 #include "platform.h"
 #include "tile/tileID.h"
 #include "tile/tile.h"
@@ -55,26 +56,18 @@ const char* TileSource::mimeType() const {
     return "";
 }
 
-std::shared_ptr<TileTask> TileSource::createTask(TileID _tileId, int _subTask) {
-    auto task = std::make_shared<BinaryTileTask>(_tileId, shared_from_this(), _subTask);
+std::shared_ptr<TileTask> TileSource::createTask(TileID _tileId) {
+    auto task = std::make_shared<BinaryTileTask>(_tileId, shared_from_this());
 
-    createSubTasks(task);
+    addRasterTasks(*task);
 
     return task;
 }
 
-void TileSource::createSubTasks(std::shared_ptr<TileTask> _task) {
-    size_t index = 0;
+void TileSource::addRasterTasks(TileTask& _task) {
 
-    for (auto& subSource : m_rasterSources) {
-        TileID subTileID = _task->tileId();
-
-        // get tile for lower zoom if we are past max zoom
-        if (subTileID.z > subSource->maxZoom()) {
-            subTileID = subTileID.withMaxSourceZoom(subSource->maxZoom());
-        }
-
-        _task->subTasks().push_back(subSource->createTask(subTileID, index++));
+    for (auto& source : m_rasterSources) {
+        source->addRasterTask(_task);
     }
 }
 
@@ -98,47 +91,40 @@ void TileSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
     }
 
     for (auto& subTask : _task->subTasks()) {
-        subTask->source().loadTileData(subTask, _cb);
+        subTask->source()->loadTileData(subTask, _cb);
     }
 }
 
-std::shared_ptr<TileData> TileSource::parse(const TileTask& _task, const MapProjection& _projection) const {
+std::shared_ptr<TileData> TileSource::parse(const TileTask& _task) const {
     switch (m_format) {
-    case Format::TopoJson: return TopoJson::parseTile(_task, _projection, m_id);
-    case Format::GeoJson: return GeoJson::parseTile(_task, _projection, m_id);
-    case Format::Mvt: return Mvt::parseTile(_task, _projection, m_id);
+    case Format::TopoJson: return TopoJson::parseTile(_task, m_id);
+    case Format::GeoJson: return GeoJson::parseTile(_task, m_id);
+    case Format::Mvt: return Mvt::parseTile(_task, m_id);
     }
     assert(false);
     return nullptr;
 }
 
-void TileSource::cancelLoadingTile(const TileID& _tileID) {
+void TileSource::cancelLoadingTile(TileTask& _task) {
 
-    if (m_sources) { return m_sources->cancelLoadingTile(_tileID); }
+    if (m_sources) { m_sources->cancelLoadingTile(_task); }
 
-    for (auto& raster : m_rasterSources) {
-        TileID rasterID = _tileID.withMaxSourceZoom(raster->maxZoom());
-        raster->cancelLoadingTile(rasterID);
-    }
-}
-
-void TileSource::clearRasters() {
-    for (auto& raster : m_rasterSources) {
-        raster->clearRasters();
-    }
-}
-
-void TileSource::clearRaster(const TileID& id) {
-    for (auto& raster : m_rasterSources) {
-        TileID rasterID = id.withMaxSourceZoom(raster->maxZoom());
-        raster->clearRaster(rasterID);
+    for (auto& subTask : _task.subTasks()) {
+        subTask->source()->cancelLoadingTile(*subTask);
     }
 }
 
 void TileSource::addRasterSource(std::shared_ptr<TileSource> _rasterSource) {
-    /*
-     * We limit the parent source by any attached raster source's min/max.
-     */
+    if (!_rasterSource) {
+        LOGE("No raster source");
+        return;
+    }
+    auto rasterSource = dynamic_cast<RasterSource*>(_rasterSource.get());
+    if (!rasterSource) {
+        LOGE("Not a raster source: %s", _rasterSource->name().c_str());
+        return;
+    }
+    // We limit the parent source by any attached raster source's min/max.
     int32_t rasterMinDisplayZoom = _rasterSource->minDisplayZoom();
     int32_t rasterMaxDisplayZoom = _rasterSource->maxDisplayZoom();
     if (rasterMinDisplayZoom > m_zoomOptions.minDisplayZoom) {
@@ -147,7 +133,8 @@ void TileSource::addRasterSource(std::shared_ptr<TileSource> _rasterSource) {
     if (rasterMaxDisplayZoom < m_zoomOptions.maxDisplayZoom) {
         m_zoomOptions.maxDisplayZoom = rasterMaxDisplayZoom;
     }
-    m_rasterSources.push_back(_rasterSource);
+
+    m_rasterSources.push_back(rasterSource);
 }
 
 }

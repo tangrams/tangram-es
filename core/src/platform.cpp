@@ -3,6 +3,15 @@
 
 #include <fstream>
 #include <string>
+#include <cassert>
+
+#ifdef LOGTIME
+std::chrono::time_point<std::chrono::system_clock> tangram_log_time_start, tangram_log_time_last;
+std::mutex tangram_log_time_mutex;
+#endif
+
+constexpr char const* shutdown_message = "Shutting down";
+constexpr char const* cancel_message = "Request canceled";
 
 namespace Tangram {
 
@@ -44,6 +53,109 @@ FontSourceHandle Platform::systemFont(const std::string& _name, const std::strin
 std::vector<FontSourceHandle> Platform::systemFontFallbacksHandle() const {
     // No-op by default
     return {};
+}
+
+void Platform::shutdown() {
+    if (m_shutdown.exchange(true)) { return; }
+
+    {
+        std::lock_guard<std::mutex> lock(m_callbackMutex);
+
+        for (auto& entry : m_urlCallbacks) {
+            auto& request = entry.second;
+            if (request.callback) {
+                UrlResponse response;
+                response.error = shutdown_message;
+                request.callback(std::move(response));
+            }
+
+            if (request.cancelable) {
+                cancelUrlRequestImpl(request.id);
+            }
+        }
+        m_urlCallbacks.clear();
+    }
+}
+
+UrlRequestHandle Platform::startUrlRequest(Url _url, UrlCallback&& _callback) {
+
+    assert(_callback);
+
+    if (m_shutdown) {
+        UrlResponse response;
+        response.error = shutdown_message;
+        _callback(std::move(response));
+        return 0;
+    }
+
+    UrlRequestHandle handle= ++m_urlRequestCount;
+
+    // Need to do this in advance in case startUrlRequest calls back synchronously.
+    UrlRequestEntry* entry = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(m_callbackMutex);
+        auto it = m_urlCallbacks.emplace(handle, UrlRequestEntry{std::move(_callback), 0, false});
+        entry = &it.first->second;
+    }
+
+    // Start Platform specific url request
+    if (startUrlRequestImpl(_url, handle, entry->id)) {
+        entry->cancelable = true;
+    }
+
+    return handle;
+}
+
+void Platform::cancelUrlRequest(const UrlRequestHandle _request) {
+    if (_request == 0) { return; }
+
+    UrlRequestId id = 0;
+    UrlCallback callback;
+    bool cancelable = false;
+
+    {
+        std::lock_guard<std::mutex> lock(m_callbackMutex);
+        auto it = m_urlCallbacks.find(_request);
+        if (it != m_urlCallbacks.end()) {
+            id = it->second.id;
+            cancelable = it->second.cancelable;
+
+            if (!cancelable) {
+                callback = std::move(it->second.callback);
+                m_urlCallbacks.erase(it);
+            }
+        }
+    }
+
+    if (cancelable) {
+        cancelUrlRequestImpl(id);
+
+    } else {
+        // Run callback directly when platform implementation cannot cancel it.
+        if (callback) {
+            UrlResponse response;
+            response.error = cancel_message;
+            callback(std::move(response));
+        }
+    }
+}
+
+void Platform::onUrlResponse(const UrlRequestHandle _request, UrlResponse&& _response) {
+    if (m_shutdown) {
+        LOGW("onUrlResponse after shutdown");
+        return;
+    }
+    // Find the callback associated with the request.
+    UrlCallback callback;
+    {
+        std::lock_guard<std::mutex> lock(m_callbackMutex);
+        auto it = m_urlCallbacks.find(_request);
+        if (it != m_urlCallbacks.end()) {
+            callback = std::move(it->second.callback);
+            m_urlCallbacks.erase(it);
+        }
+    }
+    if (callback) { callback(std::move(_response)); }
 }
 
 } // namespace Tangram

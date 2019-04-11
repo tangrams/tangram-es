@@ -1,6 +1,6 @@
 #include "catch.hpp"
 #include "gl/dynamicQuadMesh.h"
-#include "labels/labels.h"
+#include "labels/labelManager.h"
 #include "labels/textLabel.h"
 #include "labels/textLabels.h"
 #include "map.h"
@@ -15,7 +15,7 @@
 
 namespace Tangram {
 
-TextStyle dummyStyle("textStyle", nullptr);
+TextStyle dummyStyle("textStyle");
 TextLabels dummy(dummyStyle);
 Label::AABB* bounds = nullptr;
 
@@ -104,11 +104,12 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
 TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
 
     View view(256, 256);
+    view.setConstrainToWorldBounds(false);
     view.setPosition(0, 0);
     view.setZoom(0);
-    view.update(false);
+    view.update();
 
-    Tile tile({0,0,0}, view.getMapProjection());
+    Tile tile({0,0,0});
     tile.update(0, view);
 
     struct TestTransform {
@@ -116,7 +117,7 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
         TestTransform(ScreenTransform::Buffer& _buffer, Range& _range) : transform(_buffer, _range) {}
     };
 
-    class TestLabels : public Labels {
+    class TestLabels : public LabelManager {
     public:
         TestLabels(View& _v) {
             m_isect2d.resize({1, 1}, {_v.getWidth(), _v.getHeight()});

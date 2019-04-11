@@ -2,6 +2,7 @@
 
 #include "tile/tileID.h"
 #include "util/mapProjection.h"
+#include "util/types.h"
 #include "view/viewConstraint.h"
 
 #include "glm/mat4x4.hpp"
@@ -20,8 +21,22 @@ enum class CameraType : uint8_t {
 
 struct Stops;
 
+struct Camera {
+    CameraType type = CameraType::perspective;
+
+    float maxTilt = 90.f;
+    std::shared_ptr<Stops> maxTiltStops;
+
+    // perspective
+    glm::vec2 vanishingPoint = {0, 0};
+    float fieldOfView = 0.25 * PI;
+    std::shared_ptr<Stops> fovStops;
+
+    // isometric
+    glm::vec2 obliqueAxis = {0, 1};
+};
+
 struct ViewState {
-    const MapProjection* mapProjection;
     bool changedOnLastUpdate;
     glm::dvec2 center;
     float zoom;
@@ -31,25 +46,18 @@ struct ViewState {
     float tileSize;
 };
 
-/* View
- * 1. Stores a representation of the current view into the map world
- * 2. Determines which tiles are visible in the current view
- * 3. Tracks changes in the view state to determine when new rendering is needed
-*/
+// View
+// 1. Stores a representation of the current view into the map world
+// 2. Determines which tiles are visible in the current view
+// 3. Tracks changes in the view state to determine when new rendering is needed
 
 class View {
 
 public:
 
-    View(int _width = 800, int _height = 600, ProjectionType _projType = ProjectionType::mercator);
+    View(int _width = 800, int _height = 600);
 
-    View(const View& _view) = default;
-
-    /* Sets a new map projection with default tileSize */
-    void setMapProjection(ProjectionType _projType);
-
-    /* Gets the current map projection */
-    const MapProjection& getMapProjection() const { return *m_projection.get(); }
+    void setCamera(const Camera& _camera);
 
     void setCameraType(CameraType _type);
     auto cameraType() const { return m_type; }
@@ -81,6 +89,18 @@ public:
     // field-of-view angle.
     float getFocalLength() const;
 
+    // Set the minimum zoom level. Clamped to >=0.
+    void setMinZoom(float minZoom);
+
+    // Get the minimum zoom level.
+    float getMinZoom() const { return m_minZoom; }
+
+    // Set the maximum zoom level. Clamped to <= 20.5.
+    void setMaxZoom(float maxZoom);
+
+    // Get the maximum zoom level.
+    float getMaxZoom() const { return m_maxZoom; }
+
     // Set the maximum pitch angle in degrees.
     void setMaxPitch(float degrees);
 
@@ -90,106 +110,114 @@ public:
     // Get the maximum pitch angle for the current zoom, in degrees.
     float getMaxPitch() const;
 
-    /* Sets the ratio of hardware pixels to logical pixels (for high-density screens)
-     * If unset, default is 1.0
-     */
+    // Whether to constrain visible area to the projected bounds of the world.
+    void setConstrainToWorldBounds(bool constrainToWorldBounds);
+
+    // Set the ratio of hardware pixels to logical pixels. Default is 1.0.
     void setPixelScale(float _pixelsPerPoint);
 
-    /* Sets the size of the viewable area in pixels */
+    // Set the size of the viewable area in pixel.
     void setSize(int _width, int _height);
 
-    /* Sets the position of the view within the world (in projection units) */
+    // Set the position of the view within the world in projected meters.
     void setPosition(double _x, double _y);
-    void setPosition(const glm::dvec3 pos) { setPosition(pos.x, pos.y); }
     void setPosition(const glm::dvec2 pos) { setPosition(pos.x, pos.y); }
 
-    /* Sets the zoom level of the view */
+    void setCenterCoordinates(LngLat center);
+
+    // Set the zoom level of the view.
     void setZoom(float _z);
 
-    /* Sets the roll angle of the view in radians (default is 0) */
+    // Set the roll angle of the view in radians. Default is 0.
     void setRoll(float _rad);
 
-    /* Sets the pitch angle of the view in radians (default is 0) */
+    // Set the pitch angle of the view in radians. Default is 0.
     void setPitch(float _rad);
 
-    /* Moves the position of the view */
+    // Move the position of the view in projected meters.
     void translate(double _dx, double _dy);
 
-    /* Changes zoom by the given amount */
+    // Change zoom by the given amount.
     void zoom(float _dz);
 
-    /* Changes the roll angle by the given amount in radians */
+    // Change the roll angle by the given amount in radians.
     void roll(float _drad);
 
-    /* Changes the pitch angle by the given amount in radians */
+    // Change the pitch angle by the given amount in radians.
     void pitch(float _drad);
 
-    /* Gets the current zoom */
+    // Get the current zoom.
     float getZoom() const { return m_zoom; }
 
-    /* Get the current roll angle in radians */
+    // Get the current zoom truncated to an integer. This is the zoom used to determine visible tiles.
+    int getIntegerZoom() const { return static_cast<int>(m_zoom); }
+
+    // Get the current roll angle in radians.
     float getRoll() const { return m_roll; }
 
-    /* Get the current pitch angle in radians */
+    // Get the current pitch angle in radians.
     float getPitch() const { return m_pitch; }
 
-    /* Updates the view and projection matrices if properties have changed */
-    void update(bool _constrainToWorldBounds = true);
+    // Update the view and projection matrices if properties have changed.
+    void update();
 
-    /* Gets the position of the view in projection units (z is the effective 'height' determined from zoom) */
+    // Get the position of the view in projection units (z is the effective 'height' determined from zoom).
     const glm::dvec3& getPosition() const { return m_pos; }
 
-    /* Gets the transformation from global space into view (camera) space; Due to precision limits, this
-       does not contain the translation of the view from the global origin (you must apply that separately) */
+    // Get the coordinates of the point at the center of the view.
+    LngLat getCenterCoordinates() const;
+
+    // Get the transformation from global space into view (camera) space; Due to precision limits, this
+    // does not contain the translation of the view from the global origin (you must apply that separately).
     const glm::mat4& getViewMatrix() const { return m_view; }
 
-    /* Gets the transformation from view space into screen space */
+    // Get the transformation from view space into screen space.
     const glm::mat4& getProjectionMatrix() const { return m_proj; }
 
-    /* Gets the combined view and projection transformation */
+    // Get the combined view and projection transformation.
     const glm::mat4 getViewProjectionMatrix() const { return m_viewProj; }
 
-    /* Gets the normal matrix; transforms surface normals from model space to camera space */
+    // Get the normal matrix; transforms surface normals from model space to camera space.
     const glm::mat3& getNormalMatrix() const { return m_normalMatrix; }
 
     const glm::mat3& getInverseNormalMatrix() const { return m_invNormalMatrix; }
 
-    /* Returns the eye position in world space */
+    // Get the eye position in world space.
     const glm::vec3& getEye() const { return m_eye; }
 
-    /* Returns the window coordinates [0,1], lower left corner of the window is (0, 0) */
+    // Get the window coordinates [0,1], lower left corner of the window is (0, 0).
     glm::vec2 normalizedWindowCoordinates(float _x, float _y) const;
 
     ViewState state() const;
 
-    /* Returns a rectangle of the current view range as [[x_min, y_min], [x_max, y_max]] */
+    // Get a rectangle of the current view range as [[x_min, y_min], [x_max, y_max]].
     glm::dmat2 getBoundsRect() const;
 
     float getWidth() const { return m_vpWidth; }
 
     float getHeight() const { return m_vpHeight; }
 
-    /* Calculate the position on the ground plane (z = 0) under the given screen space coordinates,
-     * replacing the input coordinates with world-space coordinates
-     * @return the un-normalized distance 'into the screen' to the ground plane
-     * (if < 0, intersection is behind the screen)
-     */
+    // Calculate the position on the ground plane (z = 0) under the given screen space coordinates,
+    // replacing the input coordinates with world-space coordinates.
+    // Returns the un-normalized distance 'into the screen' to the ground plane
+    // (if < 0, intersection is behind the screen).
     double screenToGroundPlane(float& _screenX, float& _screenY);
     double screenToGroundPlane(double& _screenX, double& _screenY);
 
-    /* Gets the screen position from a latitude/longitude */
-    glm::vec2 lonLatToScreenPosition(double lon, double lat, bool& clipped) const;
+    // Get the screen position from a latitude/longitude.
+    glm::vec2 lngLatToScreenPosition(double lng, double lat, bool& clipped);
 
-    /* Returns the set of all tiles visible at the current position and zoom */
+    LngLat screenPositionToLngLat(float x, float y, bool& intersection);
+
+    // For a position on the map in projected meters, this returns the displacement vector *from* the view *to* that
+    // position, accounting for wrapping around the 180th meridian to get the smallest magnitude displacement.
+    glm::dvec2 getRelativeMeters(glm::dvec2 projectedMeters) const;
+
+    // Get the set of all tiles visible at the current position and zoom.
     void getVisibleTiles(const std::function<void(TileID)>& _tileCb) const;
 
-    /* Returns true if the view properties have changed since the last call to update() */
+    // Returns true if the view properties have changed since the last call to update().
     bool changedOnLastUpdate() const { return m_changed; }
-
-    /* TODO: API for setting these */
-    constexpr static float s_maxZoom = 20.5;
-    constexpr static float s_minZoom = 0.0;
-    constexpr static float s_pixelsPerTile = 256.0;
 
     const glm::mat4& getOrthoViewportMatrix() const { return m_orthoViewport; };
 
@@ -203,9 +231,10 @@ protected:
 
     void updateMatrices();
 
+    void applyWorldBounds();
+
     double screenToGroundPlaneInternal(double& _screenX, double& _screenY) const;
 
-    std::shared_ptr<MapProjection> m_projection;
     std::shared_ptr<Stops> m_fovStops;
     std::shared_ptr<Stops> m_maxPitchStops;
 
@@ -228,6 +257,7 @@ protected:
     float m_pitch = 0.f;
 
     float m_zoom = 0.f;
+    float m_worldBoundsMinZoom = 0.f;
 
     float m_width;
     float m_height;
@@ -238,12 +268,16 @@ protected:
     float m_pixelScale = 1.0f;
     float m_fov = 0.25 * PI;
     float m_maxPitch = 90.f;
+    float m_minZoom = 0.f;
+    float m_maxZoom = 20.5f;
 
     CameraType m_type;
 
     bool m_dirtyMatrices;
     bool m_dirtyTiles;
+    bool m_dirtyWorldBoundsMinZoom;
     bool m_changed;
+    bool m_constrainToWorldBounds = true;
 
 };
 

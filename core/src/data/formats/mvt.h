@@ -50,7 +50,7 @@ namespace Mvt {
 
     Layer getLayer(ParserContext& _ctx, protobuf::message _layerIn);
 
-    std::shared_ptr<TileData> parseTile(const TileTask& _task, const MapProjection& _projection, int32_t _sourceId);
+    std::shared_ptr<TileData> parseTile(const TileTask& _task, int32_t _sourceId);
 
 } // namespace Mvt
 

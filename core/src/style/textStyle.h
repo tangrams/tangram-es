@@ -21,6 +21,8 @@ class TextStyle : public Style {
 
 public:
 
+    constexpr static uint32_t DEFAULT_TEXT_WRAP_LENGTH = 15;
+
     struct Parameters {
         std::shared_ptr<alfons::Font> font;
         std::string text = "";
@@ -34,7 +36,7 @@ public:
         Label::Options labelOptions;
         bool wordWrap = true;
         uint32_t maxLines = 0;
-        uint32_t maxLineWidth = 15;
+        uint32_t maxLineWidth = DEFAULT_TEXT_WRAP_LENGTH;
 
         TextLabelProperty::Transform transform = TextLabelProperty::Transform::none;
         TextLabelProperty::Align align = TextLabelProperty::Align::none;
@@ -51,7 +53,7 @@ protected:
 
     bool m_sdf;
 
-    std::shared_ptr<FontContext> m_context;
+    FontContext* m_context;
 
     struct UniformBlock {
         UniformLocation uTexScaleFactor{"u_uv_scale_factor"};
@@ -65,8 +67,8 @@ protected:
 
 public:
 
-    TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext, bool _sdf = false,
-              Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES, bool _selection = true);
+    TextStyle(std::string _name, bool _sdf = false, Blending _blendMode = Blending::overlay,
+              GLenum _drawMode = GL_TRIANGLES, bool _selection = true);
 
     void constructVertexLayout() override;
     void constructShaderProgram() override;
@@ -85,13 +87,13 @@ public:
      * - First pass if signed distance field is on, draw outlines
      * - Second pass, draw the inner glyph pixels
      */
-    virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
+    virtual void onBeginDrawFrame(RenderState& rs, const View& _view) override;
 
-    virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) override;
+    virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view) override;
 
-    virtual void draw(RenderState& rs, const Tile& _tile) override {}
+    virtual bool draw(RenderState& rs, const Tile& _tile) override { return false; }
 
-    virtual void draw(RenderState& rs, const Marker& _marker) override {}
+    virtual bool draw(RenderState& rs, const Marker& _marker) override { return false; }
 
     std::unique_ptr<StyleBuilder> createBuilder() const override;
 
@@ -102,6 +104,10 @@ public:
     virtual size_t dynamicMeshSize() const override;
 
     virtual ~TextStyle() override;
+
+    void setFontContext(FontContext& _fontContext) {
+        m_context = &_fontContext;
+    }
 
 private:
 

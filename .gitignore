@@ -110,16 +110,11 @@ DerivedData
 *.out
 *.app
 
-#Keep specific precompiled static libraries
-!**/precompiled/**/*.a
-!**/precompiled/**/*.dylib
-
 # CMake files
 CMakeCache.txt
 CMakeScripts
 CMakeFiles
 build
-build/**/Makefile
 cmake_install.cmake
 install_manifest.txt
 
@@ -134,7 +129,7 @@ platforms/android/demo/gradle
 platforms/android/demo/gradlew*
 
 # iOS generated plist configuration
-platforms/ios/demo/resources/Config.plist
+platforms/ios/App/resources/Config.plist
 
 # vim
 *.swp

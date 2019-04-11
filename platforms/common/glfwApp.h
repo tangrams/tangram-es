@@ -7,10 +7,11 @@ namespace Tangram {
 
 namespace GlfwApp {
 
-void create(std::shared_ptr<Platform> platform, int width, int height);
+void create(std::unique_ptr<Platform> platform, int width, int height);
 void setScene(const std::string& _path, const std::string& _yaml);
-void loadSceneFile(bool setPosition = false);
+void loadSceneFile(bool setPosition = false, std::vector<SceneUpdate> updates = {});
 void parseArgs(int argc, char* argv[]);
+void setWireframeMode(bool state);
 void run();
 void stop(int);
 void destroy();

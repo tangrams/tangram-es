@@ -16,26 +16,13 @@
 
 namespace Tangram {
 
-MarkerManager::MarkerManager() {}
+// ':' Delimiter for style params and layer-sublayer naming
+static const char DELIMITER = ':';
+
+MarkerManager::MarkerManager(const Scene& _scene) : m_scene(_scene) {}
 
 MarkerManager::~MarkerManager() {}
 
-void MarkerManager::setScene(std::shared_ptr<Scene> scene) {
-
-    m_scene = scene;
-    m_mapProjection = scene->mapProjection().get();
-
-    m_styleContext = std::make_unique<StyleContext>();
-    m_styleContext->initFunctions(*scene);
-
-    // Initialize StyleBuilders.
-    m_styleBuilders.clear();
-    for (auto& style : scene->styles()) {
-        m_styleBuilders[style->getName()] = style->createBuilder();
-    }
-
-    removeAll();
-}
 
 MarkerID MarkerManager::add() {
     m_dirty = true;
@@ -49,7 +36,6 @@ MarkerID MarkerManager::add() {
 
     // Return a handle for the marker.
     return id;
-
 }
 
 bool MarkerManager::remove(MarkerID markerID) {
@@ -68,35 +54,26 @@ bool MarkerManager::setStyling(MarkerID markerID, const char* styling, bool isPa
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
-    m_dirty = true;
-
     marker->setStyling(std::string(styling), isPath);
-
-    // Create a draw rule from the styling string.
-    if (!buildStyling(*marker)) { return false; }
-
-    // Build the feature mesh for the marker's current geometry.
-    buildMesh(*marker, m_zoom);
+    m_dirty = true;
 
     return true;
 }
 
-bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const unsigned int* bitmapData) {
+bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, float density, const unsigned int* bitmapData) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
-    m_dirty = true;
+    marker->clearMesh();
 
-    TextureOptions options = { GL_RGBA, GL_RGBA, { GL_LINEAR, GL_LINEAR }, { GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE } };
-    auto texture = std::make_unique<Texture>(width, height, options);
-    unsigned int size = width * height;
-    texture->setData(bitmapData, size);
-
+    TextureOptions options;
+    options.displayScale = 1.f / density;
+    auto texture = std::make_unique<Texture>(options);
+    texture->setPixelData(width, height, sizeof(GLuint),
+                          reinterpret_cast<const GLubyte*>(bitmapData),
+                          width * height * sizeof(GLuint));
     marker->setTexture(std::move(texture));
-
-    // The geometry is unchanged, but the mesh must be rebuilt because DynamicQuadMesh contains
-    // texture batches as part of its data.
-    buildMesh(*marker, m_zoom);
+    m_dirty = true;
 
     return true;
 }
@@ -105,9 +82,9 @@ bool MarkerManager::setVisible(MarkerID markerID, bool visible) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
+    marker->setVisible(visible);
     m_dirty = true;
 
-    marker->setVisible(visible);
     return true;
 }
 
@@ -115,71 +92,60 @@ bool MarkerManager::setDrawOrder(MarkerID markerID, int drawOrder) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
-    m_dirty = true;
-
     marker->setDrawOrder(drawOrder);
-
     // Sort the marker list by draw order.
     std::stable_sort(m_markers.begin(), m_markers.end(), Marker::compareByDrawOrder);
+
+    m_dirty = true;
+
     return true;
 }
 
 bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
-
-    if (!m_scene) { return false; }
-
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
-
-    m_dirty = true;
 
     marker->clearMesh();
 
     // If the marker does not have a 'point' feature mesh built, build it.
-    if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
+    if (!marker->feature() || marker->feature()->geometryType != GeometryType::points) {
         auto feature = std::make_unique<Feature>();
         feature->geometryType = GeometryType::points;
         feature->points.emplace_back();
         marker->setFeature(std::move(feature));
-        buildMesh(*marker, m_zoom);
     }
 
     // Update the marker's bounds to the given coordinates.
-    auto origin = m_mapProjection->LonLatToMeters({ lngLat.longitude, lngLat.latitude });
+    auto origin = MapProjection::lngLatToProjectedMeters({lngLat.longitude, lngLat.latitude});
     marker->setBounds({ origin, origin });
+
+    m_dirty = true;
 
     return true;
 }
 
 bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float duration, EaseType ease) {
-
-    if (!m_scene) { return false; }
-
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
     m_dirty = true;
 
     // If the marker does not have a 'point' feature built, set that point immediately.
-    if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
+    if (!marker->feature() || marker->feature()->geometryType != GeometryType::points) {
         return setPoint(markerID, lngLat);
     }
 
-    auto dest = m_mapProjection->LonLatToMeters({ lngLat.longitude, lngLat.latitude });
+    auto dest = MapProjection::lngLatToProjectedMeters({lngLat.longitude, lngLat.latitude});
     marker->setEase(dest, duration, ease);
 
     return true;
 }
 
 bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int count) {
-
-    if (!m_scene) { return false; }
-
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
     m_dirty = true;
-
     marker->clearMesh();
 
     if (!coordinates || count < 2) { return false; }
@@ -197,40 +163,35 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
     for (int i = 0; i < count; ++i) {
         bounds.expand(coordinates[i].longitude, coordinates[i].latitude);
     }
-    bounds.min = m_mapProjection->LonLatToMeters(bounds.min);
-    bounds.max = m_mapProjection->LonLatToMeters(bounds.max);
+    bounds.min = MapProjection::lngLatToProjectedMeters({bounds.min.x, bounds.min.y});
+    bounds.max = MapProjection::lngLatToProjectedMeters({bounds.max.x, bounds.max.y});
 
     // Update the marker's bounds.
     marker->setBounds(bounds);
 
-    float scale = 1.f / marker->extent();
+    float scale = 1.f / marker->modelScale();
 
     // Project and offset the coordinates into the marker-local coordinate system.
     auto origin = marker->origin(); // SW corner.
     for (int i = 0; i < count; ++i) {
-        auto degrees = glm::dvec2(coordinates[i].longitude, coordinates[i].latitude);
-        auto meters = m_mapProjection->LonLatToMeters(degrees);
-        line.emplace_back((meters.x - origin.x) * scale, (meters.y - origin.y) * scale, 0.f);
+        auto degrees = LngLat(coordinates[i].longitude, coordinates[i].latitude);
+        auto meters = MapProjection::lngLatToProjectedMeters(degrees);
+        line.emplace_back((meters.x - origin.x) * scale, (meters.y - origin.y) * scale);
     }
 
     // Update the feature data for the marker.
     marker->setFeature(std::move(feature));
 
-    // Build a new mesh for the marker.
-    buildMesh(*marker, m_zoom);
-
     return true;
 }
 
 bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* counts, int rings) {
-
-    if (!m_scene) { return false; }
+    if (!m_scene.isReady()) { return false; }
 
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
     m_dirty = true;
-
     marker->clearMesh();
 
     if (!coordinates || !counts || rings < 1) { return false; }
@@ -255,13 +216,13 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
         }
         ring += count;
     }
-    bounds.min = m_mapProjection->LonLatToMeters(bounds.min);
-    bounds.max = m_mapProjection->LonLatToMeters(bounds.max);
+    bounds.min = MapProjection::lngLatToProjectedMeters({bounds.min.x, bounds.min.y});
+    bounds.max = MapProjection::lngLatToProjectedMeters({bounds.max.x, bounds.max.y});
 
     // Update the marker's bounds.
     marker->setBounds(bounds);
 
-    float scale = 1.f / marker->extent();
+    float scale = 1.f / marker->modelScale();
 
     // Project and offset the coordinates into the marker-local coordinate system.
     auto origin = marker->origin(); // SW corner.
@@ -271,9 +232,9 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
         polygon.emplace_back();
         auto& line = polygon.back();
         for (int j = 0; j < count; ++j) {
-            auto degrees = glm::dvec2(ring[j].longitude, ring[j].latitude);
-            auto meters = m_mapProjection->LonLatToMeters(degrees);
-            line.emplace_back((meters.x - origin.x) * scale, (meters.y - origin.y) * scale, 0.f);
+            auto degrees = LngLat(ring[j].longitude, ring[j].latitude);
+            auto meters = MapProjection::lngLatToProjectedMeters(degrees);
+            line.emplace_back((meters.x - origin.x) * scale, (meters.y - origin.y) * scale);
         }
         ring += count;
     }
@@ -281,13 +242,23 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
     // Update the feature data for the marker.
     marker->setFeature(std::move(feature));
 
-    // Build a new mesh for the marker.
-    buildMesh(*marker, m_zoom);
-
     return true;
 }
 
 bool MarkerManager::update(const View& _view, float _dt) {
+    if (!m_dirty && m_markers.empty()) { return false; }
+
+    if (!m_scene.isReady()) { return false; }
+
+    if (!m_styleContext) {
+        // First call to update after scene became ready
+        // Initialize Stylecontext and StyleBuilders.
+        m_styleContext = std::make_unique<StyleContext>();
+        m_styleContext->initFunctions(m_scene);
+        for (const auto& style : m_scene.styles()) {
+            m_styleBuilders[style->getName()] = style->createBuilder();
+        }
+    }
 
     m_zoom = _view.getZoom();
 
@@ -297,8 +268,11 @@ bool MarkerManager::update(const View& _view, float _dt) {
     m_dirty = false;
 
     for (auto& marker : m_markers) {
+        int builtZoom = marker->builtZoomLevel();
 
-        if (m_zoom != marker->builtZoomLevel()) {
+        if (m_zoom != builtZoom || !marker->mesh()) {
+            if (builtZoom < 0) { buildStyling(*marker); }
+
             buildMesh(*marker, m_zoom);
             rebuilt = true;
         }
@@ -312,19 +286,18 @@ bool MarkerManager::update(const View& _view, float _dt) {
 
 void MarkerManager::removeAll() {
     m_dirty = true;
-
     m_markers.clear();
-
 }
 
 void MarkerManager::rebuildAll() {
+    if (m_markers.empty()) { return; }
+
     m_dirty = true;
 
     for (auto& entry : m_markers) {
         buildStyling(*entry);
         buildMesh(*entry, m_zoom);
     }
-
 }
 
 const std::vector<std::unique_ptr<Marker>>& MarkerManager::markers() const {
@@ -333,18 +306,16 @@ const std::vector<std::unique_ptr<Marker>>& MarkerManager::markers() const {
 
 bool MarkerManager::buildStyling(Marker& marker) {
 
-    if (!m_scene) { return false; }
-
     const auto& markerStyling = marker.styling();
 
     // If the Marker styling is a path, find the layers it specifies.
     if (markerStyling.isPath) {
         auto path = markerStyling.string;
         // The DELIMITER used by layers is currently ":", but Marker paths use "." (scene.h).
-        std::replace(path.begin(), path.end(), '.', DELIMITER[0]);
+        std::replace(path.begin(), path.end(), '.', DELIMITER);
         // Start iterating over the delimited path components.
         size_t start = 0, end = 0;
-        end = path.find(DELIMITER[0], start);
+        end = path.find(DELIMITER, start);
         if (path.compare(start, end - start, "layers") != 0) {
             // If the path doesn't begin with 'layers' it isn't a layer heirarchy.
             return false;
@@ -353,8 +324,8 @@ bool MarkerManager::buildStyling(Marker& marker) {
         const SceneLayer* currentLayer = nullptr;
         size_t layerStart = end + 1;
         start = end + 1;
-        end = path.find(DELIMITER[0], start);
-        for (const auto& layer : m_scene->layers()) {
+        end = path.find(DELIMITER, start);
+        for (const auto& layer : m_scene.layers()) {
             if (path.compare(layerStart, end - layerStart, layer.name()) == 0) {
                 currentLayer = &layer;
                 marker.mergeRules(layer);
@@ -364,7 +335,7 @@ bool MarkerManager::buildStyling(Marker& marker) {
         // Search sublayers recursively until we can't find another token or layer.
         while (end != std::string::npos && currentLayer != nullptr) {
             start = end + 1;
-            end = path.find(DELIMITER[0], start);
+            end = path.find(DELIMITER, start);
             const auto& layers = currentLayer->sublayers();
             currentLayer = nullptr;
             for (const auto& layer : layers) {
@@ -381,28 +352,31 @@ bool MarkerManager::buildStyling(Marker& marker) {
         }
         // The draw group name should come next.
         start = end + 1;
-        end = path.find(DELIMITER[0], start);
+        end = path.find(DELIMITER, start);
         // Find the rule in the merged set whose name matches the final token.
         return marker.finalizeRuleMergingForName(path.substr(start, end - start));
     }
 
-    std::vector<StyleParam> params;
 
     // If the styling is not a path, try to load it as a string of YAML.
-    const auto& sceneJsFnList = m_scene->functions();
-    auto jsFnIndex = sceneJsFnList.size();
+    size_t start = m_functions.size();
 
+    std::vector<StyleParam> params;
     try {
         YAML::Node node = YAML::Load(markerStyling.string);
-        // Parse style parameters from the YAML node.
-        SceneLoader::parseStyleParams(node, m_scene, "", params);
+        params = SceneLoader::parseStyleParams(node, m_stops, m_functions);
     } catch (const YAML::Exception& e) {
         LOG("Invalid marker styling '%s', %s", markerStyling.string.c_str(), e.what());
         return false;
     }
+
+    size_t offset = start + m_scene.functions().size();
+    for (auto& p : params) {
+        if (p.function >= 0) { p.function += offset; }
+    }
     // Compile any new JS functions used for styling.
-    for (auto i = jsFnIndex; i < sceneJsFnList.size(); ++i) {
-        m_styleContext->addFunction(sceneJsFnList[i]);
+    for (auto i = start; i < m_functions.size(); ++i) {
+        m_styleContext->addFunction(m_functions[i]);
     }
 
     marker.setDrawRuleData(std::make_unique<DrawRuleData>("", 0, std::move(params)));
@@ -445,7 +419,7 @@ bool MarkerManager::buildMesh(Marker& marker, int zoom) {
     bool interactive = false;
     if (rule->get(StyleParamKey::interactive, interactive) && interactive) {
         if (selectionColor == 0) {
-            selectionColor = m_scene->featureSelection()->nextColorIdentifier();
+            selectionColor = m_scene.featureSelection()->nextColorIdentifier();
         }
         rule->selectionColor = selectionColor;
     } else {

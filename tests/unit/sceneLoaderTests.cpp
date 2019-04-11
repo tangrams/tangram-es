@@ -15,19 +15,14 @@ using namespace Tangram;
 using YAML::Node;
 
 TEST_CASE("Style with the same name as a built-in style are ignored") {
-    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform, Url());
-    SceneLoader::loadStyle(platform, "polygons", Node(), scene);
-    REQUIRE(scene->styles().size() == 0);
-
+    REQUIRE(SceneLoader::loadStyle("polygons", Node()) == nullptr);
 }
 
 TEST_CASE("Correctly instantiate a style from a YAML configuration") {
-    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform, Url());
 
-    scene->styles().emplace_back(new PolygonStyle("polygons"));
-    scene->styles().emplace_back(new PolylineStyle("lines"));
+    Scene::Styles styles;
+    styles.push_back(std::make_unique<PolygonStyle>("polygons"));
+    styles.push_back(std::make_unique<PolylineStyle>("lines"));
 
     YAML::Node node = YAML::Load(R"END(
         animated: true
@@ -39,9 +34,9 @@ TEST_CASE("Correctly instantiate a style from a YAML configuration") {
             emission: 0.0
         )END");
 
-    SceneLoader::loadStyle(platform, "roads", node, scene);
-
-    auto& styles = scene->styles();
+    SceneTextures textures;
+    styles.push_back(SceneLoader::loadStyle("roads", node));
+    SceneLoader::loadStyleProps(node, *styles.back().get(), textures);
 
     REQUIRE(styles.size() == 3);
     REQUIRE(styles[0]->getName() == "polygons");

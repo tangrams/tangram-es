@@ -96,7 +96,6 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
     mvp[3][1] = 0.5f;
 
     ViewState viewState {
-        nullptr, // mapProjection (unused)
         false, // changedOnLastUpdate (unused)
         glm::dvec2{}, // center (unused)
         0.f, // zoom (unused)

@@ -2,6 +2,7 @@
 
 #include "data/tileData.h"
 #include "util/json.h"
+#include "util/types.h"
 
 #include "glm/vec2.hpp"
 #include <functional>
@@ -10,11 +11,10 @@
 namespace Tangram {
 
 class TileTask;
-class MapProjection;
 
 namespace TopoJson {
 
-using Transform = std::function<Point(glm::dvec2 _lonLat)>;
+using Transform = std::function<Point(LngLat _lngLat)>;
 
 struct Topology {
     glm::dvec2 scale = { 1., 1. };
@@ -35,7 +35,7 @@ Feature getFeature(const JsonValue& _geometry, const Topology& _topology, int32_
 
 Layer getLayer(JsonValue::MemberIterator& _object, const Topology& _topology, int32_t _sourceId);
 
-std::shared_ptr<TileData> parseTile(const TileTask& _task, const MapProjection& _projection, int32_t _sourceId);
+std::shared_ptr<TileData> parseTile(const TileTask& _task, int32_t _sourceId);
 
 } // namespace TopoJson
 

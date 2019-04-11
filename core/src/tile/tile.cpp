@@ -1,70 +1,50 @@
 #include "tile/tile.h"
 
-#include "data/tileSource.h"
 #include "labels/labelSet.h"
 #include "style/style.h"
 #include "tile/tileID.h"
+#include "util/mapProjection.h"
 #include "view/view.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 
 namespace Tangram {
 
-Tile::Tile(TileID _id, const MapProjection& _projection, const TileSource* _source) :
+Tile::Tile(TileID _id, const int32_t& _sourceId, const int32_t& _sourceGeneration) :
     m_id(_id),
-    m_projection(&_projection),
-    m_sourceId(_source ? _source->id() : 0),
-    m_sourceGeneration(_source ? _source->generation() : 0) {
+    m_sourceId(_sourceId),
+    m_sourceGeneration(_sourceGeneration) {
 
-    BoundingBox bounds(_projection.TileBounds(_id));
-
-    m_scale = bounds.width();
-    m_inverseScale = 1.0/m_scale;
-
-    updateTileOrigin(_id.wrap);
+    m_scale = MapProjection::metersPerTileAtZoom(_id.z);
+    m_tileOrigin = MapProjection::tileSouthWestCorner(_id);
 
     // Init model matrix to size of tile
     m_modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(m_scale));
 }
 
 
-glm::dvec2 Tile::coordToLngLat(const glm::vec2& _tileCoord) const {
-    double scale = 1.0 / m_inverseScale;
-
-    glm::dvec2 meters = glm::dvec2(_tileCoord) * scale + m_tileOrigin;
-    glm::dvec2 degrees = m_projection->MetersToLonLat(meters);
-
-    return {degrees.x, degrees.y};
+LngLat Tile::coordToLngLat(const glm::vec2& _tileCoord) const {
+    glm::dvec2 meters = glm::dvec2(_tileCoord) * m_scale + m_tileOrigin;
+    LngLat degrees = MapProjection::projectedMetersToLngLat(meters);
+    return degrees;
 }
 
 Tile::~Tile() {}
-
-//Note: This could set tile origin to be something different than the one if TileID's wrap is used.
-// But, this is required for wrapped tiles which are picked up from the cache
-void Tile::updateTileOrigin(const int _wrap) {
-    BoundingBox bounds(m_projection->TileBounds(m_id));
-
-    m_tileOrigin = { bounds.min.x, bounds.max.y }; // South-West corner
-    // negative y coordinate: to change from y down to y up
-    // (tile system has y down and gl context we use has y up).
-    m_tileOrigin.y *= -1.0;
-
-    auto mapBound = m_projection->MapBounds();
-    auto mapSpan = mapBound.max.x - mapBound.min.x;
-
-    m_tileOrigin.x += (mapSpan * _wrap);
-}
 
 void Tile::initGeometry(uint32_t _size) {
     m_geometry.resize(_size);
 }
 
 void Tile::update(float _dt, const View& _view) {
+    // Get the relative position of the *center* of the tile, to ensure that the result places the tile as close to
+    // the view center as possible.
+    auto centerOffset = glm::dvec2(m_scale / 2.0);
+    auto centerRelativeMeters = _view.getRelativeMeters(m_tileOrigin + centerOffset);
+    auto originRelativeMeters = centerRelativeMeters - centerOffset;
 
     // Apply tile-view translation to the model matrix
-    const auto& viewOrigin = _view.getPosition();
-    m_modelMatrix[3][0] = m_tileOrigin.x - viewOrigin.x;
-    m_modelMatrix[3][1] = m_tileOrigin.y - viewOrigin.y;
+    m_modelMatrix[3][0] = static_cast<float>(originRelativeMeters.x);
+    m_modelMatrix[3][1] = static_cast<float>(originRelativeMeters.y);
 
     m_mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
 }
