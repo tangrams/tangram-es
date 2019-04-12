@@ -1,5 +1,5 @@
 #include "androidPlatform.h"
-#include "data/clientGeoJsonSource.h"
+#include "data/clientDataSource.h"
 #include "map.h"
 
 #include <cassert>
@@ -36,7 +36,7 @@ JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved) {
 #define FUNC(CLASS, NAME) JNIEXPORT JNICALL Java_com_mapzen_tangram_ ## CLASS ## _native ## NAME
 
 #define auto_map(ptr) assert(ptr); auto map = reinterpret_cast<Tangram::AndroidMap*>(mapPtr)
-#define auto_source(ptr) assert(ptr); auto source = reinterpret_cast<Tangram::ClientGeoJsonSource*>(ptr)
+#define auto_source(ptr) assert(ptr); auto source = reinterpret_cast<Tangram::ClientDataSource*>(ptr)
 
 
 #define MapRenderer(NAME) FUNC(MapRenderer, NAME)
@@ -534,7 +534,7 @@ jlong MapController(AddTileSource)(JNIEnv* jniEnv, jobject obj, jlong mapPtr,
     auto_map(mapPtr);
 
     auto sourceName = stringFromJString(jniEnv, name);
-    auto source = std::make_shared<Tangram::ClientGeoJsonSource>(map->getPlatform(),
+    auto source = std::make_shared<Tangram::ClientDataSource>(map->getPlatform(),
                                                                  sourceName, "",
                                                                  generateCentroid);
     map->addTileSource(source);
@@ -582,7 +582,7 @@ void MapData(AddFeature)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jdoubleAr
     if (nRings > 0) {
         // If rings are defined, this is a polygon feature.
         auto* rings = jniEnv->GetIntArrayElements(jrings, NULL);
-        Tangram::PolygonBuilder builder;
+        Tangram::ClientDataSource::PolygonBuilder builder;
         builder.beginPolygon(static_cast<size_t>(nRings));
         int offset = 0;
         for (int j = 0; j < nRings; j++) {
@@ -597,7 +597,7 @@ void MapData(AddFeature)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jdoubleAr
         jniEnv->ReleaseIntArrayElements(jrings, rings, JNI_ABORT);
     } else if (nPoints > 1) {
         // If no rings defined but multiple points, this is a polyline feature.
-        Tangram::PolylineBuilder builder;
+        Tangram::ClientDataSource::PolylineBuilder builder;
         builder.beginPolyline(static_cast<size_t>(nPoints));
         for (size_t i = 0; i < nPoints; i++) {
             builder.addPoint(LngLat(coordinates[2 * i], coordinates[2 * i + 1]));

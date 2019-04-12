@@ -27,7 +27,7 @@ static inline void TGFeaturePropertiesConvertToCoreProperties(TGFeaturePropertie
 }
 
 @interface TGMapData () {
-    std::shared_ptr<Tangram::ClientGeoJsonSource> dataSource;
+    std::shared_ptr<Tangram::ClientDataSource> dataSource;
 }
 
 @property (copy, nonatomic) NSString* name;
@@ -37,7 +37,7 @@ static inline void TGFeaturePropertiesConvertToCoreProperties(TGFeaturePropertie
 
 @implementation TGMapData
 
-- (instancetype)initWithMapView:(__weak TGMapView *)mapView name:(NSString *)name source:(std::shared_ptr<Tangram::ClientGeoJsonSource>)source
+- (instancetype)initWithMapView:(__weak TGMapView *)mapView name:(NSString *)name source:(std::shared_ptr<Tangram::ClientDataSource>)source
 {
     self = [super init];
 
@@ -67,7 +67,7 @@ static inline void TGFeaturePropertiesConvertToCoreProperties(TGFeaturePropertie
 
         } else if (TGGeoPolyline *polyline = [feature polyline]) {
 
-            Tangram::PolylineBuilder builder;
+            Tangram::ClientDataSource::PolylineBuilder builder;
             size_t numberOfPoints = polyline.count;
             builder.beginPolyline(numberOfPoints);
             for (size_t i = 0; i < numberOfPoints; i++) {
@@ -77,7 +77,7 @@ static inline void TGFeaturePropertiesConvertToCoreProperties(TGFeaturePropertie
 
         } else if (TGGeoPolygon *polygon = [feature polygon]) {
 
-            Tangram::PolygonBuilder builder;
+            Tangram::ClientDataSource::PolygonBuilder builder;
             builder.beginPolygon(polygon.rings.count);
             for (TGGeoPolyline *ring in polygon.rings) {
                 size_t numberOfPoints = ring.count;

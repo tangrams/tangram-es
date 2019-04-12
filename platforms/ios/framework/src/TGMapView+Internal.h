@@ -7,7 +7,6 @@
 
 #import "TGMapView.h"
 
-#include "data/clientGeoJsonSource.h"
 #include "map.h"
 #include <vector>
 #include <memory>
