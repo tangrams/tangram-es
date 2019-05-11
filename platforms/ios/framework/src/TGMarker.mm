@@ -204,11 +204,11 @@
     }
 }
 
-- (BOOL)getError:(NSError**)error
+- (BOOL)getError:(NSError**)result
 {
     if (self->error) {
-        if (error) {
-            *error = self->error;
+        if (result) {
+            *result = self->error;
         }
 
         self->error = nil;
