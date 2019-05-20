@@ -17,14 +17,14 @@ struct Range {
 
 struct LngLat {
     LngLat() {}
-    LngLat(double _lon, double _lat) : longitude(_lon), latitude(_lat) {}
+    LngLat(double _lng, double _lat) : longitude(_lng), latitude(_lat) {}
 
     LngLat(const LngLat& _other) = default;
     LngLat(LngLat&& _other) = default;
     LngLat& operator=(const LngLat& _other) = default;
     LngLat& operator=(LngLat&& _other) = default;
 
-    bool operator==(const LngLat& _other) {
+    bool operator==(const LngLat& _other) const {
         return longitude == _other.longitude &&
                latitude == _other.latitude;
     }
