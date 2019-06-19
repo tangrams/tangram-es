@@ -8,7 +8,7 @@ add_library(tangram-core
   include/tangram/map.h
   include/tangram/platform.h
   include/tangram/tangram.h
-  include/tangram/data/clientGeoJsonSource.h
+  include/tangram/data/clientDataSource.h
   include/tangram/data/properties.h
   include/tangram/data/propertyItem.h
   include/tangram/data/tileSource.h
@@ -19,7 +19,7 @@ add_library(tangram-core
   include/tangram/util/variant.h
   src/map.cpp
   src/platform.cpp
-  src/data/clientGeoJsonSource.cpp
+  src/data/clientDataSource.cpp
   src/data/memoryCacheDataSource.h
   src/data/memoryCacheDataSource.cpp
   src/data/networkDataSource.h
