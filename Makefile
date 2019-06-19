@@ -7,6 +7,7 @@ all: android osx ios
 .PHONY: clean-ios
 .PHONY: clean-rpi
 .PHONY: clean-linux
+.PHONY: clean-windows
 .PHONY: clean-benchmark
 .PHONY: clean-shaders
 .PHONY: clean-tizen-arm
@@ -21,6 +22,7 @@ all: android osx ios
 .PHONY: ios-docs
 .PHONY: rpi
 .PHONY: linux
+.PHONY: windows
 .PHONY: benchmark
 .PHONY: tests
 .PHONY: cmake-osx
@@ -28,6 +30,7 @@ all: android osx ios
 .PHONY: cmake-ios
 .PHONY: cmake-rpi
 .PHONY: cmake-linux
+.PHONY: cmake-windows
 
 ANDROID_BUILD_DIR = platforms/android/tangram/build
 OSX_BUILD_DIR = build/osx
@@ -36,6 +39,7 @@ IOS_BUILD_DIR = build/ios
 IOS_DOCS_BUILD_DIR = build/ios-docs
 RPI_BUILD_DIR = build/rpi
 LINUX_BUILD_DIR = build/linux
+WINDOWS_BUILD_DIR = build/windows
 TESTS_BUILD_DIR = build/tests
 BENCH_BUILD_DIR = build/bench
 TIZEN_ARM_BUILD_DIR = build/tizen-arm
@@ -99,6 +103,14 @@ LINUX_CMAKE_PARAMS = \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
 	${CMAKE_OPTIONS}
 
+WINDOWS_CMAKE_PARAMS = \
+	-G "MinGW Makefiles" \
+	-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+	-DTANGRAM_PLATFORM=windows \
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+	-DCMAKE_SH="CMAKE_SH-NOTFOUND" \
+	${CMAKE_OPTIONS}
+
 ifndef TIZEN_PROFILE
 	TIZEN_PROFILE=mobile
 endif
@@ -128,7 +140,7 @@ TIZEN_X86_CMAKE_PARAMS = \
 	${CMAKE_OPTIONS}
 
 clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux clean-shaders \
-	clean-tizen-arm clean-tizen-x86
+	clean-tizen-arm clean-tizen-x86 clean-windows
 
 clean-android:
 	rm -rf platforms/android/build
@@ -147,6 +159,9 @@ clean-rpi:
 
 clean-linux:
 	rm -rf ${LINUX_BUILD_DIR}
+
+clean-windows:
+	rm -rf ${WINDOWS_BUILD_DIR}
 
 clean-xcode:
 	rm -rf ${OSX_XCODE_BUILD_DIR}
@@ -253,8 +268,14 @@ cmake-rpi:
 linux: cmake-linux
 	cmake --build ${LINUX_BUILD_DIR}
 
+windows: cmake-windows
+	cmake --build ${WINDOWS_BUILD_DIR}
+
 cmake-linux:
 	cmake -H. -B${LINUX_BUILD_DIR} ${LINUX_CMAKE_PARAMS}
+
+cmake-windows:
+	cmake -H. -B${WINDOWS_BUILD_DIR} ${WINDOWS_CMAKE_PARAMS}
 
 tizen-arm: cmake-tizen-arm
 	cmake --build ${TIZEN_ARM_BUILD_DIR}

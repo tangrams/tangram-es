@@ -103,4 +103,6 @@ int main(int argc, char* argv[]) {
 
     // Clean up.
     GlfwApp::destroy();
+
+    return 0;
 }

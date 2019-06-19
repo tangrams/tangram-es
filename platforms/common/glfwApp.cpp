@@ -1,8 +1,15 @@
 #include "glfwApp.h"
+
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_stl.h"
+
+#ifdef TANGRAM_WINDOWS
+#define GLFW_INCLUDE_NONE
+#include <glad/glad.h>
+#endif // TANGRAM_WINDOWS
+
 #define GLFW_INCLUDE_GLEXT
 #include <GLFW/glfw3.h>
 #include <cstdlib>
@@ -180,6 +187,10 @@ void create(std::unique_ptr<Platform> p, int w, int h) {
     // Make the main_window's context current
     glfwMakeContextCurrent(main_window);
     glfwSwapInterval(1); // Enable vsync
+
+#ifdef TANGRAM_WINDOWS
+    gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+#endif
 
     // Set input callbacks
     glfwSetFramebufferSizeCallback(main_window, framebufferResizeCallback);

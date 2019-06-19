@@ -1,0 +1,25 @@
+environment:
+  MINGW_PATH: C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64
+  CURL_VERSION: curl-7.63.0
+  ZLIB_VERSION: zlib-1.2.11
+install:
+  - set PATH=C:\cmake-install\bin;C:\cmake-install\lib;%MINGW_PATH%\bin;%PATH%
+  - appveyor DownloadFile "https://www.zlib.net/%ZLIB_VERSION%.tar.gz"
+  - 7z x -o. %ZLIB_VERSION%.tar.gz
+  - 7z x -oC:\cmake-install %ZLIB_VERSION%.tar
+  - cd C:\cmake-install\%ZLIB_VERSION%
+  - cmake -H. -Bbuild -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX=C:\cmake-install -DCMAKE_SH="CMAKE_SH-NOTFOUND"
+  - cmake --build build -- -j %NUMBER_OF_PROCESSORS%
+  - cmake --build build --target install
+  - appveyor DownloadFile "https://curl.haxx.se/download/%CURL_VERSION%.tar.gz"
+  - 7z x -o. %CURL_VERSION%.tar.gz
+  - 7z x -oC:\cmake-install %CURL_VERSION%.tar
+  - cd C:\cmake-install\%CURL_VERSION%
+  - cmake -H. -Bbuild -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX=C:\cmake-install -DBUILD_CURL_EXE=OFF -DBUILD_TESTING=OFF -DCMAKE_USE_WINSSL=ON -DCMAKE_SH="CMAKE_SH-NOTFOUND"
+  - cmake --build build -- -j %NUMBER_OF_PROCESSORS%
+  - cmake --build build --target install
+  - cd C:\projects\tangram-es
+before_build:
+  - git submodule update --init --recursive
+build_script:
+  - mingw32-make windows -j %NUMBER_OF_PROCESSORS% CMAKE_OPTIONS="-DCURL_LIBRARIES=C:/cmake-install/bin/libcurl.dll -DCURL_INCLUDE_DIRS=C:/cmake-install/include"

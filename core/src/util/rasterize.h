@@ -2,6 +2,9 @@
 
 #include "glm/vec2.hpp"
 #include <cmath>
+#ifndef M_PI // M_PI is non-standard since c++99
+#define M_PI (3.14159265358979323846264338327950288)
+#endif
 #include <functional>
 
 namespace Tangram {
