@@ -493,7 +493,7 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& _node, SceneTextures&
         auto atlas = std::make_unique<SpriteAtlas>();
         for (auto it = sprites.begin(); it != sprites.end(); ++it) {
 
-            const Node& sprite = it->second;
+            const Node sprite = it->second;
             const std::string& spriteName = it->first.Scalar();
 
             if (sprite) {
