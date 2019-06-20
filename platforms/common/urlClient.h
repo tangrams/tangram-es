@@ -3,6 +3,7 @@
 #include "platform.h" // UrlResponse
 #include "util/asyncWorker.h"
 
+#include <atomic>
 #include <condition_variable>
 #include <functional>
 #include <list>
@@ -69,7 +70,7 @@ private:
     std::mutex m_requestMutex;
 
     // RequestIds
-    std::atomic_uint64_t m_requestCount{0};
+    std::atomic<uint64_t> m_requestCount{0};
 
     // File descriptors to break waiting select.
     int m_requestNotify[2] = { -1, -1 };
