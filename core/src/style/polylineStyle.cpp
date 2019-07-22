@@ -122,7 +122,7 @@ void PolylineStyle::constructShaderProgram() {
         auto pixels = DashArray::render(m_dashArray, dash_scale);
 
         m_texture = std::make_shared<Texture>(options);
-        m_texture->setPixelData(pixels.size(), 1, sizeof(GLuint),
+        m_texture->setPixelData(1, pixels.size(), sizeof(GLuint),
                                 reinterpret_cast<GLubyte*>(pixels.data()),
                                 pixels.size() * sizeof(GLuint));
 
