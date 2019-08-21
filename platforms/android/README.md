@@ -20,7 +20,7 @@ Then add tangram-es in the 'dependencies' section of your module's 'build.gradle
 
 ```
 dependencies {
-  compile 'com.mapzen.tangram:tangram:$latest_version'
+  implementation 'com.mapzen.tangram:tangram:$latest_version'
 }
 ```
 
