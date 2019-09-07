@@ -31,7 +31,7 @@ jobs:
       - run: cd platforms/android && ./gradlew uploadArchives
   build-ios:
     macos:
-      xcode: "10.1.0"
+      xcode: "10.3.0"
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
