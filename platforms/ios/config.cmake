@@ -10,6 +10,14 @@ set(CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "9.3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 execute_process(COMMAND xcrun --sdk iphoneos --show-sdk-version OUTPUT_VARIABLE IOS_SDK_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+# Copy necessary workspace settings into a user-specific location in the iOS workspace.
+# See platforms/ios/DEVELOPING.md for details.
+configure_file(
+  ${PROJECT_SOURCE_DIR}/platforms/ios/WorkspaceSettings.xcsettings
+  ${PROJECT_SOURCE_DIR}/platforms/ios/Tangram.xcworkspace/xcuserdata/$ENV{USER}.xcuserdatad/WorkspaceSettings.xcsettings
+  COPYONLY
+)
+
 # Configure the API key in the Info.plist for the demo app.
 set(NEXTZEN_API_KEY $ENV{NEXTZEN_API_KEY})
 configure_file(${PROJECT_SOURCE_DIR}/platforms/ios/demo/Info.plist.in ${PROJECT_BINARY_DIR}/Info.plist)
