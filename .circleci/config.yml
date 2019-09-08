@@ -31,7 +31,7 @@ jobs:
       - run: cd platforms/android && ./gradlew uploadArchives
   build-ios:
     macos:
-      xcode: "9.4.0"
+      xcode: "10.3.0"
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
@@ -45,7 +45,7 @@ jobs:
       - run: make ios-static-sim BUILD_TYPE=Debug
   build-deploy-ios-snapshot:
     macos:
-      xcode: "9.4.0"
+      xcode: "10.3.0"
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
@@ -53,7 +53,7 @@ jobs:
       - checkout
       - run: git submodule update --init
       # Install dependencies.
-      - run: sudo gem install jazzy --no-document --version 0.9.4
+      - run: sudo gem install jazzy --no-document --version 0.10.0
       - run: brew install cmake
       # Build the framework in debug mode and package it into pod.zip
       - run: make ios-framework-universal BUILD_TYPE=Debug
@@ -67,7 +67,7 @@ jobs:
           path: ~/pod.zip
   build-deploy-macos-snapshot:
     macos:
-      xcode: "9.4.0"
+      xcode: "10.3.0"
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
@@ -84,7 +84,7 @@ jobs:
           path: ~/demo.zip
   build-deploy-ios-release:
     macos:
-      xcode: "9.4.0"
+      xcode: "10.3.0"
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
@@ -92,7 +92,7 @@ jobs:
       - checkout
       - run: git submodule update --init
       # Install dependencies.
-      - run: sudo gem install jazzy --no-document --version 0.9.4
+      - run: sudo gem install jazzy --no-document --version 0.10.0
       - run: brew install cmake jfrog-cli-go
       # Build the framework in release mode and package it into pod.zip
       - run: make ios-framework-universal BUILD_TYPE=Release
