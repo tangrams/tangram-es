@@ -105,6 +105,8 @@ set_target_properties(TangramMap PROPERTIES
   XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14"
   XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
   XCODE_ATTRIBUTE_GCC_TREAT_WARNINGS_AS_ERRORS "YES"
+  # Generate dsym for all build types to ensure symbols are available in profiling.
+  XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS "YES"
 )
 
 ### Configure static library build target.
@@ -169,6 +171,8 @@ set_target_properties(tangram-static PROPERTIES
   XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14"
   XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
   XCODE_ATTRIBUTE_GCC_TREAT_WARNINGS_AS_ERRORS "YES"
+  # Generate dsym for all build types to ensure symbols are available in profiling.
+  XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS "YES"
   # The Xcode settings below are to pre-link our static libraries into a single
   # archive. Xcode will take the objects from this target and from all of the
   # pre-link libraries, combine them, and resolve the symbols into one "master"
