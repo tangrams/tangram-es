@@ -3,10 +3,7 @@ add_definitions(-DTANGRAM_IOS)
 set(TANGRAM_FRAMEWORK_VERSION "0.10.2-dev")
 
 ### Configure iOS toolchain.
-set(IOS TRUE)
-set(CMAKE_OSX_SYSROOT "iphoneos")
-set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
-set(CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "9.3")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "9.3") # Applies to iOS even though the variable name says OSX.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 execute_process(COMMAND xcrun --sdk iphoneos --show-sdk-version OUTPUT_VARIABLE IOS_SDK_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
