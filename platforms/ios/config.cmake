@@ -3,12 +3,17 @@ add_definitions(-DTANGRAM_IOS)
 set(TANGRAM_FRAMEWORK_VERSION "0.10.2-dev")
 
 ### Configure iOS toolchain.
-set(IOS TRUE)
-set(CMAKE_OSX_SYSROOT "iphoneos")
-set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
-set(CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "9.3")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "9.3") # Applies to iOS even though the variable name says OSX.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 execute_process(COMMAND xcrun --sdk iphoneos --show-sdk-version OUTPUT_VARIABLE IOS_SDK_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# Copy necessary workspace settings into a user-specific location in the iOS workspace.
+# See platforms/ios/DEVELOPING.md for details.
+configure_file(
+  ${PROJECT_SOURCE_DIR}/platforms/ios/WorkspaceSettings.xcsettings
+  ${PROJECT_SOURCE_DIR}/platforms/ios/Tangram.xcworkspace/xcuserdata/$ENV{USER}.xcuserdatad/WorkspaceSettings.xcsettings
+  COPYONLY
+)
 
 # Configure the API key in the Info.plist for the demo app.
 set(NEXTZEN_API_KEY $ENV{NEXTZEN_API_KEY})
@@ -99,6 +104,7 @@ set_target_properties(TangramMap PROPERTIES
   FRAMEWORK TRUE
   PUBLIC_HEADER "${TANGRAM_FRAMEWORK_HEADERS}"
   MACOSX_FRAMEWORK_INFO_PLIST "${PROJECT_SOURCE_DIR}/platforms/ios/framework/Info.plist"
+  XCODE_GENERATE_SCHEME TRUE
   XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${TANGRAM_FRAMEWORK_VERSION}"
   XCODE_ATTRIBUTE_DEFINES_MODULE "YES"
   XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
@@ -166,6 +172,7 @@ if(TANGRAM_MBTILES_DATASOURCE)
 endif()
 
 set_target_properties(tangram-static PROPERTIES
+  XCODE_GENERATE_SCHEME TRUE
   XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${TANGRAM_FRAMEWORK_VERSION}"
   XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
   XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14"
