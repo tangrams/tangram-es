@@ -5,13 +5,11 @@ This page is for those who intend to modify Tangram ES itself, not just use it i
 
 ## Don't commit code signing changes ##
 
-When building and running the demo application on an iOS device, you will likely need to modify the "App ID" and "Development Team" values in the Xcode project in order to sign the application package correctly because Apple mandates that an App ID can only be used by one Development Team. This is a good security practice, but since the App ID and Developer Team values are embedded in the Xcode project data, there is no way for each developer working with the repository to use their App ID / Developer Team values without modifying the Xcode project files that are checked into source control.
+When building and running the demo application on an iOS device, you will need to set the "App ID" and "Development Team" values in the Xcode project in order to sign the application package. Apple mandates that an App ID can only be used by one Development Team. This is a good security practice, but it means that the demo application cannot include one App ID for everyone to use. When the Developer Team and App ID are set from the Xcode UI they become included in the project file. This can be disruptive to a git workflow because git will show the Xcode project file as modified.
 
-This can be disruptive to a git workflow because git will show the Xcode project file as modified. To work with a clean source tree, you should let git assume there were no changes to the demo Xcode project by running this command once:
-```
-git update-index --assume-unchanged platforms/ios/demo/TangramDemo.xcodeproj/project.pbxproj
-```
-[Source](https://stackoverflow.com/questions/21756531/git-ignore-local-changes-to-portions-of-tracked-files)
+To allow you build the demo with a clean source tree, the demo application project is configured to read local settings like your App ID and Development Team from a [xcconfig](https://help.apple.com/xcode/mac/8.3/#/dev745c5c974) file located at `platforms/ios/demo/Local.xcconfig`. The `.gitignore` in this folder configures git to ignore this file, so you can add your personal code signing settings here while keeping your git status clean. The CMake script for the iOS target initializes a template for this file, if it does not already exist. Set the `DEVELOPMENT_TEAM` value to your Development Team (which should look something like `AB1CDE2F3G`) and set the `PRODUCT_BUNDLE_IDENTIFIER` to your App ID (some unique identifier, usually of the form `com.my.namespace.TangramDemo`).
+
+You can find your personal Development Team in the Keychain Access app. Find your iOS code signing identity in the "Certificates" category, right-click it and select "Get Info". Your Development Team is the value in the "Organizational Unit" field.
 
 ## Always run builds from the Xcode workspace ##
 
