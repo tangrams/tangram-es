@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C92CC3FC2328B926009C2E35 /* Local.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C92CC3FB2328B926009C2E35 /* Local.xcconfig */; };
 		D20C4A55212B6D94005BDB9A /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D20C4A54212B6D93005BDB9A /* GLKit.framework */; };
 		D298723520D05F6F009A0AB8 /* MapViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723120D05F6E009A0AB8 /* MapViewController.m */; };
 		D298723620D05F6F009A0AB8 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723220D05F6E009A0AB8 /* main.m */; };
@@ -45,6 +46,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C92CC3FB2328B926009C2E35 /* Local.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Local.xcconfig; sourceTree = "<group>"; };
 		D20C4A54212B6D93005BDB9A /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
 		D222B92321642BCA007E6FD6 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../../../build/ios/Info.plist; sourceTree = "<group>"; };
 		D298721620D05D8E009A0AB8 /* TangramDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TangramDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -107,6 +109,7 @@
 		D298720D20D05D8E009A0AB8 = {
 			isa = PBXGroup;
 			children = (
+				C92CC3FB2328B926009C2E35 /* Local.xcconfig */,
 				D222B92321642BCA007E6FD6 /* Info.plist */,
 				D298723820D05F7A009A0AB8 /* resources */,
 				D298722F20D05F6E009A0AB8 /* src */,
@@ -227,6 +230,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C92CC3FC2328B926009C2E35 /* Local.xcconfig in Resources */,
 				D298723E20D05F7A009A0AB8 /* Main_iPad.storyboard in Resources */,
 				D298723D20D05F7A009A0AB8 /* Main_iPhone.storyboard in Resources */,
 				D298723C20D05F7A009A0AB8 /* LaunchScreen.xib in Resources */,
@@ -383,15 +387,14 @@
 		};
 		D298722D20D05D91009A0AB8 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C92CC3FB2328B926009C2E35 /* Local.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				INFOPLIST_FILE = ../../../build/ios/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.mapzen.ios.TangramDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SYMROOT = ../../../build/ios;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -400,16 +403,15 @@
 		};
 		D298722E20D05D91009A0AB8 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C92CC3FB2328B926009C2E35 /* Local.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				INFOPLIST_FILE = ../../../build/ios/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.mapzen.ios.TangramDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SYMROOT = ../../../build/ios;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -418,16 +420,15 @@
 		};
 		D2F0603320E6DFB200CB442F /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C92CC3FB2328B926009C2E35 /* Local.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
 				HEADER_SEARCH_PATHS = ../../../build/ios/Include;
 				INFOPLIST_FILE = ../../../build/ios/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.mapzen.ios.TangramDemo-static";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SYMROOT = ../../../build/ios;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -436,16 +437,15 @@
 		};
 		D2F0603420E6DFB200CB442F /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C92CC3FB2328B926009C2E35 /* Local.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
 				HEADER_SEARCH_PATHS = ../../../build/ios/Include;
 				INFOPLIST_FILE = ../../../build/ios/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.mapzen.ios.TangramDemo-static";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SYMROOT = ../../../build/ios;
 				TARGETED_DEVICE_FAMILY = "1,2";
