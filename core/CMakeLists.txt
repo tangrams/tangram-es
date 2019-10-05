@@ -1,5 +1,9 @@
 project(tangram-core)
 
+# GLM default initialization was removed as of release 0.9.9.0 (https://github.com/g-truc/glm/releases/tag/0.9.9.0)
+# TODO: Ensure all GLM values are explicitly initialized, then remove this.
+add_definitions(-DGLM_FORCE_CTOR_INIT)
+
 # Build core library dependencies.
 add_subdirectory(deps)
 
