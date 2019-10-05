@@ -4,6 +4,8 @@
 #include "util/variant.h"
 
 #include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
+
 #include <initializer_list>
 #include <string>
 #include <vector>

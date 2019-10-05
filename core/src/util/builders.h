@@ -3,9 +3,11 @@
 #include "data/tileData.h"
 
 #include "earcut.hpp"
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
+
 #include <functional>
 #include <vector>
-
 
 namespace Tangram {
 

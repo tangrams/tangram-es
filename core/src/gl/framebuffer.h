@@ -1,11 +1,12 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-
-#include "glm/vec4.hpp"
 #include "gl.h"
 #include "util/color.h"
+
+#include "glm/vec2.hpp"
+
+#include <memory>
+#include <vector>
 
 namespace Tangram {
 

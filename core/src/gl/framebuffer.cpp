@@ -1,12 +1,11 @@
 #include "gl/framebuffer.h"
 
 #include "gl/glError.h"
+#include "gl/hardware.h"
 #include "gl/primitives.h"
 #include "gl/renderState.h"
-#include "gl/hardware.h"
 #include "gl/texture.h"
 #include "log.h"
-#include "glm/vec2.hpp"
 
 #include <cmath>
 
