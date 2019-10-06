@@ -28,6 +28,8 @@ include(cmake/glfw.cmake)
 include(FindPkgConfig)
 pkg_check_modules(FONTCONFIG REQUIRED "fontconfig")
 
+find_package(CURL REQUIRED)
+
 add_executable(tangram
   platforms/linux/src/linuxPlatform.cpp
   platforms/linux/src/main.cpp
@@ -55,7 +57,7 @@ target_link_libraries(tangram
   ${GLFW_LIBRARIES}
   ${OPENGL_LIBRARIES}
   ${FONTCONFIG_LDFLAGS}
-  -lcurl
+  ${CURL_LIBRARIES}
   -pthread
   # only used when not using external lib
   -ldl
