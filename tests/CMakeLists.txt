@@ -13,6 +13,11 @@ target_include_directories(platform_test
   ${CMAKE_CURRENT_SOURCE_DIR}/catch
 )
 
+set_target_properties(platform_test
+  PROPERTIES
+  CXX_STANDARD 14
+)
+
 set(TEST_SOURCES
   unit/curlTests.cpp
   unit/drawRuleTests.cpp
@@ -61,6 +66,7 @@ if(TANGRAM_BUNDLE_TESTS)
   set_target_properties(${EXECUTABLE_NAME}
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+    CXX_STANDARD 14
   )
 
   # Copy resources into output directory (only needs to be performed for one target)
@@ -88,6 +94,7 @@ else()
     set_target_properties(${EXECUTABLE_NAME}
       PROPERTIES
       RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+      CXX_STANDARD 14
     )
     # Copy resources into output directory (only needs to be performed for one target)
     add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes" "res")

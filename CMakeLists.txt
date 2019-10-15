@@ -86,6 +86,7 @@ if(TANGRAM_BUILD_BENCHMARKS OR TANGRAM_BUILD_TESTS)
   target_include_directories(platform_mock PUBLIC tests/src)
   target_compile_definitions(platform_mock PUBLIC -DUNIT_TESTS)
   target_link_libraries(platform_mock PUBLIC tangram-core)
+  set_target_properties(platform_mock PROPERTIES CXX_STANDARD 14)
 endif()
 
 if(TANGRAM_BUILD_TESTS)
