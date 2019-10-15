@@ -1,13 +1,12 @@
 #include "catch.hpp"
-#include "map.h"
 #include "mockPlatform.h"
 #include "style/textStyleBuilder.h"
-
-#include "log.h"
 
 #include <memory>
 
 namespace Tangram {
+
+#define TAGS "[Core][Alfons]"
 
 #define TEST_FONT_SIZE  24
 #define TEST_FONT       "res/fonts/NotoSans-Regular.ttf"
@@ -25,157 +24,159 @@ struct AtlasCallback : public alfons::TextureCallback {
             const unsigned char* src, uint16_t padding) override {}
 };
 
-AtlasCallback atlasCb;
-ScratchBuffer buffer;
-
-alfons::TextShaper shaper;
-alfons::GlyphAtlas atlas(atlasCb);
-alfons::TextBatch batch(atlas, buffer);
-alfons::FontManager fontManager;
-std::shared_ptr<alfons::Font> font;
-
-void initFont(std::string _font = TEST_FONT) {
+auto initFont(alfons::FontManager& fontManager, const std::string& _font) {
     std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
-    font = fontManager.addFont("default", TEST_FONT_SIZE, alfons::InputSource(_font));
+    auto font = fontManager.addFont("default", TEST_FONT_SIZE, alfons::InputSource(_font));
 
     auto data = platform->getBytesFromFile(_font.c_str());
     auto face = fontManager.addFontFace(alfons::InputSource(std::move(data)), TEST_FONT_SIZE);
     font->addFace(face);
+
+    return font;
 }
 
-TEST_CASE("Ensure empty line is given when giving empty shape to alfons", "[Core][Alfons]") {
-    initFont();
-    auto line = shaper.shape(font, "");
+TEST_CASE("TextWrapper determines the correct number of lines for a unicode string given a character limit", TAGS) {
 
-    REQUIRE(line.shapes().size() == 0);
-    TextWrapper textWrap;
-    alfons::LineMetrics metrics;
+    AtlasCallback atlasCb;
+    ScratchBuffer buffer;
 
-    float width = textWrap.getShapeRangeWidth(line);
-    int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+    alfons::TextShaper shaper;
+    alfons::GlyphAtlas atlas(atlasCb);
+    alfons::TextBatch batch(atlas, buffer);
+    alfons::FontManager fontManager;
 
-    REQUIRE(nbLines == 0);
-}
+    SECTION("Empty string") {
+        auto font = initFont(fontManager, TEST_FONT);
+        auto line = shaper.shape(font, "");
 
-TEST_CASE() {
-    initFont();
-
-    auto text = icu::UnicodeString::fromUTF8("The quick brown fox");
-
-    {
-        auto line = shaper.shapeICU(font, text, 4, 10);
-        REQUIRE(line.shapes().size() == 19);
-
+        REQUIRE(line.shapes().size() == 0);
         TextWrapper textWrap;
         alfons::LineMetrics metrics;
+
         float width = textWrap.getShapeRangeWidth(line);
         int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
-        REQUIRE(nbLines == 2);
+
+        REQUIRE(nbLines == 0);
     }
 
-    {
-        auto line = shaper.shapeICU(font, text, 4, 4);
-        TextWrapper textWrap;
-        alfons::LineMetrics metrics;
-        float width = textWrap.getShapeRangeWidth(line);
-        int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
-        REQUIRE(nbLines == 3);
+    SECTION("Latin font") {
+
+        auto font = initFont(fontManager, TEST_FONT);
+
+        auto text = icu::UnicodeString::fromUTF8("The quick brown fox");
+
+        {
+            auto line = shaper.shapeICU(font, text, 4, 10);
+            REQUIRE(line.shapes().size() == 19);
+
+            TextWrapper textWrap;
+            alfons::LineMetrics metrics;
+            float width = textWrap.getShapeRangeWidth(line);
+            int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+            REQUIRE(nbLines == 2);
+        }
+
+        {
+            auto line = shaper.shapeICU(font, text, 4, 4);
+            TextWrapper textWrap;
+            alfons::LineMetrics metrics;
+            float width = textWrap.getShapeRangeWidth(line);
+            int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+            REQUIRE(nbLines == 3);
+        }
+
+        {
+            auto line = shaper.shapeICU(font, text, 0, 1);
+
+            TextWrapper textWrap;
+            alfons::LineMetrics metrics;
+            float width = textWrap.getShapeRangeWidth(line);
+            int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+            REQUIRE(nbLines == 4);
+        }
+
+        {
+            auto line = shaper.shapeICU(font, text, 0, 3);
+            TextWrapper textWrap;
+            alfons::LineMetrics metrics;
+            float width = textWrap.getShapeRangeWidth(line);
+            int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+            REQUIRE(nbLines == 4);
+        }
+
+        {
+            auto line = shaper.shapeICU(font, text, 2, 5);
+            TextWrapper textWrap;
+            alfons::LineMetrics metrics;
+            float width = textWrap.getShapeRangeWidth(line);
+            int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+            REQUIRE(nbLines == 4);
+        }
     }
 
-    {
+    SECTION("Arabic font") {
+        auto font = initFont(fontManager, TEST_FONT_AR);
+
+        auto text = icu::UnicodeString::fromUTF8("لعدم عليها كلّ.");
+
+        {
+            auto line = shaper.shapeICU(font, text, 0, 1);
+            REQUIRE(line.shapes().size() == 15);
+
+            TextWrapper textWrap;
+            alfons::LineMetrics metrics;
+
+            float width = textWrap.getShapeRangeWidth(line);
+            int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+            REQUIRE(nbLines == 3);
+        }
+
+        {
+            auto line = shaper.shapeICU(font, text, 0, 10);
+            REQUIRE(line.shapes().size() == 15);
+
+            TextWrapper textWrap;
+            alfons::LineMetrics metrics;
+            float width = textWrap.getShapeRangeWidth(line);
+            int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+
+            REQUIRE(nbLines == 2);
+        }
+    }
+
+    SECTION("Japanese font") {
+        auto font = initFont(fontManager, TEST_FONT_JP);
+
+        auto text = icu::UnicodeString::fromUTF8("日本語のキーボード");
+
         auto line = shaper.shapeICU(font, text, 0, 1);
+        REQUIRE(line.shapes().size() == 9);
 
         TextWrapper textWrap;
         alfons::LineMetrics metrics;
         float width = textWrap.getShapeRangeWidth(line);
         int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
-        REQUIRE(nbLines == 4);
+        REQUIRE(nbLines == 7);
     }
 
-    {
-        auto line = shaper.shapeICU(font, text, 0, 3);
-        TextWrapper textWrap;
-        alfons::LineMetrics metrics;
-        float width = textWrap.getShapeRangeWidth(line);
-        int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
-        REQUIRE(nbLines == 4);
-    }
+    SECTION("Arabic font 2") {
+        auto font = initFont(fontManager, TEST_FONT_AR);
 
-    {
-        auto line = shaper.shapeICU(font, text, 2, 5);
-        TextWrapper textWrap;
-        alfons::LineMetrics metrics;
-        float width = textWrap.getShapeRangeWidth(line);
-        int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
-        REQUIRE(nbLines == 4);
-    }
+        auto text = icu::UnicodeString::fromUTF8("الضفة الغربية وقطاع غزة");
 
-}
+        {
+            auto line = shaper.shapeICU(font, text, 1, 10);
+            REQUIRE(line.shapes()[5].mustBreak);
+            REQUIRE(line.shapes()[13].mustBreak);
+            REQUIRE(line.shapes()[22].mustBreak);
+        }
 
-TEST_CASE() {
-    initFont(TEST_FONT_AR);
-
-    auto text = icu::UnicodeString::fromUTF8("لعدم عليها كلّ.");
-
-    {
-        auto line = shaper.shapeICU(font, text, 0, 1);
-        REQUIRE(line.shapes().size() == 15);
-
-        TextWrapper textWrap;
-        alfons::LineMetrics metrics;
-
-        float width = textWrap.getShapeRangeWidth(line);
-        int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
-        REQUIRE(nbLines == 3);
-    }
-
-    {
-        auto line = shaper.shapeICU(font, text, 0, 10);
-        REQUIRE(line.shapes().size() == 15);
-
-        TextWrapper textWrap;
-        alfons::LineMetrics metrics;
-        float width = textWrap.getShapeRangeWidth(line);
-        int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
-
-        REQUIRE(nbLines == 2);
+        {
+            auto line = shaper.shapeICU(font, text, 1, 15);
+            REQUIRE(line.shapes()[13].mustBreak);
+            REQUIRE(line.shapes()[22].mustBreak);
+        }
     }
 }
 
-TEST_CASE() {
-    initFont(TEST_FONT_JP);
-
-    auto text = icu::UnicodeString::fromUTF8("日本語のキーボード");
-
-    auto line = shaper.shapeICU(font, text, 0, 1);
-    REQUIRE(line.shapes().size() == 9);
-
-    TextWrapper textWrap;
-    alfons::LineMetrics metrics;
-    float width = textWrap.getShapeRangeWidth(line);
-    int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
-    REQUIRE(nbLines == 7);
-}
-
-
-TEST_CASE() {
-    initFont(TEST_FONT_AR);
-
-    auto text = icu::UnicodeString::fromUTF8("الضفة الغربية وقطاع غزة");
-
-    {
-        auto line = shaper.shapeICU(font, text, 1, 10);
-        REQUIRE(line.shapes()[5].mustBreak);
-        REQUIRE(line.shapes()[13].mustBreak);
-        REQUIRE(line.shapes()[22].mustBreak);
-    }
-
-    {
-        auto line = shaper.shapeICU(font, text, 1, 15);
-        REQUIRE(line.shapes()[13].mustBreak);
-        REQUIRE(line.shapes()[22].mustBreak);
-    }
-
-}
-
-}
+} // namespace Tangram
