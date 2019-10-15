@@ -41,6 +41,7 @@ foreach(_src_file_path ${BENCH_SOURCES})
   set_target_properties(${EXECUTABLE_NAME}
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
+    CXX_STANDARD 14
   )
 
   if(TANGRAM_JSCORE_ENABLED)
