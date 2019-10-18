@@ -128,9 +128,6 @@ platforms/android/*/obj
 platforms/android/demo/gradle
 platforms/android/demo/gradlew*
 
-# iOS generated plist configuration
-platforms/ios/App/resources/Config.plist
-
 # vim
 *.swp
 *.swo

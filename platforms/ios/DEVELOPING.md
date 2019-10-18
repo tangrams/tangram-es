@@ -5,13 +5,11 @@ This page is for those who intend to modify Tangram ES itself, not just use it i
 
 ## Don't commit code signing changes ##
 
-When building and running the demo application on an iOS device, you will likely need to modify the "App ID" and "Development Team" values in the Xcode project in order to sign the application package correctly because Apple mandates that an App ID can only be used by one Development Team. This is a good security practice, but since the App ID and Developer Team values are embedded in the Xcode project data, there is no way for each developer working with the repository to use their App ID / Developer Team values without modifying the Xcode project files that are checked into source control.
+When building and running the demo application on an iOS device, you will need to set the "App ID" and "Development Team" values in the Xcode project in order to sign the application package. Apple mandates that an App ID can only be used by one Development Team. This is a good security practice, but it means that the demo application cannot include one App ID for everyone to use. When the Developer Team and App ID are set from the Xcode UI they become included in the project file. This can be disruptive to a git workflow because git will show the Xcode project file as modified.
 
-This can be disruptive to a git workflow because git will show the Xcode project file as modified. To work with a clean source tree, you should let git assume there were no changes to the demo Xcode project by running this command once:
-```
-git update-index --assume-unchanged platforms/ios/demo/TangramDemo.xcodeproj/project.pbxproj
-```
-[Source](https://stackoverflow.com/questions/21756531/git-ignore-local-changes-to-portions-of-tracked-files)
+To allow you build the demo with a clean source tree, the demo application project is configured to read local settings like your App ID and Development Team from a [xcconfig](https://help.apple.com/xcode/mac/8.3/#/dev745c5c974) file located at `platforms/ios/demo/Local.xcconfig`. The `.gitignore` in this folder configures git to ignore this file, so you can add your personal code signing settings here while keeping your git status clean. The CMake script for the iOS target initializes a template for this file, if it does not already exist. Set the `DEVELOPMENT_TEAM` value to your Development Team (which should look something like `AB1CDE2F3G`) and set the `PRODUCT_BUNDLE_IDENTIFIER` to your App ID (some unique identifier, usually of the form `com.my.namespace.TangramDemo`).
+
+You can find your personal Development Team in the Keychain Access app. Find your iOS code signing identity in the "Certificates" category, right-click it and select "Get Info". Your Development Team is the value in the "Organizational Unit" field.
 
 ## Always run builds from the Xcode workspace ##
 
@@ -40,19 +38,3 @@ set_target_properties(myIosTarget PROPERTIES XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT
 ```
 
 Some build configurations are more easily applied through Xcode settings, and some are only relevant when Xcode is the target IDE.
-
-## Fix missing symbols when profiling in Instruments ##
-
-After running the Time Profiler in Xcode's Instruments you might see traces with memory addresses instead of function names, like in the image below:
-
-![Instruments trace with missing symbols](/images/instruments-missing-symbols.png)
-
-For each Instruments run where function names are missing use the following steps to locate the symbols that Instruments needs to show the names correctly.
-
-After collecting data from a run and stopping the Time Profiler, go to `File` > `Symbols...`
-
-In the symbols pane that appears, select `TangramMap` in the menu on the left and then press the folder icon next to the binary path to choose the correct binary file.
-
-![Instruments symbols pane](/images/instruments-locate-binary.png)
-
-The correct binary file is the file named `TangramMap` in the directory shown in the file chooser that appears (located within the tangram-es repository at `build/ios/Release-iphoneos/TangramMap.framework/TangramMap`).  After choosing the binary file, press `Done` to close the symbols pane and the function names will appear correctly in your Time Profiler trace.

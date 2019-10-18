@@ -3,12 +3,28 @@ add_definitions(-DTANGRAM_IOS)
 set(TANGRAM_FRAMEWORK_VERSION "0.10.2-dev")
 
 ### Configure iOS toolchain.
-set(IOS TRUE)
-set(CMAKE_OSX_SYSROOT "iphoneos")
-set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
-set(CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "9.3")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "9.3") # Applies to iOS even though the variable name says OSX.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 execute_process(COMMAND xcrun --sdk iphoneos --show-sdk-version OUTPUT_VARIABLE IOS_SDK_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# Copy necessary workspace settings into a user-specific location in the iOS workspace.
+# See platforms/ios/DEVELOPING.md for details.
+configure_file(
+  ${PROJECT_SOURCE_DIR}/platforms/ios/WorkspaceSettings.xcsettings
+  ${PROJECT_SOURCE_DIR}/platforms/ios/Tangram.xcworkspace/xcuserdata/$ENV{USER}.xcuserdatad/WorkspaceSettings.xcsettings
+  COPYONLY
+)
+
+# Copy a xcconfig file for local signing settings into the demo folder, if it doesn't already exist.
+# See platforms/ios/DEVELOPING.md for details.
+set(LOCAL_XCCONFIG "${PROJECT_SOURCE_DIR}/platforms/ios/demo/Local.xcconfig")
+if (NOT EXISTS ${LOCAL_XCCONFIG})
+  configure_file(
+    ${PROJECT_SOURCE_DIR}/platforms/ios/Local.xcconfig.in
+    ${LOCAL_XCCONFIG}
+    COPYONLY
+  )
+endif()
 
 # Configure the API key in the Info.plist for the demo app.
 set(NEXTZEN_API_KEY $ENV{NEXTZEN_API_KEY})
@@ -99,12 +115,15 @@ set_target_properties(TangramMap PROPERTIES
   FRAMEWORK TRUE
   PUBLIC_HEADER "${TANGRAM_FRAMEWORK_HEADERS}"
   MACOSX_FRAMEWORK_INFO_PLIST "${PROJECT_SOURCE_DIR}/platforms/ios/framework/Info.plist"
+  XCODE_GENERATE_SCHEME TRUE
   XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${TANGRAM_FRAMEWORK_VERSION}"
   XCODE_ATTRIBUTE_DEFINES_MODULE "YES"
   XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
   XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14"
   XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
   XCODE_ATTRIBUTE_GCC_TREAT_WARNINGS_AS_ERRORS "YES"
+  # Generate dsym for all build types to ensure symbols are available in profiling.
+  XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS "YES"
 )
 
 ### Configure static library build target.
@@ -164,11 +183,14 @@ if(TANGRAM_MBTILES_DATASOURCE)
 endif()
 
 set_target_properties(tangram-static PROPERTIES
+  XCODE_GENERATE_SCHEME TRUE
   XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${TANGRAM_FRAMEWORK_VERSION}"
   XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
   XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14"
   XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
   XCODE_ATTRIBUTE_GCC_TREAT_WARNINGS_AS_ERRORS "YES"
+  # Generate dsym for all build types to ensure symbols are available in profiling.
+  XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS "YES"
   # The Xcode settings below are to pre-link our static libraries into a single
   # archive. Xcode will take the objects from this target and from all of the
   # pre-link libraries, combine them, and resolve the symbols into one "master"
