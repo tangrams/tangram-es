@@ -12,14 +12,15 @@ class RpiPlatform : public Platform {
 public:
 
     RpiPlatform();
-    RpiPlatform(UrlClient::Options urlClientOptions);
+    explicit RpiPlatform(UrlClient::Options urlClientOptions);
     ~RpiPlatform() override;
     void requestRender() const override;
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
-    UrlRequestHandle startUrlRequest(Url _url, UrlCallback _callback) override;
-    void cancelUrlRequest(UrlRequestHandle _url) override;
     FontSourceHandle systemFont(const std::string& _name, const std::string& _weight,
             const std::string& _face) const override;
+
+    bool startUrlRequestImpl(const Url& _url, const UrlRequestHandle _request, UrlRequestId& _id) override;
+    void cancelUrlRequestImpl(const UrlRequestId _id) override;
 
 protected:
 

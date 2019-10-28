@@ -1,7 +1,3 @@
-# options
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_CXX_FLAGS} -L/opt/vc/lib/")
-set(CXX_FLAGS_DEBUG "-g -O0")
-
 add_definitions(-DTANGRAM_RPI)
 
 check_unsupported_compiler_version()
@@ -12,8 +8,6 @@ add_definitions(-DNEXTZEN_API_KEY="${NEXTZEN_API_KEY}")
 # System font config
 include(FindPkgConfig)
 pkg_check_modules(FONTCONFIG REQUIRED "fontconfig")
-
-add_subdirectory(platforms/common/duktape)
 
 add_executable(tangram
   platforms/rpi/src/context.cpp
@@ -39,13 +33,13 @@ target_link_libraries(tangram
   tangram-core
   ${FONTCONFIG_LDFLAGS}
   curl
-  EGL
-  GLESv2
   pthread
-  bcm_host
-  vchiq_arm
-  vcos
   rt
+  /opt/vc/lib/libbcm_host.so
+  /opt/vc/lib/libbrcmEGL.so
+  /opt/vc/lib/libbrcmGLESv2.so
+  /opt/vc/lib/libvchiq_arm.so
+  /opt/vc/lib/libvcos.so
 )
 
 target_compile_options(tangram
@@ -55,4 +49,4 @@ target_compile_options(tangram
   -fpermissive
 )
 
-add_resources(tangram "${PROJECT_SOURCE_DIR}/scenes")
+add_resources(tangram "${PROJECT_SOURCE_DIR}/scenes" "res")
