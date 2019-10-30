@@ -63,13 +63,17 @@ FontSourceHandle RpiPlatform::systemFont(const std::string& _name, const std::st
     return FontSourceHandle(Url(fontFile));
 }
 
-UrlRequestHandle RpiPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
+bool RpiPlatform::startUrlRequestImpl(const Url& _url, const UrlRequestHandle _request, UrlRequestId& _id) {
 
-    return m_urlClient.addRequest(_url.string(), _callback);
+    _id = m_urlClient.addRequest(_url.string(),
+                                 [this, _request](UrlResponse&& response) {
+                                     onUrlResponse(_request, std::move(response));
+                                 });
+    return true;
 }
 
-void RpiPlatform::cancelUrlRequest(UrlRequestHandle _request) {
-    m_urlClient.cancelRequest(_request);
+void RpiPlatform::cancelUrlRequestImpl(const UrlRequestId _id) {
+    m_urlClient.cancelRequest(_id);
 }
 
 RpiPlatform::~RpiPlatform() {}

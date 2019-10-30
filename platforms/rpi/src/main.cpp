@@ -26,15 +26,15 @@
 
 using namespace Tangram;
 
-Map* map = nullptr;
-std::shared_ptr<RpiPlatform> platform;
+std::unique_ptr<Map> map;
+std::unique_ptr<RpiPlatform> platform;
 
 std::string apiKey;
 
 static bool bUpdate = true;
 
 struct LaunchOptions {
-    std::string sceneFilePath = "scene.yaml";
+    std::string sceneFilePath = "res/scene.yaml";
     double latitude = 0.0;
     double longitude = 0.0;
     int x = 0;
@@ -119,9 +119,9 @@ int main(int argc, char **argv) {
     LaunchOptions options = getLaunchOptions(argc, argv);
 
     UrlClient::Options urlClientOptions;
-    urlClientOptions.numberOfThreads = 4;
+    urlClientOptions.maxActiveTasks = 10;
 
-    platform = std::make_shared<RpiPlatform>(urlClientOptions);
+    platform = std::make_unique<RpiPlatform>(urlClientOptions);
 
     // Start OpenGL context
     createSurface(options.x, options.y, options.width, options.height);
@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
 
     Url sceneUrl = Url(options.sceneFilePath).resolved(baseUrl);
 
-    map = new Map(platform);
+    map = std::make_unique<Map>(std::move(platform));
     map->loadScene(sceneUrl.string(), !options.hasLocationSet, updates);
     map->setupGL();
     map->resize(getWindowWidth(), getWindowHeight());
@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
     while (bUpdate) {
         pollInput();
         double dt = timer.deltaSeconds();
-        if (getRenderRequest() || platform->isContinuousRendering() ) {
+        if (getRenderRequest() || map->getPlatform().isContinuousRendering() ) {
             setRenderRequest(false);
             map->update(dt);
             map->render();
@@ -177,7 +177,6 @@ int main(int argc, char **argv) {
     }
 
     if (map) {
-        delete map;
         map = nullptr;
     }
 
