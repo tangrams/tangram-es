@@ -923,7 +923,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     if (!self.map) { return; }
 
-    self.map->setCameraType(cameraType);
+    self.map->setCameraType(static_cast<int>(cameraType));
 }
 
 #pragma mark Gesture Recognizers
