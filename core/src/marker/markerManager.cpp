@@ -169,7 +169,7 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
     // Update the marker's bounds.
     marker->setBounds(bounds);
 
-    float scale = 1.f / marker->modelScale();
+    float scale = 1.f / marker->extent();
 
     // Project and offset the coordinates into the marker-local coordinate system.
     auto origin = marker->origin(); // SW corner.
@@ -222,7 +222,7 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
     // Update the marker's bounds.
     marker->setBounds(bounds);
 
-    float scale = 1.f / marker->modelScale();
+    float scale = 1.f / marker->extent();
 
     // Project and offset the coordinates into the marker-local coordinate system.
     auto origin = marker->origin(); // SW corner.
