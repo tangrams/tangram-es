@@ -29,6 +29,7 @@ void framebufferResizeCallback(GLFWwindow* window, int fWidth, int fHeight);
 void showDebugFlagsGUI();
 void showViewportGUI();
 void showSceneGUI();
+void showMarkerGUI();
 
 constexpr double double_tap_time = 0.5; // seconds
 constexpr double scroll_span_multiplier = 0.05; // scaling for zoom and rotation
@@ -63,10 +64,13 @@ double last_y_velocity = 0.0;
 bool wireframe_mode = false;
 bool show_gui = true;
 bool load_async = true;
+bool add_point_marker_on_click = false;
+bool add_polyline_marker_on_click = false;
 
-Tangram::MarkerID marker = 0;
-Tangram::MarkerID poiMarker = 0;
-Tangram::MarkerID polyline = 0;
+std::vector<Tangram::MarkerID> point_markers;
+
+Tangram::MarkerID polyline_marker = 0;
+std::vector<Tangram::LngLat> polyline_marker_coordinates;
 
 std::vector<SceneUpdate> sceneUpdates;
 const char* apiKeyScenePath = "global.sdk_api_key";
@@ -229,6 +233,7 @@ void run() {
             // ImGui::ShowDemoWindow();
             showSceneGUI();
             showViewportGUI();
+            showMarkerGUI();
             showDebugFlagsGUI();
         }
         double currentTime = glfwGetTime();
@@ -347,15 +352,31 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
         map->setCameraPositionEased(pos, duration, EaseType::quint);
     } else if ((time - last_time_pressed) < single_tap_time) {
         // Single tap recognized
-        Tangram::LngLat p;
-        map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
+        Tangram::LngLat location;
+        map->screenPositionToLngLat(x, y, &location.longitude, &location.latitude);
         double xx, yy;
-        map->lngLatToScreenPosition(p.longitude, p.latitude, &xx, &yy);
+        map->lngLatToScreenPosition(location.longitude, location.latitude, &xx, &yy);
 
         logMsg("------\n");
-        logMsg("LngLat: %f, %f\n", p.longitude, p.latitude);
+        logMsg("LngLat: %f, %f\n", location.longitude, location.latitude);
         logMsg("Clicked:  %f, %f\n", x, y);
         logMsg("Remapped: %f, %f\n", xx, yy);
+
+        if (add_point_marker_on_click) {
+            auto marker = map->markerAdd();
+            map->markerSetPoint(marker, location);
+            map->markerSetStylingFromPath(marker, markerStylingPath.c_str());
+            point_markers.push_back(marker);
+        }
+
+        if (add_polyline_marker_on_click) {
+            if (polyline_marker_coordinates.empty()) {
+                polyline_marker = map->markerAdd();
+                map->markerSetStylingFromString(polyline_marker, polylineStyle.c_str());
+            }
+            polyline_marker_coordinates.push_back(location);
+            map->markerSetPolyline(polyline_marker, polyline_marker_coordinates.data(), polyline_marker_coordinates.size());
+        }
 
         map->getPlatform().requestRender();
     }
@@ -568,6 +589,26 @@ void showSceneGUI() {
         }
         if (ImGui::Button("Reload Scene")) {
             loadSceneFile();
+        }
+    }
+}
+
+void showMarkerGUI() {
+    if (ImGui::CollapsingHeader("Markers")) {
+        ImGui::Checkbox("Add point markers on click", &add_point_marker_on_click);
+        if (ImGui::Button("Clear point markers")) {
+            for (const auto marker : point_markers) {
+                map->markerRemove(marker);
+            }
+            point_markers.clear();
+        }
+        
+        ImGui::Checkbox("Add polyline marker points on click", &add_polyline_marker_on_click);
+        if (ImGui::Button("Clear polyline marker")) {
+            if (!polyline_marker_coordinates.empty()) {
+                map->markerRemove(polyline_marker);
+                polyline_marker_coordinates.clear();
+            }
         }
     }
 }
