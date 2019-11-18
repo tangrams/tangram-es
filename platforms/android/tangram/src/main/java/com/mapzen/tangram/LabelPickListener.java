@@ -1,9 +1,10 @@
 package com.mapzen.tangram;
 
 import androidx.annotation.Keep;
+import androidx.annotation.Nullable;
 
 /**
- * Interface for a callback to receive information about labels picked from the map
+ * Callback to receive information about labels picked from the map
  * Triggered after a call of {@link MapController#pickLabel(float, float)}
  * Listener should be set with {@link MapController#setLabelPickListener(LabelPickListener)}
  * The callback will be run on the main (UI) thread.
@@ -11,10 +12,8 @@ import androidx.annotation.Keep;
 @Keep
 public interface LabelPickListener {
     /**
-     * Receive information about labels found in a call to {@link MapController#pickLabel(float, float)}
-     * @param labelPickResult The {@link LabelPickResult} that has been selected
-     * @param positionX The horizontal screen coordinate of the picked location
-     * @param positionY The vertical screen coordinate of the picked location
+     * Called when a label pick query is complete, whether or not a label was found.
+     * @param result Info about the selected label, or null if no label was found.
      */
-    void onLabelPick(final LabelPickResult labelPickResult, final float positionX, final float positionY);
+    void onLabelPickComplete(@Nullable final LabelPickResult result);
 }

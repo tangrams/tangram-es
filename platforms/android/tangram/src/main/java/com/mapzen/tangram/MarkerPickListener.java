@@ -1,6 +1,7 @@
 package com.mapzen.tangram;
 
 import androidx.annotation.Keep;
+import androidx.annotation.Nullable;
 
 /**
  * Interface for a callback to receive the picked {@link Marker}
@@ -11,10 +12,8 @@ import androidx.annotation.Keep;
 @Keep
 public interface MarkerPickListener {
     /**
-     * Receive information about marker found in a call to {@link MapController#pickMarker(float, float)}
-     * @param markerPickResult The {@link MarkerPickResult} the marker that has been selected
-     * @param positionX The horizontal screen coordinate of the picked location
-     * @param positionY The vertical screen coordinate of the picked location
+     * Called when a marker pick query is complete, whether or not a marker was found.
+     * @param result Info about the selected marker, or null if no marker was found.
      */
-    void onMarkerPick(final MarkerPickResult markerPickResult, final float positionX, final float positionY);
+    void onMarkerPickComplete(@Nullable final MarkerPickResult result);
 }
