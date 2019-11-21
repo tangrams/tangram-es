@@ -1,6 +1,6 @@
 add_definitions(-DTANGRAM_IOS)
 
-set(TANGRAM_FRAMEWORK_VERSION "0.11.0")
+set(TANGRAM_FRAMEWORK_VERSION "0.11.1-dev")
 
 ### Configure iOS toolchain.
 set(CMAKE_OSX_DEPLOYMENT_TARGET "9.3") # Applies to iOS even though the variable name says OSX.
