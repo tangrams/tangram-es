@@ -27,7 +27,6 @@
 using namespace Tangram;
 
 std::unique_ptr<Map> map;
-std::unique_ptr<RpiPlatform> platform;
 
 std::string apiKey;
 
@@ -121,8 +120,6 @@ int main(int argc, char **argv) {
     UrlClient::Options urlClientOptions;
     urlClientOptions.maxActiveTasks = 10;
 
-    platform = std::make_unique<RpiPlatform>(urlClientOptions);
-
     // Start OpenGL context
     createSurface(options.x, options.y, options.width, options.height);
 
@@ -150,7 +147,7 @@ int main(int argc, char **argv) {
 
     Url sceneUrl = Url(options.sceneFilePath).resolved(baseUrl);
 
-    map = std::make_unique<Map>(std::move(platform));
+    map = std::make_unique<Map>(std::make_unique<RpiPlatform>(urlClientOptions));
     map->loadScene(sceneUrl.string(), !options.hasLocationSet, updates);
     map->setupGL();
     map->resize(getWindowWidth(), getWindowHeight());
@@ -212,15 +209,15 @@ void onKeyPress(int _key) {
         default:
             logMsg(" -> %i\n",_key);
     }
-    platform->requestRender();
+    setRenderRequest(true);
 }
 
 void onMouseMove(float _x, float _y) {
-    platform->requestRender();
+    setRenderRequest(true);
 }
 
 void onMouseClick(float _x, float _y, int _button) {
-    platform->requestRender();
+    setRenderRequest(true);
 }
 
 void onMouseDrag(float _x, float _y, int _button) {
@@ -243,13 +240,13 @@ void onMouseDrag(float _x, float _y, int _button) {
         }
 
     }
-    platform->requestRender();
+    setRenderRequest(true);
 }
 
 void onMouseRelease(float _x, float _y) {
-    platform->requestRender();
+    setRenderRequest(true);
 }
 
 void onViewportResize(int _newWidth, int _newHeight) {
-    platform->requestRender();
+    setRenderRequest(true);
 }
