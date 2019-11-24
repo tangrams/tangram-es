@@ -60,7 +60,7 @@ jobs:
       # Build the framework in debug mode and package it into pod.zip
       - run: make ios-framework-universal BUILD_TYPE=Debug
       - run: make ios-docs
-      - run: cd build/ios-docs zip -r ~/docs.zip .
+      - run: cd build/ios-docs && zip -r ~/docs.zip .
       - store_artifacts:
           path: ~/docs.zip
       # To produce the intended structure within the zip archive, we must cd to each file's location.
@@ -102,7 +102,7 @@ jobs:
       # Build the framework in release mode and package it into pod.zip
       - run: make ios-framework-universal BUILD_TYPE=Release
       - run: make ios-docs
-      - run: cd build/ios-docs zip -r ~/docs.zip .
+      - run: cd build/ios-docs && zip -r ~/docs.zip .
       - store_artifacts:
           path: ~/docs.zip
       # To produce the intended structure within the zip archive, we must cd to each file's location.
