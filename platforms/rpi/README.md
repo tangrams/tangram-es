@@ -44,7 +44,7 @@ You can optionally use `make -j` to parallelize the build and append a `BUILD_TY
 
 Run the demo program from the output folder:
 ```
-cd build/rpi/bin
+cd build/rpi
 ./tangram
 ```
 
@@ -61,3 +61,16 @@ You can provide several command line options:
  - `-r` or `--rotation` followed by a rotation from North in radians for the map view
 
 You can move the map with `w`, `a`, `s`, and `d`, zoom in and out with `-` and `=`, and quit with `esc`.
+
+## Troubleshooting
+
+If you encounter strange behavior or crashes, the first thing to try is to compile in __debug mode__, run it again, and watch the log output for clues.
+
+```
+make rpi BUILD_TYPE=Debug
+...
+cd build/rpi
+./tangram
+```
+
+If there are `GL_OUT_OF_MEMORY` errors in the output, you can try increasing the memory allocated to the GPU. In your Raspberry Pi's [config.txt](https://www.raspberrypi.org/documentation/configuration/config-txt/), you can increase the GPU memory from the default value of 64MB to 128MB or more (https://www.raspberrypi.org/documentation/configuration/config-txt/memory.md).
