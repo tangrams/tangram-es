@@ -60,6 +60,9 @@ jobs:
       # Build the framework in debug mode and package it into pod.zip
       - run: make ios-framework-universal BUILD_TYPE=Debug
       - run: make ios-docs
+      - run: cd build/ios-docs zip -r ~/docs.zip .
+      - store_artifacts:
+          path: ~/docs.zip
       # To produce the intended structure within the zip archive, we must cd to each file's location.
       - run: cd build/ios/Debug-universal && zip -r ~/pod.zip TangramMap.framework
       # Add the readme and license files.
@@ -99,6 +102,9 @@ jobs:
       # Build the framework in release mode and package it into pod.zip
       - run: make ios-framework-universal BUILD_TYPE=Release
       - run: make ios-docs
+      - run: cd build/ios-docs zip -r ~/docs.zip .
+      - store_artifacts:
+          path: ~/docs.zip
       # To produce the intended structure within the zip archive, we must cd to each file's location.
       - run: cd build/ios/Release-universal && zip -r ~/pod.zip TangramMap.framework
       # Add the readme and license files.
