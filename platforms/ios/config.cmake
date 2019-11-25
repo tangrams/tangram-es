@@ -1,6 +1,7 @@
 add_definitions(-DTANGRAM_IOS)
 
 set(TANGRAM_FRAMEWORK_VERSION "0.11.1-dev")
+set(TANGRAM_BUNDLE_IDENTIFIER "com.mapzen.TangramMap")
 
 ### Configure iOS toolchain.
 set(CMAKE_OSX_DEPLOYMENT_TARGET "9.3") # Applies to iOS even though the variable name says OSX.
@@ -114,9 +115,11 @@ target_include_directories(TangramMap PRIVATE
 set_target_properties(TangramMap PROPERTIES
   FRAMEWORK TRUE
   PUBLIC_HEADER "${TANGRAM_FRAMEWORK_HEADERS}"
-  MACOSX_FRAMEWORK_IDENTIFIER "com.mapzen.TangramMap"
   MACOSX_FRAMEWORK_INFO_PLIST "${PROJECT_SOURCE_DIR}/platforms/ios/framework/Info.plist"
   XCODE_ATTRIBUTE_DEFINES_MODULE "YES"
+  # This property is necessary for downstream consumers of the framework. Set it here for Xcode to
+  # populate the 'Bundle Identifier' fields and substitute the placeholder value in our Info.plist.
+  XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${TANGRAM_BUNDLE_IDENTIFIER}"
 )
 # Other properties that are common to dynamic and static framework targets are set below.
 
