@@ -11,7 +11,7 @@
 @class TGMapView;
 
 /**
- The `TGGestureDelegate` protocol can be implemented to receive gesture events from the map view. The map view will
+ The `TGRecognizerDelegate` protocol can be implemented to receive gesture events from the map view. The map view will
  first check whether a gestureDelegate is set, then check whether it responds to any `shouldRecognize*` method:
 
  - If the delegate responds to `shouldRecognize*`, the map view only performs its default handling of the gesture if
@@ -209,4 +209,4 @@ didRecognizeRotationGesture:(CGPoint)location;
      recognizer:(UIGestureRecognizer *)recognizer
 didRecognizeShoveGesture:(CGPoint)displacement;
 
-@end // protocol TGGestureDelegate
+@end // protocol TGRecognizerDelegate

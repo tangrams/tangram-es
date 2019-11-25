@@ -27,8 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
  ```
 
  ```swift
- view.queueSceneUpdates(sceneUpdates: [ TGSceneUpdate(path: "sources.osm.url_params", value: "{ api_key: \(YOUR_API_KEY) }") ])
- view.applySceneUpdates()
+ view.loadScene(from: sceneUrl, with: [ TGSceneUpdate(path: "sources.osm.url_params.api_key", value: "YOUR_API_KEY") ])
  ```
  */
 TG_EXPORT
