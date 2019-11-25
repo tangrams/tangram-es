@@ -1,6 +1,7 @@
 add_definitions(-DTANGRAM_IOS)
 
 set(TANGRAM_FRAMEWORK_VERSION "0.11.1-dev")
+set(TANGRAM_BUNDLE_IDENTIFIER "com.mapzen.TangramMap")
 
 ### Configure iOS toolchain.
 set(CMAKE_OSX_DEPLOYMENT_TARGET "9.3") # Applies to iOS even though the variable name says OSX.
@@ -114,18 +115,13 @@ target_include_directories(TangramMap PRIVATE
 set_target_properties(TangramMap PROPERTIES
   FRAMEWORK TRUE
   PUBLIC_HEADER "${TANGRAM_FRAMEWORK_HEADERS}"
-  MACOSX_FRAMEWORK_IDENTIFIER "com.mapzen.TangramMap"
   MACOSX_FRAMEWORK_INFO_PLIST "${PROJECT_SOURCE_DIR}/platforms/ios/framework/Info.plist"
-  XCODE_GENERATE_SCHEME TRUE
-  XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${TANGRAM_FRAMEWORK_VERSION}"
   XCODE_ATTRIBUTE_DEFINES_MODULE "YES"
-  XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
-  XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14"
-  XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
-  XCODE_ATTRIBUTE_GCC_TREAT_WARNINGS_AS_ERRORS "YES"
-  # Generate dsym for all build types to ensure symbols are available in profiling.
-  XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS "YES"
+  # This property is necessary for downstream consumers of the framework. Set it here for Xcode to
+  # populate the 'Bundle Identifier' fields and substitute the placeholder value in our Info.plist.
+  XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${TANGRAM_BUNDLE_IDENTIFIER}"
 )
+# Other properties that are common to dynamic and static framework targets are set below.
 
 ### Configure static library build target.
 
@@ -184,6 +180,16 @@ if(TANGRAM_MBTILES_DATASOURCE)
 endif()
 
 set_target_properties(tangram-static PROPERTIES
+  # The Xcode settings below are to pre-link our static libraries into a single
+  # archive. Xcode will take the objects from this target and from all of the
+  # pre-link libraries, combine them, and resolve the symbols into one "master"
+  # object file before outputting an archive.
+  XCODE_ATTRIBUTE_GENERATE_MASTER_OBJECT_FILE "YES"
+  XCODE_ATTRIBUTE_PRELINK_LIBS "${TANGRAM_STATIC_DEPENDENCIES}"
+)
+
+# Set properties common between dynamic and static framework targets.
+set_target_properties(TangramMap tangram-static PROPERTIES
   XCODE_GENERATE_SCHEME TRUE
   XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${TANGRAM_FRAMEWORK_VERSION}"
   XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
@@ -192,12 +198,6 @@ set_target_properties(tangram-static PROPERTIES
   XCODE_ATTRIBUTE_GCC_TREAT_WARNINGS_AS_ERRORS "YES"
   # Generate dsym for all build types to ensure symbols are available in profiling.
   XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS "YES"
-  # The Xcode settings below are to pre-link our static libraries into a single
-  # archive. Xcode will take the objects from this target and from all of the
-  # pre-link libraries, combine them, and resolve the symbols into one "master"
-  # object file before outputting an archive.
-  XCODE_ATTRIBUTE_GENERATE_MASTER_OBJECT_FILE "YES"
-  XCODE_ATTRIBUTE_PRELINK_LIBS "${TANGRAM_STATIC_DEPENDENCIES}"
 )
 
 # Copy the framework headers into a directory in the build folder, for use by
