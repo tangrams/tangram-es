@@ -556,7 +556,7 @@ void MapController(ClearTileSource)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, j
 
 #define MapData(NAME) FUNC(MapData, NAME)
 
-void MapData(AddFeature)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jdoubleArray jcoordinates,
+jlong MapData(AddFeature)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jdoubleArray jcoordinates,
                          jintArray jrings, jobjectArray jproperties) {
 
     auto_source(sourcePtr);
@@ -578,6 +578,8 @@ void MapData(AddFeature)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jdoubleAr
     }
 
     auto* coordinates = jniEnv->GetDoubleArrayElements(jcoordinates, NULL);
+
+    uint64_t id = 0;
 
     if (nRings > 0) {
         // If rings are defined, this is a polygon feature.
@@ -602,13 +604,60 @@ void MapData(AddFeature)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jdoubleAr
         for (size_t i = 0; i < nPoints; i++) {
             builder.addPoint(LngLat(coordinates[2 * i], coordinates[2 * i + 1]));
         }
-        source->addPolylineFeature(std::move(properties), std::move(builder));
+        id = source->addPolylineFeature(std::move(properties), std::move(builder));
     } else {
         // This is a point feature.
         source->addPointFeature(std::move(properties), LngLat(coordinates[0], coordinates[1]));
     }
 
     jniEnv->ReleaseDoubleArrayElements(jcoordinates, coordinates, JNI_ABORT);
+
+    return id;
+}
+
+void MapData(UpdatePolylinePoints)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jlong id, jdoubleArray jcoordinates) {
+
+    auto_source(sourcePtr);
+
+    size_t n_points = jniEnv->GetArrayLength(jcoordinates) / 2;
+
+    auto* coordinates = jniEnv->GetDoubleArrayElements(jcoordinates, NULL);
+
+    std::vector<Tangram::LngLat> lngLatCoordinates;
+    for (size_t i = 0; i < n_points; ++i) {
+        lngLatCoordinates.push_back({coordinates[2 * i], coordinates[2 * i + 1]});
+    }
+    source->updatePolylineFeature(static_cast<unsigned int>(id), lngLatCoordinates);
+
+    jniEnv->ReleaseDoubleArrayElements(jcoordinates, coordinates, JNI_ABORT);
+}
+
+void MapData(UpdatePolylineProperties)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jlong id, jobjectArray jproperties) {
+
+    auto_source(sourcePtr);
+
+    size_t n_properties = (jproperties == NULL) ? 0 : jniEnv->GetArrayLength(jproperties) / 2;
+
+    Properties properties;
+
+    for (size_t i = 0; i < n_properties; ++i) {
+        jstring jkey = (jstring) (jniEnv->GetObjectArrayElement(jproperties, 2 * i));
+        jstring jvalue = (jstring) (jniEnv->GetObjectArrayElement(jproperties, 2 * i + 1));
+        auto key = stringFromJString(jniEnv, jkey);
+        auto value = stringFromJString(jniEnv, jvalue);
+        properties.set(key, value);
+        jniEnv->DeleteLocalRef(jkey);
+        jniEnv->DeleteLocalRef(jvalue);
+    }
+
+    source->updatePolylineFeature(static_cast<unsigned int>(id), std::move(properties));
+}
+
+void MapData(RemovePolyline)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jlong id) {
+
+    auto_source(sourcePtr);
+
+    source->removePolylineFeature(static_cast<unsigned int>(id));
 }
 
 void MapData(AddGeoJson)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr, jstring geojson) {

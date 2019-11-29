@@ -55,6 +55,72 @@ public class MapData {
     }
 
     /**
+     * Add a feature to this data collection.
+     * @param feature The feature to add
+     */
+    public long addFeature(@NonNull final Geometry feature) {
+        final MapController map = mapController;
+        if (map == null) {
+            return 0;
+        }
+        synchronized (this) {
+            long id = nativeAddFeature(pointer,
+                    feature.getCoordinateArray(),
+                    feature.getRingArray(),
+                    feature.getPropertyArray());
+            nativeGenerateTiles(pointer);
+            return id;
+        }
+    }
+
+    /**
+     * Update polyline coordinates
+     * @param id Id of polyline to update
+     * @param coordinates New coordinates of a polyline
+     */
+    public void updatePolyline(long id, List<LngLat> coordinates) {
+        final MapController map = mapController;
+        if (map == null) {
+            return;
+        }
+        synchronized (this) {
+            nativeUpdatePolylinePoints(pointer, id, Polyline.toCoordinateArray(coordinates));
+            nativeGenerateTiles(pointer);
+        }
+    }
+
+    /**
+     * Update polyline coordinates
+     * @param id Id of polyline to update
+     * @param properties New properties of a polyline
+     */
+    public void updatePolyline(long id, Map<String, String> properties) {
+        final MapController map = mapController;
+        if (map == null) {
+            return;
+        }
+        synchronized (this) {
+            nativeUpdatePolylineProperties(pointer, id, Geometry.getStringMapAsArray(properties));
+            nativeGenerateTiles(pointer);
+        }
+    }
+
+    /**
+     * Remove polyline
+     * @param id Id of polyline to remove
+     */
+    public void removePolyline(long id) {
+        final MapController map = mapController;
+        if (map == null) {
+            return;
+        }
+        synchronized (this) {
+            nativeRemovePolyline(pointer, id);
+            nativeGenerateTiles(pointer);
+        }
+    }
+
+    /**
      * Assign features described in a GeoJSON string to this collection. This will replace any previously assigned feature lists or GeoJSON data.
      * @param data A string containing a <a href="http://geojson.org/">GeoJSON</a> FeatureCollection
      */
@@ -103,7 +169,11 @@ public class MapData {
         }
     }
 
-    private native void nativeAddFeature(long sourcePtr, double[] coordinates, int[] rings, String[] properties);
+    private native long nativeAddFeature(long sourcePtr, double[] coordinates, int[] rings, String[] properties);
     private native void nativeAddGeoJson(long sourcePtr, String geoJson);
     private native void nativeGenerateTiles(long sourcePtr);
+
+    private native void nativeUpdatePolylinePoints(long sourcePtr, long id, double[] coordinates);
+    private native void nativeUpdatePolylineProperties(long sourcePtr, long id, String[] properties);
+    private native void nativeRemovePolyline(long sourcePtr, long id);
 }
