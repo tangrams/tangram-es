@@ -1,12 +1,12 @@
 package com.mapzen.tangram.networking;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapView;
 
 import java.io.IOException;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * {@code HttpHandler} interface for handling network requests for map resources,

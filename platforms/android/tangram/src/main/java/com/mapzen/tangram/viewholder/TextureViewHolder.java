@@ -3,8 +3,6 @@ package com.mapzen.tangram.viewholder;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
-import android.support.annotation.NonNull;
-import android.support.annotation.UiThread;
 import android.util.Log;
 import android.view.TextureView;
 import android.view.TextureView.SurfaceTextureListener;
@@ -20,6 +18,9 @@ import javax.microedition.khronos.opengles.GL10;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.UiThread;
 
 /*
 How TextureView, SurfaceTexture, EGLSurface and gl texture related:

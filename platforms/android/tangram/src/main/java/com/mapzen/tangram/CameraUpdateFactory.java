@@ -1,7 +1,8 @@
 package com.mapzen.tangram;
 
 import android.graphics.Rect;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 public class CameraUpdateFactory {
     /**

@@ -1,9 +1,9 @@
 package com.mapzen.tangram.geometry;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * {@code Geometry} is an abstract container of LngLat points and associated properties.

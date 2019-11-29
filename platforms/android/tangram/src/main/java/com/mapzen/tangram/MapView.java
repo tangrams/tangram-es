@@ -4,8 +4,6 @@ import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -18,6 +16,9 @@ import com.mapzen.tangram.viewholder.GLViewHolder;
 import com.mapzen.tangram.viewholder.GLViewHolderFactory;
 
 import java.lang.ref.WeakReference;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * {@code MapView} is a View for displaying a Tangram map.

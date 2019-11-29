@@ -5,8 +5,8 @@ allprojects {
       jcenter()
     }
     dependencies {
-      classpath 'com.android.tools.build:gradle:3.2.1'
-      classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
+      classpath 'com.android.tools.build:gradle:3.5.2'
+      classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
     }
   }
 

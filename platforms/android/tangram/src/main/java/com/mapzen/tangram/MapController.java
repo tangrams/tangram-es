@@ -7,10 +7,6 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
-import android.support.annotation.IntRange;
-import android.support.annotation.Keep;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.ArrayMap;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -28,6 +24,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import androidx.annotation.IntRange;
+import androidx.annotation.Keep;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * {@code MapController} is the main class for interacting with a Tangram map.
@@ -95,7 +96,7 @@ public class MapController {
 
     /**
      * Interface for listening to scene load status information.
-     * Triggered after a call of {@link #updateSceneAsync(List<SceneUpdate>)} or
+     * Triggered after a call of {@link #loadSceneYamlAsync(String, String, List<SceneUpdate>)} or
      * {@link #loadSceneFileAsync(String, List<SceneUpdate>)} or {@link #loadSceneFile(String, List<SceneUpdate>)}
      * Listener should be set with {@link #setSceneLoadListener(SceneLoadListener)}
      * The callbacks will be run on the main (UI) thread.
@@ -104,7 +105,7 @@ public class MapController {
     public interface SceneLoadListener {
         /**
          * Received when a scene load or update finishes. If sceneError is not null then the operation did not succeed.
-         * @param sceneId The identifier returned by {@link #updateSceneAsync(List<SceneUpdate>)} or
+         * @param sceneId The identifier returned by {@link #loadSceneYamlAsync(String, String, List<SceneUpdate>)} or
          * {@link #loadSceneFileAsync(String, List<SceneUpdate>)}.
          * @param sceneError A {@link SceneError} holding error information, or null if no error occurred.
          */

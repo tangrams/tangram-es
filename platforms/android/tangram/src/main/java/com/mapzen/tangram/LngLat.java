@@ -1,7 +1,7 @@
 package com.mapzen.tangram;
 
-import android.support.annotation.Keep;
-import android.support.annotation.NonNull;
+import androidx.annotation.Keep;
+import androidx.annotation.NonNull;
 
 /**
  * {@code LngLat} represents a geographic coordinate with longitude and latitude.

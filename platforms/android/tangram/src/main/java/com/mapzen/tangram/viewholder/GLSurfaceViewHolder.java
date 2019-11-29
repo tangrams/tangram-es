@@ -1,8 +1,9 @@
 package com.mapzen.tangram.viewholder;
 
 import android.opengl.GLSurfaceView;
-import android.support.annotation.NonNull;
 import android.view.View;
+
+import androidx.annotation.NonNull;
 
 
 public class GLSurfaceViewHolder implements GLViewHolder {
