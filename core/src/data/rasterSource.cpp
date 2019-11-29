@@ -150,7 +150,7 @@ std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task) const {
 
 void RasterSource::addRasterTask(TileTask& _task) {
 
-    TileID subTileID = _task.tileId();
+    TileID subTileID = getFallbackTileID(_task.tileId());
 
     // apply apt downsampling for raster tiles depending on difference
     // in zoomBias (which also takes zoom offset into account)
