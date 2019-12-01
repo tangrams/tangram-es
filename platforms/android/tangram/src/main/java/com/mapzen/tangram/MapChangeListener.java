@@ -1,6 +1,6 @@
 package com.mapzen.tangram;
 
-import android.support.annotation.Keep;
+import androidx.annotation.Keep;
 
 @Keep
 public interface MapChangeListener {

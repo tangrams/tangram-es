@@ -1,13 +1,13 @@
 package com.mapzen.tangram.geometry;
 
-import android.support.annotation.Keep;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import com.mapzen.tangram.LngLat;
 
 import java.util.List;
 import java.util.Map;
+
+import androidx.annotation.Keep;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * {@code Polygon} is a sequence of rings of LngLat points and its properties.

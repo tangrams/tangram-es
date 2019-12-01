@@ -3,11 +3,12 @@ package com.mapzen.tangram;
 import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
 import android.os.Handler;
-import android.support.annotation.NonNull;
 import android.view.View;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
+import androidx.annotation.NonNull;
 
 class MapRenderer implements GLSurfaceView.Renderer {
 

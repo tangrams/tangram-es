@@ -1,8 +1,9 @@
 package com.mapzen.tangram.viewholder;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.view.TextureView;
+
+import androidx.annotation.NonNull;
 
 public class TextureViewHolderFactory implements GLViewHolderFactory {
     /**

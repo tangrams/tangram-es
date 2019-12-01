@@ -1,6 +1,6 @@
 package com.mapzen.tangram;
 
-import android.support.annotation.Keep;
+import androidx.annotation.Keep;
 
 /**
  * Interface for a callback to receive information about labels picked from the map

@@ -1,15 +1,12 @@
 package com.mapzen.tangram;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import com.mapzen.tangram.geometry.Geometry;
-import com.mapzen.tangram.geometry.Point;
-import com.mapzen.tangram.geometry.Polygon;
 import com.mapzen.tangram.geometry.Polyline;
 
 import java.util.List;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
 
 /**
  * {@code MapData} is a named collection of drawable map features.

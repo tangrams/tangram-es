@@ -1,7 +1,6 @@
 package com.mapzen.tangram;
 
 import android.os.Build;
-import android.support.annotation.NonNull;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.util.SparseArray;
@@ -20,6 +19,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
 
 class FontConfig {
 

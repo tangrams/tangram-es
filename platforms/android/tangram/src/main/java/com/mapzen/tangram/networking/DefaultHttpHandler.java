@@ -1,7 +1,5 @@
 package com.mapzen.tangram.networking;
 
-import android.os.Build;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.IOException;
@@ -9,21 +7,17 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.SocketFactory;
-import javax.net.ssl.SSLContext;
 
+import androidx.annotation.NonNull;
 import okhttp3.Call;
-import okhttp3.ConnectionSpec;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import okhttp3.TlsVersion;
 
 /**
  * {@code DefaultHttpHandler} is an implementation of {@link HttpHandler} using OkHTTP.

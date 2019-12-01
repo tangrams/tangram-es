@@ -1,9 +1,9 @@
 package com.mapzen.tangram.viewholder;
 
 import android.opengl.GLSurfaceView;
-import android.support.annotation.NonNull;
 import android.view.View;
 
+import androidx.annotation.NonNull;
 
 /**
  * Interface which holds a GL View, used to display Tangram Map
