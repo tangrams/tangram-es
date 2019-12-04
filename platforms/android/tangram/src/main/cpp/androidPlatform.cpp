@@ -457,14 +457,14 @@ void AndroidMap::pickMarker(float posX, float posY) {
 
         float x = 0.f, y = 0.f;
         double lng = 0., lat = 0.;
-        long markerID = 0;
+        jlong markerID = 0;
 
         if (markerPickResult) {
             x = markerPickResult->position[0];
             y = markerPickResult->position[1];
             lng = markerPickResult->coordinates.longitude;
             lat = markerPickResult->coordinates.latitude;
-            markerID = static_cast<long>(markerPickResult->id);
+            markerID = markerPickResult->id;
         }
 
         jniEnv->CallVoidMethod(m_tangramInstance, markerPickCallbackMID, markerID, x, y, lng, lat);
