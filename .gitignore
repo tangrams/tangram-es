@@ -56,7 +56,8 @@ proguard/
 # Log Files
 *.log
 
-*.externalNativeBuild
+*.externalNativeBuild/
+*.cxx/
 
 ### Xcode ###
 *.pbxuser
