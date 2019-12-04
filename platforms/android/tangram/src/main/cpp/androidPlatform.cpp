@@ -446,7 +446,7 @@ void AndroidMap::pickLabel(float posX, float posY) {
                 jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
             }
         }
-        jniEnv->CallVoidMethod(m_tangramInstance, labelPickCallbackMID, hashmap, x, y, lng, lat, type);
+        jniEnv->CallVoidMethod(m_tangramInstance, labelPickCallbackMID, hashmap, x, y, type, lng, lat);
     });
 }
 
