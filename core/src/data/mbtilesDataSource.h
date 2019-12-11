@@ -17,16 +17,19 @@ class AsyncWorker;
 class MBTilesDataSource : public TileSource::DataSource {
 public:
 
-    MBTilesDataSource(Platform& _platform, std::string _name, std::string _path, std::string _mime,
-                      bool _cache = false, bool _offlineFallback = false);
+    MBTilesDataSource(Platform& _platform, std::string _name, std::vector<std::string> _paths,
+                      std::string _mime, bool _cache = false, bool _offlineFallback = false);
 
     ~MBTilesDataSource();
+
+    TileID getFallbackTileID(const TileID& _tileID, int32_t _maxZoom, int32_t _zoomBias) override;
 
     bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
 
     void clear() override {}
 
 private:
+    bool hasTileData(const TileID& _tileId);
     bool getTileData(const TileID& _tileId, std::vector<char>& _data);
     void storeTileData(const TileID& _tileId, const std::vector<char>& _data);
     bool loadNextSource(std::shared_ptr<TileTask> _task, TileTaskCb _cb);
@@ -38,7 +41,7 @@ private:
     std::string m_name;
 
     // The path to an mbtiles tile store.
-    std::string m_path;
+    std::vector<std::string> m_paths;
     std::string m_mime;
 
     // Store tiles from next source
@@ -48,8 +51,8 @@ private:
     bool m_offlineMode;
 
     // Pointer to SQLite DB of MBTiles store
-    std::unique_ptr<SQLite::Database> m_db;
-    std::unique_ptr<MBTilesQueries> m_queries;
+    std::vector<std::unique_ptr<SQLite::Database>> m_dbs;
+    std::vector<std::unique_ptr<MBTilesQueries>> m_queries;
     std::unique_ptr<AsyncWorker> m_worker;
 
     // Platform reference

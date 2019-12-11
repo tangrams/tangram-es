@@ -296,8 +296,10 @@ void TileManager::updateTileSets(const View& _view) {
                 auto zoomBias = tileSet.source->zoomBias();
                 auto maxZoom = tileSet.source->maxZoom();
 
+                TileID fallbackTile = tileSet.source->getFallbackTileID(_tileID);
+
                 // Insert scaled and maxZoom mapped tileID in the visible set
-                tileSet.visibleTiles.insert(_tileID.zoomBiasAdjusted(zoomBias).withMaxSourceZoom(maxZoom));
+                tileSet.visibleTiles.insert(fallbackTile.zoomBiasAdjusted(zoomBias).withMaxSourceZoom(maxZoom));
             }
         };
 
