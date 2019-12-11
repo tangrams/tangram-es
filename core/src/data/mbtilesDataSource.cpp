@@ -505,7 +505,7 @@ bool MBTilesDataSource::getTileData(const TileID& _tileId, std::vector<char>& _d
 
             if (stmt.executeStep()) {
                 SQLite::Column column = stmt.getColumn(0);
-                const int length = column.getBytes();
+                size_t length = (size_t)column.getBytes();
 
                 if (length > largestLength) {
                     const char *blob = (const char *) column.getBlob();
@@ -530,7 +530,6 @@ bool MBTilesDataSource::getTileData(const TileID& _tileId, std::vector<char>& _d
                 }
 
                 stmt.reset();
-                //return true;
             }
 
         } catch (std::exception &e) {
@@ -541,7 +540,7 @@ bool MBTilesDataSource::getTileData(const TileID& _tileId, std::vector<char>& _d
         } catch (...) {}
     }
 
-    return false;
+    return !_data.empty();
 }
 
 void MBTilesDataSource::storeTileData(const TileID& _tileId, const std::vector<char>& _data) {
