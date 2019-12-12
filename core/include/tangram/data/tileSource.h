@@ -54,7 +54,7 @@ public:
     struct DataSource {
         virtual ~DataSource() {}
 
-        virtual TileID getFallbackTileID(const TileID& _tileID, int32_t _maxZoom, int32_t _zoomBias) = 0;
+        virtual TileID getFallbackTileID(const TileID& _tileID, int32_t _zoomBias) = 0;
 
         virtual bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) = 0;
 

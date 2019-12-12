@@ -114,33 +114,20 @@ void MemoryCacheDataSource::cachePut(const TileID& _tileID, std::shared_ptr<std:
     m_cache->put(_tileID, _rawDataRef);
 }
 
-TileID MemoryCacheDataSource::getFallbackTileID(const TileID& _tileID, int32_t _maxZoom, int32_t _zoomBias) {
-
-    if (hasCache(_tileID.zoomBiasAdjusted(_zoomBias).withMaxSourceZoom(_maxZoom))) {
-        if (next) {
-            TileID nextTileID = next->getFallbackTileID(_tileID, _maxZoom, _zoomBias);
-            return (_tileID.z > nextTileID.z) ? _tileID : nextTileID;
-        }
-
-        return _tileID;
-    }
+TileID MemoryCacheDataSource::getFallbackTileID(const TileID& _tileID, int32_t _zoomBias) {
 
     TileID tileID(_tileID);
     bool isCached = false;
 
-    if (_zoomBias > 0) {
-        while (!(isCached = hasCache(tileID.zoomBiasAdjusted(_zoomBias))) && tileID.z > _zoomBias) {
-            tileID = tileID.zoomBiasAdjusted(_zoomBias);
-        }
-    }
-    else {
-        while (!(isCached = hasCache(tileID)) && tileID.z > 0) {
-            tileID = tileID.getParent(_zoomBias);
-        }
+    while (!(isCached = hasCache(tileID)) && tileID.z > 0) {
+        tileID = tileID.getParent(_zoomBias);
     }
 
+    tileID.s = _tileID.s;
+
     if (next) {
-        TileID nextTileID = next->getFallbackTileID(_tileID, _maxZoom, _zoomBias);
+        TileID nextTileID = next->getFallbackTileID(_tileID, _zoomBias);
+        nextTileID.s = _tileID.s;
 
         if (isCached) {
             return (tileID.z > nextTileID.z) ? tileID : nextTileID;
@@ -150,7 +137,7 @@ TileID MemoryCacheDataSource::getFallbackTileID(const TileID& _tileID, int32_t _
         }
     }
 
-    return _tileID;
+    return tileID;
 }
 
 bool MemoryCacheDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {

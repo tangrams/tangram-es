@@ -81,7 +81,7 @@ void TileSource::clearData() {
 TileID TileSource::getFallbackTileID(const TileID& _tileID) {
 
     if (m_sources) {
-        return m_sources->getFallbackTileID(_tileID, maxZoom(), zoomBias());
+        return m_sources->getFallbackTileID(_tileID, zoomBias());
     }
     else {
         return _tileID;

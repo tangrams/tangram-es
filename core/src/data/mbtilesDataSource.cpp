@@ -133,24 +133,15 @@ MBTilesDataSource::MBTilesDataSource(Platform& _platform, std::string _name,
 MBTilesDataSource::~MBTilesDataSource() {
 }
 
-TileID MBTilesDataSource::getFallbackTileID(const TileID& _tileID, int32_t _maxZoom, int32_t _zoomBias) {
-
-    if (hasTileData(_tileID.zoomBiasAdjusted(_zoomBias).withMaxSourceZoom(_maxZoom))) {
-        return _tileID;
-    }
+TileID MBTilesDataSource::getFallbackTileID(const TileID& _tileID, int32_t _zoomBias) {
 
     TileID tileID(_tileID);
 
-    if (_zoomBias > 0) {
-        while (!hasTileData(tileID.zoomBiasAdjusted(_zoomBias)) && tileID.z > _zoomBias) {
-            tileID = tileID.zoomBiasAdjusted(_zoomBias);
-        }
+    while (!hasTileData(tileID) && tileID.z > 0) {
+        tileID = tileID.getParent(_zoomBias);
     }
-    else {
-        while (!hasTileData(tileID) && tileID.z > 0) {
-            tileID = tileID.getParent(_zoomBias);
-        }
-    }
+
+    tileID.s = _tileID.s;
 
     return tileID;
 }
@@ -456,6 +447,15 @@ void MBTilesDataSource::initSchema(SQLite::Database& db, std::string _name, std:
 
 bool MBTilesDataSource::hasTileData(const TileID& _tileId) {
 
+    TileID tileId = TileID(_tileId);
+    tileId.s = 0;
+
+    auto search = m_HasTileDataCache.find(tileId);
+
+    if (search != m_HasTileDataCache.end()) {
+        return search->second;
+    }
+
     for (int i = 0; i < m_queries.size(); ++i) {
         auto &stmt = m_queries[i]->getTileData;
         try {
@@ -471,6 +471,7 @@ bool MBTilesDataSource::hasTileData(const TileID& _tileId) {
 
             if (stmt.executeStep()) {
                 stmt.reset();
+                m_HasTileDataCache[tileId] = true;
                 return true;
             }
 
@@ -482,6 +483,7 @@ bool MBTilesDataSource::hasTileData(const TileID& _tileId) {
         } catch (...) {}
     }
 
+    m_HasTileDataCache[tileId] = false;
     return false;
 }
 

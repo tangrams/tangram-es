@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include "data/tileSource.h"
 
 namespace SQLite {
@@ -22,7 +23,7 @@ public:
 
     ~MBTilesDataSource();
 
-    TileID getFallbackTileID(const TileID& _tileID, int32_t _maxZoom, int32_t _zoomBias) override;
+    TileID getFallbackTileID(const TileID& _tileID, int32_t _zoomBias) override;
 
     bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
 
@@ -54,6 +55,9 @@ private:
     std::vector<std::unique_ptr<SQLite::Database>> m_dbs;
     std::vector<std::unique_ptr<MBTilesQueries>> m_queries;
     std::unique_ptr<AsyncWorker> m_worker;
+
+    // Cached has tile data
+    std::map<TileID, bool> m_HasTileDataCache;
 
     // Platform reference
     Platform& m_platform;
