@@ -212,17 +212,6 @@ void ClientDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb 
     TileSource::loadTileData(_task, _cb);
 }
 
-void ClientDataSource::clearData() {
-
-    std::lock_guard<std::mutex> lock(m_mutexStore);
-
-    m_store->features.clear();
-    m_store->properties.clear();
-    m_store->tiles.reset();
-
-    m_generation++;
-}
-
 void ClientDataSource::addData(const std::string& _data) {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);

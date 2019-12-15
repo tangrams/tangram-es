@@ -62,7 +62,7 @@ public:
     std::shared_ptr<TileTask> createTask(TileID _tileId) override;
 
     void cancelLoadingTile(TileTask& _task) override {};
-    void clearData() override;
+    void clearData() override {};
 
 protected:
 
