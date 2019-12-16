@@ -28,7 +28,7 @@ public abstract class Geometry {
     }
 
     @NonNull
-    protected String[] getStringMapAsArray(@NonNull final Map<String, String> properties) {
+    public static String[] getStringMapAsArray(@NonNull final Map<String, String> properties) {
         final String[] out = new String[properties.size() * 2];
         int i = 0;
         for (final Map.Entry<String, String> entry : properties.entrySet()) {
