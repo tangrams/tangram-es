@@ -115,10 +115,11 @@ struct MBTilesQueries {
 
 };
 
-MBTilesDataSource::MBTilesDataSource(Platform& _platform, std::string _name, std::string _path,
-                                     std::string _mime, bool _cache, bool _offlineFallback)
+MBTilesDataSource::MBTilesDataSource(Platform& _platform, std::string _name,
+                                     std::vector<std::string> _paths, std::string _mime,
+                                     bool _cache, bool _offlineFallback)
     : m_name(_name),
-      m_path(_path),
+      m_paths(_paths),
       m_mime(_mime),
       m_cacheMode(_cache),
       m_offlineMode(_offlineFallback),
@@ -143,7 +144,7 @@ bool MBTilesDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb
         return loadNextSource(_task, _cb);
     }
 
-    if (!m_db) { return false; }
+    if (m_dbs.empty()) { return false; }
 
     if (_task->rawSource == this->level) {
 
@@ -184,7 +185,7 @@ bool MBTilesDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb
 bool MBTilesDataSource::loadNextSource(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
     if (!next) { return false; }
 
-    if (!m_db) {
+    if (m_dbs.empty()) {
         return next->loadTileData(_task, _cb);
     }
 
@@ -196,12 +197,12 @@ bool MBTilesDataSource::loadNextSource(std::shared_ptr<TileTask> _task, TileTask
             if (m_cacheMode) {
                 m_worker->enqueue([this, _task](){
 
-                        auto& task = static_cast<BinaryTileTask&>(*_task);
+                auto& task = static_cast<BinaryTileTask&>(*_task);
 
-                        LOGW("store tile: %s, %d", _task->tileId().toString().c_str(), task.hasData());
+                LOGW("store tile: %s, %d", _task->tileId().toString().c_str(), task.hasData());
 
-                        storeTileData(_task->tileId(), *task.rawTileData);
-                    });
+                storeTileData(_task->tileId(), *task.rawTileData);
+                });
             }
 
             _cb.func(_task);
@@ -232,77 +233,86 @@ bool MBTilesDataSource::loadNextSource(std::shared_ptr<TileTask> _task, TileTask
 
 void MBTilesDataSource::openMBTiles() {
 
-    try {
-        auto mode = SQLite::OPEN_READONLY;
-        if (m_cacheMode) {
-            // Need to explicitly open a SQLite DB with OPEN_READWRITE
-            // and OPEN_CREATE flags to make a file and write.
-            mode = SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE;
-        }
+    for (int i = 0; i < m_paths.size(); ++i) {
+        std::string path = m_paths[i];
 
-        auto url = Url(m_path);
-        auto path = url.path();
-        const char* vfs = "";
-        if (url.scheme() == "asset") {
-            vfs = "ndk-asset";
-            path.erase(path.begin()); // Remove leading '/'.
-        }
-        m_db = std::make_unique<SQLite::Database>(path, mode, 0, vfs);
-        LOG("SQLite database opened: %s", path.c_str());
+        try {
+            auto mode = SQLite::OPEN_READONLY;
+            if (m_cacheMode) {
+                // Need to explicitly open a SQLite DB with OPEN_READWRITE
+                // and OPEN_CREATE flags to make a file and write.
+                mode = SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE;
+            }
 
-    } catch (std::exception& e) {
-        LOGE("Unable to open SQLite database: %s - %s", m_path.c_str(), e.what());
-        m_db.reset();
-        return;
-    }
+            auto url = Url(path);
+            auto path = url.path();
+            const char* vfs = "";
+            if (url.scheme() == "asset") {
+                vfs = "ndk-asset";
+                path.erase(path.begin()); // Remove leading '/'.
+            }
+            m_dbs.push_back(std::make_unique<SQLite::Database>(path, mode, 0, vfs));
+            LOG("SQLite database opened: %s", path.c_str());
 
-    bool ok = testSchema(*m_db);
-    if (ok) {
-        if (m_cacheMode && !m_schemaOptions.isCache) {
-            // TODO better description
-            LOGE("Cannot cache to 'externally created' MBTiles database");
-            // Run in non-caching mode
-            m_cacheMode = false;
+        } catch (std::exception& e) {
+            LOGE("Unable to open SQLite database: %s - %s", path.c_str(), e.what());
+            if (!m_dbs.empty()) {
+                m_dbs[m_dbs.size() - 1].reset();
+            }
             return;
         }
-    } else if (m_cacheMode) {
 
-        // Setup the database by running the schema.sql.
-        initSchema(*m_db, m_name, m_mime);
+        if (!m_dbs.empty()) {
+            std::unique_ptr<SQLite::Database>& db = m_dbs[m_dbs.size() - 1];
 
-        ok = testSchema(*m_db);
-        if (!ok) {
-            LOGE("Unable to initialize MBTiles schema");
-            m_db.reset();
-            return;
+            bool ok = testSchema(*db);
+            if (ok) {
+                if (m_cacheMode && !m_schemaOptions.isCache) {
+                    // TODO better description
+                    LOGE("Cannot cache to 'externally created' MBTiles database");
+                    // Run in non-caching mode
+                    m_cacheMode = false;
+                    return;
+                }
+            } else if (m_cacheMode) {
+
+                // Setup the database by running the schema.sql.
+                initSchema(*db, m_name, m_mime);
+
+                ok = testSchema(*db);
+                if (!ok) {
+                    LOGE("Unable to initialize MBTiles schema");
+                    db.reset();
+                    return;
+                }
+            } else {
+                LOGE("Invalid MBTiles schema");
+                db.reset();
+                return;
+            }
+
+            if (m_schemaOptions.compression == Compression::unsupported) {
+                db.reset();
+                return;
+            }
+
+            try {
+                m_queries.push_back(std::make_unique<MBTilesQueries>(*db, m_cacheMode));
+            } catch (std::exception &e) {
+                LOGE("Unable to initialize queries: %s", e.what());
+                db.reset();
+            }
         }
-    } else {
-        LOGE("Invalid MBTiles schema");
-        m_db.reset();
-        return;
-    }
-
-    if (m_schemaOptions.compression == Compression::unsupported) {
-        m_db.reset();
-        return;
-    }
-
-    try {
-        m_queries = std::make_unique<MBTilesQueries>(*m_db, m_cacheMode);
-    } catch (std::exception& e) {
-        LOGE("Unable to initialize queries: %s", e.what());
-        m_db.reset();
-        return;
     }
 }
 
 /**
- * We check to see if the database has the MBTiles Schema.
- * Sets m_schemaOptions from metadata table
- *
- * @param _source A pointer to a the data source in which we will setup a db.
- * @return true if database contains MBTiles schema
- */
+* We check to see if the database has the MBTiles Schema.
+* Sets m_schemaOptions from metadata table
+*
+* @param _source A pointer to a the data source in which we will setup a db.
+* @return true if database contains MBTiles schema
+*/
 bool MBTilesDataSource::testSchema(SQLite::Database& db) {
 
     bool metadata = false, tiles = false, grids = false, grid_data = false;
@@ -314,7 +324,7 @@ bool MBTilesDataSource::testSchema(SQLite::Database& db) {
             // required
             if (name == "metadata") metadata = true;
             else if (name == "tiles") tiles = true;
-            // optional
+                // optional
             else if (name == "grids") grids = true;
             else if (name == "grid_data") grid_data = true;
             // schema implementation specific
@@ -424,49 +434,59 @@ void MBTilesDataSource::initSchema(SQLite::Database& db, std::string _name, std:
 
 bool MBTilesDataSource::getTileData(const TileID& _tileId, std::vector<char>& _data) {
 
-    auto& stmt = m_queries->getTileData;
-    try {
-        // Google TMS to WMTS
-        // https://github.com/mapbox/node-mbtiles/blob/
-        // 4bbfaf991969ce01c31b95184c4f6d5485f717c3/lib/mbtiles.js#L149
-        int z = _tileId.z;
-        int y = (1 << z) - 1 - _tileId.y;
+    int largestLength = 0;
 
-        stmt.bind(1, z);
-        stmt.bind(2, _tileId.x);
-        stmt.bind(3, y);
+    for (int i = 0; i < m_queries.size(); ++i) {
 
-        if (stmt.executeStep()) {
-            SQLite::Column column = stmt.getColumn(0);
-            const char* blob = (const char*) column.getBlob();
-            const int length = column.getBytes();
+        auto &stmt = m_queries[i]->getTileData;
+        try {
+            // Google TMS to WMTS
+            // https://github.com/mapbox/node-mbtiles/blob/
+            // 4bbfaf991969ce01c31b95184c4f6d5485f717c3/lib/mbtiles.js#L149
+            int z = _tileId.z;
+            int y = (1 << z) - 1 - _tileId.y;
 
-            if ((m_schemaOptions.compression == Compression::undefined) ||
-                (m_schemaOptions.compression == Compression::deflate)) {
+            stmt.bind(1, z);
+            stmt.bind(2, _tileId.x);
+            stmt.bind(3, y);
 
-                if (zlib::inflate(blob, length, _data) != 0) {
-                    if (m_schemaOptions.compression == Compression::undefined) {
+            if (stmt.executeStep()) {
+                SQLite::Column column = stmt.getColumn(0);
+                const int length = column.getBytes();
+
+                if (length > largestLength) {
+                    const char *blob = (const char *) column.getBlob();
+
+                    if ((m_schemaOptions.compression == Compression::undefined) ||
+                        (m_schemaOptions.compression == Compression::deflate)) {
+
+                        if (zlib::inflate(blob, length, _data) != 0) {
+                            if (m_schemaOptions.compression == Compression::undefined) {
+                                _data.resize(length);
+                                memcpy(_data.data(), blob, length);
+                            } else {
+                                LOGW("Invalid deflate compression");
+                            }
+                        }
+                    } else {
                         _data.resize(length);
                         memcpy(_data.data(), blob, length);
-                    } else {
-                        LOGW("Invalid deflate compression");
                     }
+
+                    largestLength = length;
                 }
-            } else {
-                _data.resize(length);
-                memcpy(_data.data(), blob, length);
+
+                stmt.reset();
+                //return true;
             }
 
-            stmt.reset();
-            return true;
+        } catch (std::exception &e) {
+            LOGE("MBTiles SQLite get tile_data statement failed: %s", e.what());
         }
-
-    } catch (std::exception& e) {
-        LOGE("MBTiles SQLite get tile_data statement failed: %s", e.what());
+        try {
+            stmt.reset();
+        } catch (...) {}
     }
-    try {
-        stmt.reset();
-    } catch(...) {}
 
     return false;
 }
@@ -487,7 +507,7 @@ void MBTilesDataSource::storeTileData(const TileID& _tileId, const std::vector<c
     std::string md5id = md5(data, size);
 
     try {
-        auto& stmt = m_queries->putMap;
+        auto& stmt = m_queries[0]->putMap;
         stmt.bind(1, z);
         stmt.bind(2, _tileId.x);
         stmt.bind(3, y);
@@ -501,7 +521,7 @@ void MBTilesDataSource::storeTileData(const TileID& _tileId, const std::vector<c
     }
 
     try {
-        auto& stmt = m_queries->putImage;
+        auto& stmt = m_queries[0]->putImage;
         stmt.bind(1, md5id);
         stmt.bind(2, data, size);
         stmt.exec();
