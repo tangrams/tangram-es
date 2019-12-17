@@ -22,8 +22,17 @@ struct RawCache {
 
     CacheMap m_cacheMap;
     CacheList m_cacheList;
-    int m_usage = 0;
-    int m_maxUsage = 0;
+    size_t m_usage = 0;
+    size_t m_maxUsage = 0;
+
+    bool has(const TileID& _tileID) {
+
+        if (m_maxUsage <= 0) { return false; }
+
+        std::lock_guard<std::mutex> lock(m_mutex);
+
+        return m_cacheMap.find(_tileID) != m_cacheMap.end();
+    }
 
     bool get(BinaryTileTask& _task) {
 
@@ -93,12 +102,42 @@ void MemoryCacheDataSource::setCacheSize(size_t _cacheSize) {
     m_cache->m_maxUsage = _cacheSize;
 }
 
+bool MemoryCacheDataSource::hasCache(const TileID& _tileID) {
+    return m_cache->has(_tileID);
+}
+
 bool MemoryCacheDataSource::cacheGet(BinaryTileTask& _task) {
     return m_cache->get(_task);
 }
 
 void MemoryCacheDataSource::cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef) {
     m_cache->put(_tileID, _rawDataRef);
+}
+
+TileID MemoryCacheDataSource::getFallbackTileID(const TileID& _tileID, int32_t _zoomBias) {
+
+    TileID tileID(_tileID);
+    bool isCached = false;
+
+    while (!(isCached = hasCache(tileID)) && tileID.z > 0) {
+        tileID = tileID.getParent(_zoomBias);
+    }
+
+    tileID.s = _tileID.s;
+
+    if (next) {
+        TileID nextTileID = next->getFallbackTileID(_tileID, _zoomBias);
+        nextTileID.s = _tileID.s;
+
+        if (isCached) {
+            return (tileID.z > nextTileID.z) ? tileID : nextTileID;
+        }
+        else {
+            return nextTileID;
+        }
+    }
+
+    return tileID;
 }
 
 bool MemoryCacheDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {

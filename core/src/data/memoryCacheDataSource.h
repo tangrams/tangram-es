@@ -10,6 +10,8 @@ public:
     MemoryCacheDataSource();
     ~MemoryCacheDataSource();
 
+    TileID getFallbackTileID(const TileID& _tileID, int32_t _zoomBias) override;
+
     bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
 
     void clear() override;
@@ -20,6 +22,7 @@ public:
     void setCacheSize(size_t _cacheSize);
 
 private:
+    bool hasCache(const TileID& _tileID);
     bool cacheGet(BinaryTileTask& _task);
 
     void cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef);

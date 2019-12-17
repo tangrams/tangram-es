@@ -50,10 +50,16 @@ public:
 
     void addPointFeature(Properties&& properties, LngLat coordinates);
 
-    void addPolylineFeature(Properties&& properties, PolylineBuilder&& polyline);
+    uint64_t addPolylineFeature(Properties&& properties, PolylineBuilder&& polyline);
 
     void addPolygonFeature(Properties&& properties, PolygonBuilder
         && polygon);
+
+    void updatePolylineFeature(uint64_t id, const Coordinates& coordinates);
+
+    void updatePolylineFeature(uint64_t id, const Properties&& properties);
+
+    void removePolylineFeature(uint64_t id);
 
     // Transform added feature data into tiles.
     void generateTiles();
