@@ -133,7 +133,7 @@ MBTilesDataSource::MBTilesDataSource(Platform& _platform, std::string _name,
 MBTilesDataSource::~MBTilesDataSource() {
 }
 
-TileID MBTilesDataSource::getFallbackTileID(const TileID& _tileID, int32_t _zoomBias) {
+TileID MBTilesDataSource::getFallbackTileID(const TileID& _tileID, int32_t _maxZoom, int32_t _zoomBias) {
 
     TileID tileID(_tileID);
 
@@ -141,7 +141,12 @@ TileID MBTilesDataSource::getFallbackTileID(const TileID& _tileID, int32_t _zoom
         tileID = tileID.getParent(_zoomBias);
     }
 
-    tileID.s = _tileID.s;
+    if (tileID.z == _maxZoom) {
+        tileID = _tileID;
+    }
+    else {
+        tileID.s = _tileID.s;
+    }
 
     return tileID;
 }

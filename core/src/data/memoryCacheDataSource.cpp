@@ -114,7 +114,7 @@ void MemoryCacheDataSource::cachePut(const TileID& _tileID, std::shared_ptr<std:
     m_cache->put(_tileID, _rawDataRef);
 }
 
-TileID MemoryCacheDataSource::getFallbackTileID(const TileID& _tileID, int32_t _zoomBias) {
+TileID MemoryCacheDataSource::getFallbackTileID(const TileID& _tileID, int32_t _maxZoom, int32_t _zoomBias) {
 
     TileID tileID(_tileID);
     bool isCached = false;
@@ -123,11 +123,22 @@ TileID MemoryCacheDataSource::getFallbackTileID(const TileID& _tileID, int32_t _
         tileID = tileID.getParent(_zoomBias);
     }
 
-    tileID.s = _tileID.s;
+    if (tileID.z == _maxZoom) {
+        tileID = _tileID;
+    }
+    else {
+        tileID.s = _tileID.s;
+    }
 
     if (next) {
-        TileID nextTileID = next->getFallbackTileID(_tileID, _zoomBias);
-        nextTileID.s = _tileID.s;
+        TileID nextTileID = next->getFallbackTileID(_tileID, _maxZoom, _zoomBias);
+
+        if (nextTileID.z == _maxZoom) {
+            nextTileID = _tileID;
+        }
+        else {
+            nextTileID.s = _tileID.s;
+        }
 
         if (isCached) {
             return (tileID.z > nextTileID.z) ? tileID : nextTileID;

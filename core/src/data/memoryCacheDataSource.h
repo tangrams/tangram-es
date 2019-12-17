@@ -10,7 +10,7 @@ public:
     MemoryCacheDataSource();
     ~MemoryCacheDataSource();
 
-    TileID getFallbackTileID(const TileID& _tileID, int32_t _zoomBias) override;
+    TileID getFallbackTileID(const TileID& _tileID, int32_t _maxZoom, int32_t _zoomBias) override;
 
     bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
 
