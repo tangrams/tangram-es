@@ -78,6 +78,16 @@ void TileSource::clearData() {
     m_generation++;
 }
 
+TileID TileSource::getFallbackTileID(const TileID& _tileID) {
+
+    if (m_sources) {
+        return m_sources->getFallbackTileID(_tileID, maxZoom(), zoomBias());
+    }
+    else {
+        return _tileID;
+    }
+}
+
 void TileSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
 
     if (m_sources) {
