@@ -132,6 +132,24 @@ MBTilesDataSource::MBTilesDataSource(Platform& _platform, std::string _name, std
 MBTilesDataSource::~MBTilesDataSource() {
 }
 
+TileID MBTilesDataSource::getFallbackTileID(const TileID& _tileID, int32_t _maxZoom, int32_t _zoomBias) {
+
+    TileID tileID(_tileID);
+
+    while (!hasTileData(tileID) && tileID.z > 0) {
+        tileID = tileID.getParent(_zoomBias);
+    }
+
+    if (tileID.z == _maxZoom) {
+        tileID = _tileID;
+    }
+    else {
+        tileID.s = _tileID.s;
+    }
+
+    return tileID;
+}
+
 bool MBTilesDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
 
     if (m_offlineMode) {
@@ -196,12 +214,12 @@ bool MBTilesDataSource::loadNextSource(std::shared_ptr<TileTask> _task, TileTask
             if (m_cacheMode) {
                 m_worker->enqueue([this, _task](){
 
-                        auto& task = static_cast<BinaryTileTask&>(*_task);
+                    auto& task = static_cast<BinaryTileTask&>(*_task);
 
-                        LOGW("store tile: %s, %d", _task->tileId().toString().c_str(), task.hasData());
+                    LOGW("store tile: %s, %d", _task->tileId().toString().c_str(), task.hasData());
 
-                        storeTileData(_task->tileId(), *task.rawTileData);
-                    });
+                    storeTileData(_task->tileId(), *task.rawTileData);
+                });
             }
 
             _cb.func(_task);
@@ -422,7 +440,49 @@ void MBTilesDataSource::initSchema(SQLite::Database& db, std::string _name, std:
     }
 }
 
+bool MBTilesDataSource::hasTileData(const TileID& _tileId) {
+
+    TileID tileId = TileID(_tileId);
+    tileId.s = 0;
+
+    auto search = m_HasTileDataCache.find(tileId);
+
+    if (search != m_HasTileDataCache.end()) {
+        return search->second;
+    }
+
+    auto& stmt = m_queries->getTileData;
+    try {
+        // Google TMS to WMTS
+        // https://github.com/mapbox/node-mbtiles/blob/
+        // 4bbfaf991969ce01c31b95184c4f6d5485f717c3/lib/mbtiles.js#L149
+        int z = _tileId.z;
+        int y = (1 << z) - 1 - _tileId.y;
+
+        stmt.bind(1, z);
+        stmt.bind(2, _tileId.x);
+        stmt.bind(3, y);
+
+        if (stmt.executeStep()) {
+            stmt.reset();
+            m_HasTileDataCache[tileId] = true;
+            return true;
+        }
+
+    } catch (std::exception& e) {
+        LOGE("MBTiles SQLite get tile_data statement failed: %s", e.what());
+    }
+    try {
+        stmt.reset();
+    } catch (...) {}
+
+    m_HasTileDataCache[tileId] = false;
+    return false;
+}
+
 bool MBTilesDataSource::getTileData(const TileID& _tileId, std::vector<char>& _data) {
+
+    int largestLength = 0;
 
     auto& stmt = m_queries->getTileData;
     try {
@@ -441,20 +501,24 @@ bool MBTilesDataSource::getTileData(const TileID& _tileId, std::vector<char>& _d
             const char* blob = (const char*) column.getBlob();
             const int length = column.getBytes();
 
-            if ((m_schemaOptions.compression == Compression::undefined) ||
-                (m_schemaOptions.compression == Compression::deflate)) {
+            if (length > largestLength) {
+                if ((m_schemaOptions.compression == Compression::undefined) ||
+                    (m_schemaOptions.compression == Compression::deflate)) {
 
-                if (zlib::inflate(blob, length, _data) != 0) {
-                    if (m_schemaOptions.compression == Compression::undefined) {
-                        _data.resize(length);
-                        memcpy(_data.data(), blob, length);
-                    } else {
-                        LOGW("Invalid deflate compression");
+                    if (zlib::inflate(blob, length, _data) != 0) {
+                        if (m_schemaOptions.compression == Compression::undefined) {
+                            _data.resize(length);
+                            memcpy(_data.data(), blob, length);
+                        } else {
+                            LOGW("Invalid deflate compression");
+                        }
                     }
+                } else {
+                    _data.resize(length);
+                    memcpy(_data.data(), blob, length);
                 }
-            } else {
-                _data.resize(length);
-                memcpy(_data.data(), blob, length);
+
+                largestLength = length;
             }
 
             stmt.reset();
