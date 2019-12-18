@@ -477,7 +477,6 @@ bool MBTilesDataSource::getTileData(const TileID& _tileId, std::vector<char>& _d
                 }
 
                 stmt.reset();
-                //return true;
             }
 
         } catch (std::exception& e) {
@@ -488,7 +487,7 @@ bool MBTilesDataSource::getTileData(const TileID& _tileId, std::vector<char>& _d
         } catch (...) {}
     }
 
-    return false;
+    return !_data.empty();
 }
 
 void MBTilesDataSource::storeTileData(const TileID& _tileId, const std::vector<char>& _data) {
