@@ -324,7 +324,7 @@ bool MBTilesDataSource::testSchema(SQLite::Database& db) {
             // required
             if (name == "metadata") metadata = true;
             else if (name == "tiles") tiles = true;
-                // optional
+            // optional
             else if (name == "grids") grids = true;
             else if (name == "grid_data") grid_data = true;
             // schema implementation specific
@@ -438,7 +438,7 @@ bool MBTilesDataSource::getTileData(const TileID& _tileId, std::vector<char>& _d
 
     for (int i = 0; i < m_queries.size(); ++i) {
 
-        auto &stmt = m_queries[i]->getTileData;
+        auto& stmt = m_queries[i]->getTileData;
         try {
             // Google TMS to WMTS
             // https://github.com/mapbox/node-mbtiles/blob/
@@ -480,7 +480,7 @@ bool MBTilesDataSource::getTileData(const TileID& _tileId, std::vector<char>& _d
                 //return true;
             }
 
-        } catch (std::exception &e) {
+        } catch (std::exception& e) {
             LOGE("MBTiles SQLite get tile_data statement failed: %s", e.what());
         }
         try {
