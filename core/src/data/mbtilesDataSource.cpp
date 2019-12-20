@@ -144,7 +144,7 @@ bool MBTilesDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb
         return loadNextSource(_task, _cb);
     }
 
-    if (m_dbs.empty()) { return false; }
+    if (m_queries.empty()) { return false; }
 
     if (_task->rawSource == this->level) {
 
@@ -185,7 +185,7 @@ bool MBTilesDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb
 bool MBTilesDataSource::loadNextSource(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
     if (!next) { return false; }
 
-    if (m_dbs.empty()) {
+    if (m_queries.empty()) {
         return next->loadTileData(_task, _cb);
     }
 
@@ -197,11 +197,11 @@ bool MBTilesDataSource::loadNextSource(std::shared_ptr<TileTask> _task, TileTask
             if (m_cacheMode) {
                 m_worker->enqueue([this, _task](){
 
-                auto& task = static_cast<BinaryTileTask&>(*_task);
+                    auto& task = static_cast<BinaryTileTask&>(*_task);
 
-                LOGW("store tile: %s, %d", _task->tileId().toString().c_str(), task.hasData());
+                    LOGW("store tile: %s, %d", _task->tileId().toString().c_str(), task.hasData());
 
-                storeTileData(_task->tileId(), *task.rawTileData);
+                    storeTileData(_task->tileId(), *task.rawTileData);
                 });
             }
 
@@ -259,59 +259,59 @@ void MBTilesDataSource::openMBTiles() {
             if (!m_dbs.empty()) {
                 m_dbs[m_dbs.size() - 1].reset();
             }
-            return;
+            continue;
+        }
+    }
+
+    for (int i = 0; i < m_dbs.size(); ++i) {
+        std::unique_ptr<SQLite::Database>& db = m_dbs[i];
+
+        bool ok = testSchema(*db);
+        if (ok) {
+            if (m_cacheMode && !m_schemaOptions.isCache) {
+                // TODO better description
+                LOGE("Cannot cache to 'externally created' MBTiles database");
+                // Run in non-caching mode
+                m_cacheMode = false;
+                continue;
+            }
+        } else if (m_cacheMode) {
+
+            // Setup the database by running the schema.sql.
+            initSchema(*db, m_name, m_mime);
+
+            ok = testSchema(*db);
+            if (!ok) {
+                LOGE("Unable to initialize MBTiles schema");
+                db.reset();
+                continue;
+            }
+        } else {
+            LOGE("Invalid MBTiles schema");
+            db.reset();
+            continue;
         }
 
-        if (!m_dbs.empty()) {
-            std::unique_ptr<SQLite::Database>& db = m_dbs[m_dbs.size() - 1];
+        if (m_schemaOptions.compression == Compression::unsupported) {
+            db.reset();
+            continue;
+        }
 
-            bool ok = testSchema(*db);
-            if (ok) {
-                if (m_cacheMode && !m_schemaOptions.isCache) {
-                    // TODO better description
-                    LOGE("Cannot cache to 'externally created' MBTiles database");
-                    // Run in non-caching mode
-                    m_cacheMode = false;
-                    return;
-                }
-            } else if (m_cacheMode) {
-
-                // Setup the database by running the schema.sql.
-                initSchema(*db, m_name, m_mime);
-
-                ok = testSchema(*db);
-                if (!ok) {
-                    LOGE("Unable to initialize MBTiles schema");
-                    db.reset();
-                    return;
-                }
-            } else {
-                LOGE("Invalid MBTiles schema");
-                db.reset();
-                return;
-            }
-
-            if (m_schemaOptions.compression == Compression::unsupported) {
-                db.reset();
-                return;
-            }
-
-            try {
-                m_queries.push_back(std::make_unique<MBTilesQueries>(*db, m_cacheMode));
-            } catch (std::exception &e) {
-                LOGE("Unable to initialize queries: %s", e.what());
-                db.reset();
-            }
+        try {
+            m_queries.push_back(std::make_unique<MBTilesQueries>(*db, m_cacheMode));
+        } catch (std::exception& e) {
+            LOGE("Unable to initialize queries: %s", e.what());
+            db.reset();
         }
     }
 }
 
 /**
-* We check to see if the database has the MBTiles Schema.
-* Sets m_schemaOptions from metadata table
-*
-* @param _source A pointer to a the data source in which we will setup a db.
-* @return true if database contains MBTiles schema
+ * We check to see if the database has the MBTiles Schema.
+ * Sets m_schemaOptions from metadata table
+ *
+ * @param _source A pointer to a the data source in which we will setup a db.
+ * @return true if database contains MBTiles schema
 */
 bool MBTilesDataSource::testSchema(SQLite::Database& db) {
 
@@ -455,7 +455,7 @@ bool MBTilesDataSource::getTileData(const TileID& _tileId, std::vector<char>& _d
                 const int length = column.getBytes();
 
                 if (length > largestLength) {
-                    const char *blob = (const char *) column.getBlob();
+                    const char* blob = (const char*) column.getBlob();
 
                     if ((m_schemaOptions.compression == Compression::undefined) ||
                         (m_schemaOptions.compression == Compression::deflate)) {
