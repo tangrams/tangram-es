@@ -454,6 +454,7 @@ bool MBTilesDataSource::getTileData(const TileID& _tileId, std::vector<char>& _d
                 SQLite::Column column = stmt.getColumn(0);
                 const int length = column.getBytes();
 
+                // When multiple mbtiles contain the same tile, get the tile which has more data.
                 if (length > largestLength) {
                     const char* blob = (const char*) column.getBlob();
 
