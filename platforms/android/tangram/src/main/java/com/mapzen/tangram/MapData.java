@@ -35,16 +35,14 @@ public class MapData {
      * @param features The features to assign
      */
     public void setFeatures(@NonNull final List<Geometry> features) {
-        synchronized (this) {
-            nativeClearFeatures(pointer);
-            for (Geometry feature : features) {
-                nativeAddFeature(pointer,
-                        feature.getCoordinateArray(),
-                        feature.getRingArray(),
-                        feature.getPropertyArray());
-            }
-            nativeGenerateTiles(pointer);
+        nativeClearFeatures(pointer);
+        for (Geometry feature : features) {
+            nativeAddFeature(pointer,
+                    feature.getCoordinateArray(),
+                    feature.getRingArray(),
+                    feature.getPropertyArray());
         }
+        nativeGenerateTiles(pointer);
     }
 
     /**
@@ -52,11 +50,9 @@ public class MapData {
      * @param data A string containing a <a href="http://geojson.org/">GeoJSON</a> FeatureCollection
      */
     public void setGeoJson(final String data) {
-        synchronized (this) {
-            nativeClearFeatures(pointer);
-            nativeAddGeoJson(pointer, data);
-            nativeGenerateTiles(pointer);
-        }
+        nativeClearFeatures(pointer);
+        nativeAddGeoJson(pointer, data);
+        nativeGenerateTiles(pointer);
     }
 
     /**
@@ -87,9 +83,7 @@ public class MapData {
      * Remove all features from this collection.
      */
     public void clear() {
-        synchronized (this) {
-            nativeClearFeatures(pointer);
-        }
+        nativeClearFeatures(pointer);
     }
 
     private native void nativeAddFeature(long sourcePtr, double[] coordinates, int[] rings, String[] properties);
