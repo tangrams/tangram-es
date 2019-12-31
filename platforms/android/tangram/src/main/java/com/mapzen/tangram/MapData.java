@@ -35,12 +35,8 @@ public class MapData {
      * @param features The features to assign
      */
     public void setFeatures(@NonNull final List<Geometry> features) {
-        final MapController map = mapController;
-        if (map == null) {
-            return;
-        }
         synchronized (this) {
-            map.clearTileSource(pointer);
+            nativeClearFeatures(pointer);
             for (Geometry feature : features) {
                 nativeAddFeature(pointer,
                         feature.getCoordinateArray(),
@@ -56,13 +52,10 @@ public class MapData {
      * @param data A string containing a <a href="http://geojson.org/">GeoJSON</a> FeatureCollection
      */
     public void setGeoJson(final String data) {
-        final MapController map = mapController;
-        if (map != null) {
-            synchronized (this) {
-                map.clearTileSource(pointer);
-                nativeAddGeoJson(pointer, data);
-                nativeGenerateTiles(pointer);
-            }
+        synchronized (this) {
+            nativeClearFeatures(pointer);
+            nativeAddGeoJson(pointer, data);
+            nativeGenerateTiles(pointer);
         }
     }
 
@@ -94,13 +87,13 @@ public class MapData {
      * Remove all features from this collection.
      */
     public void clear() {
-        final MapController map = mapController;
-        if (map != null) {
-            map.clearTileSource(pointer);
+        synchronized (this) {
+            nativeClearFeatures(pointer);
         }
     }
 
     private native void nativeAddFeature(long sourcePtr, double[] coordinates, int[] rings, String[] properties);
     private native void nativeAddGeoJson(long sourcePtr, String geoJson);
     private native void nativeGenerateTiles(long sourcePtr);
+    private native void nativeClearFeatures(long sourcePtr);
 }
