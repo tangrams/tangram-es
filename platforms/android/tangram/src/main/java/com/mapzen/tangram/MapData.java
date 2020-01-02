@@ -84,6 +84,7 @@ public class MapData {
      */
     public void clear() {
         nativeClearFeatures(pointer);
+        nativeGenerateTiles(pointer);
     }
 
     private native void nativeAddFeature(long sourcePtr, double[] coordinates, int[] rings, String[] properties);
