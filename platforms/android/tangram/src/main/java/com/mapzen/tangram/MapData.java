@@ -35,6 +35,7 @@ public class MapData {
      * @param features The features to assign
      */
     public void setFeatures(@NonNull final List<Geometry> features) {
+        checkPointer(pointer);
         nativeClearFeatures(pointer);
         for (Geometry feature : features) {
             nativeAddFeature(pointer,
@@ -50,6 +51,7 @@ public class MapData {
      * @param data A string containing a <a href="http://geojson.org/">GeoJSON</a> FeatureCollection
      */
     public void setGeoJson(final String data) {
+        checkPointer(pointer);
         nativeClearFeatures(pointer);
         nativeAddGeoJson(pointer, data);
         nativeGenerateTiles(pointer);
@@ -83,8 +85,16 @@ public class MapData {
      * Remove all features from this collection.
      */
     public void clear() {
+        checkPointer(pointer);
         nativeClearFeatures(pointer);
         nativeGenerateTiles(pointer);
+    }
+
+    private void checkPointer(final long ptr) {
+        if (ptr <= 0) {
+            throw new RuntimeException("Tried to perform an operation on an invalid pointer!"
+                    + " This means you may have used a MapData that has already been removed.");
+        }
     }
 
     private native void nativeAddFeature(long sourcePtr, double[] coordinates, int[] rings, String[] properties);
