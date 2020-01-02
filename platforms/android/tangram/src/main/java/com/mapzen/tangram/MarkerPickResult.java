@@ -1,35 +1,47 @@
 package com.mapzen.tangram;
 
+import android.graphics.PointF;
+
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 
 /**
- * {@code MarkerPickResult} represents labels that can be selected on the screen
+ * Result of a marker selection query.
  */
 @Keep
 public class MarkerPickResult {
 
     private Marker marker;
     private LngLat coordinates;
+    private PointF screenPosition;
 
-    MarkerPickResult(final Marker marker, final double longitude, final double latitude) {
+    MarkerPickResult(final Marker marker, final double longitude, final double latitude, final float screenX, final float screenY) {
         this.marker = marker;
         this.coordinates = new LngLat(longitude, latitude);
+        this.screenPosition = new PointF(screenX, screenY);
     }
 
     /**
-     * @return The marker associated with the selection
+     * @return Selected marker.
      */
     public Marker getMarker() {
-        return this.marker;
+        return marker;
     }
 
     /**
-     * @return The coordinate of the feature for which this label has been created
+     * @return Geographic coordinates of the selected marker.
      */
     @NonNull
     public LngLat getCoordinates() {
-        return this.coordinates;
+        return coordinates;
+    }
+
+    /**
+     * @return Screen position of the query that produced this result.
+     */
+    @NonNull
+    public PointF getScreenPosition() {
+        return screenPosition;
     }
 
 }

@@ -11,6 +11,7 @@ import android.widget.Toast;
 import com.mapzen.tangram.CameraPosition;
 import com.mapzen.tangram.CameraUpdateFactory;
 import com.mapzen.tangram.FeaturePickListener;
+import com.mapzen.tangram.FeaturePickResult;
 import com.mapzen.tangram.LabelPickListener;
 import com.mapzen.tangram.LabelPickResult;
 import com.mapzen.tangram.LngLat;
@@ -161,6 +162,8 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
 
         mapData = map.addDataLayer("touch");
+
+        map.setPickRadius(10);
     }
 
     @Override
@@ -233,25 +236,6 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     public boolean onSingleTapConfirmed(float x, float y) {
         LngLat tappedPoint = map.screenPositionToLngLat(new PointF(x, y));
 
-        tappedPoints.add(tappedPoint);
-
-        if (tappedPoints.size() > 1) {
-            Map<String, String> props = new HashMap<>();
-            props.put("type", "line");
-            props.put("color", "#D2655F");
-
-            Polyline polyline = new Polyline(tappedPoints, props);
-
-            Polygon polygon = new Polygon(Collections.singletonList(tappedPoints), props);
-
-            mapData.setFeatures(Arrays.asList(polyline, polygon));
-        }
-
-        Marker p = map.addMarker();
-        p.setStylingFromPath(pointStylingPath);
-        p.setPoint(tappedPoint);
-        pointMarkers.add(p);
-
         map.pickFeature(x, y);
         map.pickLabel(x, y);
         map.pickMarker(x, y);
@@ -275,6 +259,12 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     public boolean onDoubleTap(float x, float y) {
 
         LngLat tapped = map.screenPositionToLngLat(new PointF(x, y));
+
+        Marker p = map.addMarker();
+        p.setStylingFromPath(pointStylingPath);
+        p.setPoint(tapped);
+        pointMarkers.add(p);
+
         CameraPosition camera = map.getCameraPosition();
 
         camera.longitude = .5 * (tapped.longitude + camera.longitude);
@@ -296,14 +286,14 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     }
 
     @Override
-    public void onFeaturePick(Map<String, String> properties, float positionX, float positionY) {
-        if (properties == null) {
+    public void onFeaturePickComplete(@Nullable final FeaturePickResult result) {
+        if (result == null) {
             Log.d(TAG, "Empty selection");
             return;
         }
 
-        String name = properties.get("name");
-        if (name.isEmpty()) {
+        String name = result.getProperties().get("name");
+        if (name == null || name.isEmpty()) {
             name = "unnamed";
         }
 
@@ -313,14 +303,14 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     }
 
     @Override
-    public void onLabelPick(LabelPickResult labelPickResult, float positionX, float positionY) {
-        if (labelPickResult == null) {
+    public void onLabelPickComplete(@Nullable final LabelPickResult result) {
+        if (result == null) {
             Log.d(TAG, "Empty label selection");
             return;
         }
 
-        String name = labelPickResult.getProperties().get("name");
-        if (name.isEmpty()) {
+        String name = result.getProperties().get("name");
+        if (name == null || name.isEmpty()) {
             name = "unnamed";
         }
 
@@ -330,14 +320,14 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     }
 
     @Override
-    public void onMarkerPick(MarkerPickResult markerPickResult, float positionX, float positionY) {
-        if (markerPickResult == null) {
+    public void onMarkerPickComplete(@Nullable final MarkerPickResult result) {
+        if (result == null) {
             Log.d(TAG, "Empty marker selection");
             return;
         }
 
-        Log.d(TAG, "Picked marker: " + markerPickResult.getMarker().getMarkerId());
-        final String message = String.valueOf(markerPickResult.getMarker().getMarkerId());
+        Log.d(TAG, "Picked marker: " + result.getMarker().getMarkerId());
+        final String message = String.valueOf(result.getMarker().getMarkerId());
         Toast.makeText(getApplicationContext(), "Selected Marker: " + message, Toast.LENGTH_SHORT).show();
     }
 }

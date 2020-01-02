@@ -63,6 +63,8 @@ styles:
     icons:
         base: points
         texture: pois
+        draw:
+            interactive: true
     heightglow:
         base: polygons
         blend: translucent
