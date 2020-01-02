@@ -81,6 +81,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setGeoJson:(NSString *)data;
 
 /**
+ Clears the contents of this map data.
+ */
+- (void)clear;
+
+/**
  Permanently removes this map data from the map view.
 
  Any future use of this object will do nothing.

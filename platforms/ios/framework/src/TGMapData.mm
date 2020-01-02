@@ -105,6 +105,16 @@ static inline void TGFeaturePropertiesConvertToCoreProperties(TGFeaturePropertie
     dataSource->generateTiles();
 }
 
+- (void)clear
+{
+    if (!self.map) {
+        return;
+    }
+
+    dataSource->clearFeatures();
+    dataSource->generateTiles();
+}
+
 - (BOOL)remove
 {
     if (!self.map) {
