@@ -56,7 +56,7 @@ static inline void TGFeaturePropertiesConvertToCoreProperties(TGFeaturePropertie
         return;
     }
 
-    dataSource->clearData();
+    dataSource->clearFeatures();
     for (TGMapFeature *feature in features) {
         Tangram::Properties properties;
         TGFeaturePropertiesConvertToCoreProperties(feature.properties, properties);
@@ -100,8 +100,18 @@ static inline void TGFeaturePropertiesConvertToCoreProperties(TGFeaturePropertie
     }
 
     std::string sourceData = std::string([data UTF8String]);
-    dataSource->clearData();
+    dataSource->clearFeatures();
     dataSource->addData(sourceData);
+    dataSource->generateTiles();
+}
+
+- (void)clear
+{
+    if (!self.map) {
+        return;
+    }
+
+    dataSource->clearFeatures();
     dataSource->generateTiles();
 }
 

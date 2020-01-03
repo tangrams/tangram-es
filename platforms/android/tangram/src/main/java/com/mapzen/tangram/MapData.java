@@ -35,20 +35,15 @@ public class MapData {
      * @param features The features to assign
      */
     public void setFeatures(@NonNull final List<Geometry> features) {
-        final MapController map = mapController;
-        if (map == null) {
-            return;
+        checkPointer(pointer);
+        nativeClearFeatures(pointer);
+        for (Geometry feature : features) {
+            nativeAddFeature(pointer,
+                    feature.getCoordinateArray(),
+                    feature.getRingArray(),
+                    feature.getPropertyArray());
         }
-        synchronized (this) {
-            map.clearTileSource(pointer);
-            for (Geometry feature : features) {
-                nativeAddFeature(pointer,
-                        feature.getCoordinateArray(),
-                        feature.getRingArray(),
-                        feature.getPropertyArray());
-            }
-            nativeGenerateTiles(pointer);
-        }
+        nativeGenerateTiles(pointer);
     }
 
     /**
@@ -56,14 +51,10 @@ public class MapData {
      * @param data A string containing a <a href="http://geojson.org/">GeoJSON</a> FeatureCollection
      */
     public void setGeoJson(final String data) {
-        final MapController map = mapController;
-        if (map != null) {
-            synchronized (this) {
-                map.clearTileSource(pointer);
-                nativeAddGeoJson(pointer, data);
-                nativeGenerateTiles(pointer);
-            }
-        }
+        checkPointer(pointer);
+        nativeClearFeatures(pointer);
+        nativeAddGeoJson(pointer, data);
+        nativeGenerateTiles(pointer);
     }
 
     /**
@@ -94,13 +85,20 @@ public class MapData {
      * Remove all features from this collection.
      */
     public void clear() {
-        final MapController map = mapController;
-        if (map != null) {
-            map.clearTileSource(pointer);
+        checkPointer(pointer);
+        nativeClearFeatures(pointer);
+        nativeGenerateTiles(pointer);
+    }
+
+    private void checkPointer(final long ptr) {
+        if (ptr <= 0) {
+            throw new RuntimeException("Tried to perform an operation on an invalid pointer!"
+                    + " This means you may have used a MapData that has already been removed.");
         }
     }
 
     private native void nativeAddFeature(long sourcePtr, double[] coordinates, int[] rings, String[] properties);
     private native void nativeAddGeoJson(long sourcePtr, String geoJson);
     private native void nativeGenerateTiles(long sourcePtr);
+    private native void nativeClearFeatures(long sourcePtr);
 }

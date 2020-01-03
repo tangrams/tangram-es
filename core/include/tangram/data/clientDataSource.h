@@ -55,6 +55,9 @@ public:
     void addPolygonFeature(Properties&& properties, PolygonBuilder
         && polygon);
 
+    // Remove all feature data.
+    void clearFeatures();
+
     // Transform added feature data into tiles.
     void generateTiles();
 
@@ -62,7 +65,6 @@ public:
     std::shared_ptr<TileTask> createTask(TileID _tileId) override;
 
     void cancelLoadingTile(TileTask& _task) override {};
-    void clearData() override;
 
 protected:
 

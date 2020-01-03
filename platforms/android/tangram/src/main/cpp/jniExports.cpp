@@ -529,7 +529,7 @@ void MapController(SetDefaultBackgroundColor)(JNIEnv* jnienv, jobject obj, jlong
     map->setDefaultBackgroundColor(r, g, b);
 }
 
-jlong MapController(AddTileSource)(JNIEnv* jniEnv, jobject obj, jlong mapPtr,
+jlong MapController(AddClientDataSource)(JNIEnv* jniEnv, jobject obj, jlong mapPtr,
                                    jstring name, jboolean generateCentroid) {
     auto_map(mapPtr);
 
@@ -541,18 +541,11 @@ jlong MapController(AddTileSource)(JNIEnv* jniEnv, jobject obj, jlong mapPtr,
     return reinterpret_cast<jlong>(source.get());
 }
 
-void MapController(RemoveTileSource)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong sourcePtr) {
+void MapController(RemoveClientDataSource)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong sourcePtr) {
     auto_map(mapPtr);
     auto_source(sourcePtr);
     map->removeTileSource(*source);
 }
-
-void MapController(ClearTileSource)(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong sourcePtr) {
-    auto_map(mapPtr);
-    auto_source(sourcePtr);
-    map->clearTileSource(*source, true, true);
-}
-
 
 #define MapData(NAME) FUNC(MapData, NAME)
 
@@ -622,6 +615,12 @@ void MapData(GenerateTiles)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr) {
     auto_source(sourcePtr);
 
     source->generateTiles();
+}
+
+void MapData(ClearFeatures)(JNIEnv* jniEnv, jobject obj, jlong sourcePtr) {
+    auto_source(sourcePtr);
+
+    source->clearFeatures();
 }
 
 } // extern "C"

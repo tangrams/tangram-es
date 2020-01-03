@@ -682,7 +682,7 @@ public class MapController {
             return mapData;
         }
         checkPointer(mapPointer);
-        final long pointer = nativeAddTileSource(mapPointer, name, generateCentroid);
+        final long pointer = nativeAddClientDataSource(mapPointer, name, generateCentroid);
         if (pointer <= 0) {
             throw new RuntimeException("Unable to create new data source");
         }
@@ -699,7 +699,7 @@ public class MapController {
         clientTileSources.remove(mapData.name);
         checkPointer(mapPointer);
         checkPointer(mapData.pointer);
-        nativeRemoveTileSource(mapPointer, mapData.pointer);
+        nativeRemoveClientDataSource(mapPointer, mapData.pointer);
     }
 
     /**
@@ -1107,19 +1107,6 @@ public class MapController {
         nativeOnLowMemory(mapPointer);
     }
 
-    void removeTileSource(final long sourcePtr) {
-        checkPointer(mapPointer);
-        checkPointer(sourcePtr);
-        nativeRemoveTileSource(mapPointer, sourcePtr);
-    }
-
-    void clearTileSource(final long sourcePtr) {
-        checkPointer(mapPointer);
-        checkPointer(sourcePtr);
-        nativeClearTileSource(mapPointer, sourcePtr);
-    }
-
-
     void checkPointer(final long ptr) {
         if (ptr <= 0) {
             throw new RuntimeException("Tried to perform an operation on an invalid pointer!"
@@ -1440,9 +1427,8 @@ public class MapController {
     private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
     private synchronized native void nativeSetDefaultBackgroundColor(long mapPtr, float r, float g, float b);
 
-    private synchronized native long nativeAddTileSource(long mapPtr, String name, boolean generateCentroid);
-    private synchronized native void nativeRemoveTileSource(long mapPtr, long sourcePtr);
-    private synchronized native void nativeClearTileSource(long mapPtr, long sourcePtr);
+    private synchronized native long nativeAddClientDataSource(long mapPtr, String name, boolean generateCentroid);
+    private synchronized native void nativeRemoveClientDataSource(long mapPtr, long sourcePtr);
 
     private synchronized native void nativeSetDebugFlag(int flag, boolean on);
 
