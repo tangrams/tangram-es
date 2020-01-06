@@ -120,6 +120,9 @@ set_target_properties(TangramMap PROPERTIES
   # This property is necessary for downstream consumers of the framework. Set it here for Xcode to
   # populate the 'Bundle Identifier' fields and substitute the placeholder value in our Info.plist.
   XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${TANGRAM_BUNDLE_IDENTIFIER}"
+  # This ensures that the dynamic linker loads the framework from its embedded path in an app, not
+  # from the location it was originally built.
+  XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
 )
 # Other properties that are common to dynamic and static framework targets are set below.
 
