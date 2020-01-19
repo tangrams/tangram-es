@@ -283,13 +283,13 @@ typedef NS_ENUM(NSInteger, TGMapRegionChangeState) {
     _pinchGestureRecognizer.delegate = self;
     _rotationGestureRecognizer.delegate = self;
 
-    [_glView addGestureRecognizer:_tapGestureRecognizer];
-    [_glView addGestureRecognizer:_doubleTapGestureRecognizer];
-    [_glView addGestureRecognizer:_panGestureRecognizer];
-    [_glView addGestureRecognizer:_pinchGestureRecognizer];
-    [_glView addGestureRecognizer:_rotationGestureRecognizer];
-    [_glView addGestureRecognizer:_shoveGestureRecognizer];
-    [_glView addGestureRecognizer:_longPressGestureRecognizer];
+    [self addGestureRecognizer:_tapGestureRecognizer];
+    [self addGestureRecognizer:_doubleTapGestureRecognizer];
+    [self addGestureRecognizer:_panGestureRecognizer];
+    [self addGestureRecognizer:_pinchGestureRecognizer];
+    [self addGestureRecognizer:_rotationGestureRecognizer];
+    [self addGestureRecognizer:_shoveGestureRecognizer];
+    [self addGestureRecognizer:_longPressGestureRecognizer];
 }
 
 #pragma mark UIView methods
@@ -932,70 +932,70 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     if (!recognizer) { return; }
     if (_tapGestureRecognizer) {
-        [_glView removeGestureRecognizer:_tapGestureRecognizer];
+        [self removeGestureRecognizer:_tapGestureRecognizer];
     }
     _tapGestureRecognizer = recognizer;
-    [_glView addGestureRecognizer:_tapGestureRecognizer];
+    [self addGestureRecognizer:_tapGestureRecognizer];
 }
 
 - (void)setDoubleTapGestureRecognizer:(UITapGestureRecognizer *)recognizer
 {
     if (!recognizer) { return; }
     if (_doubleTapGestureRecognizer) {
-        [_glView removeGestureRecognizer:_doubleTapGestureRecognizer];
+        [self removeGestureRecognizer:_doubleTapGestureRecognizer];
     }
     _doubleTapGestureRecognizer = recognizer;
-    [_glView addGestureRecognizer:_doubleTapGestureRecognizer];
+    [self addGestureRecognizer:_doubleTapGestureRecognizer];
 }
 
 - (void)setPanGestureRecognizer:(UIPanGestureRecognizer *)recognizer
 {
     if (!recognizer) { return; }
     if (_panGestureRecognizer) {
-        [_glView removeGestureRecognizer:_panGestureRecognizer];
+        [self removeGestureRecognizer:_panGestureRecognizer];
     }
     _panGestureRecognizer = recognizer;
-    [_glView addGestureRecognizer:_panGestureRecognizer];
+    [self addGestureRecognizer:_panGestureRecognizer];
 }
 
 - (void)setPinchGestureRecognizer:(UIPinchGestureRecognizer *)recognizer
 {
     if (!recognizer) { return; }
     if (_pinchGestureRecognizer) {
-        [_glView removeGestureRecognizer:_pinchGestureRecognizer];
+        [self removeGestureRecognizer:_pinchGestureRecognizer];
     }
     _pinchGestureRecognizer = recognizer;
-    [_glView addGestureRecognizer:_pinchGestureRecognizer];
+    [self addGestureRecognizer:_pinchGestureRecognizer];
 }
 
 - (void)setRotationGestureRecognizer:(UIRotationGestureRecognizer *)recognizer
 {
     if (!recognizer) { return; }
     if (_rotationGestureRecognizer) {
-        [_glView removeGestureRecognizer:_rotationGestureRecognizer];
+        [self removeGestureRecognizer:_rotationGestureRecognizer];
     }
     _rotationGestureRecognizer = recognizer;
-    [_glView addGestureRecognizer:_rotationGestureRecognizer];
+    [self addGestureRecognizer:_rotationGestureRecognizer];
 }
 
 - (void)setShoveGestureRecognizer:(UIPanGestureRecognizer *)recognizer
 {
     if (!recognizer) { return; }
     if (_shoveGestureRecognizer) {
-        [_glView removeGestureRecognizer:_shoveGestureRecognizer];
+        [self removeGestureRecognizer:_shoveGestureRecognizer];
     }
     _shoveGestureRecognizer = recognizer;
-    [_glView addGestureRecognizer:_shoveGestureRecognizer];
+    [self addGestureRecognizer:_shoveGestureRecognizer];
 }
 
 - (void)setLongPressGestureRecognizer:(UILongPressGestureRecognizer *)recognizer
 {
     if (!recognizer) { return; }
     if (_longPressGestureRecognizer) {
-        [_glView removeGestureRecognizer:_longPressGestureRecognizer];
+        [self removeGestureRecognizer:_longPressGestureRecognizer];
     }
     _longPressGestureRecognizer = recognizer;
-    [_glView addGestureRecognizer:_longPressGestureRecognizer];
+    [self addGestureRecognizer:_longPressGestureRecognizer];
 }
 
 // Implement touchesBegan to catch down events
@@ -1016,7 +1016,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)respondToLongPressGesture:(UILongPressGestureRecognizer *)longPressRecognizer
 {
-    CGPoint location = [longPressRecognizer locationInView:_glView];
+    CGPoint location = [longPressRecognizer locationInView:self];
     if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeLongPressGesture:)] ) {
         if (![self.gestureDelegate mapView:self recognizer:longPressRecognizer shouldRecognizeLongPressGesture:location]) { return; }
     }
@@ -1028,7 +1028,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer
 {
-    CGPoint location = [tapRecognizer locationInView:_glView];
+    CGPoint location = [tapRecognizer locationInView:self];
     if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeSingleTapGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:tapRecognizer shouldRecognizeSingleTapGesture:location]) { return; }
     }
@@ -1040,7 +1040,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer
 {
-    CGPoint location = [doubleTapRecognizer locationInView:_glView];
+    CGPoint location = [doubleTapRecognizer locationInView:self];
     if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeDoubleTapGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:doubleTapRecognizer shouldRecognizeDoubleTapGesture:location]) { return; }
     }
@@ -1052,7 +1052,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer
 {
-    CGPoint displacement = [panRecognizer translationInView:_glView];
+    CGPoint displacement = [panRecognizer translationInView:self];
 
     if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizePanGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:panRecognizer shouldRecognizePanGesture:displacement]) {
@@ -1085,12 +1085,12 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     }
 
     // Reset translation to zero so that subsequent calls get relative value.
-    [panRecognizer setTranslation:CGPointZero inView:_glView];
+    [panRecognizer setTranslation:CGPointZero inView:self];
 }
 
 - (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer
 {
-    CGPoint location = [pinchRecognizer locationInView:_glView];
+    CGPoint location = [pinchRecognizer locationInView:self];
     if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizePinchGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:pinchRecognizer shouldRecognizePinchGesture:location]) {
             return;
@@ -1135,7 +1135,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer
 {
-    CGPoint position = [rotationRecognizer locationInView:_glView];
+    CGPoint position = [rotationRecognizer locationInView:self];
     if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeRotationGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:rotationRecognizer shouldRecognizeRotationGesture:position]) {
             return;
@@ -1173,7 +1173,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer
 {
-    CGPoint displacement = [shoveRecognizer translationInView:_glView];
+    CGPoint displacement = [shoveRecognizer translationInView:self];
 
     if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeShoveGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:shoveRecognizer shouldRecognizeShoveGesture:displacement]) {
