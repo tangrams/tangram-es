@@ -58,6 +58,21 @@ size_t LabelCollider::filterRepeatGroups(size_t startPos, size_t curPos) {
 
 void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tileSize) {
 
+    // Set view parameters so that the tile is rendererd at
+    // style-zoom-level + 2. (scaled up by factor 4). This
+    // filters out labels that are unlikely to become visible
+    // within the tiles zoom-range.
+    int overzoom = 2;
+    int tileScaleDiff = _tileID.s - _tileID.z + overzoom;
+
+    if (tileScaleDiff >= 6) {
+        return;
+    }
+
+    float tileScale = pow(2, tileScaleDiff);
+    glm::vec2 screenSize{ _tileSize * tileScale };
+    glm::vec2 screenSize128{screenSize.x / 128, screenSize.y / 128};
+    
     // Sort labels so that all labels of one repeat group are next to each other
     std::sort(m_labels.begin(), m_labels.end(),
               [](auto& e1, auto& e2) {
@@ -78,14 +93,6 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
 
                   return l1->hash() < l2->hash();
               });
-
-    // Set view parameters so that the tile is rendererd at
-    // style-zoom-level + 2. (scaled up by factor 4). This
-    // filters out labels that are unlikely to become visible
-    // within the tiles zoom-range.
-    int overzoom = 2;
-    float tileScale = pow(2, _tileID.s - _tileID.z + overzoom);
-    glm::vec2 screenSize{ _tileSize * tileScale };
 
     // Project tile to NDC (-1 to 1, y-up)
     glm::mat4 mvp{1};
