@@ -8,6 +8,26 @@
 
 namespace Tangram {
 
+static const char* keywordGeometryString = "$geometry";
+static const char* keywordZoomString = "$zoom";
+static const char* keywordMetersPerPixelString = "$meters_per_pixel";
+
+FilterKeyword stringToFilterKeyword(const std::string& _key) {
+    if (_key == keywordGeometryString) { return FilterKeyword::geometry; }
+    if (_key == keywordZoomString) { return  FilterKeyword::zoom; }
+    if (_key == keywordMetersPerPixelString) { return FilterKeyword::meters_per_pixel; }
+    return  FilterKeyword::undefined;
+}
+
+std::string filterKeywordToString(FilterKeyword keyword) {
+    switch (keyword) {
+        case FilterKeyword::geometry: return keywordGeometryString;
+        case FilterKeyword::zoom: return keywordZoomString;
+        case FilterKeyword::meters_per_pixel: return keywordMetersPerPixelString;
+        default: return {};
+    }
+}
+
 void Filter::print(int _indent) const {
 
     switch (data.which()) {
