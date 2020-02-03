@@ -19,6 +19,9 @@ glm::vec4 getColorAsVec4(const YAML::Node& node) {
     if (node.IsSequence()) {
         glm::vec4 vec;
         if (parseVec(node, vec)) {
+            if (node.size() < 4) {
+                vec.w = 1.0;
+            }
             return vec;
         }
     }

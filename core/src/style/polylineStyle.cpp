@@ -107,7 +107,6 @@ void PolylineStyle::onBeginDrawFrame(RenderState& rs, const View& _view) {
 
 void PolylineStyle::setDashBackgroundColor(const glm::vec4 _dashBackgroundColor) {
     m_dashBackgroundColor = _dashBackgroundColor;
-    m_dashBackground = true;
 }
 
 void PolylineStyle::constructShaderProgram() {
@@ -126,22 +125,22 @@ void PolylineStyle::constructShaderProgram() {
                                 reinterpret_cast<GLubyte*>(pixels.data()),
                                 pixels.size() * sizeof(GLuint));
 
-        if (m_dashBackground) {
-            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LINE_BACKGROUND_COLOR vec3(" +
-                ff::to_string(m_dashBackgroundColor.r) + ", " +
-                ff::to_string(m_dashBackgroundColor.g) + ", " +
-                ff::to_string(m_dashBackgroundColor.b) + ")\n");
-        }
+        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LINE_BACKGROUND_COLOR vec4(" +
+                                                  ff::to_string(m_dashBackgroundColor.r) + ", " +
+                                                  ff::to_string(m_dashBackgroundColor.g) + ", " +
+                                                  ff::to_string(m_dashBackgroundColor.b) + ", " +
+                                                  ff::to_string(m_dashBackgroundColor.a) + ")\n");
     }
 
     if (m_dashArray.size() > 0 || m_texture) {
         m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LINE_TEXTURE\n", false);
         m_shaderSource->addSourceBlock("defines", "#define TANGRAM_ALPHA_TEST 0.25\n", false);
         if (m_dashArray.size() > 0) {
-            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE " +
+            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LINE_DASH");
+            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_DASH_TEX_SCALE " +
                                             ff::to_string(dash_scale) + "\n", false);
         } else {
-            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE 1.0\n", false);
+            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_DASH_TEX_SCALE 1.0\n", false);
         }
     }
 

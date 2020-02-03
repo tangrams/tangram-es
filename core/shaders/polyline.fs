@@ -65,20 +65,20 @@ void main(void) {
     #endif
 
     #ifdef TANGRAM_LINE_TEXTURE
-        vec2 line_st = vec2(v_texcoord.x, fract(v_texcoord.y * TANGRAM_DASHLINE_TEX_SCALE / u_texture_ratio));
+        vec2 line_st = vec2(v_texcoord.x, fract(v_texcoord.y * TANGRAM_DASH_TEX_SCALE / u_texture_ratio));
         vec4 line_color = texture2D(u_texture, line_st);
 
-        if (line_color.a < TANGRAM_ALPHA_TEST) {
-            #ifdef TANGRAM_LINE_BACKGROUND_COLOR
-                color.rgb = TANGRAM_LINE_BACKGROUND_COLOR;
-            #elif !defined(TANGRAM_BLEND_OVERLAY) && !defined(TANGRAM_BLEND_INLAY)
-                discard;
-            #else
-                color.a = 0.0;
-            #endif
-        } else {
+        #if defined(TANGRAM_LINE_DASH)
+            color = mix(TANGRAM_LINE_BACKGROUND_COLOR, color, line_color.a);
+        #else
             color *= line_color;
-        }
+        #endif
+
+        #if defined(TANGRAM_BLEND_OPAQUE)
+            if (color.a < TANGRAM_ALPHA_TEST) {
+                discard;
+            }
+        #endif
     #endif
 
     #ifdef TANGRAM_RASTER_TEXTURE_NORMAL
