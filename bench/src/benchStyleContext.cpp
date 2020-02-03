@@ -104,7 +104,7 @@ struct JSTileStyleFnFixture : public benchmark::Fixture {
     void SetUp(const ::benchmark::State& state) override {
         globalSetup();
         ctx.initFunctions(*scene);
-        ctx.setKeywordZoom(10);
+        ctx.setZoom(10);
     }
     void TearDown(const ::benchmark::State& state) override {
         LOG(">>> %d", evalCnt);
