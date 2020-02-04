@@ -66,6 +66,10 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
     int tileScaleDiff = _tileID.s - _tileID.z + overzoom;
 
     if (tileScaleDiff >= 6) {
+        m_labels.clear();
+        m_aabbs.clear();
+        m_obbs.clear();
+        m_isect2d.clear();
         return;
     }
 
