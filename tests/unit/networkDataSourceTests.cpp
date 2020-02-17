@@ -14,11 +14,20 @@ TEST_CASE("Convert tile coordinates to QuadKey", TAGS) {
     CHECK(NetworkDataSource::tileCoordinatesToQuadKey(TileID(5, 3, 4)) == "0123");
 }
 
+TEST_CASE("Distinguish URLs that contain tile patterns", TAGS) {
+    CHECK(NetworkDataSource::urlHasTilePattern("https://some.domain/{z}/{x}/{y}.stuff"));
+    CHECK(NetworkDataSource::urlHasTilePattern("some.domain/{q}.thing"));
+
+    CHECK_FALSE(NetworkDataSource::urlHasTilePattern("file://{s}.tile.town"));
+    CHECK_FALSE(NetworkDataSource::urlHasTilePattern("file://tile.town/{x}/{y}"));
+}
+
 TEST_CASE("Build URL for tile from template", TAGS) {
+
+    NetworkDataSource::UrlOptions urlOptions;
 
     SECTION("Template with x/y/z") {
         std::string url = "https://some.domain/tiles/{z}/{x}/{y}.json";
-        NetworkDataSource::UrlOptions urlOptions;
 
         CHECK(NetworkDataSource::buildUrlForTile(TileID(0, 1, 2), url, urlOptions, 0) == "https://some.domain/tiles/2/0/1.json");
         CHECK(NetworkDataSource::buildUrlForTile(TileID(12345, 54321, 20), url, urlOptions, 0) == "https://some.domain/tiles/20/12345/54321.json");
@@ -26,7 +35,6 @@ TEST_CASE("Build URL for tile from template", TAGS) {
 
     SECTION("Template with x/y/z in TMS mode") {
         std::string url = "https://some.domain/tiles/{z}/{x}/{y}.json";
-        NetworkDataSource::UrlOptions urlOptions;
         urlOptions.isTms = true;
 
         CHECK(NetworkDataSource::buildUrlForTile(TileID(0, 1, 2), url, urlOptions, 0) == "https://some.domain/tiles/2/0/2.json");
@@ -35,7 +43,6 @@ TEST_CASE("Build URL for tile from template", TAGS) {
 
     SECTION("Template with subdomains") {
         std::string url = "https://{s}.some.domain/tiles/{z}/{x}/{y}.json";
-        NetworkDataSource::UrlOptions urlOptions;
         urlOptions.subdomains = { "zero", "one" };
 
         CHECK(NetworkDataSource::buildUrlForTile(TileID(0, 1, 2), url, urlOptions, 0) == "https://zero.some.domain/tiles/2/0/1.json");
@@ -44,7 +51,6 @@ TEST_CASE("Build URL for tile from template", TAGS) {
 
     SECTION("Template with quadkey") {
         std::string url = "file://tiles/{q}.blah";
-        NetworkDataSource::UrlOptions urlOptions;
 
         CHECK(NetworkDataSource::buildUrlForTile(TileID(0, 0, 1), url, urlOptions, 0) == "file://tiles/0.blah");
         CHECK(NetworkDataSource::buildUrlForTile(TileID(3, 5, 3), url, urlOptions, 0) == "file://tiles/213.blah");

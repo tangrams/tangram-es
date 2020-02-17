@@ -783,13 +783,8 @@ std::shared_ptr<TileSource> SceneLoader::loadSource(const Node& _source, const s
              " include the subdomain placeholder '{s}'.", _name.c_str());
     }
 
-    // A data source is considered 'tiled' if it has a URL that either contains 'x', 'y', and 'z' placeholders or
-    // contains a 'q' placeholder.
-    bool tiled = (!url.empty()) && (
-            (url.find("{x}") != std::string::npos &&
-             url.find("{y}") != std::string::npos &&
-             url.find("{z}") != std::string::npos) ||
-            (url.find("{q}") != std::string::npos));
+
+    bool isTiled = NetworkDataSource::urlHasTilePattern(url);
 
     bool isMBTilesFile = false;
     {
@@ -808,14 +803,14 @@ std::shared_ptr<TileSource> SceneLoader::loadSource(const Node& _source, const s
     if (isMBTilesFile) {
 #ifdef TANGRAM_MBTILES_DATASOURCE
         // If we have MBTiles, we know the source is tiled.
-        tiled = true;
+        isTiled = true;
         // Create an MBTiles data source from the file at the url and add it to the source chain.
         rawSources = std::make_unique<MBTilesDataSource>(_platform, _name, url, "");
 #else
         LOGE("MBTiles support is disabled. This source will be ignored: %s", _name.c_str());
         return nullptr;
 #endif
-    } else if (tiled) {
+    } else if (isTiled) {
         auto cacheSize = _options.memoryTileCacheSize;
         if (cacheSize > 0) {
             auto cache = std::make_unique<MemoryCacheDataSource>();
@@ -833,7 +828,7 @@ std::shared_ptr<TileSource> SceneLoader::loadSource(const Node& _source, const s
 
     std::shared_ptr<TileSource> sourcePtr;
 
-    if (type == "GeoJSON" && !tiled) {
+    if (type == "GeoJSON" && !isTiled) {
         bool generateCentroids = false;
         if (auto genLabelCentroidsNode = _source["generate_label_centroids"]) {
             generateCentroids = true;

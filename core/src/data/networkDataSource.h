@@ -1,7 +1,6 @@
 #pragma once
 
 #include "data/tileSource.h"
-#include "platform.h"
 
 #include <unordered_map>
 
@@ -24,6 +23,9 @@ public:
     void cancelLoadingTile(TileTask& _task) override;
 
     static std::string tileCoordinatesToQuadKey(const TileID& tile);
+
+    /// Returns true if the URL either contains 'x', 'y', and 'z' placeholders or contains a 'q' placeholder.
+    static bool urlHasTilePattern(const std::string& url);
 
     static std::string buildUrlForTile(const TileID& tile, const std::string& urlTemplate, const UrlOptions& options, int subdomainIndex);
 

@@ -27,6 +27,13 @@ std::string NetworkDataSource::tileCoordinatesToQuadKey(const TileID &tile) {
     return quadKey;
 }
 
+bool NetworkDataSource::urlHasTilePattern(const std::string &url) {
+    return (url.find("{x}") != std::string::npos &&
+            url.find("{y}") != std::string::npos &&
+            url.find("{z}") != std::string::npos) ||
+           (url.find("{q}") != std::string::npos);
+}
+
 std::string NetworkDataSource::buildUrlForTile(const TileID& tile, const std::string& urlTemplate, const UrlOptions& options, int subdomainIndex) {
 
     std::string url = urlTemplate;
