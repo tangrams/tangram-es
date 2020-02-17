@@ -698,12 +698,11 @@ std::shared_ptr<TileSource> SceneLoader::loadSource(const Node& _source, const s
     std::string type;
     std::string url;
     std::string mbtiles;
-    std::vector<std::string> subdomains;
 
-    int32_t minDisplayZoom = -1;
-    int32_t maxDisplayZoom = -1;
-    int32_t maxZoom = 18;
-    int32_t zoomBias = 0;
+    NetworkDataSource::UrlOptions urlOptions{};
+
+    TileSource::ZoomOptions zoomOptions{};
+
     int32_t zoomOffset = 0;
 
     if (auto typeNode = _source["type"]) {
@@ -713,13 +712,13 @@ std::shared_ptr<TileSource> SceneLoader::loadSource(const Node& _source, const s
         url = urlNode.Scalar();
     }
     if (auto minDisplayZoomNode = _source["min_display_zoom"]) {
-        YamlUtil::getInt(minDisplayZoomNode, minDisplayZoom);
+        YamlUtil::getInt(minDisplayZoomNode, zoomOptions.minDisplayZoom);
     }
     if (auto maxDisplayZoomNode = _source["max_display_zoom"]) {
-        YamlUtil::getInt(maxDisplayZoomNode, maxDisplayZoom);
+        YamlUtil::getInt(maxDisplayZoomNode, zoomOptions.maxDisplayZoom);
     }
     if (auto maxZoomNode = _source["max_zoom"]) {
-        YamlUtil::getInt(maxZoomNode, maxZoom);
+        YamlUtil::getInt(maxZoomNode, zoomOptions.maxZoom);
     }
     if (auto zoomOffsetNode = _source["zoom_offset"]) {
         YamlUtil::getInt(zoomOffsetNode, zoomOffset);
@@ -727,12 +726,12 @@ std::shared_ptr<TileSource> SceneLoader::loadSource(const Node& _source, const s
     if (auto tileSizeNode = _source["tile_size"]) {
         int tileSize = 0;
         if (YamlUtil::getInt(tileSizeNode, tileSize)) {
-            zoomBias = TileSource::zoomBiasFromTileSize(tileSize);
+            zoomOptions.zoomBias = TileSource::zoomBiasFromTileSize(tileSize);
         }
     }
 
     if (zoomOffset >= 0) {
-        zoomBias += zoomOffset;
+        zoomOptions.zoomBias += zoomOffset;
     }
 
     // Parse and append any URL parameters.
@@ -767,7 +766,7 @@ std::shared_ptr<TileSource> SceneLoader::loadSource(const Node& _source, const s
         if (subDomainNode.IsSequence()) {
             for (const auto& domain : subDomainNode) {
                 if (domain.IsScalar()) {
-                    subdomains.push_back(domain.Scalar());
+                    urlOptions.subdomains.push_back(domain.Scalar());
                 }
             }
         }
@@ -775,20 +774,22 @@ std::shared_ptr<TileSource> SceneLoader::loadSource(const Node& _source, const s
 
     // Check whether the URL template and subdomains make sense together, and warn if not.
     bool hasSubdomainPlaceholder = (url.find("{s}") != std::string::npos);
-    if (hasSubdomainPlaceholder && subdomains.empty()) {
+    if (hasSubdomainPlaceholder && urlOptions.subdomains.empty()) {
         LOGW("The URL for source '%s' includes the subdomain placeholder '{s}'," \
              " but no subdomains were given.", _name.c_str());
     }
-    if (!hasSubdomainPlaceholder && !subdomains.empty()) {
+    if (!hasSubdomainPlaceholder && !urlOptions.subdomains.empty()) {
         LOGW("The URL for source '%s' has subdomains specified, but does not" \
              " include the subdomain placeholder '{s}'.", _name.c_str());
     }
 
-    // distinguish tiled and non-tiled sources by url
-    bool tiled = url.size() > 0 &&
-        url.find("{x}") != std::string::npos &&
-        url.find("{y}") != std::string::npos &&
-        url.find("{z}") != std::string::npos;
+    // A data source is considered 'tiled' if it has a URL that either contains 'x', 'y', and 'z' placeholders or
+    // contains a 'q' placeholder.
+    bool tiled = (!url.empty()) && (
+            (url.find("{x}") != std::string::npos &&
+             url.find("{y}") != std::string::npos &&
+             url.find("{z}") != std::string::npos) ||
+            (url.find("{q}") != std::string::npos));
 
     bool isMBTilesFile = false;
     {
@@ -798,9 +799,8 @@ std::shared_ptr<TileSource> SceneLoader::loadSource(const Node& _source, const s
         isMBTilesFile = urlLength > extLength && (url.compare(urlLength - extLength, extLength, extStr) == 0);
     }
 
-    bool isTms = false;
     if (const Node& tmsNode = _source["tms"]) {
-        YamlUtil::getBool(tmsNode, isTms);
+        YamlUtil::getBool(tmsNode, urlOptions.isTms);
     }
 
     std::unique_ptr<TileSource::DataSource> rawSources;
@@ -823,7 +823,7 @@ std::shared_ptr<TileSource> SceneLoader::loadSource(const Node& _source, const s
             rawSources = std::move(cache);
         }
 
-        auto s = std::make_unique<NetworkDataSource>(_platform, url, std::move(subdomains), isTms);
+        auto s = std::make_unique<NetworkDataSource>(_platform, url, urlOptions);
         if (rawSources) {
             rawSources->next = std::move(s);
         } else {
@@ -832,8 +832,6 @@ std::shared_ptr<TileSource> SceneLoader::loadSource(const Node& _source, const s
     }
 
     std::shared_ptr<TileSource> sourcePtr;
-
-    TileSource::ZoomOptions zoomOptions = { minDisplayZoom, maxDisplayZoom, maxZoom, zoomBias };
 
     if (type == "GeoJSON" && !tiled) {
         bool generateCentroids = false;

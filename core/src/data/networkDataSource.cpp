@@ -5,16 +5,31 @@
 
 namespace Tangram {
 
-NetworkDataSource::NetworkDataSource(Platform& _platform, const std::string& _urlTemplate,
-                                     std::vector<std::string>&& _urlSubdomains, bool isTms) :
+NetworkDataSource::NetworkDataSource(Platform& _platform, std::string url, UrlOptions options) :
     m_platform(_platform),
-    m_urlTemplate(_urlTemplate),
-    m_urlSubdomains(std::move(_urlSubdomains)),
-    m_isTms(isTms) {}
+    m_urlTemplate(std::move(url)),
+    m_options(std::move(options)) {}
 
-std::string NetworkDataSource::buildUrlForTile(const TileID& tile, size_t subdomainIndex) const {
+std::string NetworkDataSource::tileCoordinatesToQuadKey(const TileID &tile) {
+    std::string quadKey;
+    for (int i = tile.z; i > 0; i--) {
+        char digit = '0';
+        int mask = 1 << (i - 1);
+        if ((tile.x & mask) != 0) {
+            digit++;
+        }
+        if ((tile.y & mask) != 0) {
+            digit++;
+            digit++;
+        }
+        quadKey.push_back(digit);
+    }
+    return quadKey;
+}
 
-    std::string url = m_urlTemplate;
+std::string NetworkDataSource::buildUrlForTile(const TileID& tile, const std::string& urlTemplate, const UrlOptions& options, int subdomainIndex) {
+
+    std::string url = urlTemplate;
 
     size_t xPos = url.find("{x}");
     if (xPos != std::string::npos) {
@@ -24,7 +39,7 @@ std::string NetworkDataSource::buildUrlForTile(const TileID& tile, size_t subdom
     if (yPos != std::string::npos) {
         int y = tile.y;
         int z = tile.z;
-        if (m_isTms) {
+        if (options.isTms) {
             // Convert XYZ to TMS
             y = (1 << z) - 1 - tile.y;
         }
@@ -34,12 +49,18 @@ std::string NetworkDataSource::buildUrlForTile(const TileID& tile, size_t subdom
     if (zPos != std::string::npos) {
         url.replace(zPos, 3, std::to_string(tile.z));
     }
-    if (subdomainIndex < m_urlSubdomains.size()) {
+    if (subdomainIndex < options.subdomains.size()) {
         size_t sPos = url.find("{s}");
         if (sPos != std::string::npos) {
-            url.replace(sPos, 3, m_urlSubdomains[subdomainIndex]);
+            url.replace(sPos, 3, options.subdomains[subdomainIndex]);
         }
     }
+    size_t qPos = url.find("{q}");
+    if (qPos != std::string::npos) {
+        auto quadkey = tileCoordinatesToQuadKey(tile);
+        url.replace(qPos, 3, quadkey);
+    }
+
     return url;
 }
 
@@ -52,10 +73,10 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
 
     auto tileId = task->tileId();
 
-    Url url(buildUrlForTile(tileId, m_urlSubdomainIndex));
+    Url url(buildUrlForTile(tileId, m_urlTemplate, m_options, m_urlSubdomainIndex));
 
-    if (!m_urlSubdomains.empty()) {
-        m_urlSubdomainIndex = (m_urlSubdomainIndex + 1) % m_urlSubdomains.size();
+    if (!m_options.subdomains.empty()) {
+        m_urlSubdomainIndex = (m_urlSubdomainIndex + 1) % m_options.subdomains.size();
     }
 
     LOGTInit(">>> %s", task->tileId().toString().c_str());
