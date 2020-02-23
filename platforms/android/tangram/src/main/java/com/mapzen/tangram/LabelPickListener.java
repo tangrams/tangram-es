@@ -4,10 +4,11 @@ import androidx.annotation.Keep;
 import androidx.annotation.Nullable;
 
 /**
- * Callback to receive information about labels picked from the map
- * Triggered after a call of {@link MapController#pickLabel(float, float)}
- * Listener should be set with {@link MapController#setLabelPickListener(LabelPickListener)}
- * The callback will be run on the main (UI) thread.
+ * Callback to receive information about labels picked from the map, triggered after a call to
+ * {@link MapController#pickLabel(float, float)}.
+ * The listener is set with {@link MapController#setLabelPickListener(LabelPickListener)}
+ * The callback will be run on the main (UI) thread and is performed in the same order as
+ * {@link MapController#pickLabel(float, float)} was called.
  */
 @Keep
 public interface LabelPickListener {
