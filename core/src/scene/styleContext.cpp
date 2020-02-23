@@ -13,9 +13,6 @@
 
 namespace Tangram {
 
-static const std::string key_geom("$geometry");
-static const std::string key_zoom("$zoom");
-
 static const std::vector<std::string> s_geometryStrings = {
     "", // unknown
     "point",
@@ -125,60 +122,52 @@ void StyleContext::setFeature(const Feature& _feature) {
 
     m_feature = &_feature;
 
-    if (m_keywordGeom != m_feature->geometryType) {
-        setKeyword(key_geom, s_geometryStrings[m_feature->geometryType]);
-        m_keywordGeom = m_feature->geometryType;
+    if (m_keywordGeometry != m_feature->geometryType) {
+        setKeyword(FilterKeyword::geometry, s_geometryStrings[m_feature->geometryType]);
+        m_keywordGeometry = m_feature->geometryType;
     }
 
     m_jsContext->setCurrentFeature(&_feature);
 }
 
-void StyleContext::setKeywordZoom(int _zoom) {
-    if (m_keywordZoom != _zoom) {
-        setKeyword(key_zoom, _zoom);
-        m_keywordZoom = _zoom;
+void StyleContext::setZoom(double zoom) {
+    if (m_zoom != zoom) {
+        setKeyword(FilterKeyword::zoom, zoom);
+        m_zoom = zoom;
+        // When new zoom is set, meters_per_pixel must be updated too.
+        double meters_per_pixel = MapProjection::metersPerPixelAtZoom(m_zoom);
+        setKeyword(FilterKeyword::meters_per_pixel, meters_per_pixel);
     }
 }
 
-void StyleContext::setKeyword(const std::string& _key, Value _val) {
-    auto keywordKey = Filter::keywordType(_key);
-    if (keywordKey == FilterKeyword::undefined) {
-        LOG("Undefined Keyword: %s", _key.c_str());
+void StyleContext::setKeyword(FilterKeyword keyword, Value value) {
+
+    Value& entry = m_keywordValues[static_cast<uint8_t>(keyword)];
+    if (entry == value) {
         return;
     }
 
-    // Unset shortcuts in case setKeyword was not called by
-    // the helper functions above.
-    if (_key == key_zoom) { m_keywordZoom = -1; }
-    if (_key == key_geom) { m_keywordGeom = -1; }
-
-    Value& entry = m_keywords[static_cast<uint8_t>(keywordKey)];
-    if (entry == _val) { return; }
+    const std::string& keywordString = filterKeywordToString(keyword);
 
     {
         JSScope jsScope(*m_jsContext);
-        JSValue value;
-        if (_val.is<std::string>()) {
-            value = jsScope.newString(_val.get<std::string>());
-        } else if (_val.is<double>()) {
-            value = jsScope.newNumber(_val.get<double>());
+        JSValue jsValue;
+        if (value.is<std::string>()) {
+            jsValue = jsScope.newString(value.get<std::string>());
+        } else if (value.is<double>()) {
+            jsValue = jsScope.newNumber(value.get<double>());
         }
-        m_jsContext->setGlobalValue(_key, std::move(value));
+        m_jsContext->setGlobalValue(keywordString, std::move(jsValue));
     }
 
-
-    entry = std::move(_val);
+    entry = std::move(value);
 }
 
-float StyleContext::getPixelAreaScale() {
+double StyleContext::getPixelAreaScale() {
     // scale the filter value with pixelsPerMeter
     // used with `px2` area filtering
-    double metersPerPixel = MapProjection::EARTH_CIRCUMFERENCE_METERS * exp2(-m_keywordZoom) / MapProjection::tileSize();
+    double metersPerPixel = MapProjection::metersPerPixelAtZoom(m_zoom);
     return metersPerPixel * metersPerPixel;
-}
-
-const Value& StyleContext::getKeyword(const std::string& _key) const {
-    return getKeyword(Filter::keywordType(_key));
 }
 
 void StyleContext::clear() {

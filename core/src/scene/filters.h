@@ -14,7 +14,12 @@ enum class FilterKeyword : uint8_t {
     undefined,
     zoom,
     geometry,
+    meters_per_pixel,
 };
+
+FilterKeyword stringToFilterKeyword(const std::string& _key);
+
+std::string filterKeywordToString(FilterKeyword keyword);
 
 struct Filter {
     struct OperatorAll {
@@ -83,14 +88,14 @@ struct Filter {
     // Create an 'equality' filter
     inline static Filter MatchEquality(const std::string& k, const std::vector<Value>& vals) {
         if (vals.size() == 1) {
-            return { Equality{ k, vals[0], keywordType(k) }};
+            return { Equality{k, vals[0], stringToFilterKeyword(k) }};
         } else {
-            return { EqualitySet{ k, vals, keywordType(k) }};
+            return { EqualitySet{k, vals, stringToFilterKeyword(k) }};
         }
     }
     // Create a 'range' filter
     inline static Filter MatchRange(const std::string& k, float min, float max, bool sqA) {
-        return { Range{ k, min, max, keywordType(k), sqA }};
+        return { Range{k, min, max, stringToFilterKeyword(k), sqA }};
     }
     // Create an 'existence' filter
     inline static Filter MatchExistence(const std::string& k, bool ex) {
@@ -99,15 +104,6 @@ struct Filter {
     // Create an 'function' filter with reference to Scene function id
     inline static Filter MatchFunction(uint32_t id) {
         return { Function{ id }};
-    }
-
-    static FilterKeyword keywordType(const std::string& _key) {
-        if (_key == "$geometry") {
-            return FilterKeyword::geometry;
-        } else if (_key == "$zoom") {
-            return  FilterKeyword::zoom;
-        }
-        return  FilterKeyword::undefined;
     }
 
     /* Public for testing */

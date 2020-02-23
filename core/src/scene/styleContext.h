@@ -2,13 +2,10 @@
 
 #include "js/JavaScriptFwd.h"
 #include "scene/styleParam.h"
-#include "util/fastmap.h"
 
 #include <array>
-#include <functional>
 #include <memory>
 #include <string>
-#include <unordered_map>
 
 namespace YAML {
     class Node;
@@ -34,54 +31,50 @@ public:
 
     ~StyleContext();
 
-    /*
-     * Set currently processed Feature
-     */
-    void setFeature(const Feature& _feature);
+    /// Set current Feature being evaluated.
+    void setFeature(const Feature& feature);
 
-    /*
-     * Set keyword for currently processed Tile
-     */
-    void setKeywordZoom(int _zoom);
+    /// Set current zoom level being evaluated.
+    void setZoom(double zoom);
 
-    /* Called from Filter::eval */
-    float getKeywordZoom() const { return m_keywordZoom; }
-
-    /* returns meters per pixels at current style zoom */
-    float getPixelAreaScale();
-
-    const Value& getKeyword(FilterKeyword _key) const {
-        return m_keywords[static_cast<uint8_t>(_key)];
+    double getZoom() const {
+        return m_zoom;
     }
 
-    /* Called from Filter::eval */
+    /// Squared meters per pixels at current zoom.
+    double getPixelAreaScale();
+
+    const Value& getKeyword(FilterKeyword keyword) const {
+        return m_keywordValues[static_cast<uint8_t>(keyword)];
+    }
+
+    /// Called from Filter::eval
     bool evalFilter(FunctionID id);
 
-    /* Called from DrawRule::eval */
-    bool evalStyle(FunctionID id, StyleParamKey _key, StyleParam::Value& _val);
+    /// Called from DrawRule::eval
+    bool evalStyle(FunctionID id, StyleParamKey key, StyleParam::Value& value);
 
-    /*
-     * Setup filter and style functions from @_scene
-     */
-    void initFunctions(const Scene& _scene);
+    /// Setup filter and style functions from a Scene.
+    void initFunctions(const Scene& scene);
 
-    /*
-     * Unset Feature handle
-     */
+    /// Unset the current Feature.
     void clear();
 
-    bool setFunctions(const std::vector<std::string>& _functions);
-    bool addFunction(const std::string& _function);
+    bool setFunctions(const std::vector<std::string>& functions);
+    bool addFunction(const std::string& function);
     void setSceneGlobals(const YAML::Node& sceneGlobals);
-
-    void setKeyword(const std::string& _key, Value _value);
-    const Value& getKeyword(const std::string& _key) const;
 
 private:
 
-    std::array<Value, 4> m_keywords;
-    int m_keywordGeom= -1;
-    int m_keywordZoom = -1;
+    void setKeyword(FilterKeyword keyword, Value value);
+
+    std::array<Value, 4> m_keywordValues;
+
+    // Cache zoom separately from keywords for easier access.
+    double m_zoom = -1;
+
+    // Geometry keyword is accessed as a string, but internally cached as an int.
+    int m_keywordGeometry = -1;
 
     int m_functionCount = 0;
 

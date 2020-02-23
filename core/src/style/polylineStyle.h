@@ -27,8 +27,7 @@ private:
 
     std::vector<float> m_dashArray;
     std::shared_ptr<Texture> m_texture;
-    bool m_dashBackground = false;
-    glm::vec4 m_dashBackgroundColor;
+    glm::vec4 m_dashBackgroundColor = {};
 
     UniformLocation m_uTexture{"u_texture"};
     UniformLocation m_uTextureRatio{"u_texture_ratio"};
