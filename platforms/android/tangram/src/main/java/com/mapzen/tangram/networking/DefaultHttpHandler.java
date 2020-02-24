@@ -29,61 +29,14 @@ public class DefaultHttpHandler implements HttpHandler {
 
     private OkHttpClient okClient;
 
-    /**
-     * Construct an {@code DefaultHttpHandler} with default options.
-     */
-    public DefaultHttpHandler() {
-        final OkHttpClient.Builder builder = new OkHttpClient.Builder()
-                .followRedirects(true)
-                .followSslRedirects(true)
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .writeTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS);
-
-
-        builder.socketFactory(new SocketFactory() {
-            SocketFactory factory = SocketFactory.getDefault();
-
-            @Override
-            public Socket createSocket() throws IOException {
-                Socket s = factory.createSocket();
-                try {
-                    //Log.d("Tangram", "Patching socket nodelay: " + s.getTcpNoDelay());
-                    s.setTcpNoDelay(true);
-                } catch (SocketException e) {
-                    // empty
-                }
-                return s;
-            }
-
-            @Override
-            public Socket createSocket(String s, int i) throws IOException, UnknownHostException {
-                return null;
-            }
-
-            @Override
-            public Socket createSocket(String s, int i, InetAddress inetAddress, int i1) throws IOException, UnknownHostException {
-                return null;
-            }
-
-            @Override
-            public Socket createSocket(InetAddress inetAddress, int i) throws IOException {
-                return null;
-            }
-
-            @Override
-            public Socket createSocket(InetAddress inetAddress, int i, InetAddress inetAddress1, int i1) throws IOException {
-                return null;
-            }
-        });
-
-        configureClient(builder);
-
-        okClient = builder.build();
-    }
-
     @Override
     public Object startRequest(@NonNull final String url, @NonNull final HttpHandler.Callback cb) {
+        // Build the OkHttpClient lazily. If we run configureClient() in the constructor then
+        // subclasses in Kotlin won't yet be initialized.
+        if (okClient == null) {
+            okClient = buildClient();
+        }
+
         final HttpUrl httpUrl = HttpUrl.parse(url);
         if (httpUrl == null) {
             cb.onFailure(new IOException("Failed to parse URL: " + url));
@@ -133,6 +86,20 @@ public class DefaultHttpHandler implements HttpHandler {
         }
     }
 
+    private OkHttpClient buildClient() {
+        final OkHttpClient.Builder builder = new OkHttpClient.Builder()
+                .followRedirects(true)
+                .followSslRedirects(true)
+                .socketFactory(new CustomSocketFactory())
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS);
+
+        configureClient(builder);
+
+        return builder.build();
+    }
+
     /**
      * Override this method to customize the OkHTTP client
      * @param builder OkHTTP client builder to customize
@@ -146,6 +113,43 @@ public class DefaultHttpHandler implements HttpHandler {
      * @param builder Request builder to customize
      */
     protected void configureRequest(HttpUrl url, Request.Builder builder) {
+    }
+
+    private class CustomSocketFactory extends SocketFactory {
+
+        SocketFactory factory = SocketFactory.getDefault();
+
+        @Override
+        public Socket createSocket() throws IOException {
+            Socket s = factory.createSocket();
+            try {
+                //Log.d("Tangram", "Patching socket nodelay: " + s.getTcpNoDelay());
+                s.setTcpNoDelay(true);
+            } catch (SocketException e) {
+                // empty
+            }
+            return s;
+        }
+
+        @Override
+        public Socket createSocket(String s, int i) throws IOException, UnknownHostException {
+            return null;
+        }
+
+        @Override
+        public Socket createSocket(String s, int i, InetAddress inetAddress, int i1) throws IOException, UnknownHostException {
+            return null;
+        }
+
+        @Override
+        public Socket createSocket(InetAddress inetAddress, int i) throws IOException {
+            return null;
+        }
+
+        @Override
+        public Socket createSocket(InetAddress inetAddress, int i, InetAddress inetAddress1, int i1) throws IOException {
+            return null;
+        }
     }
 
 }
