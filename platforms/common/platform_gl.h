@@ -20,6 +20,7 @@ extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
 #endif // TANGRAM_ANDROID
 
 #ifdef TANGRAM_IOS
+#define GL_SILENCE_DEPRECATION
 #include <OpenGLES/ES2/gl.h>
 #include <OpenGLES/ES2/glext.h>
 #define glDeleteVertexArrays glDeleteVertexArraysOES
@@ -28,6 +29,7 @@ extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
 #endif // TANGRAM_IOS
 
 #ifdef TANGRAM_OSX
+#define GL_SILENCE_DEPRECATION
 #define GLFW_INCLUDE_GLEXT
 #include <GLFW/glfw3.h>
 // Resolve aliased names in OS X
