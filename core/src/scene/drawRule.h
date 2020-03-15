@@ -83,8 +83,6 @@ struct DrawRule {
 
     void merge(const DrawRuleData& _ruleData, const SceneLayer& _layer);
 
-    bool isJSFunction(StyleParamKey _key) const;
-
     bool contains(StyleParamKey _key) const;
 
     const std::string& getStyleName() const;
