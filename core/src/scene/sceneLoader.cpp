@@ -1512,8 +1512,7 @@ std::vector<DataLayer> SceneLoader::applyLayers(const Node& _node,  SceneFunctio
             std::string source;
             std::vector<std::string> collections;
 
-            auto sublayer = loadSublayer(layer.second, name, _functions, _stops, _ruleNames);
-
+            auto sublayer = loadSublayer(layer.second, name, _functions, _stops, _ruleNames, 1);
 
             if (const Node& data = layer.second["data"]) {
 
@@ -1540,8 +1539,6 @@ std::vector<DataLayer> SceneLoader::applyLayers(const Node& _node,  SceneFunctio
                 collections.push_back(name);
             }
             dataLayers.emplace_back(std::move(sublayer), source, collections);
-            dataLayers.back().sortSublayers();
-
         }
         catch (const YAML::RepresentationException& e) {
             LOGNode("Parsing layer: '%s'", layer, e.what());
@@ -1552,13 +1549,13 @@ std::vector<DataLayer> SceneLoader::applyLayers(const Node& _node,  SceneFunctio
 
 SceneLayer SceneLoader::loadSublayer(const Node& _layer, const std::string& _layerName,
                                      SceneFunctions& _functions, SceneStops& _stops,
-                                     DrawRuleNames& _ruleNames) {
+                                     DrawRuleNames& _ruleNames, size_t depth) {
     std::vector<SceneLayer> sublayers;
     std::vector<DrawRuleData> rules;
     Filter filter;
-    bool enabled = true;
-    bool exclusive = false;
-    int priority = std::numeric_limits<int>::max();
+    SceneLayer::Options layerOptions;
+
+    layerOptions.depth = depth;
 
     for (const auto& member : _layer) {
 
@@ -1574,32 +1571,33 @@ SceneLayer SceneLoader::loadSublayer(const Node& _layer, const std::string& _lay
                 auto const& ruleName = ruleNode.first.Scalar();
                 int ruleId = addDrawRuleName(_ruleNames, ruleName);
 
-                rules.push_back({ ruleName, ruleId, std::move(params) });
+                rules.emplace_back(ruleName, ruleId, std::move(params));
             }
         } else if (key == "filter") {
             filter = generateFilter(_functions, member.second);
             if (!filter.isValid()) {
                 LOGNode("Invalid 'filter' in layer '%s'", member.second, _layerName.c_str());
-                return { _layerName, {}, {}, {}, priority, false, exclusive};
             }
         } else if (key == "visible") {
             if (!_layer["enabled"].IsDefined()) {
-                YAML::convert<bool>::decode(member.second, enabled);
+                YamlUtil::getBool(member.second, layerOptions.enabled);
             }
         } else if (key == "enabled") {
-            YAML::convert<bool>::decode(member.second, enabled);
+            YamlUtil::getBool(member.second, layerOptions.enabled);
         } else if (key == "exclusive") {
-            YAML::convert<bool>::decode(member.second, exclusive);
+            YamlUtil::getBool(member.second, layerOptions.exclusive);
         } else if (key == "priority") {
-            priority = YamlUtil::getIntOrDefault(member.second, priority);
+            YamlUtil::getInt(member.second, layerOptions.priority);
         } else {
             // Member is a sublayer
-            sublayers.push_back(loadSublayer(member.second, (_layerName + DELIMITER + key),
-                                             _functions, _stops, _ruleNames));
-            sublayers.back().sortSublayers();
+            std::string sublayerName = _layerName;
+            sublayerName += DELIMITER;
+            sublayerName += key;
+            sublayers.push_back(loadSublayer(member.second, sublayerName,
+                                             _functions, _stops, _ruleNames, depth + 1));
         }
     }
-    return { _layerName, std::move(filter), rules, std::move(sublayers), priority, enabled, exclusive };
+    return { _layerName, std::move(filter), std::move(rules), std::move(sublayers), layerOptions };
 }
 
 void printFilters(const SceneLayer& layer, int indent){

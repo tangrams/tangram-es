@@ -15,7 +15,7 @@ class DataLayer : public SceneLayer {
 
 public:
 
-    DataLayer(SceneLayer _layer, const std::string& _source, const std::vector<std::string>& _collections);
+    DataLayer(SceneLayer layer, std::string source, std::vector<std::string> collections);
 
     const auto& source() const { return m_source; }
     const auto& collections() const { return m_collections; }

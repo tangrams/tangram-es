@@ -92,7 +92,7 @@ struct SceneLoader {
                                      DrawRuleNames& ruleNames);
 
     static SceneLayer loadSublayer(const Node& layer, const std::string& name, SceneFunctions& functions,
-                                   SceneStops& stops, DrawRuleNames& ruleNames);
+                                   SceneStops& stops, DrawRuleNames& ruleNames, size_t depth);
     /// - Filter
     static Filter generateFilter(SceneFunctions& functions, const Node& filter);
     static Filter generateAnyFilter(SceneFunctions& functions, const Node& filter);
