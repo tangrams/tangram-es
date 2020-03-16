@@ -80,7 +80,7 @@ struct DrawRule {
 
     DrawRule(const DrawRuleData& ruleData, const std::string& layerName, int layerDepth);
 
-    void merge(const DrawRuleData& ruleData, const SceneLayer& layer, int layerDepth);
+    void merge(const DrawRuleData& ruleData, const std::string& layerName, int layerDepth);
 
     bool contains(StyleParamKey _key) const;
 

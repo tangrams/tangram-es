@@ -1,6 +1,5 @@
 #include "scene/drawRule.h"
 
-#include "drawRuleWarnings.h"
 #include "log.h"
 #include "platform.h"
 #include "scene/scene.h"
@@ -54,11 +53,7 @@ bool DrawRule::hasParameterSet(StyleParamKey _key) const {
     return false;
 }
 
-void DrawRule::merge(const DrawRuleData& ruleData, const SceneLayer& layer, int layerDepth) {
-
-    evalConflict(*this, ruleData, layer);
-
-    const char* layerName = layer.name().c_str();
+void DrawRule::merge(const DrawRuleData& ruleData, const std::string& layerName, int layerDepth) {
 
     for (const auto& paramNew : ruleData.parameters) {
 
@@ -66,7 +61,7 @@ void DrawRule::merge(const DrawRuleData& ruleData, const SceneLayer& layer, int 
         auto& param = params[key];
 
         if (!active[key] || layerDepth > param.layerDepth) {
-            param = { &paramNew, layerName, layerDepth };
+            param = { &paramNew, layerName.c_str(), layerDepth };
             active[key] = true;
         }
     }
@@ -208,7 +203,7 @@ void DrawRuleMergeSet::mergeRules(const SceneLayer& layer, int depth) {
         if (pos == end) {
             m_matchedRules.emplace_back(rule, layer.name(), depth);
         } else {
-            m_matchedRules[pos].merge(rule, layer, depth);
+            m_matchedRules[pos].merge(rule, layer.name(), depth);
         }
     }
 }
