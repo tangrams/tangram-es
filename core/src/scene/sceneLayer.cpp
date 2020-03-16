@@ -16,7 +16,8 @@ SceneLayer::SceneLayer(std::string name, Filter filter,
     m_sublayers(std::move(sublayers)),
     m_options(options) {
 
-    // Sort sublayers for precedence in matching operations.
+    // Sort sublayers for precedence in matching operations. If multiple values for a parameter are assigned to the same
+    // draw group at the same layer depth, then the value that comes *first* in the layer list will be the final value.
     std::sort(m_sublayers.begin(), m_sublayers.end(),
               [](const SceneLayer& a, const SceneLayer& b) {
                   if (a.exclusive() != b.exclusive()) {
@@ -26,9 +27,11 @@ SceneLayer::SceneLayer(std::string name, Filter filter,
                       // Layers whose priority value is closer to -infinity take precedence.
                       return a.priority() < b.priority();
                   }
-                  // If priority and exclusivity are the same for two layers, precedence follows the lexicographic
-                  // ordering of their names (which must be unique among sibling layers).
-                  return a.name() < b.name();
+                  // If priority and exclusivity are the same for two layers, precedence is determined by reverse
+                  // alphabetical ordering of their names (which must be unique among sibling layers). That is, if there
+                  // are two sibling layers with the same exclusivity and priority named 'a' and 'b', then 'b' will come
+                  // first.
+                  return a.name() > b.name();
               });
 }
 
