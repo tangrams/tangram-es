@@ -1512,7 +1512,7 @@ std::vector<DataLayer> SceneLoader::applyLayers(const Node& _node,  SceneFunctio
             std::string source;
             std::vector<std::string> collections;
 
-            auto sublayer = loadSublayer(layer.second, name, _functions, _stops, _ruleNames, 1);
+            auto sublayer = loadSublayer(layer.second, name, _functions, _stops, _ruleNames);
 
             if (const Node& data = layer.second["data"]) {
 
@@ -1549,13 +1549,11 @@ std::vector<DataLayer> SceneLoader::applyLayers(const Node& _node,  SceneFunctio
 
 SceneLayer SceneLoader::loadSublayer(const Node& _layer, const std::string& _layerName,
                                      SceneFunctions& _functions, SceneStops& _stops,
-                                     DrawRuleNames& _ruleNames, size_t depth) {
+                                     DrawRuleNames& _ruleNames) {
     std::vector<SceneLayer> sublayers;
     std::vector<DrawRuleData> rules;
     Filter filter;
     SceneLayer::Options layerOptions;
-
-    layerOptions.depth = depth;
 
     for (const auto& member : _layer) {
 
@@ -1594,7 +1592,7 @@ SceneLayer SceneLoader::loadSublayer(const Node& _layer, const std::string& _lay
             sublayerName += DELIMITER;
             sublayerName += key;
             sublayers.push_back(loadSublayer(member.second, sublayerName,
-                                             _functions, _stops, _ruleNames, depth + 1));
+                                             _functions, _stops, _ruleNames));
         }
     }
     return { _layerName, std::move(filter), std::move(rules), std::move(sublayers), layerOptions };

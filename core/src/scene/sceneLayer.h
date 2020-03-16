@@ -14,7 +14,6 @@ public:
 
     struct Options {
         Options() = default;
-        size_t depth = 0;
         int priority = std::numeric_limits<int>::max();
         bool enabled = true;
         bool exclusive = false;
@@ -29,7 +28,6 @@ public:
     const auto& filter() const { return m_filter; }
     const auto& rules() const { return m_rules; }
     const auto& sublayers() const { return m_sublayers; }
-    auto depth() const { return m_options.depth; }
     auto priority() const { return m_options.priority; }
     auto enabled() const { return m_options.enabled; }
     auto exclusive() const { return m_options.exclusive; }
