@@ -5,215 +5,143 @@
 #include "scene/styleContext.h"
 
 using namespace Tangram;
+
 namespace {
-using Context = StyleContext;
 
-// Functions to initialize SceneLayer instances
-const int dg0 = 0;
-const int dg1 = 1;
-const int dg2 = 2;
+#define TAGS "[SceneLayer][Filter][DrawRule]"
 
-const int group1 = 1;
-const int group2 = 2;
+TEST_CASE("SceneLayer feature matching", TAGS) {
+    // layer_e:
+    //   draw_group_2:
+    //     order: order_e
+    //   layer_d:
+    //     draw_group_0:
+    //       order: order_d
+    //   layer_c:
+    //     draw_group_2:
+    //       order: order_c
+    //     layer_b:
+    //       filter:
+    //         any: []
+    //       draw_group_1:
+    //         order: order_b
+    //     layer_a:
+    //       draw_group_0:
+    //         order: order_a
 
-SceneLayer instance_a() {
+    const Filter matchEverything;
+    const Filter matchNothing = Filter::MatchAny({});
 
-    Filter f = Filter(); // passes everything
+    const DrawRuleData ruleA = {"draw_group_0", 0, {{StyleParamKey::order, "order_a"}}};
+    const SceneLayer layerA = {"layer_a", matchEverything, {ruleA}, {}, SceneLayer::Options()};
 
-    DrawRuleData rule = { "dg0", dg0, { { StyleParamKey::order, "value_a" } } };
+    const DrawRuleData ruleB = {"draw_group_1", 1, {{StyleParamKey::order, "order_b"}}};
+    const SceneLayer layerB = {"layer_b", matchNothing, {ruleB}, {}, SceneLayer::Options()};
 
-    return { "layer_a", f, { rule }, {}, SceneLayer::Options() };
-}
+    const DrawRuleData ruleC = {"draw_group_2", 2, {{StyleParamKey::order, "order_c"}}};
+    const SceneLayer layerC = {"layer_c", matchEverything, {ruleC}, {layerA, layerB}, SceneLayer::Options()};
 
-SceneLayer instance_b() {
+    const DrawRuleData ruleD = {"draw_group_0", 0, {{StyleParamKey::order, "order_d"}}};
+    const SceneLayer layerD = {"layer_d", matchEverything, {ruleD}, {}, SceneLayer::Options()};
 
-    Filter f = Filter::MatchAny({}); // passes nothing
+    const DrawRuleData ruleE = {"draw_group_2", 2, {{StyleParamKey::order, "order_e"}}};
+    const SceneLayer layerE = {"layer_e", matchEverything, {ruleE}, {layerC, layerD}, SceneLayer::Options()};
 
-    DrawRuleData rule = { "dg1", dg1, { { StyleParamKey::order, "value_b" } } };
+    Feature feature;
+    StyleContext context;
+    DrawRuleMergeSet ruleSet;
 
-    return { "layer_b", f, { rule }, {}, SceneLayer::Options() };
-}
-
-SceneLayer instance_c() {
-
-    Filter f = Filter(); // passes everything
-
-    DrawRuleData rule = { "dg2", dg2, { { StyleParamKey::order, "value_c" } } };
-
-    return { "layer_c", f, { rule }, { instance_a(), instance_b() }, SceneLayer::Options() };
-}
-
-SceneLayer instance_d() {
-
-    Filter f = Filter(); // passes everything
-
-    DrawRuleData rule = { "dg0", dg0, { { StyleParamKey::order, "value_d" } } };
-
-    return { "layer_d", f, { rule }, {}, SceneLayer::Options() };
-}
-
-SceneLayer instance_e() {
-
-    Filter f = Filter(); // passes everything
-
-    DrawRuleData rule = { "dg2", dg2, { { StyleParamKey::order, "value_e" } } };
-
-    return { "layer_e", f, { rule }, { instance_c(), instance_d() }, SceneLayer::Options() };
-}
-
-SceneLayer instance_2() {
-
-    Filter f = Filter::MatchExistence("two", true);
-
-    DrawRuleData rule = { "group2", group2, {} };
-
-    return { "subLayer2", f, { rule }, {}, SceneLayer::Options() };
-}
-
-SceneLayer instance_1() {
-
-    Filter f = Filter::MatchExistence("one", true);
-
-    DrawRuleData rule = { "group1", group1, {} };
-
-    return { "subLayer1", f, { rule }, {}, SceneLayer::Options() };
-}
-
-SceneLayer instance() {
-
-    Filter f = Filter::MatchExistence("base", true);
-
-    DrawRuleData rule = { "group1", group1, { {StyleParamKey::order, "a" } } };
-
-    return { "layer", f, { rule }, { instance_1(), instance_2() }, SceneLayer::Options() };
-}
-
-TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
-
-    Feature f1;
-    Feature f2;
-    Feature f3;
-    Feature f4;
-    Context ctx;
-
-    auto layer = instance();
-
-    {
-        DrawRuleMergeSet ruleSet;
-        f1.props.set("base", "blah"); // Should match Base Layer
-        ruleSet.match(f1, layer, ctx);
+    SECTION("feature matches one draw group") {
+        ruleSet.match(feature, layerA, context);
         auto& matches = ruleSet.matchedRules();
 
         REQUIRE(matches.size() == 1);
-        REQUIRE(matches[0].getStyleName() == "group1");
+        REQUIRE(*matches[0].name == "draw_group_0");
     }
 
-    {
-        DrawRuleMergeSet ruleSet;
-        f2.props.set("one", "blah"); // Should match Base and subLayer1
-        f2.props.set("base", "blah");
-        ruleSet.match(f2, layer, ctx);
-        auto& matches = ruleSet.matchedRules();
-
-        REQUIRE(matches.size() == 1);
-        REQUIRE(matches[0].getStyleName() == "group1");
-        REQUIRE(matches[0].findParameter(StyleParamKey::order).key == StyleParamKey::order);
-        REQUIRE(matches[0].findParameter(StyleParamKey::order).value.get<std::string>() == "a");
-    }
-
-    {
-        DrawRuleMergeSet ruleSet;
-        f3.props.set("two", "blah"); // Should not match anything as uber layer will not be satisfied
-        ruleSet.match(f3, layer, ctx);
+    SECTION("feature matches no draw groups") {
+        ruleSet.match(feature, layerB, context);
         auto& matches = ruleSet.matchedRules();
 
         REQUIRE(matches.size() == 0);
     }
 
-    {
-        DrawRuleMergeSet ruleSet;
-        f4.props.set("two", "blah");
-        f4.props.set("base", "blah"); // Should match Base and subLayer2
-        ruleSet.match(f4, layer, ctx);
+    SECTION("feature matches multiple draw groups") {
+        ruleSet.match(feature, layerC, context);
         auto& matches = ruleSet.matchedRules();
 
         REQUIRE(matches.size() == 2);
-        REQUIRE(matches[0].getStyleName() == "group1");
-        REQUIRE(matches[0].findParameter(StyleParamKey::order).key == StyleParamKey::order);
-        REQUIRE(matches[0].findParameter(StyleParamKey::order).value.get<std::string>() == "a");
-        REQUIRE(matches[1].getStyleName() == "group2");
+        REQUIRE(*matches[0].name == "draw_group_2");
+        REQUIRE(*matches[1].name == "draw_group_0");
+    }
+
+    SECTION("feature matches draw groups in multiple layers") {
+        ruleSet.match(feature, layerE, context);
+        auto& matches = ruleSet.matchedRules();
+
+        REQUIRE(matches.size() == 2);
+
+        // deeper match from layer_c should override parameters in same style from layer_e
+        REQUIRE(*matches[0].name == "draw_group_2");
+        REQUIRE(matches[0].hasParameterSet(StyleParamKey::order));
+        REQUIRE(matches[0].findParameter(StyleParamKey::order).value.get<std::string>() == "order_c");
+
+        // deeper match from layer_a should override parameters in same style from layer_d
+        REQUIRE(*matches[1].name == "draw_group_0");
+        REQUIRE(matches[1].hasParameterSet(StyleParamKey::order));
+        REQUIRE(matches[1].findParameter(StyleParamKey::order).value.get<std::string>() == "order_a");
     }
 
 }
 
-TEST_CASE("SceneLayer matches correct rules for a feature and context", "[SceneLayer][Filter]") {
+TEST_CASE("SceneLayer exclusive and priority", TAGS) {
+    // layer_j:
+    // layer_i:
+    //   exclusive: true
+    // layer_h:
+    //   priority: 2
+    // layer_g:
+    //   priority: 1
+    // layer_f:
+    //   exclusive: true
+    //   priority: 3
 
-    Feature feat;
-    Context ctx;
+    const Filter matchEverything;
 
-    {
-        DrawRuleMergeSet ruleSet;
-        auto layer_a = instance_a();
+    SceneLayer::Options optionsF;
+    optionsF.exclusive = true;
+    optionsF.priority = 3;
+    const SceneLayer layerF = {"layer_f", matchEverything, {}, {}, optionsF};
 
-        ruleSet.match(feat, layer_a, ctx);
-        auto& matches_a = ruleSet.matchedRules();
+    SceneLayer::Options optionsG;
+    optionsG.priority = 1;
+    const SceneLayer layerG = {"layer_g", matchEverything, {}, {}, optionsG};
 
-        REQUIRE(matches_a.size() == 1);
-        REQUIRE(matches_a[0].getStyleName() == "dg0");
-    }
+    SceneLayer::Options optionsH;
+    optionsH.priority = 2;
+    const SceneLayer layerH = {"layer_h", matchEverything, {}, {}, optionsH};
 
-    {
-        DrawRuleMergeSet ruleSet;
-        auto layer_b = instance_b();
+    SceneLayer::Options optionsI;
+    optionsI.exclusive = true;
+    const SceneLayer layerI = {"layer_i", matchEverything, {}, {}, optionsI};
 
-        ruleSet.match(feat, layer_b, ctx);
-        auto& matches_b = ruleSet.matchedRules();
+    SceneLayer::Options optionsJ;
+    const SceneLayer layerJ = {"layer_j", matchEverything, {}, {}, optionsJ};
 
-        REQUIRE(matches_b.size() == 0);
-    }
-
-}
-
-TEST_CASE("SceneLayer matches correct sublayer rules for a feature and context", "[SceneLayer][Filter]") {
-
-    Feature feat;
-    Context ctx;
+    Feature feature;
+    StyleContext context;
     DrawRuleMergeSet ruleSet;
 
-    auto layer_c = instance_c();
+    SECTION("sort sublayers according to exclusive and priority") {
+        const SceneLayer layer = {"layer", matchEverything, {}, {layerF, layerG, layerH, layerI, layerJ}, SceneLayer::Options()};
 
-    ruleSet.match(feat, layer_c, ctx);
-    auto& matches = ruleSet.matchedRules();
-
-    REQUIRE(matches.size() == 2);
-
-    REQUIRE(matches[0].getStyleName() == "dg2");
-    REQUIRE(matches[1].getStyleName() == "dg0");
-
+        REQUIRE(layer.sublayers().size() == 5);
+        CHECK(layer.sublayers()[0].name() == "layer_f");
+        CHECK(layer.sublayers()[1].name() == "layer_i");
+        CHECK(layer.sublayers()[2].name() == "layer_g");
+        CHECK(layer.sublayers()[3].name() == "layer_h");
+        CHECK(layer.sublayers()[4].name() == "layer_j");
+    }
 }
 
-TEST_CASE("SceneLayer correctly merges rules matched from sublayer", "[SceneLayer][Filter]") {
-
-    Feature feat;
-    Context ctx;
-    DrawRuleMergeSet ruleSet;
-
-    auto layer_e = instance_e();
-
-    ruleSet.match(feat, layer_e, ctx);
-    auto& matches = ruleSet.matchedRules();
-
-    REQUIRE(matches.size() == 2);
-
-    // deeper match from layer_a should override parameters in same style from layer_d
-    REQUIRE(matches[1].getStyleName() == "dg0");
-    REQUIRE(matches[1].findParameter(StyleParamKey::order).key == StyleParamKey::order);
-    REQUIRE(matches[1].findParameter(StyleParamKey::order).value.get<std::string>() == "value_a");
-
-    // deeper match from layer_c should override parameters in same style from layer_e
-    REQUIRE(matches[0].getStyleName() == "dg2");
-    REQUIRE(matches[0].findParameter(StyleParamKey::order).key == StyleParamKey::order);
-    REQUIRE(matches[0].findParameter(StyleParamKey::order).value.get<std::string>() == "value_c");
-
-}
-}
+} // namespace
