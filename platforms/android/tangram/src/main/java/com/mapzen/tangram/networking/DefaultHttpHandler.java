@@ -22,7 +22,6 @@ import okhttp3.ResponseBody;
 /**
  * {@code DefaultHttpHandler} is an implementation of {@link HttpHandler} using OkHTTP.
  * Customize this class for your own application by subclassing and overriding
- * {@link DefaultHttpHandler#configureClient(OkHttpClient.Builder)} and
  * {@link DefaultHttpHandler#configureRequest(HttpUrl, Request.Builder)}.
  */
 public class DefaultHttpHandler implements HttpHandler {
@@ -30,55 +29,33 @@ public class DefaultHttpHandler implements HttpHandler {
     private OkHttpClient okClient;
 
     /**
-     * Construct an {@code DefaultHttpHandler} with default options.
+     * @return OkHttp client builder with recommended settings for Tangram.
      */
-    public DefaultHttpHandler() {
-        final OkHttpClient.Builder builder = new OkHttpClient.Builder()
+    public static OkHttpClient.Builder GetClientBuilder() {
+        return new OkHttpClient.Builder()
                 .followRedirects(true)
                 .followSslRedirects(true)
+                .socketFactory(new CustomSocketFactory())
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .writeTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS);
+    }
 
+    /**
+     * Construct an {@code DefaultHttpHandler} with default options.
+     * Uses an OkHttp client from {@link #GetClientBuilder()}.
+     */
+    public DefaultHttpHandler() {
+        this(GetClientBuilder());
+    }
 
-        builder.socketFactory(new SocketFactory() {
-            SocketFactory factory = SocketFactory.getDefault();
-
-            @Override
-            public Socket createSocket() throws IOException {
-                Socket s = factory.createSocket();
-                try {
-                    //Log.d("Tangram", "Patching socket nodelay: " + s.getTcpNoDelay());
-                    s.setTcpNoDelay(true);
-                } catch (SocketException e) {
-                    // empty
-                }
-                return s;
-            }
-
-            @Override
-            public Socket createSocket(String s, int i) throws IOException, UnknownHostException {
-                return null;
-            }
-
-            @Override
-            public Socket createSocket(String s, int i, InetAddress inetAddress, int i1) throws IOException, UnknownHostException {
-                return null;
-            }
-
-            @Override
-            public Socket createSocket(InetAddress inetAddress, int i) throws IOException {
-                return null;
-            }
-
-            @Override
-            public Socket createSocket(InetAddress inetAddress, int i, InetAddress inetAddress1, int i1) throws IOException {
-                return null;
-            }
-        });
-
+    /**
+     * Construct a {@code DefaultHttpHandler} with a custom OkHttp client builder.
+     * In most cases you should start with a builder from {@link #GetClientBuilder()}.
+     * @param builder Custom OkHttp client builder
+     */
+    public DefaultHttpHandler(@NonNull final OkHttpClient.Builder builder) {
         configureClient(builder);
-
         okClient = builder.build();
     }
 
@@ -102,7 +79,7 @@ public class DefaultHttpHandler implements HttpHandler {
 
             @Override
             public void onResponse(final Call call, final Response response) {
-                byte[] data = null;
+                byte[] data;
                 final ResponseBody body = response.body();
                 if (body != null) {
                     try {
@@ -136,7 +113,10 @@ public class DefaultHttpHandler implements HttpHandler {
     /**
      * Override this method to customize the OkHTTP client
      * @param builder OkHTTP client builder to customize
+     * @deprecated Use {@link #DefaultHttpHandler(OkHttpClient.Builder)} to customize the client
+     * builder instead.
      */
+    @Deprecated
     protected void configureClient(OkHttpClient.Builder builder) {
     }
 
@@ -148,4 +128,40 @@ public class DefaultHttpHandler implements HttpHandler {
     protected void configureRequest(HttpUrl url, Request.Builder builder) {
     }
 
+    static class CustomSocketFactory extends SocketFactory {
+
+        SocketFactory factory = SocketFactory.getDefault();
+
+        @Override
+        public Socket createSocket() throws IOException {
+            Socket s = factory.createSocket();
+            try {
+                //Log.d("Tangram", "Patching socket nodelay: " + s.getTcpNoDelay());
+                s.setTcpNoDelay(true);
+            } catch (SocketException e) {
+                // empty
+            }
+            return s;
+        }
+
+        @Override
+        public Socket createSocket(String s, int i) throws IOException, UnknownHostException {
+            return null;
+        }
+
+        @Override
+        public Socket createSocket(String s, int i, InetAddress inetAddress, int i1) throws IOException, UnknownHostException {
+            return null;
+        }
+
+        @Override
+        public Socket createSocket(InetAddress inetAddress, int i) throws IOException {
+            return null;
+        }
+
+        @Override
+        public Socket createSocket(InetAddress inetAddress, int i, InetAddress inetAddress1, int i1) throws IOException {
+            return null;
+        }
+    }
 }
