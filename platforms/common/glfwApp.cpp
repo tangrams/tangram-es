@@ -4,6 +4,7 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_stl.h"
 #define GLFW_INCLUDE_GLEXT
+#define GL_SILENCE_DEPRECATION
 #include <GLFW/glfw3.h>
 #include <cstdlib>
 #include <atomic>
