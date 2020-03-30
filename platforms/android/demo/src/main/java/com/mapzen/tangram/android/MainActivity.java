@@ -28,9 +28,6 @@ import com.mapzen.tangram.TouchInput;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
-import com.mapzen.tangram.geometry.Geometry;
-import com.mapzen.tangram.geometry.Polygon;
-import com.mapzen.tangram.geometry.Polyline;
 import com.mapzen.tangram.networking.DefaultHttpHandler;
 import com.mapzen.tangram.networking.HttpHandler;
 
@@ -209,14 +206,13 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     }
 
     HttpHandler getHttpHandler() {
-        return new DefaultHttpHandler() {
-            @Override
-            protected void configureClient(OkHttpClient.Builder builder) {
-                File cacheDir = getExternalCacheDir();
-                if (cacheDir != null && cacheDir.exists()) {
-                    builder.cache(new Cache(cacheDir, 16 * 1024 * 1024));
-                }
-            }
+        OkHttpClient.Builder builder = DefaultHttpHandler.getClientBuilder();
+        File cacheDir = getExternalCacheDir();
+        if (cacheDir != null && cacheDir.exists()) {
+            builder.cache(new Cache(cacheDir, 16 * 1024 * 1024));
+        }
+
+        return new DefaultHttpHandler(builder) {
             CacheControl tileCacheControl = new CacheControl.Builder().maxStale(7, TimeUnit.DAYS).build();
             @Override
             protected void configureRequest(HttpUrl url, Request.Builder builder) {
