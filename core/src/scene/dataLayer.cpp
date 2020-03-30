@@ -2,9 +2,9 @@
 
 namespace Tangram {
 
-DataLayer::DataLayer(SceneLayer _layer, const std::string& _source, const std::vector<std::string>& _collections) :
-    SceneLayer(std::move(_layer)),
-    m_source(_source),
-    m_collections(_collections) {}
+DataLayer::DataLayer(SceneLayer layer, std::string source, std::vector<std::string> collections) :
+    SceneLayer(std::move(layer)),
+    m_source(std::move(source)),
+    m_collections(std::move(collections)) {}
 
 }

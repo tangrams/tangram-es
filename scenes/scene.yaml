@@ -308,48 +308,51 @@ layers:
                         outline:
                             color: orange
                             width: [[11, 0px], [12, 1px], [13, 2px], [15, 12.5]]
-        arrows:
-            # oneway arrows and shields are distinct groups!
-            filter: { oneway: yes, shield_text: false, $zoom: { min: 17 } }
-            draw:
-                points:
-                    texture: pois
-                    flat: true
-                    sprite: arrow
-                    size: [[17, 18px], [18, 20px], [20, 32px]]
-                    placement: spaced
-                    placement_spacing: [[17, 70px], [20, 175px]]
-                    angle: auto
-
-        shields:
-            filter:
-                network: 'US:I' # US interstates only in this demo
-                shield_text: true
-            draw:
-                points:
-                    texture: pois
-                    sprite: shield
-                    # sprite: function() { return feature.network }
-                    priority: 2.5
-                    color: white
-                    size: 24px
-                    placement: midpoint
-                    repeat_group: shields
-                    text:
-                        repeat_distance: 150px
-                        anchor: center
-                        text_source: shield_text
-                        font:
-                            family: sans-serif
-                            size: 11px
-                            fill: white
-
-            # thin-out shields at low-zoom
-            thinning:
-                filter: { $zoom: { max: 11 } }
+        road-icons:
+            arrows:
+                # oneway arrows and shields are distinct groups!
+                exclusive: true
+                filter: { oneway: yes, $zoom: { min: 17 } }
                 draw:
                     points:
-                        repeat_distance: 75px
+                        texture: pois
+                        flat: true
+                        sprite: arrow
+                        size: [[17, 18px], [18, 20px], [20, 32px]]
+                        placement: spaced
+                        placement_spacing: [[17, 70px], [20, 175px]]
+                        angle: auto
+
+            shields:
+                exclusive: true
+                filter:
+                    network: 'US:I' # US interstates only in this demo
+                    shield_text: true
+                draw:
+                    points:
+                        texture: pois
+                        sprite: shield
+                        # sprite: function() { return feature.network }
+                        priority: 2.5
+                        color: white
+                        size: 24px
+                        placement: midpoint
+                        repeat_group: shields
+                        text:
+                            repeat_distance: 150px
+                            anchor: center
+                            text_source: shield_text
+                            font:
+                                family: sans-serif
+                                size: 11px
+                                fill: white
+
+                # thin-out shields at low-zoom
+                thinning:
+                    filter: { $zoom: { max: 11 } }
+                    draw:
+                        points:
+                            repeat_distance: 75px
 
         labels:
             filter:
@@ -365,6 +368,7 @@ layers:
                         size: 12px
 
             highway:
+                exclusive: true
                 filter: { kind: highway }
                 draw:
                     text:
@@ -376,6 +380,7 @@ layers:
                             transform: capitalize
 
             major_road:
+                exclusive: true
                 filter: { kind: major_road, $zoom: { min: 13 } }
                 draw:
                     text:
@@ -387,6 +392,7 @@ layers:
                             stroke: { color: white, width: 4 }
 
             minor_road:
+                exclusive: true
                 filter: { kind: minor_road, $zoom: { min: 15 } }
                 draw:
                     text:
@@ -395,6 +401,7 @@ layers:
                             stroke: { color: white, width: 4 }
 
             ferry:
+                exclusive: true
                 filter: { kind: ferry }
                 draw:
                     text:
@@ -474,6 +481,8 @@ layers:
                         size: 1.2em
                         fill: white
         parks:
+            exclusive: true
+            priority: 1
             filter:
                 kind: [park, cemetery, graveyard]
                 any:
@@ -492,6 +501,8 @@ layers:
                             stroke: { color: white, width: 3 }
 
         forest:
+            exclusive: true
+            priority: 2
             filter:
                 kind: forest
                 any:
@@ -509,10 +520,11 @@ layers:
                         stroke: { color: white, width: 3 }
 
         not_landuse:
+            exclusive: true
             filter:
                 name: true
                 not:
-                    kind: [peak, viewpoint, bicycle_rental, car_sharing, park, forest, cemetery, graveyard]
+                    kind: [viewpoint, bicycle_rental, car_sharing]
                 $zoom: { min: 15 }
             draw:
                 points:
@@ -544,30 +556,39 @@ layers:
             # examples of different points mapped to feature properties
             points:
                 restaurant:
+                    exclusive: true
                     filter: { kind: [restaurant] }
                     draw: { points: { sprite: restaurant } }
                 cafe:
+                    exclusive: true
                     filter: { kind: [cafe, convenience] }
                     draw: { points: { sprite: cafe } }
                 bar:
+                    exclusive: true
                     filter: { kind: [bar, pub] }
                     draw: { points: { sprite: bar } }
                 culture:
+                    exclusive: true
                     filter: { kind: [museum, library, church, place_of_worship, bank] }
                     draw: { points: { sprite: museum } }
                 station:
+                    exclusive: true
                     filter: { kind: [station] }
                     draw: { points: { sprite: train, priority: 2.5 } }
                 hospital:
+                    exclusive: true
                     filter: { kind: [hospital, pharmacy] }
                     draw: { points: { sprite: hospital } }
                 hotel:
+                    exclusive: true
                     filter: { kind: [hotel, hostel] }
                     draw: { points: { sprite: hotel } }
                 bus_stop:
+                    exclusive: true
                     filter: { kind: [bus_stop] }
                     draw: { points: { sprite: bus } }
                 bookstore:
+                    exclusive: true
                     filter: { kind: [bookstore] }
                     draw: { points: { sprite: bookstore } }
 
@@ -644,6 +665,7 @@ layers:
                         transform: uppercase
 
             countries:
+                exclusive: true
                 filter:
                     kind: country
                     any:
@@ -658,6 +680,7 @@ layers:
                             size: [[6, 14px], [8, 20px]]
 
             regions:
+                exclusive: true
                 filter:
                     kind: region
                     kind_detail: [state, province]
@@ -677,6 +700,7 @@ layers:
                             text_source: 'name:short'
 
             cities:
+                exclusive: true
                 filter:
                     kind: locality
                     kind_detail: city
@@ -689,6 +713,7 @@ layers:
                             size: [[8, 11px], [12, 16px]]
 
             neighborhoods:
+                exclusive: true
                 filter:
                     - { kind: [neighbourhood, macrohood], $zoom: { min: 13 } }
                     - { kind: microhood, $zoom: { min: 15 } }

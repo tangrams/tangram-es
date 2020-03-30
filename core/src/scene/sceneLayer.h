@@ -2,39 +2,43 @@
 
 #include "scene/drawRule.h"
 #include "scene/filters.h"
-#include "scene/styleParam.h"
 
 #include <string>
 #include <vector>
 
 namespace Tangram {
 
-struct Feature;
-
 class SceneLayer {
-
-    Filter m_filter;
-    std::string m_name;
-    std::vector<DrawRuleData> m_rules;
-    std::vector<SceneLayer> m_sublayers;
-    size_t m_depth = 0;
-    bool m_enabled = true;
 
 public:
 
-    SceneLayer(std::string _name, Filter _filter,
-               std::vector<DrawRuleData> _rules,
-               std::vector<SceneLayer> _sublayers,
-               bool _enabled);
+    struct Options {
+        Options() = default;
+        int priority = std::numeric_limits<int>::max();
+        bool enabled = true;
+        bool exclusive = false;
+    };
+
+    SceneLayer(std::string name, Filter filter,
+               std::vector<DrawRuleData> rules,
+               std::vector<SceneLayer> sublayers,
+               Options options);
 
     const auto& name() const { return m_name; }
     const auto& filter() const { return m_filter; }
     const auto& rules() const { return m_rules; }
     const auto& sublayers() const { return m_sublayers; }
-    const auto& depth() const { return m_depth; }
-    const auto& enabled() const { return m_enabled; }
+    auto priority() const { return m_options.priority; }
+    auto enabled() const { return m_options.enabled; }
+    auto exclusive() const { return m_options.exclusive; }
 
-    void setDepth(size_t _d);
+private:
+
+    Filter m_filter;
+    std::string m_name;
+    std::vector<DrawRuleData> m_rules;
+    std::vector<SceneLayer> m_sublayers;
+    Options m_options;
 };
 
 }

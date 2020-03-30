@@ -60,9 +60,8 @@ struct DrawRule {
     struct {
         const StyleParam* param;
         // SceneLayer name and depth
-        const char* name;
-        size_t depth;
-
+        const char* layerName;
+        int layerDepth;
     } params[StyleParamKeySize];
 
     // A mask to indicate which parameters are set.
@@ -79,17 +78,13 @@ struct DrawRule {
     uint32_t selectionColor = 0;
     FeatureSelection* featureSelection = nullptr;
 
-    DrawRule(const DrawRuleData& _ruleData, const std::string& _layerName, size_t _layerDepth);
+    DrawRule(const DrawRuleData& ruleData, const std::string& layerName, int layerDepth);
 
-    void merge(const DrawRuleData& _ruleData, const SceneLayer& _layer);
-
-    bool isJSFunction(StyleParamKey _key) const;
+    void merge(const DrawRuleData& ruleData, const std::string& layerName, int layerDepth);
 
     bool contains(StyleParamKey _key) const;
 
     const std::string& getStyleName() const;
-
-    const char* getLayerName(StyleParamKey _key) const;
 
     size_t getParamSetHash() const;
 
@@ -121,20 +116,25 @@ private:
 class DrawRuleMergeSet {
 
 public:
-    bool evaluateRuleForContext(DrawRule& rule, StyleContext& ctx);
+    bool evaluateRuleForContext(DrawRule& rule, StyleContext& context);
 
     // internal
-    bool match(const Feature& _feature, const SceneLayer& _layer, StyleContext& _ctx);
+    bool match(const Feature& feature, const SceneLayer& layer, StyleContext& context);
 
     // internal
-    void mergeRules(const SceneLayer& _layer);
+    void mergeRules(const SceneLayer& layer, int depth = 0);
 
     auto& matchedRules() { return m_matchedRules; }
 
 private:
+    struct LayerMatch {
+        const SceneLayer* layer;
+        int depth;
+    };
+
     // Reusable containers 'matchedRules' and 'queuedLayers'
     std::vector<DrawRule> m_matchedRules;
-    std::vector<const SceneLayer*> m_queuedLayers;
+    std::vector<LayerMatch> m_queuedLayers;
 
     // Container for dynamically-evaluated parameters
     StyleParam m_evaluated[StyleParamKeySize];

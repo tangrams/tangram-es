@@ -1539,7 +1539,6 @@ std::vector<DataLayer> SceneLoader::applyLayers(const Node& _node,  SceneFunctio
                 collections.push_back(name);
             }
             dataLayers.emplace_back(std::move(sublayer), source, collections);
-
         }
         catch (const YAML::RepresentationException& e) {
             LOGNode("Parsing layer: '%s'", layer, e.what());
@@ -1554,7 +1553,7 @@ SceneLayer SceneLoader::loadSublayer(const Node& _layer, const std::string& _lay
     std::vector<SceneLayer> sublayers;
     std::vector<DrawRuleData> rules;
     Filter filter;
-    bool enabled = true;
+    SceneLayer::Options layerOptions;
 
     for (const auto& member : _layer) {
 
@@ -1570,27 +1569,33 @@ SceneLayer SceneLoader::loadSublayer(const Node& _layer, const std::string& _lay
                 auto const& ruleName = ruleNode.first.Scalar();
                 int ruleId = addDrawRuleName(_ruleNames, ruleName);
 
-                rules.push_back({ ruleName, ruleId, std::move(params) });
+                rules.emplace_back(ruleName, ruleId, std::move(params));
             }
         } else if (key == "filter") {
             filter = generateFilter(_functions, member.second);
             if (!filter.isValid()) {
                 LOGNode("Invalid 'filter' in layer '%s'", member.second, _layerName.c_str());
-                return { _layerName, {}, {}, {}, false };
             }
         } else if (key == "visible") {
             if (!_layer["enabled"].IsDefined()) {
-                YAML::convert<bool>::decode(member.second, enabled);
+                YamlUtil::getBool(member.second, layerOptions.enabled);
             }
         } else if (key == "enabled") {
-            YAML::convert<bool>::decode(member.second, enabled);
+            YamlUtil::getBool(member.second, layerOptions.enabled);
+        } else if (key == "exclusive") {
+            YamlUtil::getBool(member.second, layerOptions.exclusive);
+        } else if (key == "priority") {
+            YamlUtil::getInt(member.second, layerOptions.priority);
         } else {
             // Member is a sublayer
-            sublayers.push_back(loadSublayer(member.second, (_layerName + DELIMITER + key),
+            std::string sublayerName = _layerName;
+            sublayerName += DELIMITER;
+            sublayerName += key;
+            sublayers.push_back(loadSublayer(member.second, sublayerName,
                                              _functions, _stops, _ruleNames));
         }
     }
-    return { _layerName, std::move(filter), rules, std::move(sublayers), enabled };
+    return { _layerName, std::move(filter), std::move(rules), std::move(sublayers), layerOptions };
 }
 
 void printFilters(const SceneLayer& layer, int indent){
