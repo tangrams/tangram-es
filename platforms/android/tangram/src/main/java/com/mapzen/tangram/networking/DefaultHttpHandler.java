@@ -31,7 +31,7 @@ public class DefaultHttpHandler implements HttpHandler {
     /**
      * @return OkHttp client builder with recommended settings for Tangram.
      */
-    public static OkHttpClient.Builder GetClientBuilder() {
+    public static OkHttpClient.Builder getClientBuilder() {
         return new OkHttpClient.Builder()
                 .followRedirects(true)
                 .followSslRedirects(true)
@@ -43,15 +43,15 @@ public class DefaultHttpHandler implements HttpHandler {
 
     /**
      * Construct an {@code DefaultHttpHandler} with default options.
-     * Uses an OkHttp client from {@link #GetClientBuilder()}.
+     * Uses an OkHttp client from {@link #getClientBuilder()}.
      */
     public DefaultHttpHandler() {
-        this(GetClientBuilder());
+        this(getClientBuilder());
     }
 
     /**
      * Construct a {@code DefaultHttpHandler} with a custom OkHttp client builder.
-     * In most cases you should start with a builder from {@link #GetClientBuilder()}.
+     * In most cases you should start with a builder from {@link #getClientBuilder()}.
      * @param builder Custom OkHttp client builder
      */
     public DefaultHttpHandler(@NonNull final OkHttpClient.Builder builder) {

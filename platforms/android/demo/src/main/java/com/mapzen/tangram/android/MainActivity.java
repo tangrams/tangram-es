@@ -206,7 +206,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     }
 
     HttpHandler getHttpHandler() {
-        OkHttpClient.Builder builder = DefaultHttpHandler.GetClientBuilder();
+        OkHttpClient.Builder builder = DefaultHttpHandler.getClientBuilder();
         File cacheDir = getExternalCacheDir();
         if (cacheDir != null && cacheDir.exists()) {
             builder.cache(new Cache(cacheDir, 16 * 1024 * 1024));
