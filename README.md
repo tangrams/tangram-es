@@ -1,6 +1,8 @@
 Tangram ES
 ==========
 
+[![CircleCI](https://circleci.com/gh/tangrams/tangram-es.svg?style=shield)](https://circleci.com/gh/tangrams/tangram-es)
+
 Tangram ES is a C++ library for rendering 2D and 3D maps from vector data using OpenGL ES. It is a counterpart to [Tangram](https://github.com/tangrams/tangram) that targets mobile and embedded devices.
 
 This repository contains both the core rendering library and sample applications that use the library on Android, iOS, Mac OS X, Ubuntu, and Raspberry Pi.
@@ -11,13 +13,11 @@ This repository contains both the core rendering library and sample applications
 
 For more information about building Tangram ES or using it in your project, see the individual platform pages below:
 
-| Platform                        | Build status |
-| ------------------------------- |--------------|
-| [Android](platforms/android)    | [![CircleCI](https://circleci.com/gh/tangrams/tangram-es.svg?style=shield)](https://circleci.com/gh/tangrams/tangram-es)|
-| [iOS](platforms/ios)            | [![CircleCI](https://circleci.com/gh/tangrams/tangram-es.svg?style=shield)](https://circleci.com/gh/tangrams/tangram-es)|
-| [Mac OS X](platforms/osx)       |
-| [Ubuntu Linux](platforms/linux) |  [![CircleCI](https://circleci.com/gh/tangrams/tangram-es.svg?style=shield)](https://circleci.com/gh/tangrams/tangram-es)|
-| [Raspberry Pi](platforms/rpi)   |
+- [Android](platforms/android)
+- [iOS](platforms/ios)
+- [Mac OS X](platforms/osx)
+- [Ubuntu Linux](platforms/linux)
+- [Raspberry Pi](platforms/rpi)
 
 ## Support
 
