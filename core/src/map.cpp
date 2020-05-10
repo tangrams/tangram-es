@@ -473,6 +473,11 @@ void Map::updateCameraPosition(const CameraUpdate& _update, float _duration, Eas
 
     if (_duration == 0.f) {
         setCameraPosition(camera);
+        // The animation listener needs to be called even when the update has no animation duration
+        // because this is how our Android MapController passes updates to its MapChangeListener.
+        if (impl->cameraAnimationListener) {
+            impl->cameraAnimationListener(true);
+        }
     } else {
         setCameraPositionEased(camera, _duration, _e);
     }
