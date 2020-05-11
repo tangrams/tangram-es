@@ -38,7 +38,9 @@ struct ClientDataSource::Storage {
     std::unique_ptr<geojsonvt::GeoJSONVT> tiles;
     geometry::feature_collection<double> features;
     std::vector<Properties> properties;
+    std::map<uint64_t, uint64_t> pointIds;
     std::map<uint64_t, uint64_t> polylineIds;
+    std::map<uint64_t, uint64_t> polygonIds;
 };
 
 struct ClientDataSource::PolylineBuilderData : mapbox::geometry::line_string<double> {
@@ -250,15 +252,22 @@ void ClientDataSource::addData(const std::string& _data) {
                              std::make_move_iterator(features.end()));
 }
 
-void ClientDataSource::addPointFeature(Properties&& properties, LngLat coordinates) {
+uint64_t ClientDataSource::addPointFeature(Properties&& properties, LngLat coordinates) {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 
     geometry::point<double> geom {coordinates.longitude, coordinates.latitude};
 
-    uint64_t id = m_store->features.size();
-    m_store->features.emplace_back(geom, id);
+    uint64_t i = m_store->features.size();
+    uint64_t id = m_store->pointIds.size();
+
+    properties.set("id", std::to_string(id));
+
+    m_store->features.emplace_back(geom, i);
     m_store->properties.emplace_back(properties);
+    m_store->pointIds.insert(std::pair<uint64_t, uint64_t>(id, i));
+
+    return id;
 }
 
 uint64_t ClientDataSource::addPolylineFeature(Properties&& properties, PolylineBuilder&& polyline) {
@@ -278,14 +287,36 @@ uint64_t ClientDataSource::addPolylineFeature(Properties&& properties, PolylineB
     return id;
 }
 
-void ClientDataSource::addPolygonFeature(Properties&& properties, PolygonBuilder&& polygon) {
+uint64_t ClientDataSource::addPolygonFeature(Properties&& properties, PolygonBuilder&& polygon) {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 
-    uint64_t id = m_store->features.size();
+    uint64_t i = m_store->features.size();
+    uint64_t id = m_store->polygonIds.size();
+
+    properties.set("id", std::to_string(id));
+
     auto geom = std::move(polygon.data);
-    m_store->features.emplace_back(*geom, id);
+    m_store->features.emplace_back(*geom, i);
     m_store->properties.emplace_back(properties);
+    m_store->polygonIds.insert(std::pair<uint64_t, uint64_t>(id, i));
+
+    return id;
+}
+
+void ClientDataSource::updatePointFeature(uint64_t id, const LngLat coordinate) {
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
+
+    std::map<uint64_t, uint64_t>::iterator findIt = m_store->pointIds.find(id);
+
+    if (findIt != m_store->pointIds.end() && findIt->second < m_store->features.size()) {
+        uint64_t i = findIt->second;
+
+        geometry::point<double> geom {coordinate.longitude, coordinate.latitude};
+
+        m_store->features[i] = mapbox::geometry::feature<double>(geom, i);
+    }
 }
 
 void ClientDataSource::updatePolylineFeature(uint64_t id, const Coordinates& coordinates) {
@@ -306,6 +337,40 @@ void ClientDataSource::updatePolylineFeature(uint64_t id, const Coordinates& coo
     }
 }
 
+void ClientDataSource::updatePolygonFeature(uint64_t id, const Coordinates& coordinates) {
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
+
+    std::map<uint64_t, uint64_t>::iterator findIt = m_store->polygonIds.find(id);
+
+    if (findIt != m_store->polygonIds.end() && findIt->second < m_store->features.size()) {
+        uint64_t i = findIt->second;
+
+        geometry::line_string<double> geom;
+        for (auto &p : coordinates) {
+            geom.emplace_back(p.longitude, p.latitude);
+        }
+
+        m_store->features[i] = mapbox::geometry::feature<double>(geom, i);
+    }
+}
+
+void ClientDataSource::updatePointFeature(uint64_t id, const Properties&& properties) {
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
+
+    std::map<uint64_t, uint64_t>::iterator findIt = m_store->pointIds.find(id);
+
+    if (findIt != m_store->pointIds.end() && findIt->second < m_store->properties.size()) {
+        uint64_t i = findIt->second;
+
+        for (int j = 0; j < properties.items().size(); ++j) {
+            m_store->properties[i].set(properties.items()[j].key,
+                properties.getString(properties.items()[j].key));
+        }
+    }
+}
+
 void ClientDataSource::updatePolylineFeature(uint64_t id, const Properties&& properties) {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
@@ -318,6 +383,43 @@ void ClientDataSource::updatePolylineFeature(uint64_t id, const Properties&& pro
         for (int j = 0; j < properties.items().size(); ++j) {
             m_store->properties[i].set(properties.items()[j].key,
                 properties.getString(properties.items()[j].key));
+        }
+    }
+}
+
+void ClientDataSource::updatePolygonFeature(uint64_t id, const Properties&& properties) {
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
+
+    std::map<uint64_t, uint64_t>::iterator findIt = m_store->polygonIds.find(id);
+
+    if (findIt != m_store->polygonIds.end() && findIt->second < m_store->properties.size()) {
+        uint64_t i = findIt->second;
+
+        for (int j = 0; j < properties.items().size(); ++j) {
+            m_store->properties[i].set(properties.items()[j].key,
+                properties.getString(properties.items()[j].key));
+        }
+    }
+}
+
+void ClientDataSource::removePointFeature(uint64_t id) {
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
+
+    std::map<uint64_t, uint64_t>::iterator findIt = m_store->pointIds.find(id);
+
+    if (findIt != m_store->pointIds.end() && findIt->second < m_store->features.size()) {
+        uint64_t i = findIt->second;
+
+        m_store->features.erase(std::next(m_store->features.begin(), i));
+        m_store->properties.erase(std::next(m_store->properties.begin(), i));
+
+        for (std::map<uint64_t, uint64_t>::iterator it = m_store->pointIds.begin(); it != m_store->pointIds.end(); ++it) {
+            if (it->second > i) {
+                it->second = it->second - 1;
+                m_store->features[it->second].id = it->second;
+            }
         }
     }
 }
@@ -335,6 +437,27 @@ void ClientDataSource::removePolylineFeature(uint64_t id) {
         m_store->properties.erase(std::next(m_store->properties.begin(), i));
 
         for (std::map<uint64_t, uint64_t>::iterator it = m_store->polylineIds.begin(); it != m_store->polylineIds.end(); ++it) {
+            if (it->second > i) {
+                it->second = it->second - 1;
+                m_store->features[it->second].id = it->second;
+            }
+        }
+    }
+}
+
+void ClientDataSource::removePolygonFeature(uint64_t id) {
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
+
+    std::map<uint64_t, uint64_t>::iterator findIt = m_store->polygonIds.find(id);
+
+    if (findIt != m_store->polygonIds.end() && findIt->second < m_store->features.size()) {
+        uint64_t i = findIt->second;
+
+        m_store->features.erase(std::next(m_store->features.begin(), i));
+        m_store->properties.erase(std::next(m_store->properties.begin(), i));
+
+        for (std::map<uint64_t, uint64_t>::iterator it = m_store->polygonIds.begin(); it != m_store->polygonIds.end(); ++it) {
             if (it->second > i) {
                 it->second = it->second - 1;
                 m_store->features[it->second].id = it->second;

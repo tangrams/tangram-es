@@ -72,6 +72,53 @@ public class MapData {
             return id;
         }
     }
+    
+    /**
+     * Update point coordinates
+     * @param id Id of point to update
+     * @param coordinate New coordinate of a point
+     */
+    public void updatePoint(long id, LngLat coordinate) {
+        final MapController map = mapController;
+        if (map == null) {
+            return;
+        }
+        synchronized (this) {
+            nativeUpdatePointPoint(pointer, id, new double[] { coordinate.longitude, coordinate.latitude });
+            nativeGenerateTiles(pointer);
+        }
+    }
+
+    /**
+     * Update point properties
+     * @param id Id of point to update
+     * @param properties New properties of a point
+     */
+    public void updatePoint(long id, Map<String, String> properties) {
+        final MapController map = mapController;
+        if (map == null) {
+            return;
+        }
+        synchronized (this) {
+            nativeUpdatePointProperties(pointer, id, Geometry.getStringMapAsArray(properties));
+            nativeGenerateTiles(pointer);
+        }
+    }
+
+    /**
+     * Remove point
+     * @param id Id of point to remove
+     */
+    public void removePoint(long id) {
+        final MapController map = mapController;
+        if (map == null) {
+            return;
+        }
+        synchronized (this) {
+            nativeRemovePoint(pointer, id);
+            nativeGenerateTiles(pointer);
+        }
+    }
 
     /**
      * Update polyline coordinates
@@ -90,7 +137,7 @@ public class MapData {
     }
 
     /**
-     * Update polyline coordinates
+     * Update polyline properties
      * @param id Id of polyline to update
      * @param properties New properties of a polyline
      */
@@ -116,6 +163,53 @@ public class MapData {
         }
         synchronized (this) {
             nativeRemovePolyline(pointer, id);
+            nativeGenerateTiles(pointer);
+        }
+    }
+    
+    /**
+     * Update polygon coordinates
+     * @param id Id of polygon to update
+     * @param coordinate New coordinates of a polygon
+     */
+    public void updatePolygon(long id, LngLat coordinate) {
+        final MapController map = mapController;
+        if (map == null) {
+            return;
+        }
+        synchronized (this) {
+            nativeUpdatePolygonPoints(pointer, id, new double[] { coordinate.longitude, coordinate.latitude });
+            nativeGenerateTiles(pointer);
+        }
+    }
+
+    /**
+     * Update polygon properties
+     * @param id Id of polygon to update
+     * @param properties New properties of a polygon
+     */
+    public void updatePolygon(long id, Map<String, String> properties) {
+        final MapController map = mapController;
+        if (map == null) {
+            return;
+        }
+        synchronized (this) {
+            nativeUpdatePolygonProperties(pointer, id, Geometry.getStringMapAsArray(properties));
+            nativeGenerateTiles(pointer);
+        }
+    }
+
+    /**
+     * Remove polygon
+     * @param id Id of polygon to remove
+     */
+    public void removePolygon(long id) {
+        final MapController map = mapController;
+        if (map == null) {
+            return;
+        }
+        synchronized (this) {
+            nativeRemovePolygon(pointer, id);
             nativeGenerateTiles(pointer);
         }
     }
@@ -173,7 +267,15 @@ public class MapData {
     private native void nativeAddGeoJson(long sourcePtr, String geoJson);
     private native void nativeGenerateTiles(long sourcePtr);
 
+    private native void nativeUpdatePointPoint(long sourcePtr, long id, double[] coordinate);
+    private native void nativeUpdatePointProperties(long sourcePtr, long id, String[] properties);
+    private native void nativeRemovePoint(long sourcePtr, long id);
+    
     private native void nativeUpdatePolylinePoints(long sourcePtr, long id, double[] coordinates);
     private native void nativeUpdatePolylineProperties(long sourcePtr, long id, String[] properties);
     private native void nativeRemovePolyline(long sourcePtr, long id);
+    
+    private native void nativeUpdatePolygonPoints(long sourcePtr, long id, double[] coordinates);
+    private native void nativeUpdatePolygonProperties(long sourcePtr, long id, String[] properties);
+    private native void nativeRemovePolygon(long sourcePtr, long id);
 }

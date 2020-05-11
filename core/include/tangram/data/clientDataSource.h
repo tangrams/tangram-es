@@ -48,18 +48,29 @@ public:
     // Add geometry from a GeoJSON string
     void addData(const std::string& _data);
 
-    void addPointFeature(Properties&& properties, LngLat coordinates);
+    uint64_t addPointFeature(Properties&& properties, LngLat coordinates);
 
     uint64_t addPolylineFeature(Properties&& properties, PolylineBuilder&& polyline);
 
-    void addPolygonFeature(Properties&& properties, PolygonBuilder
-        && polygon);
+    uint64_t addPolygonFeature(Properties&& properties, PolygonBuilder&& polygon);
+
+    void updatePointFeature(uint64_t id, const LngLat coordinate);
 
     void updatePolylineFeature(uint64_t id, const Coordinates& coordinates);
 
+    void updatePolygonFeature(uint64_t id, const Coordinates& coordinates);
+
+    void updatePointFeature(uint64_t id, const Properties&& properties);
+
     void updatePolylineFeature(uint64_t id, const Properties&& properties);
 
+    void updatePolygonFeature(uint64_t id, const Properties&& properties);
+
+    void removePointFeature(uint64_t id);
+
     void removePolylineFeature(uint64_t id);
+
+    void removePolygonFeature(uint64_t id);
 
     // Transform added feature data into tiles.
     void generateTiles();
