@@ -5,25 +5,43 @@ import androidx.annotation.Keep;
 @Keep
 public interface MapChangeListener {
     /**
-     * Called on the UI thread at the end of whenever the view is stationary, fully loaded, and
-     * no camera animations are running.
+     * Called when the view becomes stationary, fully loaded, and has no camera animations running.
+     *
+     * This is always called on the UI thread.
      */
     void onViewComplete();
 
     /**
-     * Called on the UI thread at the start of a camera animation or user interaction
-     * @param animated false when camera updates are set immediately, true otherwise
+     * Called at the start of a map camera movement, either from touch input or an API call.
+     *
+     * When the movement is triggered by touch input, this will be called on the UI thread.
+     * Otherwise, this will be called on the thread that invoked the camera movement.
+     *
+     * Camera changes using 'flyTo' and 'easing' are considered animation. Movement from touch input
+     * and immediate camera changes are not considered animation. Movement from a 'fling' after a
+     * gesture is considered an animation. A 'fling' produces separate 'WillChange' and 'DidChange'
+     * callbacks from the gesture that precedes it.
+     *
+     * @param animated true when the movement is controlled by an animation, otherwise false.
+     *
      */
     void onRegionWillChange(boolean animated);
 
     /**
-     * Called on the UI thread during a camera animation or when map is changing due to user interaction
+     * Called repeatedly during a map camera movement, either from touch input or an API call.
+     *
+     * This is always called on the UI thread.
      */
     void onRegionIsChanging();
 
     /**
-     * Called on the UI thread at the end of a camera animation or user interaction
-     * @param animated false when camera updates are set immediately, true otherwise
+     * Called at the end of a map camera movement, either from touch input or an API call.
+     *
+     * This is always called on the UI thread.
+     *
+     * See {@link MapChangeListener#onRegionWillChange(boolean)}.
+     *
+     * @param animated true when the movement is controlled by an animation, otherwise false.
      */
     void onRegionDidChange(boolean animated);
 }
