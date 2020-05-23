@@ -48,6 +48,7 @@ std::string ShaderSource::applySourceBlocks(const std::string& _source, bool _fr
 
     out.append("#define TANGRAM_EPSILON 0.00001\n");
     out.append("#define TANGRAM_WORLD_POSITION_WRAP 100000.\n");
+    out.append("#define TANGRAM_IS_ES\n");
 
     if (_fragShader) {
         out.append("#define TANGRAM_FRAGMENT_SHADER\n");
