@@ -41,7 +41,16 @@ std::string sceneFile = "scene.yaml";
 std::string sceneYaml;
 std::string apiKey;
 
+bool markerUseStylingPath = true;
 std::string markerStylingPath = "layers.touch.point.draw.icons";
+std::string markerStylingString = R"RAW(
+style: text
+text_source: "function() { return 'MARKER'; }"
+font:
+    family: Open Sans
+    size: 12px
+    fill: white
+)RAW";
 std::string polylineStyle = "{ style: lines, interactive: true, color: red, width: 20px, order: 5000 }";
 
 
@@ -366,7 +375,12 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
         if (add_point_marker_on_click) {
             auto marker = map->markerAdd();
             map->markerSetPoint(marker, location);
-            map->markerSetStylingFromPath(marker, markerStylingPath.c_str());
+            if (markerUseStylingPath) {
+                map->markerSetStylingFromPath(marker, markerStylingPath.c_str());
+            } else {
+                map->markerSetStylingFromString(marker, markerStylingString.c_str());
+            }
+
             point_markers.push_back(marker);
         }
 
@@ -597,6 +611,10 @@ void showSceneGUI() {
 void showMarkerGUI() {
     if (ImGui::CollapsingHeader("Markers")) {
         ImGui::Checkbox("Add point markers on click", &add_point_marker_on_click);
+        if(ImGui::RadioButton("Use Styling Path", markerUseStylingPath)) { markerUseStylingPath = true; }
+        ImGui::InputText("Path", &markerStylingPath);
+        if(ImGui::RadioButton("Use Styling String", !markerUseStylingPath)) { markerUseStylingPath = false; }
+        ImGui::InputTextMultiline("String", &markerStylingString);
         if (ImGui::Button("Clear point markers")) {
             for (const auto marker : point_markers) {
                 map->markerRemove(marker);
