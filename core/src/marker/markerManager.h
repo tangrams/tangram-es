@@ -92,7 +92,6 @@ private:
 
     std::unique_ptr<StyleContext> m_styleContext;
     std::vector<std::unique_ptr<Marker>> m_markers;
-    std::vector<std::string> m_jsFnList;
     fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilders;
 
     uint32_t m_idCounter = 0;

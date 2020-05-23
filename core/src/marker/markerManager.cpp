@@ -359,7 +359,7 @@ bool MarkerManager::buildStyling(Marker& marker) {
 
 
     // If the styling is not a path, try to load it as a string of YAML.
-    size_t start = m_functions.size();
+    size_t prevFunctionCount = m_functions.size();
 
     std::vector<StyleParam> params;
     try {
@@ -370,12 +370,17 @@ bool MarkerManager::buildStyling(Marker& marker) {
         return false;
     }
 
-    size_t offset = start + m_scene.functions().size();
+    // The StyleContext initially contains the set of functions from the scene definition, but the parsed style params
+    // for the Marker use a separate Marker function list and the function indices are relative to that list. So to get
+    // the correct function indices for the StyleContext we offset them by the number of functions in the scene.
+    size_t functionIndexOffset = m_scene.functions().size();
     for (auto& p : params) {
-        if (p.function >= 0) { p.function += offset; }
+        if (p.function >= 0) {
+            p.function += functionIndexOffset;
+        }
     }
     // Compile any new JS functions used for styling.
-    for (auto i = start; i < m_functions.size(); ++i) {
+    for (auto i = prevFunctionCount; i < m_functions.size(); ++i) {
         m_styleContext->addFunction(m_functions[i]);
     }
 
@@ -404,7 +409,7 @@ bool MarkerManager::buildMesh(Marker& marker, int zoom) {
         }
     }
 
-    // Apply defaul draw rules defined for this style
+    // Apply default draw rules defined for this style
     styler->style().applyDefaultDrawRules(*rule);
 
     m_styleContext->setZoom(zoom);
