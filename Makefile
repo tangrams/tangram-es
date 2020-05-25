@@ -15,6 +15,14 @@ all: android osx ios
 .PHONY: osx
 .PHONY: xcode
 .PHONY: ios
+.PHONY: ios-sim
+.PHONY: ios-static
+.PHONY: ios-static-sim
+.PHONY: ios-static-lib
+.PHONY: ios-static-lib-sim
+.PHONY: ios-static-lib-universal
+.PHONY: ios-swift
+.PHONY: ios-swift-sim
 .PHONY: ios-framework
 .PHONY: ios-framework-sim
 .PHONY: ios-framework-universal
@@ -41,13 +49,6 @@ BENCH_BUILD_DIR = build/bench
 TIZEN_ARM_BUILD_DIR = build/tizen-arm
 TIZEN_X86_BUILD_DIR = build/tizen-x86
 
-OSX_TARGET = tangram
-IOS_TARGET = tangram
-IOS_FRAMEWORK_TARGET = TangramMap
-OSX_XCODE_PROJ = tangram.xcodeproj
-IOS_XCODE_PROJ = tangram.xcodeproj
-IOS_FRAMEWORK_XCODE_PROJ = tangram.xcodeproj
-
 ifeq (, $(shell which xcpretty))
 	XCPRETTY =
 else
@@ -55,9 +56,7 @@ else
 endif
 
 # Default build type is Release
-ifndef BUILD_TYPE
-	BUILD_TYPE = Release
-endif
+BUILD_TYPE ?= Release
 
 BENCH_CMAKE_PARAMS = \
 	-DTANGRAM_BUILD_BENCHMARKS=1 \
@@ -101,13 +100,8 @@ LINUX_CMAKE_PARAMS = \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
 	${CMAKE_OPTIONS}
 
-ifndef TIZEN_PROFILE
-	TIZEN_PROFILE=mobile
-endif
-
-ifndef TIZEN_VERSION
-	TIZEN_VERSION=3.0
-endif
+TIZEN_PROFILE ?= mobile
+TIZEN_VERSION ?= 3.0
 
 TIZEN_ARM_CMAKE_PARAMS = \
 	-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
@@ -186,7 +180,7 @@ cmake-osx:
 	cmake -H. -B${OSX_BUILD_DIR} ${OSX_CMAKE_PARAMS}
 
 xcode: cmake-xcode
-	xcodebuild -target ${OSX_TARGET} -project ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ} -configuration ${BUILD_TYPE} ${XCPRETTY}
+	xcodebuild -target tangram -project ${OSX_XCODE_BUILD_DIR}/tangram.xcodeproj -configuration ${BUILD_TYPE} ${XCPRETTY}
 
 cmake-xcode:
 	cmake -H. -B${OSX_XCODE_BUILD_DIR} ${OSX_XCODE_CMAKE_PARAMS}
