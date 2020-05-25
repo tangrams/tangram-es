@@ -84,16 +84,13 @@ styles:
         base: lines
         blend: overlay
         blend_order: -2
-        shaders:
-            blocks:
-                filter: |
-                    color.rgb *= 1.25; // pump up the colors
-                    color.a = 0.5;     // translucent
         draw: # default draw parameters
             color: function() { return feature.colour || 'gray'; }
+            alpha: 0.25
             width: 6px
             outline:
                 color: [.8, .8, .8]
+                alpha: 0.25
                 width: 1px
             interactive: true
 
