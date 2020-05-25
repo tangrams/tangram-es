@@ -18,14 +18,19 @@ configure_file(
 
 # Copy a xcconfig file for local signing settings into the demo folder, if it doesn't already exist.
 # See platforms/ios/DEVELOPING.md for details.
-set(LOCAL_XCCONFIG "${PROJECT_SOURCE_DIR}/platforms/ios/demo/Local.xcconfig")
-if (NOT EXISTS ${LOCAL_XCCONFIG})
-  configure_file(
-    ${PROJECT_SOURCE_DIR}/platforms/ios/Local.xcconfig.in
-    ${LOCAL_XCCONFIG}
-    COPYONLY
-  )
-endif()
+foreach(LOCAL_XCCONFIG IN ITEMS
+  "${PROJECT_SOURCE_DIR}/platforms/ios/demo/Local.xcconfig"
+  "${PROJECT_SOURCE_DIR}/platforms/ios/swift/Local.xcconfig"
+)
+  message(STATUS "LOCAL_XCCONFIG: ${LOCAL_XCCONFIG}")
+  if (NOT EXISTS ${LOCAL_XCCONFIG})
+    configure_file(
+      ${PROJECT_SOURCE_DIR}/platforms/ios/Local.xcconfig.in
+      ${LOCAL_XCCONFIG}
+      COPYONLY
+    )
+  endif()
+endforeach()
 
 # Configure the API key in the Info.plist for the demo app.
 set(NEXTZEN_API_KEY $ENV{NEXTZEN_API_KEY})
