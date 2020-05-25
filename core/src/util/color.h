@@ -34,6 +34,12 @@ struct Color {
 
     inline ColorF toColorF();
 
+    Color withAlpha(float alpha) {
+        Color result(abgr);
+        result.a = static_cast<uint8_t>(alpha * 255.f);
+        return result;
+    }
+
     static Color mix(const Color& _x, const Color& _y, float _a) {
         return Color(
             _x.r * (1 - _a) + _y.r * _a,

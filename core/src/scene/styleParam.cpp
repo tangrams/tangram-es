@@ -23,6 +23,7 @@
 namespace Tangram {
 
 const std::map<std::string, StyleParamKey> s_StyleParamMap = {
+    {"alpha", StyleParamKey::alpha},
     {"align", StyleParamKey::text_align},
     {"anchor", StyleParamKey::anchor},
     {"angle", StyleParamKey::angle},
@@ -47,6 +48,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"none", StyleParamKey::none},
     {"offset", StyleParamKey::offset},
     {"order", StyleParamKey::order},
+    {"outline:alpha", StyleParamKey::outline_alpha},
     {"outline:cap", StyleParamKey::outline_cap},
     {"outline:color", StyleParamKey::outline_color},
     {"outline:join", StyleParamKey::outline_join},
@@ -69,9 +71,11 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"text:anchor", StyleParamKey::text_anchor},
     {"text:buffer", StyleParamKey::text_buffer},
     {"text:collide", StyleParamKey::text_collide},
+    {"text:font:alpha", StyleParamKey::text_font_alpha},
     {"text:font:family", StyleParamKey::text_font_family},
     {"text:font:fill", StyleParamKey::text_font_fill},
     {"text:font:size", StyleParamKey::text_font_size},
+    {"text:font:stroke:alpha", StyleParamKey::text_font_stroke_alpha},
     {"text:font:stroke:color", StyleParamKey::text_font_stroke_color},
     {"text:font:stroke:width", StyleParamKey::text_font_stroke_width},
     {"text:font:style", StyleParamKey::text_font_style},
@@ -348,6 +352,10 @@ StyleParam::Value StyleParam::parseNode(StyleParamKey key, const YAML::Node& nod
         LOGW("Invalid angle value: %s", Dump(node).c_str());
         break;
     }
+    case StyleParamKey::alpha:
+    case StyleParamKey::outline_alpha:
+    case StyleParamKey::text_font_alpha:
+    case StyleParamKey::text_font_stroke_alpha:
     case StyleParamKey::priority:
     case StyleParamKey::text_priority:
     case StyleParamKey::miter_limit:
@@ -358,7 +366,7 @@ StyleParam::Value StyleParam::parseNode(StyleParamKey key, const YAML::Node& nod
         if (YamlUtil::getFloat(node, floatValue, true)) {
             return floatValue;
         } else {
-            LOGW("Invalid width value: %s", Dump(node).c_str());
+            LOGW("Invalid numeric value: %s", Dump(node).c_str());
         }
         break;
     }
@@ -491,6 +499,10 @@ std::string StyleParam::toString() const {
     case StyleParamKey::outline_join:
         if (!value.is<uint32_t>()) break;
         return k + std::to_string(value.get<uint32_t>());
+    case StyleParamKey::alpha:
+    case StyleParamKey::outline_alpha:
+    case StyleParamKey::text_font_alpha:
+    case StyleParamKey::text_font_stroke_alpha:
     case StyleParamKey::priority:
     case StyleParamKey::text_priority:
     case StyleParamKey::miter_limit:

@@ -301,8 +301,12 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
                 _val = StyleParam::Width{static_cast<float>(number)};
                 break;
             }
+            case StyleParamKey::alpha:
             case StyleParamKey::angle:
+            case StyleParamKey::outline_alpha:
             case StyleParamKey::priority:
+            case StyleParamKey::text_font_alpha:
+            case StyleParamKey::text_font_stroke_alpha:
             case StyleParamKey::text_priority:
             case StyleParamKey::text_font_stroke_width:
             case StyleParamKey::placement_min_length_ratio: {
