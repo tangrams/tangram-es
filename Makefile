@@ -197,6 +197,12 @@ ios: cmake-ios
 ios-sim: cmake-ios
 	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo -configuration ${BUILD_TYPE} -sdk iphonesimulator ${XCPRETTY}
 
+ios-swift: cmake-ios
+	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemoSwift -configuration ${BUILD_TYPE} -sdk iphoneos ${XCPRETTY}
+
+ios-swift-sim: cmake-ios
+	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemoSwift -configuration ${BUILD_TYPE} -sdk iphonesimulator ${XCPRETTY}
+
 ios-xcode: cmake-ios
 	open platforms/ios/Tangram.xcworkspace
 
