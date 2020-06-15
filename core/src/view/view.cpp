@@ -493,11 +493,41 @@ glm::vec2 View::lngLatToScreenPosition(double lng, double lat, bool& clipped) {
 
     glm::dvec2 absoluteMeters = MapProjection::lngLatToProjectedMeters({lng, lat});
     glm::dvec2 relativeMeters = getRelativeMeters(absoluteMeters);
-    glm::dvec4 worldPosition(relativeMeters, 0.0, 1.0);
+    glm::vec4 worldPosition(relativeMeters, 0.0, 1.0);
+    glm::vec2 screenSize(m_vpWidth, m_vpHeight);
 
-    glm::vec2 screenPosition = worldToScreenSpace(m_viewProj, worldPosition, {m_vpWidth, m_vpHeight}, clipped);
+    glm::vec2 screenPosition = worldToScreenSpace(m_viewProj, worldPosition, screenSize, clipped);
 
     return screenPosition;
+}
+
+glm::vec2 View::lngLatToScreenPositionClamped(double lng, double lat, bool& clipped) {
+
+    if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
+
+    glm::dvec2 absoluteMeters = MapProjection::lngLatToProjectedMeters({lng, lat});
+    glm::dvec2 relativeMeters = getRelativeMeters(absoluteMeters);
+    glm::vec4 worldPosition(relativeMeters, 0.0, 1.0);
+    glm::vec4 worldScreenOrigin(0, 0, 0, 1);
+    glm::vec2 screenSize(m_vpWidth, m_vpHeight);
+
+    float f = -m_proj[2][2];
+    glm::vec2 screenPosition = worldToScreenSpaceClamped(m_viewProj, worldPosition, worldScreenOrigin, screenSize, f, clipped);
+
+    return screenPosition;
+}
+
+glm::vec2 View::lngLatToScreenDirection(double lng, double lat) {
+
+    if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
+
+    glm::dvec2 absoluteMeters = MapProjection::lngLatToProjectedMeters({lng, lat});
+    glm::dvec2 relativeMeters = getRelativeMeters(absoluteMeters);
+    glm::dvec4 worldPosition(relativeMeters, 0.0, 0.0);
+
+    glm::vec2 screenDirection = worldToScreenSpaceDirection(m_viewProj, worldPosition, {m_vpWidth, m_vpHeight});
+
+    return glm::normalize(screenDirection);
 }
 
 LngLat View::screenPositionToLngLat(float x, float y, bool& _intersection) {

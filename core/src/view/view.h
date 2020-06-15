@@ -207,6 +207,10 @@ public:
     // Get the screen position from a latitude/longitude.
     glm::vec2 lngLatToScreenPosition(double lng, double lat, bool& clipped);
 
+    glm::vec2 lngLatToScreenPositionClamped(double lng, double lat, bool& clipped);
+
+    glm::vec2 lngLatToScreenDirection(double lng, double lat);
+
     LngLat screenPositionToLngLat(float x, float y, bool& intersection);
 
     // For a position on the map in projected meters, this returns the displacement vector *from* the view *to* that

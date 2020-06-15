@@ -310,6 +310,10 @@ public:
     // point is not visible on the screen, otherwise returns true
     bool lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y);
 
+    bool lngLatToScreenPositionClamped(double lng, double lat, float* x, float* y);
+
+    void lngLatToScreenDirection(double lng, double lat, float* x, float* y);
+
     // Add a tile source for adding drawable map data, which will be styled
     // according to the scene file using the provided data source name;
     void addTileSource(std::shared_ptr<TileSource> _source);

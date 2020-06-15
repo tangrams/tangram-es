@@ -140,7 +140,9 @@ glm::vec2 clipToScreenSpace(const glm::vec4& _clipCoords, const glm::vec2& _scre
 glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize);
 glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize, bool& clipped);
 
-glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize, bool& _clipped);
+glm::vec2 worldToScreenSpaceDirection(const glm::mat4& mvp, const glm::vec4& worldDirection, const glm::vec2& screenSize);
+
+glm::vec2 worldToScreenSpaceClamped(const glm::mat4& mvp, const glm::vec4& worldPosition, const glm::vec4& worldScreenOrigin, const glm::vec2& screenSize, float f, bool& clipped);
 
 inline glm::vec2 rotateBy(const glm::vec2& _in, const glm::vec2& _normal) {
     return {

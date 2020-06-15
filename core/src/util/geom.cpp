@@ -95,10 +95,94 @@ glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosit
 
     if (clipCoords.w <= 0.0f) {
         _clipped = true;
-        return {};
+        //return {};
     }
 
     return clipToScreenSpace(clipCoords, _screenSize);
+}
+
+glm::vec2 worldToScreenSpaceDirection(const glm::mat4& mvp, const glm::vec4& worldDirection, const glm::vec2& screenSize) {
+
+    glm::vec4 clipCoords = worldToClipSpace(mvp, worldDirection);
+
+    glm::vec2 screenScale = screenSize * 0.5f;
+
+    glm::vec2 clipDirection{ clipCoords.x, clipCoords.y };
+
+    return clipDirection * screenScale;
+}
+
+glm::vec2 worldToScreenSpaceClamped(const glm::mat4& mvp, const glm::vec4& worldPosition, const glm::vec4& worldScreenOrigin, const glm::vec2& screenSize, float f, bool& clamped) {
+#if 1
+    glm::vec4 clip = worldToClipSpace(mvp, worldPosition);
+    glm::vec3 ndc = glm::vec3(clip) / clip.w;
+
+    if (abs(ndc.x) <= 1 && abs(ndc.y) <= 1 && abs(ndc.z) <= 1) {
+        clamped = false;
+    } else {
+        clamped = true;
+        // Point is off-screen, so get the direction to it and determine the point on the screen edge in that direction.
+        glm::vec4 worldDirection = worldPosition - worldScreenOrigin;
+        worldDirection.w = 0;
+
+        glm::vec4 clipDirection = worldToClipSpace(mvp, worldDirection);
+
+        ndc = glm::vec3(clipDirection) / glm::max(abs(clipDirection.x), abs(clipDirection.y));
+    }
+
+    glm::vec2 screenPosition = glm::vec2(1 + ndc.x, 1 - ndc.y) * screenSize * 0.5f;
+    return screenPosition;
+#else
+    glm::vec4 clipCoords = worldToClipSpace(mvp, worldPosition);
+    glm::vec3 ndc = glm::vec3(clipCoords) / clipCoords.w;
+
+    if (ndc.z >= -1.0f && ndc.z <= 1.0f) {
+        // Within ndc clipping range on z, simply clamp
+        ndc.x = glm::clamp(ndc.x, -1.0f, 1.0f);
+        ndc.y = glm::clamp(ndc.y, -1.0f, 1.0f);
+    } else if (ndc.z > f) {
+        // Behind frustum, classify in 4 screen sections, inverted
+        glm::vec2 rightEdge[2]  = {glm::vec2(-1.0f,-1.0f), glm::vec2(-1.0f, 1.0f)};
+        glm::vec2 topEdge[2]    = {glm::vec2(-1.0f,-1.0f), glm::vec2( 1.0f,-1.0f)};
+        glm::vec2 leftEdge[2]   = {glm::vec2( 1.0f,-1.0f), glm::vec2( 1.0f, 1.0f)};
+        glm::vec2 bottomEdge[2] = {glm::vec2(-1.0f, 1.0f), glm::vec2( 1.0f, 1.0f)};
+
+        float leftEdgeDistance2   = sqSegmentDistance(glm::vec2(ndc), leftEdge[0], leftEdge[1]);
+        float topEdgeDistance2    = sqSegmentDistance(glm::vec2(ndc), topEdge[0], topEdge[1]);
+        float rightEdgeDistance2  = sqSegmentDistance(glm::vec2(ndc), rightEdge[0], rightEdge[1]);
+        float bottomEdgeDistance2 = sqSegmentDistance(glm::vec2(ndc), bottomEdge[0], bottomEdge[1]);
+
+        float minDistance2 = std::min<float>(
+                std::min<float>(leftEdgeDistance2, topEdgeDistance2),
+                std::min<float>(rightEdgeDistance2, bottomEdgeDistance2));
+
+        // Select and fall through
+        if (minDistance2 == leftEdgeDistance2) {
+            ndc.x = -1.0f;
+            ndc.y = -glm::clamp(ndc.y, -1.0f, 1.0f);
+        } else if (minDistance2 == rightEdgeDistance2) {
+            ndc.x = 1.0f;
+            ndc.y = -glm::clamp(ndc.y, -1.0f, 1.0f);
+        } else if (minDistance2 == topEdgeDistance2) {
+            ndc.y = 1.0f;
+            ndc.x = -glm::clamp(ndc.x, -1.0f, 1.0f);
+        } else if (minDistance2 == bottomEdgeDistance2) {
+            ndc.y = -1.0f;
+            ndc.x = -glm::clamp(ndc.x, -1.0f, 1.0f);
+        }
+    } else if (ndc.z > 1.0f) {
+        // Beyond far plane
+    } else if (ndc.z < -1.0f) {
+        // Between camera and near plane
+        assert(false);
+    }
+
+    glm::vec2 screenPos;
+    screenPos.x = ndc.x + 1.0f;
+    screenPos.y = 1.0f - ndc.y;
+
+    return screenPos * glm::vec2(screenSize * 0.5f);
+#endif
 }
 
 // square distance from a point <_p> to a segment <_p1,_p2>

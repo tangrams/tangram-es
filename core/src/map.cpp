@@ -653,6 +653,24 @@ bool Map::lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _
     return !clipped && withinViewport;
 }
 
+bool Map::lngLatToScreenPositionClamped(double lng, double lat, float* x, float* y) {
+    bool clipped = false;
+
+    glm::vec2 screenPosition = impl->view.lngLatToScreenPositionClamped(lng, lat, clipped);
+
+    *x = screenPosition.x;
+    *y = screenPosition.y;
+
+    return !clipped;
+}
+
+void Map::lngLatToScreenDirection(double lng, double lat, float* x, float* y) {
+
+    glm::vec2 screenDirection = impl->view.lngLatToScreenDirection(lng, lat);
+    *x = screenDirection.x;
+    *y = screenDirection.y;
+}
+
 void Map::setPixelScale(float _pixelsPerPoint) {
     impl->setPixelScale(_pixelsPerPoint);
 }

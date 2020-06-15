@@ -78,6 +78,7 @@ bool add_point_marker_on_click = false;
 bool add_polyline_marker_on_click = false;
 
 std::vector<Tangram::MarkerID> point_markers;
+LngLat lastPointMarkerCoordinates;
 
 Tangram::MarkerID polyline_marker = 0;
 std::vector<Tangram::LngLat> polyline_marker_coordinates;
@@ -382,6 +383,8 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
             }
 
             point_markers.push_back(marker);
+
+            lastPointMarkerCoordinates = location;
         }
 
         if (add_polyline_marker_on_click) {
@@ -611,10 +614,14 @@ void showSceneGUI() {
 void showMarkerGUI() {
     if (ImGui::CollapsingHeader("Markers")) {
         ImGui::Checkbox("Add point markers on click", &add_point_marker_on_click);
-        if(ImGui::RadioButton("Use Styling Path", markerUseStylingPath)) { markerUseStylingPath = true; }
-        ImGui::InputText("Path", &markerStylingPath);
-        if(ImGui::RadioButton("Use Styling String", !markerUseStylingPath)) { markerUseStylingPath = false; }
-        ImGui::InputTextMultiline("String", &markerStylingString);
+        if (ImGui::RadioButton("Use Styling Path", markerUseStylingPath)) { markerUseStylingPath = true; }
+        if (markerUseStylingPath) {
+            ImGui::InputText("Path", &markerStylingPath);
+        }
+        if (ImGui::RadioButton("Use Styling String", !markerUseStylingPath)) { markerUseStylingPath = false; }
+        if (!markerUseStylingPath) {
+            ImGui::InputTextMultiline("String", &markerStylingString);
+        }
         if (ImGui::Button("Clear point markers")) {
             for (const auto marker : point_markers) {
                 map->markerRemove(marker);
@@ -628,6 +635,19 @@ void showMarkerGUI() {
                 map->markerRemove(polyline_marker);
                 polyline_marker_coordinates.clear();
             }
+        }
+        double markerScreenPosition[2];
+        map->lngLatToScreenPosition(lastPointMarkerCoordinates.longitude, lastPointMarkerCoordinates.latitude, &markerScreenPosition[0], &markerScreenPosition[1]);
+        float markerScreenPositionFloat[2] = {static_cast<float>(markerScreenPosition[0]), static_cast<float>(markerScreenPosition[1])};
+        ImGui::InputFloat2("Last Marker Screen", markerScreenPositionFloat, 5, ImGuiInputTextFlags_ReadOnly);
+        float markerScreenClamped[2];
+        map->lngLatToScreenPositionClamped(lastPointMarkerCoordinates.longitude, lastPointMarkerCoordinates.latitude, &markerScreenClamped[0], &markerScreenClamped[1]);
+        ImGui::InputFloat2("Last Marker Clamped", markerScreenClamped, 5, ImGuiInputTextFlags_ReadOnly);
+
+        if (!point_markers.empty()) {
+            LngLat lngLatClamped;
+            map->screenPositionToLngLat(markerScreenClamped[0], markerScreenClamped[1], &lngLatClamped.longitude, &lngLatClamped.latitude);
+            map->markerSetPoint(point_markers.back(), lngLatClamped);
         }
     }
 }
