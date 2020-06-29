@@ -639,18 +639,23 @@ bool Map::screenPositionToLngLat(double _x, double _y, double* _lng, double* _la
 }
 
 bool Map::lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y) {
-    bool clipped = false;
+    bool outsideViewport = false;
+    glm::vec2 screenPosition = impl->view.lngLatToScreenPosition(_lng, _lat, outsideViewport);
 
-    glm::vec2 screenCoords = impl->view.lngLatToScreenPosition(_lng, _lat, clipped);
+    *_x = screenPosition.x;
+    *_y = screenPosition.y;
 
-    *_x = screenCoords.x;
-    *_y = screenCoords.y;
+    return !outsideViewport;
+}
 
-    float width = impl->view.getWidth();
-    float height = impl->view.getHeight();
-    bool withinViewport = *_x >= 0. && *_x <= width && *_y >= 0. && *_y <= height;
+bool Map::lngLatToScreenPositionClipped(double lng, double lat, float* x, float* y) {
+    bool outsideViewport = false;
+    glm::vec2 screenPosition = impl->view.lngLatToScreenPosition(lng, lat, outsideViewport, true);
 
-    return !clipped && withinViewport;
+    *x = screenPosition.x;
+    *y = screenPosition.y;
+
+    return !outsideViewport;
 }
 
 void Map::setPixelScale(float _pixelsPerPoint) {

@@ -130,17 +130,25 @@ float mapValue(const float& _value, const float& _inputMin, const float& _inputM
 /* Computes the angle in radians between two points with the axis y = 0 in 2d space */
 float angleBetweenPoints(const glm::vec2& _p1, const glm::vec2& _p2);
 
-/* Computes the clip coordinates from position in world space and a model view matrix */
-glm::vec4 worldToClipSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition);
+/// Computes the clip coordinates from position in world space and a model view matrix
+inline glm::vec4 worldToClipSpace(const glm::mat4& mvp, const glm::vec4& worldPosition) {
+    return mvp * worldPosition;
+}
 
-/* Computes the screen coordinates from a coordinate in clip space and a screen size */
-glm::vec2 clipToScreenSpace(const glm::vec4& _clipCoords, const glm::vec2& _screenSize);
+inline bool clipSpaceIsBehindCamera(const glm::vec4& clip) {
+    return clip.w < 0;
+}
 
-/* Computes the screen coordinates from a world position, a model view matrix and a screen size */
-glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize);
-glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize, bool& clipped);
+inline glm::vec3 clipSpaceToNdc(const glm::vec4& clip) {
+    return glm::vec3(clip) / clip.w;
+}
 
-glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize, bool& _clipped);
+inline glm::vec2 ndcToScreenSpace(const glm::vec3& ndc, const glm::vec2& screenSize) {
+    return glm::vec2(1 + ndc.x, 1 - ndc.y) * screenSize * 0.5f;
+}
+
+/// Computes the screen coordinates from a world position, a model view matrix and a screen size
+glm::vec2 worldToScreenSpace(const glm::mat4& mvp, const glm::vec4& worldPosition, const glm::vec2& screenSize, bool& behindCamera);
 
 inline glm::vec2 rotateBy(const glm::vec2& _in, const glm::vec2& _normal) {
     return {

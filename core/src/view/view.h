@@ -175,7 +175,7 @@ public:
     const glm::mat4& getProjectionMatrix() const { return m_proj; }
 
     // Get the combined view and projection transformation.
-    const glm::mat4 getViewProjectionMatrix() const { return m_viewProj; }
+    const glm::mat4& getViewProjectionMatrix() const { return m_viewProj; }
 
     // Get the normal matrix; transforms surface normals from model space to camera space.
     const glm::mat3& getNormalMatrix() const { return m_normalMatrix; }
@@ -205,7 +205,7 @@ public:
     double screenToGroundPlane(double& _screenX, double& _screenY);
 
     // Get the screen position from a latitude/longitude.
-    glm::vec2 lngLatToScreenPosition(double lng, double lat, bool& clipped);
+    glm::vec2 lngLatToScreenPosition(double lng, double lat, bool& outsideViewport, bool clipToViewport = false);
 
     LngLat screenPositionToLngLat(float x, float y, bool& intersection);
 
