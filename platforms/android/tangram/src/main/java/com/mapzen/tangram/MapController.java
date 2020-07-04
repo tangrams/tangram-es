@@ -646,10 +646,25 @@ public class MapController {
      */
     @NonNull
     public PointF lngLatToScreenPosition(@NonNull final LngLat lngLat) {
+        PointF screenPosition = new PointF();
+        lngLatToScreenPosition(lngLat, screenPosition, false);
+        return screenPosition;
+    }
+
+    /**
+     * Find the position on screen corresponding to the given geographic coordinates
+     * @param lngLat Geographic coordinates.
+     * @param screenPositionOut Point object to hold result.
+     * @param clipToViewport If true, results that are outside of the viewport will be clipped to a
+     *                       point on the edge of the viewport in the direction towards the location.
+     * @return True if the resulting point is inside the viewport, otherwise false.
+     */
+    public boolean lngLatToScreenPosition(@NonNull final LngLat lngLat, @NonNull final PointF screenPositionOut, boolean clipToViewport) {
         checkPointer(mapPointer);
         final double[] tmp = { lngLat.longitude, lngLat.latitude };
-        nativeLngLatToScreenPosition(mapPointer, tmp);
-        return new PointF((float)tmp[0], (float)tmp[1]);
+        boolean insideViewport = nativeLngLatToScreenPosition(mapPointer, tmp, clipToViewport);
+        screenPositionOut.set((float)tmp[0], (float)tmp[1]);
+        return insideViewport;
     }
 
     /**
@@ -1393,7 +1408,7 @@ public class MapController {
     private synchronized native void nativeGetEnclosingCameraPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int[] buffer, double[] lngLatZoom);
     private synchronized native void nativeCancelCameraAnimation(long mapPtr);
     private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
-    private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates);
+    private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates, boolean clipToViewport);
     private synchronized native void nativeSetPixelScale(long mapPtr, float scale);
     private synchronized native void nativeSetCameraType(long mapPtr, int type);
     private synchronized native int nativeGetCameraType(long mapPtr);

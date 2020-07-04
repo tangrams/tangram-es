@@ -638,22 +638,12 @@ bool Map::screenPositionToLngLat(double _x, double _y, double* _lng, double* _la
     return intersection;
 }
 
-bool Map::lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y) {
+bool Map::lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y, bool clipToViewport) {
     bool outsideViewport = false;
-    glm::vec2 screenPosition = impl->view.lngLatToScreenPosition(_lng, _lat, outsideViewport);
+    glm::vec2 screenPosition = impl->view.lngLatToScreenPosition(_lng, _lat, outsideViewport, clipToViewport);
 
     *_x = screenPosition.x;
     *_y = screenPosition.y;
-
-    return !outsideViewport;
-}
-
-bool Map::lngLatToScreenPositionClipped(double lng, double lat, float* x, float* y) {
-    bool outsideViewport = false;
-    glm::vec2 screenPosition = impl->view.lngLatToScreenPosition(lng, lat, outsideViewport, true);
-
-    *x = screenPosition.x;
-    *y = screenPosition.y;
 
     return !outsideViewport;
 }

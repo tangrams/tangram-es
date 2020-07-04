@@ -308,9 +308,7 @@ public:
     // Given longitude and latitude coordinates, set the output coordinates to the
     // corresponding point in screen space (x right, y down); returns false if the
     // point is not visible on the screen, otherwise returns true
-    bool lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y);
-
-    bool lngLatToScreenPositionClipped(double lng, double lat, float* x, float* y);
+    bool lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y, bool clipToViewport = false);
 
     // Add a tile source for adding drawable map data, which will be styled
     // according to the scene file using the provided data source name;
