@@ -586,16 +586,27 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 #pragma mark Coordinate Conversions
 
-- (CGPoint)viewPositionFromCoordinate:(CLLocationCoordinate2D)coordinate
+- (CGPoint)viewPositionFromCoordinate:(CLLocationCoordinate2D)coordinate clipToViewport:(BOOL)clip
 {
-    if (!self.map) { return CGPointZero; }
+    if (!self.map) {
+        return CGPointZero;
+    }
 
-    double viewPosition[2];
-    self.map->lngLatToScreenPosition(coordinate.longitude, coordinate.latitude, &viewPosition[0], &viewPosition[1]);
-    viewPosition[0] /= self.contentScaleFactor;
-    viewPosition[1] /= self.contentScaleFactor;
+    double screenX, screenY;
+    bool inViewport = self.map->lngLatToScreenPosition(coordinate.longitude, coordinate.latitude, &screenX, &screenY, clip);
+    screenX /= self.contentScaleFactor;
+    screenY /= self.contentScaleFactor;
+    return CGPointMake(screenX, screenY);
+}
 
-    return CGPointMake((CGFloat)viewPosition[0], (CGFloat)viewPosition[1]);
+- (BOOL)coordinateIsInViewport:(CLLocationCoordinate2D)coordinate
+{
+    if (!self.map) {
+        return false;
+    }
+
+    double screenX, screenY;
+    return self.map->lngLatToScreenPosition(coordinate.longitude, coordinate.latitude, &screenX, &screenY);
 }
 
 - (CLLocationCoordinate2D)coordinateFromViewPosition:(CGPoint)viewPosition

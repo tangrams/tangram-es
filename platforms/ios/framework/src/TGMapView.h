@@ -279,9 +279,18 @@ TG_EXPORT
  Convert a longitude and latitude to a view position.
 
  @param coordinate The geographic coordinate to convert
+ @param clip If true, results that would be outside the viewport are clipped to a position on the edge of the viewport in the direction of the location.
  @return The view position of the input coordinate
  */
-- (CGPoint)viewPositionFromCoordinate:(CLLocationCoordinate2D)coordinate;
+- (CGPoint)viewPositionFromCoordinate:(CLLocationCoordinate2D)coordinate clipToViewport:(BOOL)clip;
+
+/**
+ Returns true if the coordinate is within the current map viewport.
+
+ @param coordinate The geographic coordinate.
+ @return True if the coordinate is within the current map viewport, otherwise false.
+ */
+-(BOOL)coordinateIsInViewport:(CLLocationCoordinate2D)coordinate;
 
 /**
  Convert a position in view coordinates into the longitude and latitude of the corresponding geographic location.
