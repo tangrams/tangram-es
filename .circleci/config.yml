@@ -37,7 +37,6 @@ jobs:
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
-      - run: sudo gem install jazzy --no-document --version 0.13.4
       # Check out repository with submodules.
       - checkout
       - run: git submodule update --init
@@ -49,7 +48,7 @@ jobs:
       - run: make ios-swift-sim BUILD_TYPE=Debug
   build-deploy-ios-snapshot:
     macos:
-      xcode: "11.1.0"
+      xcode: "11.4.1"
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
@@ -74,7 +73,7 @@ jobs:
           path: ~/pod.zip
   build-deploy-macos-snapshot:
     macos:
-      xcode: "11.1.0"
+      xcode: "11.4.1"
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
@@ -91,7 +90,7 @@ jobs:
           path: ~/demo.zip
   build-deploy-ios-release:
     macos:
-      xcode: "11.1.0"
+      xcode: "11.4.1"
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
