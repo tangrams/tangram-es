@@ -37,6 +37,7 @@ jobs:
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
+      - run: sudo gem install jazzy --no-document --version 0.13.4
       # Check out repository with submodules.
       - checkout
       - run: git submodule update --init
