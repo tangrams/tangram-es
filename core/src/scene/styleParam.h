@@ -19,6 +19,7 @@ struct Color;
 struct Stops;
 
 enum class StyleParamKey : uint8_t {
+    alpha,
     anchor,
     angle,
     buffer,
@@ -33,6 +34,7 @@ enum class StyleParamKey : uint8_t {
     none,
     offset,
     order,
+    outline_alpha,
     outline_cap,
     outline_color,
     outline_join,
@@ -56,9 +58,11 @@ enum class StyleParamKey : uint8_t {
     text_anchor,
     text_buffer,
     text_collide,
+    text_font_alpha,
     text_font_family,
     text_font_fill,
     text_font_size,
+    text_font_stroke_alpha,
     text_font_stroke_color,
     text_font_stroke_width,
     text_font_style,

@@ -127,6 +127,11 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule) const -> Parameters {
     Parameters p;
 
     _rule.get(StyleParamKey::color, p.color);
+    float alpha = 1;
+    if (_rule.get(StyleParamKey::alpha, alpha)) {
+        p.color = Color(p.color).withAlpha(alpha).abgr;
+    }
+
     _rule.get(StyleParamKey::sprite, p.sprite);
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
     _rule.get(StyleParamKey::buffer, p.labelOptions.buffer);
@@ -193,14 +198,16 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule) const -> Parameters {
 
     auto& strokeWidth = _rule.findParameter(StyleParamKey::outline_width);
 
-    if (_rule.get(StyleParamKey::outline_color, p.outlineColor) &&
-        strokeWidth.value.is<StyleParam::Width>()) {
-
-        auto& widthParam = strokeWidth.value.get<StyleParam::Width>();
-
-        p.outlineWidth = widthParam.value * m_style.pixelScale();
+    if (_rule.get(StyleParamKey::outline_color, p.outlineColor)) {
+        if (strokeWidth.value.is<StyleParam::Width>()) {
+            auto& widthParam = strokeWidth.value.get<StyleParam::Width>();
+            p.outlineWidth = widthParam.value * m_style.pixelScale();
+        }
     }
-
+    float outlineAlpha = 1;
+    if (_rule.get(StyleParamKey::outline_alpha, outlineAlpha)) {
+        p.outlineColor = Color(p.outlineColor).withAlpha(outlineAlpha).abgr;
+    }
 
     std::hash<Parameters> hash;
     p.labelOptions.paramHash = hash(p);

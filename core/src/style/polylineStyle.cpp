@@ -291,7 +291,14 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
         return p;
     }
     fill.slope -= fill.width;
-    _rule.get(StyleParamKey::color, p.fill.color);
+
+    if (_rule.get(StyleParamKey::color, p.fill.color)) {
+        float alpha;
+        if (_rule.get(StyleParamKey::alpha, alpha)) {
+            p.fill.color = Color(p.fill.color).withAlpha(alpha).abgr;
+        }
+    }
+
     _rule.get(StyleParamKey::cap, cap);
     _rule.get(StyleParamKey::join, join);
     _rule.get(StyleParamKey::order, fill.order);
@@ -328,7 +335,15 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
             p.stroke.cap = static_cast<CapTypes>(cap);
             p.stroke.join = static_cast<JoinTypes>(join);
 
-            if (!_rule.get(StyleParamKey::outline_color, p.stroke.color)) { return p; }
+            if (_rule.get(StyleParamKey::outline_color, p.stroke.color)) {
+                float outlineAlpha;
+                if (_rule.get(StyleParamKey::outline_alpha, outlineAlpha)) {
+                    p.stroke.color = Color(p.stroke.color).withAlpha(outlineAlpha).abgr;
+                }
+            } else {
+                return p;
+            }
+
             if (!evalWidth(strokeWidth, stroke.width, stroke.slope)) {
                 return p;
             }

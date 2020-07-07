@@ -9,6 +9,7 @@
 #include "scene/drawRule.h"
 #include "tile/tile.h"
 #include "util/builders.h"
+#include "util/color.h"
 #include "util/extrude.h"
 
 #include "glm/vec2.hpp"
@@ -153,6 +154,11 @@ template <class V>
 auto PolygonStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties& _props) -> Parameters {
     Parameters p;
     _rule.get(StyleParamKey::color, p.color);
+    float alpha = 1;
+    if (_rule.get(StyleParamKey::alpha, alpha)) {
+        p.color = Color(p.color).withAlpha(alpha).abgr;
+    }
+
     _rule.get(StyleParamKey::extrude, p.extrude);
     _rule.get(StyleParamKey::order, p.order);
     _rule.get(StyleParamKey::tile_edges, p.keepTileEdges);

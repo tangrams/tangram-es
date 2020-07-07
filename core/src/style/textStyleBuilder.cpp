@@ -11,6 +11,7 @@
 #include "selection/featureSelection.h"
 #include "scene/drawRule.h"
 #include "tile/tile.h"
+#include "util/color.h"
 #include "util/geom.h"
 #include "util/mapProjection.h"
 #include "util/lineSampler.h"
@@ -609,8 +610,17 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         return p;
     }
     _rule.get(StyleParamKey::text_font_fill, p.fill);
+    float alpha = 1;
+    if (_rule.get(StyleParamKey::text_font_alpha, alpha)) {
+        p.fill = Color(p.fill).withAlpha(alpha).abgr;
+    }
 
     _rule.get(StyleParamKey::text_font_stroke_color, p.strokeColor);
+    float strokeAlpha = 1;
+    if (_rule.get(StyleParamKey::text_font_stroke_alpha, strokeAlpha)) {
+        p.strokeColor = Color(p.strokeColor).withAlpha(strokeAlpha).abgr;
+    }
+
     _rule.get(StyleParamKey::text_font_stroke_width, p.strokeWidth);
     p.strokeWidth *= m_style.pixelScale();
 
