@@ -105,6 +105,8 @@ jobs:
       - run: brew install cmake jfrog-cli-go
       # Build the framework in release mode and package it into pod.zip
       - run: make ios-framework-universal BUILD_TYPE=Release
+      # Check that bitcode is included for required archs.
+      - run: source scripts/check_bitcode.sh build/ios/Release-universal/TangramMap.framework/TangramMap armv7 arm64
       - run: make ios-docs
       - run: cd build/ios-docs && zip -r ~/docs.zip .
       - store_artifacts:
