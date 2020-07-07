@@ -7,6 +7,9 @@ set(TANGRAM_BUNDLE_IDENTIFIER "com.mapzen.TangramMap")
 set(CMAKE_OSX_DEPLOYMENT_TARGET "9.3") # Applies to iOS even though the variable name says OSX.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 execute_process(COMMAND xcrun --sdk iphoneos --show-sdk-version OUTPUT_VARIABLE IOS_SDK_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+# Set the global BITCODE_GENERATION_MODE value to 'bitcode' for Release builds.
+# This is for generating full bitcode outside of the "archive" command.
+set(CMAKE_XCODE_ATTRIBUTE_BITCODE_GENERATION_MODE "$<$<CONFIG:Release>:bitcode>")
 
 # Copy necessary workspace settings into a user-specific location in the iOS workspace.
 # See platforms/ios/DEVELOPING.md for details.
