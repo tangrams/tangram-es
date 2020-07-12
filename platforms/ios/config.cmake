@@ -9,7 +9,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines
 execute_process(COMMAND xcrun --sdk iphoneos --show-sdk-version OUTPUT_VARIABLE IOS_SDK_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 # Set the global BITCODE_GENERATION_MODE value to 'bitcode' for Release builds.
 # This is for generating full bitcode outside of the "archive" command.
-set(CMAKE_XCODE_ATTRIBUTE_BITCODE_GENERATION_MODE "$<$<CONFIG:Release>:bitcode>")
+# Set 'marker' for other configs to make debug builds install-able on devices.
+set(CMAKE_XCODE_ATTRIBUTE_BITCODE_GENERATION_MODE "$<IF:$<CONFIG:Release>,bitcode,marker>")
 
 # Copy necessary workspace settings into a user-specific location in the iOS workspace.
 # See platforms/ios/DEVELOPING.md for details.
