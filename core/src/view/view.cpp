@@ -487,16 +487,26 @@ void View::updateMatrices() {
 
 }
 
-glm::vec2 View::lngLatToScreenPosition(double lng, double lat, bool& clipped) {
+glm::vec2 View::lngLatToScreenPosition(double lng, double lat, bool& outsideViewport, bool clipToViewport) {
 
     if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
 
     glm::dvec2 absoluteMeters = MapProjection::lngLatToProjectedMeters({lng, lat});
     glm::dvec2 relativeMeters = getRelativeMeters(absoluteMeters);
-    glm::dvec4 worldPosition(relativeMeters, 0.0, 1.0);
+    glm::vec4 worldPosition(relativeMeters, 0.0, 1.0);
+    glm::vec4 clip = worldToClipSpace(m_viewProj, worldPosition);
+    glm::vec3 ndc = clipSpaceToNdc(clip);
+    outsideViewport = clipSpaceIsBehindCamera(clip) || abs(ndc.x) > 1 || abs(ndc.y) > 1;
 
-    glm::vec2 screenPosition = worldToScreenSpace(m_viewProj, worldPosition, {m_vpWidth, m_vpHeight}, clipped);
+    if (outsideViewport && clipToViewport) {
+        // Get direction to the point and determine the point on the screen edge in that direction.
+        glm::vec4 worldDirection(relativeMeters, 0, 0);
+        glm::vec4 clipDirection = worldToClipSpace(m_viewProj, worldDirection);
+        ndc = glm::vec3(clipDirection) / glm::max(abs(clipDirection.x), abs(clipDirection.y));
+    }
 
+    glm::vec2 screenSize(m_vpWidth, m_vpHeight);
+    glm::vec2 screenPosition = ndcToScreenSpace(ndc, screenSize);
     return screenPosition;
 }
 

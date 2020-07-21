@@ -68,37 +68,12 @@ float pointSegmentDistance(const glm::vec2& _p, const glm::vec2& _a, const glm::
     return sqrt(sqPointSegmentDistance(_p, _a, _b));
 }
 
-glm::vec4 worldToClipSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition) {
-    return _mvp * _worldPosition;
-}
-
-glm::vec2 clipToScreenSpace(const glm::vec4& _clipCoords, const glm::vec2& _screenSize) {
-    glm::vec2 halfScreen = glm::vec2(_screenSize * 0.5f);
-
-    // from normalized device coordinates to screen space coordinate system
-    // top-left screen axis, y pointing down
-
-    glm::vec2 screenPos;
-    screenPos.x = (_clipCoords.x / _clipCoords.w) + 1;
-    screenPos.y = 1 - (_clipCoords.y / _clipCoords.w);
-
-    return screenPos * halfScreen;
-}
-
-glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize) {
-    return clipToScreenSpace(worldToClipSpace(_mvp, _worldPosition), _screenSize);
-}
-
-glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize, bool& _clipped) {
-
-    glm::vec4 clipCoords = worldToClipSpace(_mvp, _worldPosition);
-
-    if (clipCoords.w <= 0.0f) {
-        _clipped = true;
-        return {};
-    }
-
-    return clipToScreenSpace(clipCoords, _screenSize);
+glm::vec2 worldToScreenSpace(const glm::mat4& mvp, const glm::vec4& worldPosition, const glm::vec2& screenSize, bool& behindCamera) {
+    glm::vec4 clip = worldToClipSpace(mvp, worldPosition);
+    glm::vec3 ndc = clipSpaceToNdc(clip);
+    glm::vec2 screenPosition = ndcToScreenSpace(ndc, screenSize);
+    behindCamera = clipSpaceIsBehindCamera(clip);
+    return screenPosition;
 }
 
 // square distance from a point <_p> to a segment <_p1,_p2>

@@ -76,8 +76,14 @@ bool show_gui = true;
 bool load_async = true;
 bool add_point_marker_on_click = false;
 bool add_polyline_marker_on_click = false;
+bool point_markers_position_clipped = false;
 
-std::vector<Tangram::MarkerID> point_markers;
+struct PointMarker {
+    MarkerID markerId;
+    LngLat coordinates;
+};
+
+std::vector<PointMarker> point_markers;
 
 Tangram::MarkerID polyline_marker = 0;
 std::vector<Tangram::LngLat> polyline_marker_coordinates;
@@ -381,7 +387,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
                 map->markerSetStylingFromString(marker, markerStylingString.c_str());
             }
 
-            point_markers.push_back(marker);
+            point_markers.push_back({ marker, location });
         }
 
         if (add_polyline_marker_on_click) {
@@ -611,13 +617,17 @@ void showSceneGUI() {
 void showMarkerGUI() {
     if (ImGui::CollapsingHeader("Markers")) {
         ImGui::Checkbox("Add point markers on click", &add_point_marker_on_click);
-        if(ImGui::RadioButton("Use Styling Path", markerUseStylingPath)) { markerUseStylingPath = true; }
-        ImGui::InputText("Path", &markerStylingPath);
-        if(ImGui::RadioButton("Use Styling String", !markerUseStylingPath)) { markerUseStylingPath = false; }
-        ImGui::InputTextMultiline("String", &markerStylingString);
+        if (ImGui::RadioButton("Use Styling Path", markerUseStylingPath)) { markerUseStylingPath = true; }
+        if (markerUseStylingPath) {
+            ImGui::InputText("Path", &markerStylingPath);
+        }
+        if (ImGui::RadioButton("Use Styling String", !markerUseStylingPath)) { markerUseStylingPath = false; }
+        if (!markerUseStylingPath) {
+            ImGui::InputTextMultiline("String", &markerStylingString);
+        }
         if (ImGui::Button("Clear point markers")) {
             for (const auto marker : point_markers) {
-                map->markerRemove(marker);
+                map->markerRemove(marker.markerId);
             }
             point_markers.clear();
         }
@@ -627,6 +637,31 @@ void showMarkerGUI() {
             if (!polyline_marker_coordinates.empty()) {
                 map->markerRemove(polyline_marker);
                 polyline_marker_coordinates.clear();
+            }
+        }
+
+        ImGui::Checkbox("Point markers use clipped position", &point_markers_position_clipped);
+        if (point_markers_position_clipped) {
+            // Move all point markers to "clipped" positions.
+            for (const auto& marker : point_markers) {
+                double screenClipped[2];
+                map->lngLatToScreenPosition(marker.coordinates.longitude, marker.coordinates.latitude, &screenClipped[0], &screenClipped[1], true);
+                LngLat lngLatClipped;
+                map->screenPositionToLngLat(screenClipped[0], screenClipped[1], &lngLatClipped.longitude, &lngLatClipped.latitude);
+                map->markerSetPoint(marker.markerId, lngLatClipped);
+            }
+
+            // Display coordinates for last marker.
+            if (!point_markers.empty()) {
+                auto& last_marker = point_markers.back();
+                double screenPosition[2];
+                map->lngLatToScreenPosition(last_marker.coordinates.longitude, last_marker.coordinates.latitude, &screenPosition[0], &screenPosition[1]);
+                float screenPositionFloat[2] = {static_cast<float>(screenPosition[0]), static_cast<float>(screenPosition[1])};
+                ImGui::InputFloat2("Last Marker Screen", screenPositionFloat, 5, ImGuiInputTextFlags_ReadOnly);
+                double screenClipped[2];
+                map->lngLatToScreenPosition(last_marker.coordinates.longitude, last_marker.coordinates.latitude, &screenClipped[0], &screenClipped[1], true);
+                float screenClippedFloat[2] = {static_cast<float>(screenClipped[0]), static_cast<float>(screenClipped[1])};
+                ImGui::InputFloat2("Last Marker Clipped", screenClippedFloat, 5, ImGuiInputTextFlags_ReadOnly);
             }
         }
     }

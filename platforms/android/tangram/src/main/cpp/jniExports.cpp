@@ -167,11 +167,11 @@ jboolean MapController(ScreenPositionToLngLat)(JNIEnv* jniEnv, jobject obj, jlon
 }
 
 jboolean MapController(LngLatToScreenPosition)(JNIEnv* jniEnv, jobject obj, jlong mapPtr,
-                                               jdoubleArray coordinates) {
+                                               jdoubleArray coordinates, jboolean clipToViewport) {
     auto_map(mapPtr);
 
     jdouble* arr = jniEnv->GetDoubleArrayElements(coordinates, NULL);
-    bool result = map->lngLatToScreenPosition(arr[0], arr[1], &arr[0], &arr[1]);
+    bool result = map->lngLatToScreenPosition(arr[0], arr[1], &arr[0], &arr[1], clipToViewport);
     jniEnv->ReleaseDoubleArrayElements(coordinates, arr, 0);
     return static_cast<jboolean>(result);
 }

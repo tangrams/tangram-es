@@ -638,19 +638,14 @@ bool Map::screenPositionToLngLat(double _x, double _y, double* _lng, double* _la
     return intersection;
 }
 
-bool Map::lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y) {
-    bool clipped = false;
+bool Map::lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y, bool clipToViewport) {
+    bool outsideViewport = false;
+    glm::vec2 screenPosition = impl->view.lngLatToScreenPosition(_lng, _lat, outsideViewport, clipToViewport);
 
-    glm::vec2 screenCoords = impl->view.lngLatToScreenPosition(_lng, _lat, clipped);
+    *_x = screenPosition.x;
+    *_y = screenPosition.y;
 
-    *_x = screenCoords.x;
-    *_y = screenCoords.y;
-
-    float width = impl->view.getWidth();
-    float height = impl->view.getHeight();
-    bool withinViewport = *_x >= 0. && *_x <= width && *_y >= 0. && *_y <= height;
-
-    return !clipped && withinViewport;
+    return !outsideViewport;
 }
 
 void Map::setPixelScale(float _pixelsPerPoint) {
