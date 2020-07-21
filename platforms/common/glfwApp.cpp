@@ -644,8 +644,8 @@ void showMarkerGUI() {
         if (point_markers_position_clipped) {
             // Move all point markers to "clipped" positions.
             for (const auto& marker : point_markers) {
-                float screenClipped[2];
-                map->lngLatToScreenPositionClipped(marker.coordinates.longitude, marker.coordinates.latitude,&screenClipped[0], &screenClipped[1]);
+                double screenClipped[2];
+                map->lngLatToScreenPosition(marker.coordinates.longitude, marker.coordinates.latitude, &screenClipped[0], &screenClipped[1], true);
                 LngLat lngLatClipped;
                 map->screenPositionToLngLat(screenClipped[0], screenClipped[1], &lngLatClipped.longitude, &lngLatClipped.latitude);
                 map->markerSetPoint(marker.markerId, lngLatClipped);
@@ -658,9 +658,10 @@ void showMarkerGUI() {
                 map->lngLatToScreenPosition(last_marker.coordinates.longitude, last_marker.coordinates.latitude, &screenPosition[0], &screenPosition[1]);
                 float screenPositionFloat[2] = {static_cast<float>(screenPosition[0]), static_cast<float>(screenPosition[1])};
                 ImGui::InputFloat2("Last Marker Screen", screenPositionFloat, 5, ImGuiInputTextFlags_ReadOnly);
-                float screenClipped[2];
-                map->lngLatToScreenPositionClipped(last_marker.coordinates.longitude, last_marker.coordinates.latitude,&screenClipped[0], &screenClipped[1]);
-                ImGui::InputFloat2("Last Marker Clipped", screenClipped, 5, ImGuiInputTextFlags_ReadOnly);
+                double screenClipped[2];
+                map->lngLatToScreenPosition(last_marker.coordinates.longitude, last_marker.coordinates.latitude, &screenClipped[0], &screenClipped[1], true);
+                float screenClippedFloat[2] = {static_cast<float>(screenClipped[0]), static_cast<float>(screenClipped[1])};
+                ImGui::InputFloat2("Last Marker Clipped", screenClippedFloat, 5, ImGuiInputTextFlags_ReadOnly);
             }
         }
     }
