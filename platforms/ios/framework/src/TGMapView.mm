@@ -599,7 +599,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     return CGPointMake(screenX, screenY);
 }
 
-- (BOOL)coordinateIsInViewport:(CLLocationCoordinate2D)coordinate
+- (BOOL)viewportContainsCoordinate:(CLLocationCoordinate2D)coordinate
 {
     if (!self.map) {
         return false;

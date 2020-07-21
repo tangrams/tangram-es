@@ -290,7 +290,7 @@ TG_EXPORT
  @param coordinate The geographic coordinate.
  @return True if the coordinate is within the current map viewport, otherwise false.
  */
--(BOOL)coordinateIsInViewport:(CLLocationCoordinate2D)coordinate;
+-(BOOL)viewportContainsCoordinate:(CLLocationCoordinate2D)coordinate;
 
 /**
  Convert a position in view coordinates into the longitude and latitude of the corresponding geographic location.
