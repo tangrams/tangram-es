@@ -170,7 +170,7 @@
 
     bitmap.resize(w * h);
 
-    CGColorSpaceRef colorSpace = CGImageGetColorSpace(cgImage);
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     // iOS only supports contexts with pre-multiplied alpha, so we transform it below.
     CGContextRef cgContext = CGBitmapContextCreate(bitmap.data(), w, h, 8, w * 4,
         colorSpace, kCGImageAlphaPremultipliedLast);
