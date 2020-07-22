@@ -189,9 +189,11 @@
         auto* p = reinterpret_cast<unsigned char*>(&pixel);
         unsigned int a = p[3];
         if (a != 0) {
-            p[0] = p[0] * 255 / a;
-            p[1] = p[1] * 255 / a;
-            p[2] = p[2] * 255 / a;
+            // Add a '1/2' to account for rounding down during pre-multiply.
+            unsigned int half = a / 2;
+            p[0] = (p[0] * 255 + half) / a;
+            p[1] = (p[1] * 255 + half) / a;
+            p[2] = (p[2] * 255 + half) / a;
         }
     }
 
