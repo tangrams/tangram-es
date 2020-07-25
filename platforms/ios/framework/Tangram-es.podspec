@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name    = 'Tangram-es'
-  s.version = '0.12.0'
+  s.version = '0.13.0'
 
   s.summary           = 'Open source C++ library for rendering 2D and 3D maps from vector data using OpenGL ES.'
   s.description       = 'Open source C++ library for rendering 2D and 3D maps from vector data using OpenGL ES, wrapped with native Cocoa Touch APIs.'
