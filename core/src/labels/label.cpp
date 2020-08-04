@@ -75,7 +75,7 @@ void Label::enterState(const State& _state, float _alpha) {
 }
 
 void Label::setAlpha(float _alpha) {
-    m_alpha = CLAMP(_alpha, 0.0, 1.0);
+    m_alpha = clamp01(_alpha);
 }
 
 void Label::resetState() {
