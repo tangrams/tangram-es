@@ -3,6 +3,7 @@
 #include "scene/stops.h"
 #include "yaml-cpp/yaml.h"
 #include "util/mapProjection.h"
+#include "glm/gtc/epsilon.hpp"
 
 using namespace Tangram;
 
@@ -253,6 +254,7 @@ TEST_CASE("Stops using `%` for StyleParam::size", "[Stops][YAML]") {
         [[6, 50%], [10, [7px, 8px]], [13, 100%]]
     )END");
     const glm::vec2 CSS_SIZE(10.f, 20.f);
+    const float EPSILON = 1e-6;
 
     Stops stops(Stops::Sizes(node, StyleParam::unitSetForStyleParam(StyleParamKey::size)));
 
@@ -261,17 +263,17 @@ TEST_CASE("Stops using `%` for StyleParam::size", "[Stops][YAML]") {
      */
     REQUIRE(stops.frames.size() == 3);
 
-    auto val = glm::abs(stops.evalSize(0, CSS_SIZE) - glm::vec2(5.f, 10.f));
-    REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
+    auto val = stops.evalSize(0, CSS_SIZE);
+    REQUIRE(glm::all(glm::epsilonEqual(val, glm::vec2(5.f, 10.f), EPSILON)));
 
     auto nanValue = stops.evalSize(0, glm::vec2(NAN));
-    REQUIRE((std::isnan(nanValue.x) || std::isnan(nanValue.y)) == true);
+    REQUIRE((std::isnan(nanValue.x) || std::isnan(nanValue.y)));
 
-    val = glm::abs(stops.evalSize(10, CSS_SIZE) - glm::vec2(7.f, 8.f));
-    REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
+    val = stops.evalSize(10, CSS_SIZE);
+    REQUIRE(glm::all(glm::epsilonEqual(val, glm::vec2(7.f, 8.f), EPSILON)));
 
-    val = glm::abs(stops.evalSize(18, CSS_SIZE) - glm::vec2(10.f, 20.f));
-    REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
+    val = stops.evalSize(18, CSS_SIZE);
+    REQUIRE(glm::all(glm::epsilonEqual(val, glm::vec2(10.f, 20.f), EPSILON)));
 }
 
 TEST_CASE("Stops using auto and `%` for StyleParam::size", "[Stops][YAML]") {
@@ -279,6 +281,7 @@ TEST_CASE("Stops using auto and `%` for StyleParam::size", "[Stops][YAML]") {
         [[6, ["auto", 20]], [13, 50%]]
     )END");
     const glm::vec2 CSS_SIZE(60, 30);
+    const float EPSILON = 1e-6;
 
     Stops stops(Stops::Sizes(node, StyleParam::unitSetForStyleParam(StyleParamKey::size)));
 
@@ -287,15 +290,14 @@ TEST_CASE("Stops using auto and `%` for StyleParam::size", "[Stops][YAML]") {
      */
     REQUIRE(stops.frames.size() == 2);
 
-    auto val = glm::abs(stops.evalSize(0, CSS_SIZE) - glm::vec2(40.f, 20.f));
-    REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
+    auto val = stops.evalSize(0, CSS_SIZE);
+    REQUIRE(glm::all(glm::epsilonEqual(val, glm::vec2(40.f, 20.f), EPSILON)));
 
     auto nanValue = stops.evalSize(0, glm::vec2(NAN));
-    REQUIRE((std::isnan(nanValue.x) || std::isnan(nanValue.y)) == true);
+    REQUIRE((std::isnan(nanValue.x) || std::isnan(nanValue.y)));
 
-    val = glm::abs(stops.evalSize(18, CSS_SIZE) - glm::vec2(30.f, 15.f));
-    REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
-
+    val = stops.evalSize(18, CSS_SIZE);
+    REQUIRE(glm::all(glm::epsilonEqual(val, glm::vec2(30.f, 15.f), EPSILON)));
 }
 
 TEST_CASE("Stops using `%` and auto for StyleParam::size", "[Stops][YAML]") {
@@ -303,6 +305,7 @@ TEST_CASE("Stops using `%` and auto for StyleParam::size", "[Stops][YAML]") {
         [[6, 50%], [13, ["auto", 20]]]
     )END");
     const glm::vec2 CSS_SIZE(60, 30);
+    const float EPSILON = 1e-6;
 
     Stops stops(Stops::Sizes(node, StyleParam::unitSetForStyleParam(StyleParamKey::size)));
 
@@ -311,13 +314,12 @@ TEST_CASE("Stops using `%` and auto for StyleParam::size", "[Stops][YAML]") {
      */
     REQUIRE(stops.frames.size() == 2);
 
-    auto val = glm::abs(stops.evalSize(0, CSS_SIZE) - glm::vec2(30.f, 15.f));
-    REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
+    auto val = stops.evalSize(0, CSS_SIZE);
+    REQUIRE(glm::all(glm::epsilonEqual(val, glm::vec2(30.f, 15.f), EPSILON)));
 
     auto nanValue = stops.evalSize(0, glm::vec2(NAN));
-    REQUIRE((std::isnan(nanValue.x) || std::isnan(nanValue.y)) == true);
+    REQUIRE((std::isnan(nanValue.x) || std::isnan(nanValue.y)));
 
-    val = glm::abs(stops.evalSize(18, CSS_SIZE) - glm::vec2(40.f, 20.f));
-    REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
-
+    val = stops.evalSize(18, CSS_SIZE);
+    REQUIRE(glm::all(glm::epsilonEqual(val, glm::vec2(40.f, 20.f), EPSILON)));
 }
