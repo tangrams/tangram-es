@@ -121,29 +121,37 @@ inline glm::vec4 worldToClipSpace(const glm::mat4& mvp, const glm::vec4& worldPo
     return mvp * worldPosition;
 }
 
-/// Returns true if the given clip space point is behind the camera plane.
+/// Return true if the given clip space point is behind the camera plane.
 inline bool clipSpaceIsBehindCamera(const glm::vec4& clip) {
     return clip.w < 0;
 }
 
-/// Returns the given clip space point converted to Normalized Device Coordinates.
+/// Return the given clip space point converted to Normalized Device Coordinates.
 inline glm::vec3 clipSpaceToNdc(const glm::vec4& clip) {
     return glm::vec3(clip) / clip.w;
 }
 
-/// Returns the given point in Normalized Device Coordinates converted to screen space.
+/// Return the given point in Normalized Device Coordinates converted to screen space.
 inline glm::vec2 ndcToScreenSpace(const glm::vec3& ndc, const glm::vec2& screenSize) {
     return glm::vec2(1 + ndc.x, 1 - ndc.y) * screenSize * 0.5f;
 }
 
-/// Computes the screen coordinates from a world position, a model view matrix and a screen size
+/// Compute the screen coordinates from a world position, a model view matrix and a screen size.
 glm::vec2 worldToScreenSpace(const glm::mat4& mvp, const glm::vec4& worldPosition, const glm::vec2& screenSize, bool& behindCamera);
 
-inline glm::vec2 rotateBy(const glm::vec2& in, const glm::vec2& normal) {
-    return {
-        in.x * normal.x + in.y * normal.y,
-        -in.x * normal.y + in.y * normal.x
-    };
+/// Return the rotation unit vector representing a counter-clockwise rotation in the plane of the given radians.
+inline glm::vec2 rotation2dRad(float radians) {
+    return { cos(radians), sin(radians) };
+}
+
+/// Return the rotation unit vector representing a counter-clockwise rotation in the plane of the given degrees.
+inline glm::vec2 rotation2dDeg(float degrees) {
+    return rotation2dRad(static_cast<float>(DEG_TO_RAD) * degrees);
+}
+
+/// Return the vector 'in' rotated in the plane by the rotation unit vector 'rotation'.
+inline glm::vec2 rotate2d(const glm::vec2& in, const glm::vec2& rotation) {
+    return { in.x * rotation.x + in.y * rotation.y, -in.x * rotation.y + in.y * rotation.x };
 }
 
 /// Return true if the value is exactly a power of two.

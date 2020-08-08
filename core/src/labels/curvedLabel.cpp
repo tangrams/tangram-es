@@ -261,7 +261,7 @@ void CurvedLabel::addVerticesToMesh(ScreenTransform& _transform, const glm::vec2
 
         for (int i = 0; i < 4; i++) {
 
-            vertexPosition[i] = p + glm::i16vec2{rotateBy(glm::vec2(quad.quad[i].pos) - origin, rotation)};
+            vertexPosition[i] = p + glm::i16vec2{rotate2d(glm::vec2(quad.quad[i].pos) - origin, rotation)};
 
             if (!visible &&
                 vertexPosition[i].x > min.x &&
