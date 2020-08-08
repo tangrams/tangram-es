@@ -101,11 +101,9 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
 
         // Rotate in clockwise order on the ground plane
         if (m_options.angle != 0.f) {
-            glm::vec2 rotation(cos(DEG_TO_RAD * m_options.angle),
-                               sin(DEG_TO_RAD * m_options.angle));
-
+            glm::vec2 rotation = rotation2dDeg(m_options.angle);
             for (size_t i = 0; i < 4; i++) {
-                positions[i] = rotateBy(positions[i], rotation);
+                positions[i] = rotate2d(positions[i], rotation);
             }
         }
 

@@ -341,7 +341,7 @@ bool TextStyleBuilder::addStraightTextLabels(const Line& _line, float _labelWidt
             dir2 = (p1 - p2) / segmentLength;
 
             glm::vec2 pp = glm::vec2(_line[j-1]);
-            float d = sqPointSegmentDistance(pp, p0, p2);
+            float d = pointSegmentDistanceSq(pp, p0, p2);
             if (d > tolerance) { break; }
 
             if ((glm::length2(dir1 + dir2) < sqDirLimit) ||
@@ -439,7 +439,7 @@ void TextStyleBuilder::addCurvedTextLabels(const Line& _line, const TextStyle::P
                 // Take cross product of direction (unit-) vectors of the current
                 // and next segment. The magnitude of the cross product is the sine
                 // angle between dir1 and dir2.
-                float angle = crossProduct(dir1, dir2);
+                float angle = perpDotProduct(dir1, dir2);
 
                 if (std::abs(angle) > flipTolerance) {
                     if (lastAngle > 0) {

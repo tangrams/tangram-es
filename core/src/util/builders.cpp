@@ -109,8 +109,7 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
         glm::vec3 coord(p.x, p.y, _height);
 
         if (_ctx.useTexCoords) {
-            glm::vec2 uv(mapValue(coord.x, min.x, max.x, 0., 1.),
-                         mapValue(coord.y, min.y, max.y, 1., 0.));
+            glm::vec2 uv(mapRange01(coord.x, min.x, max.x), mapRange01(coord.y, max.y, min.y));
 
             _ctx.addVertex(coord, glm::vec3(0.0, 0.0, 1.0), uv);
         } else {
