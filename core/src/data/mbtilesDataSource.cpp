@@ -233,11 +233,11 @@ bool MBTilesDataSource::loadNextSource(std::shared_ptr<TileTask> _task, TileTask
 void MBTilesDataSource::openMBTiles() {
 
     try {
-        auto mode = SQLite::OPEN_READONLY;
+        auto mode = SQLite::OPEN_READONLY | SQLite::OPEN_FULLMUTEX;
         if (m_cacheMode) {
             // Need to explicitly open a SQLite DB with OPEN_READWRITE
             // and OPEN_CREATE flags to make a file and write.
-            mode = SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE;
+            mode = SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE | SQLite::OPEN_FULLMUTEX;
         }
 
         auto url = Url(m_path);
