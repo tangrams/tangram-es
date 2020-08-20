@@ -261,13 +261,12 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad, Te
 
     if (_params.labelOptions.angle != 0.f) {
         // Rotate the sprite icon quad vertices in clockwise order
-        glm::vec2 rotation(cos(-DEG_TO_RAD * _params.labelOptions.angle),
-                           sin(-DEG_TO_RAD * _params.labelOptions.angle));
+        glm::vec2 rotation = rotation2dDeg(-_params.labelOptions.angle);
 
-        v0 = rotateBy(v0, rotation);
-        v1 = rotateBy(v1, rotation);
-        v2 = rotateBy(v2, rotation);
-        v3 = rotateBy(v3, rotation);
+        v0 = rotate2d(v0, rotation);
+        v1 = rotate2d(v1, rotation);
+        v2 = rotate2d(v2, rotation);
+        v3 = rotate2d(v3, rotation);
     }
 
     m_quads.push_back({{

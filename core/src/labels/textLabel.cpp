@@ -157,7 +157,7 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
 
             m_screenCenter = screenPosition;
 
-            PointTransform(_transform).set(screenPosition + rotateBy(offset, rotation), rotation);
+            PointTransform(_transform).set(screenPosition + rotate2d(offset, rotation), rotation);
 
             return true;
         }
@@ -231,7 +231,7 @@ void TextLabel::addVerticesToMesh(ScreenTransform& _transform, const glm::vec2& 
 
         if (rotate) {
             for (int i = 0; i < 4; i++) {
-                vertexPosition[i] = sp + glm::i16vec2{rotateBy(quad.quad[i].pos, rotation)};
+                vertexPosition[i] = sp + glm::i16vec2{rotate2d(quad.quad[i].pos, rotation)};
             }
         } else {
             for (int i = 0; i < 4; i++) {
