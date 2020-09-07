@@ -93,6 +93,9 @@ styles:
                 alpha: 0.25
                 width: 1px
             interactive: true
+    pick-arrow:
+        base: points
+        texture: img/arrow-3.png
 
 sources:
     osm:
@@ -126,6 +129,13 @@ layers:
                 # texture: null
                 collide: false
                 transition: { show: { time: 0s }, hide: { time: 0s } }
+
+    pick-result:
+        draw:
+            pick-arrow:
+                collide: false
+                offset: [0px, 24px]
+                order: 200
 
     earth:
         data: { source: osm }
