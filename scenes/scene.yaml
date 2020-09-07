@@ -106,20 +106,20 @@ layers:
     touch:
         data: { source: touch }
         line:
-          filter: { type: line }
+          filter: { $geometry: line }
           draw:
             lines:
               color: function () { return feature.color || 'black'; }
               order: 500
               width: 2px
         poly:
-            filter: { type: poly }
+            filter: { $geometry: polygon }
             draw:
               polygons:
                 color: magenta
                 order: 40
         point:
-            filter: { type: point }
+            filter: { $geometry: point }
             draw:
               icons:
                 sprite: sunburst
