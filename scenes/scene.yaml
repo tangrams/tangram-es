@@ -58,6 +58,9 @@ textures:
             bookstore: [0, 333, 32, 32]
             shield: [0, 1142, 32, 32]
             arrow: [1, 1175, 22, 22]
+    marker-stroked:
+        url: img/marker-stroked.png
+        density: 2
 
 styles:
     icons:
@@ -93,9 +96,10 @@ styles:
                 alpha: 0.25
                 width: 1px
             interactive: true
-    pick-arrow:
+    pick-marker:
         base: points
-        texture: img/arrow-3.png
+        texture: marker-stroked
+        blend_order: 3
 
 sources:
     osm:
@@ -132,10 +136,10 @@ layers:
 
     pick-result:
         draw:
-            pick-arrow:
+            pick-marker:
                 collide: false
-                offset: [0px, 24px]
-                order: 200
+                offset: [0px, -11px]
+                order: 900
 
     earth:
         data: { source: osm }

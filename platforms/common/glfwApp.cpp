@@ -387,7 +387,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
             }
             if (pickResultMarker == 0) {
                 pickResultMarker = map->markerAdd();
-                map->markerSetStylingFromPath(pickResultMarker, "layers.pick-result.draw.pick-arrow");
+                map->markerSetStylingFromPath(pickResultMarker, "layers.pick-result.draw.pick-marker");
             }
             map->markerSetPoint(pickResultMarker, result->coordinates);
             logMsg("Pick label result:\n");
