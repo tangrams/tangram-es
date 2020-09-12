@@ -152,17 +152,14 @@ public class MapController {
         markers = new LongSparseArray<>();
 
         // Get configuration info from application
-        displayMetrics = context.getResources().getDisplayMetrics();
-        assetManager = context.getAssets();
+        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        AssetManager assetManager = context.getAssets();
 
         // Parse font file description
         //FontConfig.init();
 
-        mapPointer = nativeInit(assetManager);
-        if (mapPointer <= 0) {
-            throw new RuntimeException("Unable to create a native Map object! There may be insufficient memory available.");
-        }
-        nativeSetPixelScale(mapPointer, displayMetrics.density);
+        nativeMap = new NativeMap(this, assetManager);
+        nativeMap.setPixelScale(displayMetrics.density);
     }
 
     /**
@@ -188,7 +185,6 @@ public class MapController {
         // Set up MapView
         this.viewHolder = viewHolder;
         viewHolder.setRenderer(mapRenderer);
-        isGLRendererSet = true;
         viewHolder.setRenderMode(GLViewHolder.RenderMode.RENDER_WHEN_DIRTY);
 
         touchInput = new TouchInput(context);
@@ -210,10 +206,9 @@ public class MapController {
      * If client code extends MapController and overrides this method, then it must call super.dispose()
      */
     protected synchronized void dispose() {
-        if (mapPointer == 0) { return; }
 
         Log.e("TANGRAM", ">>> dispose");
-        nativeShutdown(mapPointer);
+        nativeMap.shutdown();
         Log.e("TANGRAM", "<<< http requests: " + httpRequestHandles.size());
 
         for (MapData mapData : clientTileSources.values()) {
@@ -236,11 +231,10 @@ public class MapController {
         labelPickListener = null;
         markerPickListener = null;
         cameraAnimationCallback = null;
-        frameCaptureCallback = null;
 
         // Prevent any calls to native functions - except dispose.
-        final long pointer = mapPointer;
-        mapPointer = 0;
+        final NativeMap disposingNativeMap = nativeMap;
+        nativeMap = null;
 
         // NOTE: It is possible for the MapView held by a ViewGroup to be removed, calling detachFromWindow which
         // stops the Render Thread associated with GLSurfaceView, possibly resulting in leaks from render thread
@@ -249,7 +243,7 @@ public class MapController {
         //
         // Since all gl resources will be freed when GLSurfaceView is deleted this is safe until
         // we support sharing gl contexts.
-        nativeDispose(pointer);
+        disposingNativeMap.dispose();
         Log.e("TANGRAM", "<<< disposed");
 
     }
@@ -299,9 +293,8 @@ public class MapController {
      * {@link SceneLoadListener#onSceneReady(int sceneId, SceneError sceneError)} when loading is complete.
      */
     public int loadSceneFile(final String path, @Nullable final List<SceneUpdate> sceneUpdates) {
-        checkPointer(mapPointer);
         final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        final int sceneId = nativeLoadScene(mapPointer, path, updateStrings);
+        final int sceneId = nativeMap.loadScene(path, updateStrings);
         removeAllMarkers();
         requestRender();
         return sceneId;
@@ -318,9 +311,8 @@ public class MapController {
      * {@link SceneLoadListener#onSceneReady(int sceneId, SceneError sceneError)} when loading is complete.
      */
     public int loadSceneFileAsync(final String path, @Nullable final List<SceneUpdate> sceneUpdates) {
-        checkPointer(mapPointer);
         final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        final int sceneId = nativeLoadSceneAsync(mapPointer, path, updateStrings);
+        final int sceneId = nativeMap.loadSceneAsync(path, updateStrings);
         removeAllMarkers();
         requestRender();
         return sceneId;
@@ -338,9 +330,8 @@ public class MapController {
      */
     public int loadSceneYaml(final String yaml, final String resourceRoot,
                              @Nullable final List<SceneUpdate> sceneUpdates) {
-        checkPointer(mapPointer);
         final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        final int sceneId = nativeLoadSceneYaml(mapPointer, yaml, resourceRoot, updateStrings);
+        final int sceneId = nativeMap.loadSceneYaml(yaml, resourceRoot, updateStrings);
         removeAllMarkers();
         requestRender();
         return sceneId;
@@ -358,9 +349,8 @@ public class MapController {
      */
     public int loadSceneYamlAsync(final String yaml, final String resourceRoot,
                                   @Nullable final List<SceneUpdate> sceneUpdates) {
-        checkPointer(mapPointer);
         final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        final int sceneId = nativeLoadSceneYamlAsync(mapPointer, yaml, resourceRoot, updateStrings);
+        final int sceneId = nativeMap.loadSceneYamlAsync(yaml, resourceRoot, updateStrings);
         removeAllMarkers();
         requestRender();
         return sceneId;
@@ -412,7 +402,6 @@ public class MapController {
      * @param cb Callback that will run when the animation is finished or canceled
      */
     public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease, @Nullable final CameraAnimationCallback cb) {
-        checkPointer(mapPointer);
         if (duration > 0) {
             setMapRegionState(MapRegionChangeState.ANIMATING);
         } else {
@@ -420,7 +409,7 @@ public class MapController {
         }
         setPendingCameraAnimationCallback(cb);
         final float seconds = duration / 1000.f;
-        nativeUpdateCameraPosition(mapPointer, update.set, update.longitude, update.latitude, update.zoom,
+        nativeMap.updateCameraPosition(update.set, update.longitude, update.latitude, update.zoom,
                 update.zoomBy, update.rotation, update.rotationBy, update.tilt, update.tiltBy,
                 update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.padding,
                 seconds, ease.ordinal());
@@ -458,7 +447,6 @@ public class MapController {
     }
 
     private void flyToCameraPosition(@NonNull final CameraPosition position, final int duration, @Nullable final CameraAnimationCallback callback, final float speed) {
-        checkPointer(mapPointer);
         if (duration == 0) {
             setMapRegionState(MapRegionChangeState.JUMPING);
         } else {
@@ -466,7 +454,7 @@ public class MapController {
         }
         setPendingCameraAnimationCallback(callback);
         final float seconds = duration / 1000.f;
-        nativeFlyTo(mapPointer, position.longitude, position.latitude, position.zoom, seconds, speed);
+        nativeMap.flyTo(position.longitude, position.latitude, position.zoom, seconds, speed);
     }
 
     private void setPendingCameraAnimationCallback(final CameraAnimationCallback callback) {
@@ -509,10 +497,9 @@ public class MapController {
      */
     @NonNull
     public CameraPosition getCameraPosition(@NonNull final CameraPosition out) {
-        checkPointer(mapPointer);
         final double[] pos = { 0, 0 };
         final float[] zrt = { 0, 0, 0 };
-        nativeGetCameraPosition(mapPointer, pos, zrt);
+        nativeMap.getCameraPosition(pos, zrt);
         out.longitude = pos[0];
         out.latitude = pos[1];
         out.zoom = zrt[0];
@@ -525,8 +512,7 @@ public class MapController {
      * Cancel current camera animation
      */
     public void cancelCameraAnimation() {
-        checkPointer(mapPointer);
-        nativeCancelCameraAnimation(mapPointer);
+        nativeMap.cancelCameraAnimation();
     }
 
     /**
@@ -551,9 +537,9 @@ public class MapController {
      */
     @NonNull
     public CameraPosition getEnclosingCameraPosition(@NonNull LngLat sw, @NonNull LngLat ne, @NonNull Rect padding, @NonNull final CameraPosition out) {
-        int pad[] = new int[]{padding.left, padding.top, padding.right, padding.bottom};
-        double lngLatZoom[] = new double[3];
-        nativeGetEnclosingCameraPosition(mapPointer, sw.longitude, sw.latitude, ne.longitude, ne.latitude, pad, lngLatZoom);
+        int[] pad = new int[]{padding.left, padding.top, padding.right, padding.bottom};
+        double[] lngLatZoom = new double[3];
+        nativeMap.getEnclosingCameraPosition(sw.longitude, sw.latitude, ne.longitude, ne.latitude, pad, lngLatZoom);
         out.longitude = lngLatZoom[0];
         out.latitude = lngLatZoom[1];
         out.zoom = (float)lngLatZoom[2];
@@ -567,8 +553,7 @@ public class MapController {
      * @param type A {@code CameraType}
      */
     public void setCameraType(@NonNull final CameraType type) {
-        checkPointer(mapPointer);
-        nativeSetCameraType(mapPointer, type.ordinal());
+        nativeMap.setCameraType(type.ordinal());
     }
 
     /**
@@ -576,8 +561,8 @@ public class MapController {
      * @return A {@code CameraType}
      */
     public CameraType getCameraType() {
-        checkPointer(mapPointer);
-        return CameraType.values()[nativeGetCameraType(mapPointer)];
+        int nativeCameraType = nativeMap.getCameraType();
+        return CameraType.values()[nativeCameraType];
     }
 
     /**
@@ -585,8 +570,7 @@ public class MapController {
      * @return The zoom level
      */
     public float getMinimumZoomLevel() {
-        checkPointer(mapPointer);
-        return nativeGetMinZoom(mapPointer);
+        return nativeMap.getMinZoom();
     }
 
     /**
@@ -597,8 +581,7 @@ public class MapController {
      * @param minimumZoom The zoom level
      */
     public void setMinimumZoomLevel(float minimumZoom) {
-        checkPointer(mapPointer);
-        nativeSetMinZoom(mapPointer, minimumZoom);
+        nativeMap.setMinZoom(minimumZoom);
     }
 
     /**
@@ -606,8 +589,7 @@ public class MapController {
      * @return The zoom level
      */
     public float getMaximumZoomLevel() {
-        checkPointer(mapPointer);
-        return nativeGetMaxZoom(mapPointer);
+        return nativeMap.getMaxZoom();
     }
 
     /**
@@ -618,8 +600,7 @@ public class MapController {
      * @param maximumZoom The zoom level
      */
     public void setMaximumZoomLevel(float maximumZoom) {
-        checkPointer(mapPointer);
-        nativeSetMaxZoom(mapPointer, maximumZoom);
+        nativeMap.setMaxZoom(maximumZoom);
     }
 
     /**
@@ -630,9 +611,8 @@ public class MapController {
      */
     @Nullable
     public LngLat screenPositionToLngLat(@NonNull final PointF screenPosition) {
-        checkPointer(mapPointer);
         final double[] tmp = { screenPosition.x, screenPosition.y };
-        if (nativeScreenPositionToLngLat(mapPointer, tmp)) {
+        if (nativeMap.screenPositionToLngLat(tmp)) {
             return new LngLat(tmp[0], tmp[1]);
         }
         return null;
@@ -660,9 +640,8 @@ public class MapController {
      * @return True if the resulting point is inside the viewport, otherwise false.
      */
     public boolean lngLatToScreenPosition(@NonNull final LngLat lngLat, @NonNull final PointF screenPositionOut, boolean clipToViewport) {
-        checkPointer(mapPointer);
         final double[] tmp = { lngLat.longitude, lngLat.latitude };
-        boolean insideViewport = nativeLngLatToScreenPosition(mapPointer, tmp, clipToViewport);
+        boolean insideViewport = nativeMap.lngLatToScreenPosition(tmp, clipToViewport);
         screenPositionOut.set((float)tmp[0], (float)tmp[1]);
         return insideViewport;
     }
@@ -696,8 +675,7 @@ public class MapController {
         if (mapData != null) {
             return mapData;
         }
-        checkPointer(mapPointer);
-        final long pointer = nativeAddClientDataSource(mapPointer, name, generateCentroid);
+        final long pointer = nativeMap.addClientDataSource(name, generateCentroid);
         if (pointer <= 0) {
             throw new RuntimeException("Unable to create new data source");
         }
@@ -712,9 +690,8 @@ public class MapController {
      */
     void removeDataLayer(@NonNull final MapData mapData) {
         clientTileSources.remove(mapData.name);
-        checkPointer(mapPointer);
         checkPointer(mapData.pointer);
-        nativeRemoveClientDataSource(mapPointer, mapData.pointer);
+        nativeMap.removeClientDataSource(mapData.pointer);
     }
 
     /**
@@ -780,7 +757,7 @@ public class MapController {
             @Override
             public boolean onPan(final float startX, final float startY, final float endX, final float endY) {
                 setMapRegionState(MapRegionChangeState.JUMPING);
-                nativeHandlePanGesture(mapPointer, startX, startY, endX, endY);
+                nativeMap.handlePanGesture(startX, startY, endX, endY);
                 return true;
             }
 
@@ -792,7 +769,7 @@ public class MapController {
 
             @Override
             public boolean onFling(final float posX, final float posY, final float velocityX, final float velocityY) {
-                nativeHandleFlingGesture(mapPointer, posX, posY, velocityX, velocityY);
+                nativeMap.handleFlingGesture(posX, posY, velocityX, velocityY);
                 return true;
             }
 
@@ -818,7 +795,7 @@ public class MapController {
             @Override
             public boolean onRotate(final float x, final float y, final float rotation) {
                 setMapRegionState(MapRegionChangeState.JUMPING);
-                nativeHandleRotateGesture(mapPointer, x, y, rotation);
+                nativeMap.handleRotateGesture(x, y, rotation);
                 return true;
             }
 
@@ -844,7 +821,7 @@ public class MapController {
             @Override
             public boolean onScale(final float x, final float y, final float scale, final float velocity) {
                 setMapRegionState(MapRegionChangeState.JUMPING);
-                nativeHandlePinchGesture(mapPointer, x, y, scale, velocity);
+                nativeMap.handlePinchGesture(x, y, scale, velocity);
                 return true;
             }
 
@@ -870,7 +847,7 @@ public class MapController {
             @Override
             public boolean onShove(final float distance) {
                 setMapRegionState(MapRegionChangeState.JUMPING);
-                nativeHandleShoveGesture(mapPointer, distance);
+                nativeMap.handleShoveGesture(distance);
                 return true;
             }
 
@@ -887,8 +864,7 @@ public class MapController {
      * @param radius The radius in dp (density-independent pixels).
      */
     public void setPickRadius(final float radius) {
-        checkPointer(mapPointer);
-        nativeSetPickRadius(mapPointer, radius);
+        nativeMap.setPickRadius(radius);
     }
 
     /**
@@ -951,8 +927,7 @@ public class MapController {
      */
     public void pickFeature(final float posX, final float posY) {
         if (featurePickListener != null) {
-            checkPointer(mapPointer);
-            nativePickFeature(mapPointer, posX, posY);
+            nativeMap.pickFeature(posX, posY);
         }
     }
 
@@ -964,8 +939,7 @@ public class MapController {
      */
     public void pickLabel(final float posX, final float posY) {
         if (labelPickListener != null) {
-            checkPointer(mapPointer);
-            nativePickLabel(mapPointer, posX, posY);
+            nativeMap.pickLabel(posX, posY);
         }
     }
 
@@ -977,8 +951,7 @@ public class MapController {
      */
     public void pickMarker(final float posX, final float posY) {
         if (markerPickListener != null) {
-            checkPointer(mapPointer);
-            nativePickMarker(mapPointer, posX, posY);
+            nativeMap.pickMarker(posX, posY);
         }
     }
 
@@ -989,8 +962,7 @@ public class MapController {
      */
     @NonNull
     public Marker addMarker() {
-        checkPointer(mapPointer);
-        final long markerId = nativeMarkerAdd(mapPointer);
+        final long markerId = nativeMap.markerAdd();
 
         final Marker marker = new Marker(viewHolder.getView().getContext(), markerId, this);
         markers.put(markerId, marker);
@@ -1014,18 +986,16 @@ public class MapController {
      * @return whether or not the marker was removed
      */
     public boolean removeMarker(final long markerId) {
-        checkPointer(mapPointer);
         checkId(markerId);
         markers.remove(markerId);
-        return nativeMarkerRemove(mapPointer, markerId);
+        return nativeMap.markerRemove(markerId);
     }
 
     /**
      * Remove all the {@link Marker} objects from the map.
      */
     public void removeAllMarkers() {
-        checkPointer(mapPointer);
-        nativeMarkerRemoveAll(mapPointer);
+        nativeMap.markerRemoveAll();
 
         // Invalidate all markers so their ids are unusable
         for (int i = 0; i < markers.size(); i++) {
@@ -1090,7 +1060,7 @@ public class MapController {
      * @param on True to activate the feature, false to deactivate
      */
     public void setDebugFlag(@NonNull final DebugFlag flag, final boolean on) {
-        nativeSetDebugFlag(flag.ordinal(), on);
+        nativeMap.setDebugFlag(flag.ordinal(), on);
     }
 
     /**
@@ -1099,8 +1069,7 @@ public class MapController {
      * @param use Whether to use a cached OpenGL state; false by default
      */
     public void useCachedGlState(final boolean use) {
-        checkPointer(mapPointer);
-        nativeUseCachedGlState(mapPointer, use);
+        nativeMap.useCachedGlState(use);
     }
 
     /**
@@ -1110,16 +1079,14 @@ public class MapController {
      * @param blue blue component of the background color
      */
     public void setDefaultBackgroundColor(final float red, final float green, final float blue) {
-        checkPointer(mapPointer);
-        nativeSetDefaultBackgroundColor(mapPointer, red, green, blue);
+        nativeMap.setDefaultBackgroundColor(red, green, blue);
     }
 
     // Package private methods
     // =======================
 
     void onLowMemory() {
-        checkPointer(mapPointer);
-        nativeOnLowMemory(mapPointer);
+        nativeMap.onLowMemory();
     }
 
     void checkPointer(final long ptr) {
@@ -1154,59 +1121,50 @@ public class MapController {
     }
 
     boolean setMarkerStylingFromString(final long markerId, final String styleString) {
-        checkPointer(mapPointer);
         checkId(markerId);
-        return nativeMarkerSetStylingFromString(mapPointer, markerId, styleString);
+        return nativeMap.markerSetStylingFromString(markerId, styleString);
     }
 
     boolean setMarkerStylingFromPath(final long markerId, final String path) {
-        checkPointer(mapPointer);
         checkId(markerId);
-        return nativeMarkerSetStylingFromPath(mapPointer, markerId, path);
+        return nativeMap.markerSetStylingFromPath(markerId, path);
     }
 
     boolean setMarkerBitmap(final long markerId, Bitmap bitmap, float density) {
-        checkPointer(mapPointer);
         checkId(markerId);
-        return nativeMarkerSetBitmap(mapPointer, markerId, bitmap, density);
+        return nativeMap.markerSetBitmap(markerId, bitmap, density);
     }
 
     boolean setMarkerPoint(final long markerId, final double lng, final double lat) {
-        checkPointer(mapPointer);
         checkId(markerId);
-        return nativeMarkerSetPoint(mapPointer, markerId, lng, lat);
+        return nativeMap.markerSetPoint(markerId, lng, lat);
     }
 
     boolean setMarkerPointEased(final long markerId, final double lng, final double lat, final int duration,
                                 @NonNull final EaseType ease) {
-        checkPointer(mapPointer);
         checkId(markerId);
         final float seconds = duration / 1000.f;
-        return nativeMarkerSetPointEased(mapPointer, markerId, lng, lat, seconds, ease.ordinal());
+        return nativeMap.markerSetPointEased(markerId, lng, lat, seconds, ease.ordinal());
     }
 
     boolean setMarkerPolyline(final long markerId, final double[] coordinates, final int count) {
-        checkPointer(mapPointer);
         checkId(markerId);
-        return nativeMarkerSetPolyline(mapPointer, markerId, coordinates, count);
+        return nativeMap.markerSetPolyline(markerId, coordinates, count);
     }
 
     boolean setMarkerPolygon(final long markerId, final double[] coordinates, final int[] rings, final int count) {
-        checkPointer(mapPointer);
         checkId(markerId);
-        return nativeMarkerSetPolygon(mapPointer, markerId, coordinates, rings, count);
+        return nativeMap.markerSetPolygon(markerId, coordinates, rings, count);
     }
 
     boolean setMarkerVisible(final long markerId, final boolean visible) {
-        checkPointer(mapPointer);
         checkId(markerId);
-        return nativeMarkerSetVisible(mapPointer, markerId, visible);
+        return nativeMap.markerSetVisible(markerId, visible);
     }
 
     boolean setMarkerDrawOrder(final long markerId, final int drawOrder) {
-        checkPointer(mapPointer);
         checkId(markerId);
-        return nativeMarkerSetDrawOrder(mapPointer, markerId, drawOrder);
+        return nativeMap.markerSetDrawOrder(markerId, drawOrder);
     }
 
 
@@ -1229,16 +1187,16 @@ public class MapController {
             public void onFailure(@Nullable final IOException e) {
                 if (httpRequestHandles.remove(requestHandle) == null) { return; }
                 String msg = (e == null) ? "" : e.getMessage();
-                nativeOnUrlComplete(mapPointer, requestHandle, null, msg);
+                nativeMap.onUrlComplete(requestHandle, null, msg);
             }
 
             @Override
             public void onResponse(final int code, @Nullable final byte[] rawDataBytes) {
                 if (httpRequestHandles.remove(requestHandle) == null) { return; }
                 if (code >= 200 && code < 300) {
-                    nativeOnUrlComplete(mapPointer, requestHandle, rawDataBytes, null);
+                    nativeMap.onUrlComplete(requestHandle, rawDataBytes, null);
                 } else {
-                    nativeOnUrlComplete(mapPointer, requestHandle, null,
+                    nativeMap.onUrlComplete(requestHandle, null,
                             "Unexpected response code: " + code + " for URL: " + url);
                 }
             }
@@ -1246,7 +1204,7 @@ public class MapController {
             @Override
             public void onCancel() {
                 if (httpRequestHandles.remove(requestHandle) == null) { return; }
-                nativeOnUrlComplete(mapPointer, requestHandle, null, null);
+                nativeMap.onUrlComplete(requestHandle, null, null);
             }
         };
 
@@ -1360,93 +1318,29 @@ public class MapController {
         return FontConfig.getFontFallback(importance, weightHint);
     }
 
+    // Native map
+    // ==========
+
+    NativeMap nativeMap;
+    MapChangeListener mapChangeListener;
+
     // Private members
     // ===============
 
-    long mapPointer;
     private MapRenderer mapRenderer;
     private GLViewHolder viewHolder;
     private MapRegionChangeState currentState = MapRegionChangeState.IDLE;
-    private AssetManager assetManager;
     private TouchInput touchInput;
-    private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
-    private final Map<Long, Object> httpRequestHandles = Collections.synchronizedMap(new HashMap());
-    MapChangeListener mapChangeListener;
+    private final Map<Long, Object> httpRequestHandles = Collections.synchronizedMap(new HashMap<Long, Object>());
     private FeaturePickListener featurePickListener;
     private SceneLoadListener sceneLoadListener;
     private LabelPickListener labelPickListener;
     private MarkerPickListener markerPickListener;
-    private FrameCaptureCallback frameCaptureCallback;
-    private boolean frameCaptureAwaitCompleteView;
     private Map<String, MapData> clientTileSources;
     private LongSparseArray<Marker> markers;
     private Handler uiThreadHandler;
     private CameraAnimationCallback cameraAnimationCallback;
     private CameraAnimationCallback pendingCameraAnimationCallback;
     private final Object cameraAnimationCallbackLock = new Object();
-    private boolean isGLRendererSet = false;
-
-    // Native methods
-    // ==============
-
-    private synchronized native void nativeOnLowMemory(long mapPtr);
-    private synchronized native long nativeInit(AssetManager assetManager);
-    private synchronized native void nativeDispose(long mapPtr);
-    private synchronized native void nativeShutdown(long mapPtr);
-    private synchronized native int nativeLoadScene(long mapPtr, String path, String[] updateStrings);
-    private synchronized native int nativeLoadSceneAsync(long mapPtr, String path, String[] updateStrings);
-    private synchronized native int nativeLoadSceneYaml(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
-    private synchronized native int nativeLoadSceneYamlAsync(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
-
-    private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
-    private synchronized native void nativeUpdateCameraPosition(long mapPtr, int set, double lon, double lat, float zoom, float zoomBy,
-                                                                float rotation, float rotateBy, float tilt, float tiltBy,
-                                                                double b1lon, double b1lat, double b2lon, double b2lat, int[] padding,
-                                                                float duration, int ease);
-    private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
-    private synchronized native void nativeGetEnclosingCameraPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int[] buffer, double[] lngLatZoom);
-    private synchronized native void nativeCancelCameraAnimation(long mapPtr);
-    private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
-    private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates, boolean clipToViewport);
-    private synchronized native void nativeSetPixelScale(long mapPtr, float scale);
-    private synchronized native void nativeSetCameraType(long mapPtr, int type);
-    private synchronized native int nativeGetCameraType(long mapPtr);
-    private synchronized native float nativeGetMinZoom(long mapPtr);
-    private synchronized native void nativeSetMinZoom(long mapPtr, float minZoom);
-    private synchronized native float nativeGetMaxZoom(long mapPtr);
-    private synchronized native void nativeSetMaxZoom(long mapPtr, float maxZoom);
-    private synchronized native void nativeHandleTapGesture(long mapPtr, float posX, float posY);
-    private synchronized native void nativeHandleDoubleTapGesture(long mapPtr, float posX, float posY);
-    private synchronized native void nativeHandlePanGesture(long mapPtr, float startX, float startY, float endX, float endY);
-    private synchronized native void nativeHandleFlingGesture(long mapPtr, float posX, float posY, float velocityX, float velocityY);
-    private synchronized native void nativeHandlePinchGesture(long mapPtr, float posX, float posY, float scale, float velocity);
-    private synchronized native void nativeHandleRotateGesture(long mapPtr, float posX, float posY, float rotation);
-    private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
-    private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
-    private synchronized native void nativePickFeature(long mapPtr, float posX, float posY);
-    private synchronized native void nativePickLabel(long mapPtr, float posX, float posY);
-    private synchronized native void nativePickMarker(long mapPtr, float posX, float posY);
-    private synchronized native long nativeMarkerAdd(long mapPtr);
-    private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
-    private synchronized native boolean nativeMarkerSetStylingFromString(long mapPtr, long markerID, String styling);
-    private synchronized native boolean nativeMarkerSetStylingFromPath(long mapPtr, long markerID, String path);
-    private synchronized native boolean nativeMarkerSetBitmap(long mapPtr, long markerID, Bitmap bitmap, float density);
-    private synchronized native boolean nativeMarkerSetPoint(long mapPtr, long markerID, double lng, double lat);
-    private synchronized native boolean nativeMarkerSetPointEased(long mapPtr, long markerID, double lng, double lat, float duration, int ease);
-    private synchronized native boolean nativeMarkerSetPolyline(long mapPtr, long markerID, double[] coordinates, int count);
-    private synchronized native boolean nativeMarkerSetPolygon(long mapPtr, long markerID, double[] coordinates, int[] rings, int count);
-    private synchronized native boolean nativeMarkerSetVisible(long mapPtr, long markerID, boolean visible);
-    private synchronized native boolean nativeMarkerSetDrawOrder(long mapPtr, long markerID, int drawOrder);
-    private synchronized native void nativeMarkerRemoveAll(long mapPtr);
-    private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
-    private synchronized native void nativeSetDefaultBackgroundColor(long mapPtr, float r, float g, float b);
-
-    private synchronized native long nativeAddClientDataSource(long mapPtr, String name, boolean generateCentroid);
-    private synchronized native void nativeRemoveClientDataSource(long mapPtr, long sourcePtr);
-
-    private synchronized native void nativeSetDebugFlag(int flag, boolean on);
-
-    private native void nativeOnUrlComplete(long mapPtr, long requestHandle, byte[] rawDataBytes, String errorMessage);
-
 }
