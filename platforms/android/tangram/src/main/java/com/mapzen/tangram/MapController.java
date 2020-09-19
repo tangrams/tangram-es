@@ -497,14 +497,7 @@ public class MapController {
      */
     @NonNull
     public CameraPosition getCameraPosition(@NonNull final CameraPosition out) {
-        final double[] pos = { 0, 0 };
-        final float[] zrt = { 0, 0, 0 };
-        nativeMap.getCameraPosition(pos, zrt);
-        out.longitude = pos[0];
-        out.latitude = pos[1];
-        out.zoom = zrt[0];
-        out.rotation = zrt[1];
-        out.tilt = zrt[2];
+        nativeMap.getCameraPosition(out);
         return out;
     }
 
@@ -538,13 +531,7 @@ public class MapController {
     @NonNull
     public CameraPosition getEnclosingCameraPosition(@NonNull LngLat sw, @NonNull LngLat ne, @NonNull Rect padding, @NonNull final CameraPosition out) {
         int[] pad = new int[]{padding.left, padding.top, padding.right, padding.bottom};
-        double[] lngLatZoom = new double[3];
-        nativeMap.getEnclosingCameraPosition(sw.longitude, sw.latitude, ne.longitude, ne.latitude, pad, lngLatZoom);
-        out.longitude = lngLatZoom[0];
-        out.latitude = lngLatZoom[1];
-        out.zoom = (float)lngLatZoom[2];
-        out.rotation = 0.f;
-        out.tilt = 0.f;
+        nativeMap.getEnclosingCameraPosition(sw.longitude, sw.latitude, ne.longitude, ne.latitude, pad, out);
         return out;
     }
 

@@ -136,21 +136,10 @@ void NATIVE_METHOD(captureSnapshot)(JNIEnv* env, jobject obj, jintArray buffer) 
     env->ReleaseIntArrayElements(buffer, ptr, 0);
 }
 
-void NATIVE_METHOD(getCameraPosition)(JNIEnv* env, jobject obj, jdoubleArray lonLat,
-                                      jfloatArray zoomRotationTilt) {
+void NATIVE_METHOD(getCameraPosition)(JNIEnv* env, jobject obj, jobject cameraPositionOut) {
     auto* map = androidMapFromJava(env, obj);
-    jdouble* pos = env->GetDoubleArrayElements(lonLat, nullptr);
-    jfloat* zrt = env->GetFloatArrayElements(zoomRotationTilt, nullptr);
-
-    auto camera = map->getCameraPosition();
-    pos[0] = camera.longitude;
-    pos[1] = camera.latitude;
-    zrt[0] = camera.zoom;
-    zrt[1] = camera.rotation;
-    zrt[2] = camera.tilt;
-
-    env->ReleaseDoubleArrayElements(lonLat, pos, 0);
-    env->ReleaseFloatArrayElements(zoomRotationTilt, zrt, 0);
+    CameraPosition cameraPosition = map->getCameraPosition();
+    JniHelpers::cameraPositionToJava(env, cameraPositionOut, cameraPosition);
 }
 
 void NATIVE_METHOD(updateCameraPosition)(JNIEnv* env, jobject obj,
@@ -185,7 +174,7 @@ void NATIVE_METHOD(updateCameraPosition)(JNIEnv* env, jobject obj,
 void NATIVE_METHOD(getEnclosingCameraPosition)(JNIEnv* env, jobject obj,
                                                jdouble aLng, jdouble aLat,
                                                jdouble bLng, jdouble bLat,
-                                               jintArray jpad, jdoubleArray lngLatZoom) {
+                                               jintArray jpad, jobject cameraPositionOut) {
     auto* map = androidMapFromJava(env, obj);
 
     EdgePadding padding;
@@ -195,11 +184,7 @@ void NATIVE_METHOD(getEnclosingCameraPosition)(JNIEnv* env, jobject obj,
         env->ReleaseIntArrayElements(jpad, jpadArray, JNI_ABORT);
     }
     CameraPosition camera = map->getEnclosingCameraPosition(LngLat{aLng,aLat}, LngLat{bLng,bLat}, padding);
-    jdouble* arr = env->GetDoubleArrayElements(lngLatZoom, nullptr);
-    arr[0] = camera.longitude;
-    arr[1] = camera.latitude;
-    arr[2] = camera.zoom;
-    env->ReleaseDoubleArrayElements(lngLatZoom, arr, 0);
+    JniHelpers::cameraPositionToJava(env, cameraPositionOut, camera);
 }
 
 void NATIVE_METHOD(flyTo)(JNIEnv* env, jobject obj, jdouble lon, jdouble lat,
