@@ -77,6 +77,7 @@ afterEvaluate { project ->
 
   task androidJavadocs(type: Javadoc) {
     source = android.sourceSets.main.java.srcDirs
+    failOnError = false
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
     exclude '**/*.kt'
     exclude 'com/almeros/android/multitouch'
@@ -91,12 +92,10 @@ afterEvaluate { project ->
   }
 
   task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
-    classifier = 'javadoc'
     from androidJavadocs.destinationDir
   }
 
   task androidSourcesJar(type: Jar) {
-    classifier = 'sources'
     from android.sourceSets.main.java.sourceFiles
   }
 
