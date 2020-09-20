@@ -106,7 +106,7 @@ bool Properties::getAsString(const std::string& key, std::string& value) const {
     return false;
 }
 
-std::string Properties::asString(const Value& value) const {
+std::string Properties::asString(const Value& value) {
     if (value.is<std::string>()) {
         return value.get<std::string>();
     } else if (value.is<double>()) {

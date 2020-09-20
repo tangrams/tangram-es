@@ -39,8 +39,6 @@ struct Properties {
 
     const std::string& getString(const std::string& key) const;
 
-    std::string asString(const Value& value) const;
-
     std::string getAsString(const std::string& key) const;
 
     bool getAsString(const std::string& key, std::string& value) const;
@@ -60,6 +58,8 @@ struct Properties {
     const std::vector<Item>& items() const { return props; }
 
     int32_t sourceId;
+
+    static std::string asString(const Value& value);
 
     static bool keyComparator(const std::string& a, const std::string& b) {
         if (a.size() == b.size()) {

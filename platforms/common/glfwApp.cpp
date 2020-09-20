@@ -88,6 +88,8 @@ std::vector<PointMarker> point_markers;
 Tangram::MarkerID polyline_marker = 0;
 std::vector<Tangram::LngLat> polyline_marker_coordinates;
 
+Tangram::MarkerID pickResultMarker = 0;
+
 std::vector<SceneUpdate> sceneUpdates;
 const char* apiKeyScenePath = "global.sdk_api_key";
 
@@ -377,6 +379,22 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
         logMsg("LngLat: %f, %f\n", location.longitude, location.latitude);
         logMsg("Clicked:  %f, %f\n", x, y);
         logMsg("Remapped: %f, %f\n", xx, yy);
+
+        map->pickLabelAt(x, y, [&](const LabelPickResult* result) {
+            if (result == nullptr) {
+                logMsg("Pick Label result is null.\n");
+                return;
+            }
+            if (pickResultMarker == 0) {
+                pickResultMarker = map->markerAdd();
+                map->markerSetStylingFromPath(pickResultMarker, "layers.pick-result.draw.pick-marker");
+            }
+            map->markerSetPoint(pickResultMarker, result->coordinates);
+            logMsg("Pick label result:\n");
+            for (const auto& item : result->touchItem.properties->items()) {
+                logMsg("  %s = %s\n", item.key.c_str(), Properties::asString(item.value).c_str());
+            }
+        });
 
         if (add_point_marker_on_click) {
             auto marker = map->markerAdd();
