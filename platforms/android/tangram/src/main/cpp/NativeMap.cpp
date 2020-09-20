@@ -149,7 +149,7 @@ void NATIVE_METHOD(updateCameraPosition)(JNIEnv* env, jobject obj,
                                          jfloat tilt, jfloat tiltBy,
                                          jdouble b1lon, jdouble b1lat,
                                          jdouble b2lon, jdouble b2lat,
-                                         jintArray jpad, jfloat duration, jint ease) {
+                                         jobject javaPadding, jfloat duration, jint ease) {
     auto* map = androidMapFromJava(env, obj);
 
     CameraUpdate update;
@@ -163,27 +163,19 @@ void NATIVE_METHOD(updateCameraPosition)(JNIEnv* env, jobject obj,
     update.tilt = tilt;
     update.tiltBy = tiltBy;
     update.bounds = std::array<LngLat,2>{{LngLat{b1lon, b1lat}, LngLat{b2lon, b2lat}}};
-    if (jpad != nullptr) {
-        jint* jpadArray = env->GetIntArrayElements(jpad, nullptr);
-        update.padding = EdgePadding{jpadArray[0], jpadArray[1], jpadArray[2], jpadArray[3]};
-        env->ReleaseIntArrayElements(jpad, jpadArray, JNI_ABORT);
-    }
+    update.padding = JniHelpers::edgePaddingFromJava(env, javaPadding);
     map->updateCameraPosition(update, duration, static_cast<Tangram::EaseType>(ease));
 }
 
 void NATIVE_METHOD(getEnclosingCameraPosition)(JNIEnv* env, jobject obj,
-                                               jdouble aLng, jdouble aLat,
-                                               jdouble bLng, jdouble bLat,
-                                               jintArray jpad, jobject cameraPositionOut) {
+                                               jobject javaLngLatSE, jobject javaLngLatNW,
+                                               jobject javaPadding, jobject cameraPositionOut) {
     auto* map = androidMapFromJava(env, obj);
 
-    EdgePadding padding;
-    if (jpad != nullptr) {
-        jint* jpadArray = env->GetIntArrayElements(jpad, nullptr);
-        padding = EdgePadding(jpadArray[0], jpadArray[1], jpadArray[2], jpadArray[3]);
-        env->ReleaseIntArrayElements(jpad, jpadArray, JNI_ABORT);
-    }
-    CameraPosition camera = map->getEnclosingCameraPosition(LngLat{aLng,aLat}, LngLat{bLng,bLat}, padding);
+    EdgePadding padding = JniHelpers::edgePaddingFromJava(env, javaPadding);
+    LngLat lngLatSE = JniHelpers::lngLatFromJava(env, javaLngLatSE);
+    LngLat lngLatNW = JniHelpers::lngLatFromJava(env, javaLngLatNW);
+    CameraPosition camera = map->getEnclosingCameraPosition(lngLatSE, lngLatNW, padding);
     JniHelpers::cameraPositionToJava(env, cameraPositionOut, camera);
 }
 
@@ -204,26 +196,24 @@ void NATIVE_METHOD(cancelCameraAnimation)(JNIEnv* env, jobject obj) {
 }
 
 jboolean NATIVE_METHOD(screenPositionToLngLat)(JNIEnv* env, jobject obj,
-                                               jdoubleArray coordinates) {
+                                               jfloat x, jfloat y, jobject lngLatOut) {
     auto* map = androidMapFromJava(env, obj);
 
-    jdouble* arr = env->GetDoubleArrayElements(coordinates, nullptr);
-    bool result = map->screenPositionToLngLat(arr[0], arr[1], &arr[0], &arr[1]);
-    env->ReleaseDoubleArrayElements(coordinates, arr, 0);
+    LngLat lngLat{};
+    bool result = map->screenPositionToLngLat(x, y, &lngLat.longitude, &lngLat.latitude);
+    JniHelpers::lngLatToJava(env, lngLatOut, lngLat);
     return static_cast<jboolean>(result);
 }
 
 jboolean NATIVE_METHOD(lngLatToScreenPosition)(JNIEnv* env, jobject obj,
-                                               jdoubleArray coordinates, jboolean clipToViewport) {
+                                               jdouble lng, jdouble lat, jobject screenPositionOut, jboolean clipToViewport) {
     auto* map = androidMapFromJava(env, obj);
 
-    jdouble* arr = env->GetDoubleArrayElements(coordinates, nullptr);
-    bool result = map->lngLatToScreenPosition(arr[0], arr[1], &arr[0], &arr[1], clipToViewport);
-    env->ReleaseDoubleArrayElements(coordinates, arr, 0);
+    double x = 0, y = 0;
+    bool result = map->lngLatToScreenPosition(lng, lat, &x, &y, clipToViewport);
+    JniHelpers::vec2ToJava(env, screenPositionOut, static_cast<float>(x), static_cast<float>(y));
     return static_cast<jboolean>(result);
 }
-
-
 
 void NATIVE_METHOD(setPixelScale)(JNIEnv* env, jobject obj, jfloat scale) {
     auto* map = androidMapFromJava(env, obj);

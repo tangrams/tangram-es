@@ -530,8 +530,7 @@ public class MapController {
      */
     @NonNull
     public CameraPosition getEnclosingCameraPosition(@NonNull LngLat sw, @NonNull LngLat ne, @NonNull Rect padding, @NonNull final CameraPosition out) {
-        int[] pad = new int[]{padding.left, padding.top, padding.right, padding.bottom};
-        nativeMap.getEnclosingCameraPosition(sw.longitude, sw.latitude, ne.longitude, ne.latitude, pad, out);
+        nativeMap.getEnclosingCameraPosition(sw, ne, padding, out);
         return out;
     }
 
@@ -598,11 +597,22 @@ public class MapController {
      */
     @Nullable
     public LngLat screenPositionToLngLat(@NonNull final PointF screenPosition) {
-        final double[] tmp = { screenPosition.x, screenPosition.y };
-        if (nativeMap.screenPositionToLngLat(tmp)) {
-            return new LngLat(tmp[0], tmp[1]);
+        LngLat result = new LngLat();
+        if (screenPositionToLngLat(screenPosition, result)) {
+            return result;
         }
         return null;
+    }
+
+    /**
+     * Find the geographic coordinates corresponding to the given position on screen.
+     * @param screenPosition Position in pixels from the top-left corner of the map area.
+     * @param lngLatOut LngLat object to hold the result.
+     * @return True if a LngLat result was found, false if the screen position does not intersect
+     * a geographic location (this can happen at high tilt angles).
+     */
+    public boolean screenPositionToLngLat(@NonNull final PointF screenPosition, @NonNull final LngLat lngLatOut) {
+        return nativeMap.screenPositionToLngLat(screenPosition.x, screenPosition.y, lngLatOut);
     }
 
     /**
@@ -627,10 +637,7 @@ public class MapController {
      * @return True if the resulting point is inside the viewport, otherwise false.
      */
     public boolean lngLatToScreenPosition(@NonNull final LngLat lngLat, @NonNull final PointF screenPositionOut, boolean clipToViewport) {
-        final double[] tmp = { lngLat.longitude, lngLat.latitude };
-        boolean insideViewport = nativeMap.lngLatToScreenPosition(tmp, clipToViewport);
-        screenPositionOut.set((float)tmp[0], (float)tmp[1]);
-        return insideViewport;
+        return nativeMap.lngLatToScreenPosition(lngLat.longitude, lngLat.latitude, screenPositionOut, clipToViewport);
     }
 
     /**

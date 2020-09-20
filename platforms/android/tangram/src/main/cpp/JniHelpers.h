@@ -1,11 +1,11 @@
 #pragma once
 
+#include "map.h"
+
 #include <jni.h>
 #include <string>
 
 namespace Tangram {
-
-struct CameraPosition;
 
 class JniHelpers {
 
@@ -18,6 +18,14 @@ public:
     static jstring javaStringFromString(JNIEnv* jniEnv, const std::string& string);
 
     static void cameraPositionToJava(JNIEnv* env, jobject javaCamera, const CameraPosition& camera);
+
+    static void vec2ToJava(JNIEnv* env, jobject javaPointF, float x, float y);
+
+    static void lngLatToJava(JNIEnv* env, jobject javaLngLat, const LngLat& lngLat);
+
+    static LngLat lngLatFromJava(JNIEnv* env, jobject javaLngLat);
+
+    static EdgePadding edgePaddingFromJava(JNIEnv* env, jobject javaRect);
 
 protected:
 
