@@ -697,6 +697,7 @@ std::shared_ptr<TileSource> SceneLoader::loadSource(const Node& _source, const s
 
     std::string type;
     std::string url;
+    std::vector<std::string> urls_mbtiles;
     std::string mbtiles;
 
     NetworkDataSource::UrlOptions urlOptions{};
@@ -710,6 +711,13 @@ std::shared_ptr<TileSource> SceneLoader::loadSource(const Node& _source, const s
     }
     if (auto urlNode = _source["url"]) {
         url = urlNode.Scalar();
+    }
+    if (auto urlsMbtilesNode = _source["urls_mbtiles"]) {
+        if (urlsMbtilesNode.IsSequence()) {
+            for (const auto &urlMbtilesNode : urlsMbtilesNode) {
+                urls_mbtiles.push_back(urlMbtilesNode.Scalar());
+            }
+        }
     }
     if (auto minDisplayZoomNode = _source["min_display_zoom"]) {
         YamlUtil::getInt(minDisplayZoomNode, zoomOptions.minDisplayZoom);
@@ -800,12 +808,15 @@ std::shared_ptr<TileSource> SceneLoader::loadSource(const Node& _source, const s
 
     std::unique_ptr<TileSource::DataSource> rawSources;
 
-    if (isMBTilesFile) {
+    if (!urls_mbtiles.empty() || isMBTilesFile) {
 #ifdef TANGRAM_MBTILES_DATASOURCE
         // If we have MBTiles, we know the source is tiled.
         isTiled = true;
         // Create an MBTiles data source from the file at the url and add it to the source chain.
-        rawSources = std::make_unique<MBTilesDataSource>(_platform, _name, url, "");
+        if (urls_mbtiles.empty()) {
+            urls_mbtiles.push_back(url);
+        }
+        rawSources = std::make_unique<MBTilesDataSource>(_platform, _name, urls_mbtiles, "");
 #else
         LOGE("MBTiles support is disabled. This source will be ignored: %s", _name.c_str());
         return nullptr;
