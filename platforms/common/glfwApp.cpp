@@ -588,6 +588,18 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 camera.zoom = 16.f;
                 map->flyTo(camera, -1.f, 1.0);
                 break;
+            case GLFW_KEY_F8: // Beijing
+                map->setCameraPosition({116.39703, 39.91006, 12.5});
+                break;
+            case GLFW_KEY_F9: // Bangkok
+                map->setCameraPosition({100.49216, 13.7556, 12.5});
+                break;
+            case GLFW_KEY_F10: // Dhaka
+                map->setCameraPosition({90.40166, 23.72909, 14.5});
+                break;
+            case GLFW_KEY_F11: // Tehran
+                map->setCameraPosition({51.42086, 35.7409, 13.5});
+                break;
             case GLFW_KEY_W:
                 map->onMemoryWarning();
                 break;
