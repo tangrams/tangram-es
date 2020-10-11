@@ -49,6 +49,9 @@ jobs:
       - store_artifacts:
           path: build/ios/CMakeFiles/CMakeOutput.log
           destination: CMakeOutput.log
+      - store_artifacts:
+          path: build/ios/CMakeFiles/CMakeError.log
+          destination: CMakeError.log
   build-deploy-ios-snapshot:
     macos:
       xcode: "11.4.1"
