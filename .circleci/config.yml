@@ -46,6 +46,9 @@ jobs:
       - run: make ios-sim BUILD_TYPE=Debug
       - run: make ios-static-sim BUILD_TYPE=Debug
       - run: make ios-swift-sim BUILD_TYPE=Debug
+      - store_artifacts:
+          path: build/ios/CMakeFiles/CMakeOutput.log
+          destination: CMakeOutput.log
   build-deploy-ios-snapshot:
     macos:
       xcode: "11.4.1"
