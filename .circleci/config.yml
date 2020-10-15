@@ -44,7 +44,7 @@ jobs:
       - run: brew install cmake
       # Build test app variants. Use simulator target to bypass codesigning.
       #- run: make ios-sim BUILD_TYPE=Debug
-      - run: make ios-static BUILD_TYPE=Debug
+      - run: make ios-static-lib BUILD_TYPE=Debug
       #- run: make ios-swift-sim BUILD_TYPE=Debug
   build-deploy-ios-snapshot:
     macos:
