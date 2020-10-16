@@ -231,6 +231,7 @@ ios-static-sim: cmake-ios
 	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo-static -configuration ${BUILD_TYPE} -sdk iphonesimulator ${XCPRETTY}
 
 ios-static-lib: cmake-ios
+	xcodebuild -project build/ios/tangram.xcodeproj -target tangram-core -configuration ${BUILD_TYPE} -sdk iphoneos ${XCPRETTY}
 	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme tangram-static -configuration ${BUILD_TYPE} -sdk iphoneos ${XCPRETTY}
 
 ios-static-lib-sim: cmake-ios
