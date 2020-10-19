@@ -58,6 +58,9 @@ textures:
             bookstore: [0, 333, 32, 32]
             shield: [0, 1142, 32, 32]
             arrow: [1, 1175, 22, 22]
+    marker-stroked:
+        url: img/marker-stroked.png
+        density: 2
 
 styles:
     icons:
@@ -93,6 +96,10 @@ styles:
                 alpha: 0.25
                 width: 1px
             interactive: true
+    pick-marker:
+        base: points
+        texture: marker-stroked
+        blend_order: 3
 
 sources:
     osm:
@@ -106,26 +113,33 @@ layers:
     touch:
         data: { source: touch }
         line:
-          filter: { type: line }
+          filter: { $geometry: line }
           draw:
             lines:
               color: function () { return feature.color || 'black'; }
               order: 500
               width: 2px
         poly:
-            filter: { type: poly }
+            filter: { $geometry: polygon }
             draw:
               polygons:
                 color: magenta
                 order: 40
         point:
-            filter: { type: point }
+            filter: { $geometry: point }
             draw:
               icons:
                 sprite: sunburst
                 # texture: null
                 collide: false
                 transition: { show: { time: 0s }, hide: { time: 0s } }
+
+    pick-result:
+        draw:
+            pick-marker:
+                collide: false
+                offset: [0px, -11px]
+                order: 900
 
     earth:
         data: { source: osm }
@@ -641,7 +655,6 @@ layers:
                         priority: 1
                         font:
                             family: Open Sans
-                            size: 12px
                             fill: [0, 0, 0, .8]
                             stroke: { color: white, width: 4 }
                             transform: uppercase

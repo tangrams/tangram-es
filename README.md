@@ -1,7 +1,7 @@
 Tangram ES
 ==========
 
-[![CircleCI](https://circleci.com/gh/tangrams/tangram-es.svg?style=shield)](https://circleci.com/gh/tangrams/tangram-es)
+[![CircleCI](https://circleci.com/gh/tangrams/tangram-es.svg?style=shield)](https://app.circleci.com/pipelines/github/tangrams/tangram-es)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
 
 Tangram ES is a C++ library for rendering 2D and 3D maps from vector data using OpenGL ES. It is a counterpart to [Tangram](https://github.com/tangrams/tangram).

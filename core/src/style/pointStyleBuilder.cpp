@@ -134,6 +134,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule) const -> Parameters {
 
     _rule.get(StyleParamKey::sprite, p.sprite);
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
+    p.labelOptions.offset *= m_style.pixelScale();
     _rule.get(StyleParamKey::buffer, p.labelOptions.buffer);
 
     float priority = 0;
