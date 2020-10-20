@@ -34,8 +34,6 @@ jobs:
   build-ios:
     macos:
       xcode: "11.4.1"
-    environment:
-      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       # Check out repository with submodules.
       - checkout
@@ -49,8 +47,6 @@ jobs:
   build-deploy-ios-snapshot:
     macos:
       xcode: "11.4.1"
-    environment:
-      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       # Check out repository with submodules.
       - checkout
@@ -77,8 +73,6 @@ jobs:
   build-deploy-macos-snapshot:
     macos:
       xcode: "11.4.1"
-    environment:
-      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       # Check out repository with submodules.
       - checkout
@@ -94,8 +88,6 @@ jobs:
   build-deploy-ios-release:
     macos:
       xcode: "11.4.1"
-    environment:
-      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       # Check out repository with submodules.
       - checkout
