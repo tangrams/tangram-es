@@ -15,7 +15,7 @@ class MapRenderer implements GLSurfaceView.Renderer {
     MapRenderer(MapController mapController, Handler uiThreadHandler) {
         this.uiThreadHandler = uiThreadHandler;
         this.map = mapController;
-        this.mapPointer = mapController.mapPointer;
+        this.nativeMap = mapController.nativeMap;
     }
 
     // GLSurfaceView.Renderer methods
@@ -34,20 +34,14 @@ class MapRenderer implements GLSurfaceView.Renderer {
         final float delta = (newTime - time) / 1000000000.0f;
         time = newTime;
 
-        if (mapPointer <= 0) {
-            // No native instance is initialized, so stop here. This can happen during Activity
-            // shutdown when the map has been disposed but the View hasn't been destroyed yet.
-            return;
-        }
-
         boolean mapViewComplete;
         boolean isCameraEasing;
         boolean isAnimating;
 
         synchronized(map) {
-            int state = nativeUpdate(mapPointer, delta);
+            int state = nativeMap.update(delta);
 
-            nativeRender(mapPointer);
+            nativeMap.render();
 
             mapViewComplete = (state == VIEW_COMPLETE);
             isCameraEasing = (state & VIEW_CHANGING) != 0;
@@ -93,34 +87,21 @@ class MapRenderer implements GLSurfaceView.Renderer {
 
     @Override
     public void onSurfaceChanged(final GL10 gl, final int width, final int height) {
-        if (mapPointer <= 0) {
-            // No native instance is initialized, so stop here. This can happen during Activity
-            // shutdown when the map has been disposed but the View hasn't been destroyed yet.
-            return;
-        }
-
         synchronized (map) {
-            nativeResize(mapPointer, width, height);
+            nativeMap.resize(width, height);
         }
     }
 
     @Override
     public void onSurfaceCreated(final GL10 gl, final EGLConfig config) {
-        if (mapPointer <= 0) {
-            // No native instance is initialized, so stop here. This can happen during Activity
-            // shutdown when the map has been disposed but the View hasn't been destroyed yet.
-            return;
-        }
-
         synchronized (map) {
-            nativeSetupGL(mapPointer);
+            nativeMap.setupGL();
         }
     }
 
     void captureFrame(MapController.FrameCaptureCallback callback, boolean waitForCompleteView) {
         frameCaptureCallback = callback;
         frameCaptureAwaitCompleteView = waitForCompleteView;
-
     }
 
     @NonNull
@@ -130,11 +111,11 @@ class MapRenderer implements GLSurfaceView.Renderer {
         final int w = view.getWidth();
         final int h = view.getHeight();
 
-        final int b[] = new int[w * h];
-        final int bt[] = new int[w * h];
+        final int[] b = new int[w * h];
+        final int[] bt = new int[w * h];
 
         synchronized (map) {
-            nativeCaptureSnapshot(mapPointer, b);
+            nativeMap.captureSnapshot(b);
         }
         for (int i = 0; i < h; i++) {
             for (int j = 0; j < w; j++) {
@@ -151,17 +132,10 @@ class MapRenderer implements GLSurfaceView.Renderer {
 
     private final Handler uiThreadHandler;
     private final MapController map;
-    private final long mapPointer;
+    private final NativeMap nativeMap;
     private long time = System.nanoTime();
     private boolean isPrevCameraEasing = false;
     private boolean isPrevMapViewComplete = false;
-
-
-    private native void nativeSetupGL(long mapPtr);
-    private native void nativeResize(long mapPtr, int width, int height);
-    private native int nativeUpdate(long mapPtr, float dt);
-    private native void nativeRender(long mapPtr);
-    private native void nativeCaptureSnapshot(long mapPtr, int[] buffer);
 
     private MapController.FrameCaptureCallback frameCaptureCallback;
     private boolean frameCaptureAwaitCompleteView;
