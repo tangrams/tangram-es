@@ -33,7 +33,7 @@ jobs:
       - run: cd platforms/android && ./gradlew uploadArchives
   build-ios:
     macos:
-      xcode: "11.4.1"
+      xcode: "11.7.0"
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
@@ -48,7 +48,7 @@ jobs:
       - run: make ios-swift-sim BUILD_TYPE=Debug
   build-deploy-ios-snapshot:
     macos:
-      xcode: "11.4.1"
+      xcode: "11.7.0"
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
@@ -76,7 +76,7 @@ jobs:
           path: ~/pod.zip
   build-deploy-macos-snapshot:
     macos:
-      xcode: "11.4.1"
+      xcode: "11.7.0"
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
@@ -93,7 +93,7 @@ jobs:
           path: ~/demo.zip
   build-deploy-ios-release:
     macos:
-      xcode: "11.4.1"
+      xcode: "11.7.0"
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
