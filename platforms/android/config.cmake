@@ -11,8 +11,11 @@ endif()
 
 add_library(tangram SHARED
   platforms/common/platform_gl.cpp
-  platforms/android/tangram/src/main/cpp/jniExports.cpp
-  platforms/android/tangram/src/main/cpp/androidPlatform.cpp
+  platforms/android/tangram/src/main/cpp/JniHelpers.cpp
+  platforms/android/tangram/src/main/cpp/JniOnLoad.cpp
+  platforms/android/tangram/src/main/cpp/AndroidPlatform.cpp
+  platforms/android/tangram/src/main/cpp/AndroidMap.cpp
+  platforms/android/tangram/src/main/cpp/NativeMap.cpp
 )
 
 if(TANGRAM_MBTILES_DATASOURCE)
