@@ -40,10 +40,9 @@ target_include_directories(miniz
 
 
 if(NOT TANGRAM_USE_SYSTEM_FONT_LIBS)
-  ## Harfbuzz - ICU-Common - UCDN - Freetype2 ##
-  ##############################################
+  ## Harfbuzz - ICU-Common - Freetype2 ##
+  #######################################
   set(HARFBUZZ_BUILD_ICU ON CACHE BOOL "Enable building of ICU")
-  set(HARFBUZZ_BUILD_UCDN ON CACHE BOOL "Enable building of UCDN")
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/harfbuzz-icu-freetype)
 
   message(STATUS "harfbuzz" ${HARFBUZZ_LIBRARIES})
