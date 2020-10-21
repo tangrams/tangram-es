@@ -34,6 +34,9 @@ jobs:
   build-ios:
     macos:
       xcode: "11.4.1"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
     steps:
       # Check out repository with submodules.
       - checkout
