@@ -60,7 +60,7 @@ jint NATIVE_METHOD(loadScene)(JNIEnv* env, jobject obj, jstring path,
     auto cPath = JniHelpers::stringFromJavaString(env, path);
 
     auto sceneUpdates = unpackSceneUpdates(env, updateStrings);
-    Url sceneUrl = Url(cPath).resolved("asset:///");
+    Url sceneUrl = Url("asset:///").resolve(Url(cPath));
     jint sceneId = map->loadScene(sceneUrl.string(), false, sceneUpdates);
 
     return sceneId;
@@ -73,7 +73,7 @@ jint NATIVE_METHOD(loadSceneAsync)(JNIEnv* env, jobject obj, jstring path,
     auto cPath = JniHelpers::stringFromJavaString(env, path);
 
     auto sceneUpdates = unpackSceneUpdates(env, updateStrings);
-    Url sceneUrl = Url(cPath).resolved("asset:///");
+    Url sceneUrl = Url("asset:///").resolve(Url(cPath));
     jint sceneId = map->loadSceneAsync(sceneUrl.string(), false, sceneUpdates);
 
     return sceneId;
@@ -87,7 +87,7 @@ jint NATIVE_METHOD(loadSceneYaml)(JNIEnv* env, jobject obj, jstring yaml, jstrin
     auto cPath = JniHelpers::stringFromJavaString(env, path);
 
     auto sceneUpdates = unpackSceneUpdates(env, updateStrings);
-    Url sceneUrl = Url(cPath).resolved("asset:///");
+    Url sceneUrl = Url("asset:///").resolve(Url(cPath));
     jint sceneId = map->loadSceneYaml(cYaml, sceneUrl.string(), false, sceneUpdates);
 
     return sceneId;
@@ -101,7 +101,7 @@ jint NATIVE_METHOD(loadSceneYamlAsync)(JNIEnv* env, jobject obj, jstring yaml, j
     auto cPath = JniHelpers::stringFromJavaString(env, path);
 
     auto sceneUpdates = unpackSceneUpdates(env, updateStrings);
-    Url sceneUrl = Url(cPath).resolved("asset:///");
+    Url sceneUrl = Url("asset:///").resolve(Url(cPath));
     jint sceneId = map->loadSceneYamlAsync(cYaml, sceneUrl.string(), false, sceneUpdates);
 
     return sceneId;

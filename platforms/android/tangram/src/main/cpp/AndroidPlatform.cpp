@@ -148,7 +148,7 @@ FontSourceHandle AndroidPlatform::systemFont(const std::string& name, const std:
 
     if (path.empty()) { return {}; }
 
-    auto data = bytesFromFile(path.c_str());
+    auto data = bytesFromFile(Url(path.c_str()));
 
     return FontSourceHandle([data]() { return data; });
 }
