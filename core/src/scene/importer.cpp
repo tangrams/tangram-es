@@ -208,11 +208,11 @@ std::vector<Url> Importer::getResolvedImportUrls(const Node& sceneNode, const Ur
     if (sceneNode.IsMap()) {
         if (const Node& import = sceneNode["import"]) {
             if (import.IsScalar()) {
-                sceneUrls.push_back(Url(import.Scalar()).resolved(base));
+                sceneUrls.push_back(base.resolve(Url(import.Scalar())));
             } else if (import.IsSequence()) {
                 for (const auto &path : import) {
                     if (path.IsScalar()) {
-                        sceneUrls.push_back(Url(path.Scalar()).resolved(base));
+                        sceneUrls.push_back(base.resolve(Url(path.Scalar())));
                     }
                 }
             }
@@ -283,7 +283,7 @@ bool Importer::isZipArchiveUrl(const Url& url) {
 
 Url Importer::getBaseUrlForZipArchive(const Url& archiveUrl) {
     auto encodedSourceUrl = Url::escapeReservedCharacters(archiveUrl.string());
-    auto baseUrl = Url("zip://" +  encodedSourceUrl);
+    auto baseUrl = Url("zip://" + encodedSourceUrl);
     return baseUrl;
 }
 
@@ -334,7 +334,7 @@ void Importer::resolveSceneUrls(Node& root, const Url& baseUrl) {
         for (auto texture : textures) {
             if (Node textureUrlNode = texture.second["url"]) {
                 if (nodeIsPotentialUrl(textureUrlNode)) {
-                    textureUrlNode = Url(textureUrlNode.Scalar()).resolved(base).string();
+                    textureUrlNode = base.resolve(Url(textureUrlNode.Scalar())).string();
                 }
             }
         }
@@ -352,7 +352,7 @@ void Importer::resolveSceneUrls(Node& root, const Url& baseUrl) {
             //style->texture
             if (Node texture = style["texture"]) {
                 if (nodeIsTextureUrl(texture, textures)) {
-                    texture = Url(texture.Scalar()).resolved(base).string();
+                    texture = base.resolve(Url(texture.Scalar())).string();
                 }
             }
 
@@ -364,7 +364,7 @@ void Importer::resolveSceneUrls(Node& root, const Url& baseUrl) {
                         if (!propNode.IsMap()) { continue; }
                         if (Node matTexture = propNode["texture"]) {
                             if (nodeIsTextureUrl(matTexture, textures)) {
-                                matTexture = Url(matTexture.Scalar()).resolved(base).string();
+                                matTexture = base.resolve(Url(matTexture.Scalar())).string();
                             }
                         }
                     }
@@ -378,11 +378,11 @@ void Importer::resolveSceneUrls(Node& root, const Url& baseUrl) {
                     for (auto uniformEntry : uniforms) {
                         Node uniformValue = uniformEntry.second;
                         if (nodeIsTextureUrl(uniformValue, textures)) {
-                            uniformValue = Url(uniformValue.Scalar()).resolved(base).string();
+                            uniformValue = base.resolve(Url(uniformValue.Scalar())).string();
                         } else if (uniformValue.IsSequence()) {
                             for (Node u : uniformValue) {
                                 if (nodeIsTextureUrl(u, textures)) {
-                                    u = Url(u.Scalar()).resolved(base).string();
+                                    u = base.resolve(Url(u.Scalar())).string();
                                 }
                             }
                         }
@@ -399,7 +399,7 @@ void Importer::resolveSceneUrls(Node& root, const Url& baseUrl) {
             if (!source.second.IsMap()) { continue; }
             if (Node sourceUrl = source.second["url"]) {
                 if (nodeIsPotentialUrl(sourceUrl)) {
-                    sourceUrl = Url(sourceUrl.Scalar()).resolved(base).string();
+                    sourceUrl = base.resolve(Url(sourceUrl.Scalar())).string();
                 }
             }
         }
@@ -413,13 +413,13 @@ void Importer::resolveSceneUrls(Node& root, const Url& baseUrl) {
                 if (font.second.IsMap()) {
                     auto urlNode = font.second["url"];
                     if (nodeIsPotentialUrl(urlNode)) {
-                        urlNode = Url(urlNode.Scalar()).resolved(base).string();
+                        urlNode = base.resolve(Url(urlNode.Scalar())).string();
                     }
                 } else if (font.second.IsSequence()) {
                     for (auto& fontNode : font.second) {
                         auto urlNode = fontNode["url"];
                         if (nodeIsPotentialUrl(urlNode)) {
-                            urlNode = Url(urlNode.Scalar()).resolved(base).string();
+                            urlNode = base.resolve(Url(urlNode.Scalar())).string();
                         }
                     }
                 }

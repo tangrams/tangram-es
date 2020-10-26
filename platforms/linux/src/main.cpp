@@ -22,12 +22,12 @@ int main(int argc, char* argv[]) {
     Url baseUrl("file:///");
     char pathBuffer[PATH_MAX] = {0};
     if (getcwd(pathBuffer, PATH_MAX) != nullptr) {
-        baseUrl = Url(std::string(pathBuffer) + "/").resolved(baseUrl);
+        baseUrl = baseUrl.resolve(Url(std::string(pathBuffer) + "/"));
     }
     
     LOG("Base URL: %s", baseUrl.string().c_str());
     
-    Url sceneUrl = Url(GlfwApp::sceneFile).resolved(baseUrl);
+    Url sceneUrl = baseUrl.resolve(Url(GlfwApp::sceneFile));
     GlfwApp::sceneFile = sceneUrl.string();
 
     // Give it a chance to shutdown cleanly on CTRL-C

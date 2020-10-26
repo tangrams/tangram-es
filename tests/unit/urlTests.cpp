@@ -137,20 +137,20 @@ TEST_CASE("Resolve a URL against an absolute base URL", "[Url]") {
 
     Url base("http://a/b/c/d;p?q");
 
-    CHECK(Url("g:h").resolved(base).string() == "g:h");
-    CHECK(Url("g").resolved(base).string() == "http://a/b/c/g");
-    CHECK(Url("./g").resolved(base).string() == "http://a/b/c/g");
-    CHECK(Url("g/").resolved(base).string() == "http://a/b/c/g/");
-    CHECK(Url("/g").resolved(base).string() == "http://a/g");
-    CHECK(Url("?y").resolved(base).string() == "http://a/b/c/d;p?y");
-    CHECK(Url("g?y").resolved(base).string() == "http://a/b/c/g?y");
-    CHECK(Url("#s").resolved(base).string() == "http://a/b/c/d;p?q#s");
-    CHECK(Url("g#s").resolved(base).string() == "http://a/b/c/g#s");
-    CHECK(Url("g?y#s").resolved(base).string() == "http://a/b/c/g?y#s");
-    CHECK(Url(";x").resolved(base).string() == "http://a/b/c/d;x"); // See [1] below.
-    CHECK(Url("g;x").resolved(base).string() == "http://a/b/c/g;x");
-    CHECK(Url("g;x?y#s").resolved(base).string() == "http://a/b/c/g;x?y#s");
-    CHECK(Url("").resolved(base).string() == "http://a/b/c/d;p?q");
+    CHECK(base.resolve(Url("g:h")).string() == "g:h");
+    CHECK(base.resolve(Url("g")).string() == "http://a/b/c/g");
+    CHECK(base.resolve(Url("./g")).string() == "http://a/b/c/g");
+    CHECK(base.resolve(Url("g/")).string() == "http://a/b/c/g/");
+    CHECK(base.resolve(Url("/g")).string() == "http://a/g");
+    CHECK(base.resolve(Url("?y")).string() == "http://a/b/c/d;p?y");
+    CHECK(base.resolve(Url("g?y")).string() == "http://a/b/c/g?y");
+    CHECK(base.resolve(Url("#s")).string() == "http://a/b/c/d;p?q#s");
+    CHECK(base.resolve(Url("g#s")).string() == "http://a/b/c/g#s");
+    CHECK(base.resolve(Url("g?y#s")).string() == "http://a/b/c/g?y#s");
+    CHECK(base.resolve(Url(";x")).string() == "http://a/b/c/d;x"); // See [1] below.
+    CHECK(base.resolve(Url("g;x")).string() == "http://a/b/c/g;x");
+    CHECK(base.resolve(Url("g;x?y#s")).string() == "http://a/b/c/g;x?y#s");
+    CHECK(base.resolve(Url("")).string() == "http://a/b/c/d;p?q");
 
 }
 
@@ -158,20 +158,20 @@ TEST_CASE("Resolve a URL against a relative base URL", "[Url]") {
 
     Url base("a/b/c/d;p?q");
 
-    CHECK(Url("g:h").resolved(base).string() == "g:h");
-    CHECK(Url("g").resolved(base).string() == "a/b/c/g");
-    CHECK(Url("./g").resolved(base).string() == "a/b/c/g");
-    CHECK(Url("g/").resolved(base).string() == "a/b/c/g/");
-    CHECK(Url("/g").resolved(base).string() == "/g");
-    CHECK(Url("?y").resolved(base).string() == "a/b/c/d;p?y");
-    CHECK(Url("g?y").resolved(base).string() == "a/b/c/g?y");
-    CHECK(Url("#s").resolved(base).string() == "a/b/c/d;p?q#s");
-    CHECK(Url("g#s").resolved(base).string() == "a/b/c/g#s");
-    CHECK(Url("g?y#s").resolved(base).string() == "a/b/c/g?y#s");
-    CHECK(Url(";x").resolved(base).string() == "a/b/c/d;x"); // See [1] below.
-    CHECK(Url("g;x").resolved(base).string() == "a/b/c/g;x");
-    CHECK(Url("g;x?y#s").resolved(base).string() == "a/b/c/g;x?y#s");
-    CHECK(Url("").resolved(base).string() == "a/b/c/d;p?q");
+    CHECK(base.resolve(Url("g:h")).string() == "g:h");
+    CHECK(base.resolve(Url("g")).string() == "a/b/c/g");
+    CHECK(base.resolve(Url("./g")).string() == "a/b/c/g");
+    CHECK(base.resolve(Url("g/")).string() == "a/b/c/g/");
+    CHECK(base.resolve(Url("/g")).string() == "/g");
+    CHECK(base.resolve(Url("?y")).string() == "a/b/c/d;p?y");
+    CHECK(base.resolve(Url("g?y")).string() == "a/b/c/g?y");
+    CHECK(base.resolve(Url("#s")).string() == "a/b/c/d;p?q#s");
+    CHECK(base.resolve(Url("g#s")).string() == "a/b/c/g#s");
+    CHECK(base.resolve(Url("g?y#s")).string() == "a/b/c/g?y#s");
+    CHECK(base.resolve(Url(";x")).string() == "a/b/c/d;x"); // See [1] below.
+    CHECK(base.resolve(Url("g;x")).string() == "a/b/c/g;x");
+    CHECK(base.resolve(Url("g;x?y#s")).string() == "a/b/c/g;x?y#s");
+    CHECK(base.resolve(Url("")).string() == "a/b/c/d;p?q");
 
 }
 
@@ -179,20 +179,20 @@ TEST_CASE("Resolve a relative URL against an empty base URL", "[Url]") {
 
     Url base("");
 
-    CHECK(Url("g:h").resolved(base).string() == "g:h");
-    CHECK(Url("g").resolved(base).string() == "g");
-    CHECK(Url("./g").resolved(base).string() == "g");
-    CHECK(Url("g/").resolved(base).string() == "g/");
-    CHECK(Url("/g").resolved(base).string() == "/g");
-    CHECK(Url("?y").resolved(base).string() == "?y");
-    CHECK(Url("g?y").resolved(base).string() == "g?y");
-    CHECK(Url("#s").resolved(base).string() == "#s");
-    CHECK(Url("g#s").resolved(base).string() == "g#s");
-    CHECK(Url("g?y#s").resolved(base).string() == "g?y#s");
-    CHECK(Url(";x").resolved(base).string() == ";x");
-    CHECK(Url("g;x").resolved(base).string() == "g;x");
-    CHECK(Url("g;x?y#s").resolved(base).string() == "g;x?y#s");
-    CHECK(Url("").resolved(base).string() == "");
+    CHECK(base.resolve(Url("g:h")).string() == "g:h");
+    CHECK(base.resolve(Url("g")).string() == "g");
+    CHECK(base.resolve(Url("./g")).string() == "g");
+    CHECK(base.resolve(Url("g/")).string() == "g/");
+    CHECK(base.resolve(Url("/g")).string() == "/g");
+    CHECK(base.resolve(Url("?y")).string() == "?y");
+    CHECK(base.resolve(Url("g?y")).string() == "g?y");
+    CHECK(base.resolve(Url("#s")).string() == "#s");
+    CHECK(base.resolve(Url("g#s")).string() == "g#s");
+    CHECK(base.resolve(Url("g?y#s")).string() == "g?y#s");
+    CHECK(base.resolve(Url(";x")).string() == ";x");
+    CHECK(base.resolve(Url("g;x")).string() == "g;x");
+    CHECK(base.resolve(Url("g;x?y#s")).string() == "g;x?y#s");
+    CHECK(base.resolve(Url("")).string() == "");
 
 }
 
@@ -202,20 +202,20 @@ TEST_CASE("Resolve an abnormal relative URL against an absolute base URL", "[Url
 
     Url base("http://a/b/c/d;p?q");
 
-    CHECK(Url("../../../g").resolved(base).string() == "http://a/g");
-    CHECK(Url("../../../../g").resolved(base).string() == "http://a/g");
-    CHECK(Url("/./g").resolved(base).string() == "http://a/g");
-    CHECK(Url("/../g").resolved(base).string() == "http://a/g");
-    CHECK(Url("g.").resolved(base).string() == "http://a/b/c/g.");
-    CHECK(Url(".g").resolved(base).string() == "http://a/b/c/.g");
-    CHECK(Url("g..").resolved(base).string() == "http://a/b/c/g..");
-    CHECK(Url("..g").resolved(base).string() == "http://a/b/c/..g");
-    CHECK(Url("./../g").resolved(base).string() == "http://a/b/g");
-    CHECK(Url("./g/.").resolved(base).string() == "http://a/b/c/g/");
-    CHECK(Url("g/./h").resolved(base).string() == "http://a/b/c/g/h");
-    CHECK(Url("g/../h").resolved(base).string() == "http://a/b/c/h");
-    CHECK(Url("g;x=1/./y").resolved(base).string() == "http://a/b/c/g;x=1/./y"); // See [1] below.
-    CHECK(Url("g;x=1/../y").resolved(base).string() == "http://a/b/c/g;x=1/../y"); // See [1] below.
+    CHECK(base.resolve(Url("../../../g")).string() == "http://a/g");
+    CHECK(base.resolve(Url("../../../../g")).string() == "http://a/g");
+    CHECK(base.resolve(Url("/./g")).string() == "http://a/g");
+    CHECK(base.resolve(Url("/../g")).string() == "http://a/g");
+    CHECK(base.resolve(Url("g.")).string() == "http://a/b/c/g.");
+    CHECK(base.resolve(Url(".g")).string() == "http://a/b/c/.g");
+    CHECK(base.resolve(Url("g..")).string() == "http://a/b/c/g..");
+    CHECK(base.resolve(Url("..g")).string() == "http://a/b/c/..g");
+    CHECK(base.resolve(Url("./../g")).string() == "http://a/b/g");
+    CHECK(base.resolve(Url("./g/.")).string() == "http://a/b/c/g/");
+    CHECK(base.resolve(Url("g/./h")).string() == "http://a/b/c/g/h");
+    CHECK(base.resolve(Url("g/../h")).string() == "http://a/b/c/h");
+    CHECK(base.resolve(Url("g;x=1/./y")).string() == "http://a/b/c/g;x=1/./y"); // See [1] below.
+    CHECK(base.resolve(Url("g;x=1/../y")).string() == "http://a/b/c/g;x=1/../y"); // See [1] below.
 
 }
 

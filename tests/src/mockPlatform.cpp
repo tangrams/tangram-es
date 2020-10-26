@@ -27,7 +27,7 @@ MockPlatform::MockPlatform() {
     m_baseUrl = Url("file:///");
     char pathBuffer[PATH_MAX] = {0};
     if (getcwd(pathBuffer, PATH_MAX) != nullptr) {
-        m_baseUrl = Url(std::string(pathBuffer) + "/").resolved(m_baseUrl);
+        m_baseUrl = m_baseUrl.resolve(Url(std::string(pathBuffer) + "/"));
     }
 }
 
