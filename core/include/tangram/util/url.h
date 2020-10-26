@@ -94,9 +94,9 @@ public:
     // a data URI then the same URI is returned.
     Url standardized() const;
 
-    // Get an absolute URL by applying this URL relative to the given base.
-    // e.g. "example.com/a/b/c.txt" == ("b/c.txt").resolved("example.com/a/")
-    Url resolved(const Url& base) const;
+    // Get an absolute URL by applying a relative URL to this URL as the base.
+    // e.g. "example.com/a/b/c.txt" == ("example.com/a/").resolve("b/c.txt")
+    Url resolve(const Url& relative) const;
 
     // Get an absolute URL by applying a relative URL to a base URL.
     // e.g. "example.com/a/b/c.txt" == resolve("example.com/a/", "b/c.txt")

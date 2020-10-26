@@ -26,7 +26,7 @@ public:
     // Get the contents of a local file (not mock URL contents).
     static std::vector<char> getBytesFromFile(const char* path);
 
-    Url resolveUrl(Url _url) { return _url.resolved(m_baseUrl); }
+    Url resolveUrl(Url _url) { return m_baseUrl.resolve(_url); }
 private:
 
     std::unordered_map<Url, std::vector<char>> m_files;

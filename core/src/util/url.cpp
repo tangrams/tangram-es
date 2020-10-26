@@ -190,8 +190,8 @@ Url Url::standardized() const {
     return t;
 }
 
-Url Url::resolved(const Url& base) const {
-    return resolve(base, *this);
+Url Url::resolve(const Url& relative) const {
+    return resolve(*this, relative);
 }
 
 Url Url::resolve(const Url& b, const Url& r) {
