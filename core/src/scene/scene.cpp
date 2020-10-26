@@ -415,7 +415,7 @@ std::shared_ptr<Texture> SceneTextures::get(const std::string& _name) {
     }
     /// If texture could not be found by name then interpret name as URL
     TextureOptions options;
-    return add(_name, _name, options);
+    return add(_name, Url(_name), options);
 }
 
 void Scene::runTextureTasks() {

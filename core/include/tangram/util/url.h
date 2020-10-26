@@ -37,19 +37,19 @@ public:
     Url();
 
     // Create an absolute or relative URL from a string.
-    Url(const std::string& source);
-    Url(std::string&& source);
-    Url(const char* source);
+    explicit Url(const std::string& source);
+    explicit Url(std::string&& source);
+    explicit Url(const char* source);
 
     // Create a URL by copy.
     Url(const Url& other);
 
     // Create a URL by move.
-    Url(Url&& other);
+    Url(Url&& other) noexcept;
 
     // Replace the contents of this URL.
     Url& operator=(const Url& other);
-    Url& operator=(Url&& other);
+    Url& operator=(Url&& other) noexcept;
 
     // Compare this URL and another using their string representations.
     bool operator==(const Url& other) const;

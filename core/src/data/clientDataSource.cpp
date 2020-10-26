@@ -107,7 +107,7 @@ ClientDataSource::ClientDataSource(Platform& _platform, const std::string& _name
             }
             m_hasPendingData = false;
         };
-        m_platform.startUrlRequest(_url, std::move(onUrlFinished));
+        m_platform.startUrlRequest(Url(_url), std::move(onUrlFinished));
         m_hasPendingData = true;
     }
 

@@ -5,7 +5,7 @@
 
 namespace Tangram {
 
-Url::Url() {}
+Url::Url() = default;
 
 Url::Url(const std::string& source) :
     buffer(source) {
@@ -28,7 +28,7 @@ Url::Url(const Url& other) :
     flags(other.flags) {
 }
 
-Url::Url(Url&& other) :
+Url::Url(Url&& other) noexcept :
     buffer(std::move(other.buffer)),
     parts(other.parts),
     flags(other.flags) {
@@ -41,7 +41,7 @@ Url& Url::operator=(const Url& other) {
     return *this;
 }
 
-Url& Url::operator=(Url&& other) {
+Url& Url::operator=(Url&& other) noexcept {
     buffer = std::move(other.buffer);
     parts = other.parts;
     flags = other.flags;

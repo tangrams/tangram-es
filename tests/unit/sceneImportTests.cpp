@@ -15,39 +15,39 @@ using namespace YAML;
 
 struct ImportMockPlatform : public MockPlatform {
     ImportMockPlatform() {
-        putMockUrlContents("/root/a.yaml", R"END(
+        putMockUrlContents(Url("/root/a.yaml"), R"END(
             import: b.yaml
             value: a
             has_a: true
         )END");
 
-        putMockUrlContents("/root/b.yaml", R"END(
+        putMockUrlContents(Url("/root/b.yaml"), R"END(
             value: b
             has_b: true
         )END");
 
-        putMockUrlContents("/root/c.yaml", R"END(
+        putMockUrlContents(Url("/root/c.yaml"), R"END(
             import: [a.yaml, b.yaml]
             value: c
             has_c: true
         )END");
 
-        putMockUrlContents("/root/cycle_simple.yaml", R"END(
+        putMockUrlContents(Url("/root/cycle_simple.yaml"), R"END(
             import: cycle_simple.yaml
             value: cyclic
         )END");
 
-        putMockUrlContents("/root/cycle_tricky.yaml", R"END(
+        putMockUrlContents(Url("/root/cycle_tricky.yaml"), R"END(
             import: imports/cycle_tricky.yaml
             has_cycle_tricky: true
         )END");
 
-        putMockUrlContents("/root/imports/cycle_tricky.yaml", R"END(
+        putMockUrlContents(Url("/root/imports/cycle_tricky.yaml"), R"END(
             import: ../cycle_tricky.yaml
             has_imports_cycle_tricky: true
         )END");
 
-        putMockUrlContents("/root/urls.yaml", R"END(
+        putMockUrlContents(Url("/root/urls.yaml"), R"END(
             import: imports/urls.yaml
             fonts: { fontA: { url: https://host/font.woff } }
             sources: { sourceA: { url: 'https://host/tiles/{z}/{y}/{x}.mvt' } }
@@ -66,7 +66,7 @@ struct ImportMockPlatform : public MockPlatform {
                             u_float: 0.25
         )END");
 
-        putMockUrlContents("/root/imports/urls.yaml", R"END(
+        putMockUrlContents(Url("/root/imports/urls.yaml"), R"END(
             fonts: { fontB: [ { url: fonts/0.ttf }, { url: fonts/1.ttf } ] }
             sources: { sourceB: { url: "tiles/{z}/{y}/{x}.mvt" } }
             textures:
@@ -82,7 +82,7 @@ struct ImportMockPlatform : public MockPlatform {
                             u_tex2: tex2
         )END");
 
-        putMockUrlContents("/root/globals.yaml", R"END(
+        putMockUrlContents(Url("/root/globals.yaml"), R"END(
             fonts: { aFont: { url: global.fontUrl } }
             sources: { aSource: { url: global.sourceUrl } }
             textures: { aTexture: { url: global.textureUrl } }
@@ -209,17 +209,17 @@ TEST_CASE("References to globals are not treated like URLs during importing", "[
 
 TEST_CASE("Map overwrites sequence", "[import][core]") {
     ImportMockPlatform platform;
-    platform.putMockUrlContents("/base.yaml", R"END(
+    platform.putMockUrlContents(Url("/base.yaml"), R"END(
         import: [roads.yaml, roads-labels.yaml]
     )END");
 
-    platform.putMockUrlContents("/roads.yaml", R"END(
+    platform.putMockUrlContents(Url("/roads.yaml"), R"END(
             filter:
                 - kind: highway
                 - $zoom: { min: 8 }
     )END");
 
-    platform.putMockUrlContents("/roads-labels.yaml", R"END(
+    platform.putMockUrlContents(Url("/roads-labels.yaml"), R"END(
                 filter: { kind: highway }
     )END");
 
@@ -233,14 +233,14 @@ TEST_CASE("Map overwrites sequence", "[import][core]") {
 
 TEST_CASE("Sequence overwrites map", "[import][core]") {
     MockPlatform platform;
-    platform.putMockUrlContents("/base.yaml", R"END(
+    platform.putMockUrlContents(Url("/base.yaml"), R"END(
         import: [map.yaml, sequence.yaml]
     )END");
-    platform.putMockUrlContents("/map.yaml", R"END(
+    platform.putMockUrlContents(Url("/map.yaml"), R"END(
             a: { b: c }
     )END");
 
-    platform.putMockUrlContents("/sequence.yaml", R"END(
+    platform.putMockUrlContents(Url("/sequence.yaml"), R"END(
             a: [ b, c]
     )END");
 
@@ -253,16 +253,16 @@ TEST_CASE("Sequence overwrites map", "[import][core]") {
 
 TEST_CASE("Scalar and null overwrite correctly", "[import][core]") {
     MockPlatform platform;
-    platform.putMockUrlContents("/base.yaml", R"END(
+    platform.putMockUrlContents(Url("/base.yaml"), R"END(
         import: [scalar.yaml, null.yaml]
         scalar_at_end: scalar
         null_at_end: null
     )END");
-    platform.putMockUrlContents("/scalar.yaml", R"END(
+    platform.putMockUrlContents(Url("/scalar.yaml"), R"END(
             null_at_end: scalar
     )END");
 
-    platform.putMockUrlContents("/null.yaml", R"END(
+    platform.putMockUrlContents(Url("/null.yaml"), R"END(
             scalar_at_end: null
     )END");
 
@@ -275,10 +275,10 @@ TEST_CASE("Scalar and null overwrite correctly", "[import][core]") {
 
 TEST_CASE("Scene load from source string", "[import][core]") {
     MockPlatform platform;
-    platform.putMockUrlContents("/resource_root/scalar.yaml", R"END(
+    platform.putMockUrlContents(Url("/resource_root/scalar.yaml"), R"END(
             null_at_end: scalar
     )END");
-    platform.putMockUrlContents("/resource_root/null.yaml", R"END(
+    platform.putMockUrlContents(Url("/resource_root/null.yaml"), R"END(
             scalar_at_end: null
     )END");
 
@@ -297,16 +297,16 @@ TEST_CASE("Scene load from source string", "[import][core]") {
 
 TEST_CASE("Scenes imported more than once are not mutated", "[import][core]") {
     MockPlatform platform;
-    platform.putMockUrlContents("/duplicate_imports_a.yaml", R"END(
+    platform.putMockUrlContents(Url("/duplicate_imports_a.yaml"), R"END(
         key: value_a
     )END");
 
-    platform.putMockUrlContents("/duplicate_imports_b.yaml", R"END(
+    platform.putMockUrlContents(Url("/duplicate_imports_b.yaml"), R"END(
         import: duplicate_imports_a.yaml
         key: value_b
     )END");
 
-    platform.putMockUrlContents("/duplicate_imports.yaml", R"END(
+    platform.putMockUrlContents(Url("/duplicate_imports.yaml"), R"END(
         import: [duplicate_imports_b.yaml, duplicate_imports_a.yaml]
     )END");
 
