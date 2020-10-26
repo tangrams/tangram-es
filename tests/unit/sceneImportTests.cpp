@@ -172,8 +172,9 @@ TEST_CASE("Scene URLs are resolved against their parent during import", "[import
     auto uniformsB = styleB["shaders"]["uniforms"];
 
     CHECK(uniformsB["u_tex1"].Scalar() == "/root/imports/in_imports.png");
-    // Don't use global textures from importing scene
-    CHECK(uniformsB["u_tex2"].Scalar() == "/root/imports/tex2");
+
+    // Use global textures from importing scene
+    CHECK(uniformsB["u_tex2"].Scalar() == "tex2");
 
     // Check that data source URLs are resolved correctly.
 
