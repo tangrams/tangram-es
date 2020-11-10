@@ -1,10 +1,8 @@
 package com.mapzen.tangram;
 
 import com.mapzen.tangram.geometry.Geometry;
-import com.mapzen.tangram.geometry.Polyline;
 
 import java.util.List;
-import java.util.Map;
 
 import androidx.annotation.NonNull;
 
@@ -36,14 +34,15 @@ public class MapData {
      */
     public void setFeatures(@NonNull final List<Geometry> features) {
         checkPointer(pointer);
-        nativeClearFeatures(pointer);
+        final NativeMap nativeMap = mapController.nativeMap;
+        nativeMap.clearClientDataFeatures(pointer);
         for (Geometry feature : features) {
-            nativeAddFeature(pointer,
+            nativeMap.addClientDataFeature(pointer,
                     feature.getCoordinateArray(),
                     feature.getRingArray(),
                     feature.getPropertyArray());
         }
-        nativeGenerateTiles(pointer);
+        nativeMap.generateClientDataTiles(pointer);
     }
 
     /**
@@ -52,9 +51,10 @@ public class MapData {
      */
     public void setGeoJson(final String data) {
         checkPointer(pointer);
-        nativeClearFeatures(pointer);
-        nativeAddGeoJson(pointer, data);
-        nativeGenerateTiles(pointer);
+        final NativeMap nativeMap = mapController.nativeMap;
+        nativeMap.clearClientDataFeatures(pointer);
+        nativeMap.addClientDataGeoJson(pointer, data);
+        nativeMap.generateClientDataTiles(pointer);
     }
 
     /**
@@ -86,8 +86,9 @@ public class MapData {
      */
     public void clear() {
         checkPointer(pointer);
-        nativeClearFeatures(pointer);
-        nativeGenerateTiles(pointer);
+        final NativeMap nativeMap = mapController.nativeMap;
+        nativeMap.clearClientDataFeatures(pointer);
+        nativeMap.generateClientDataTiles(pointer);
     }
 
     private void checkPointer(final long ptr) {
@@ -96,9 +97,4 @@ public class MapData {
                     + " This means you may have used a MapData that has already been removed.");
         }
     }
-
-    private native void nativeAddFeature(long sourcePtr, double[] coordinates, int[] rings, String[] properties);
-    private native void nativeAddGeoJson(long sourcePtr, String geoJson);
-    private native void nativeGenerateTiles(long sourcePtr);
-    private native void nativeClearFeatures(long sourcePtr);
 }

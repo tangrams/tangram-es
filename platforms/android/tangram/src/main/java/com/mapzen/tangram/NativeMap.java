@@ -72,6 +72,10 @@ class NativeMap {
 
     native long addClientDataSource(String name, boolean generateCentroid);
     native void removeClientDataSource(long sourcePtr);
+    native void addClientDataFeature(long sourcePtr, double[] coordinates, int[] rings, String[] properties);
+    native void addClientDataGeoJson(long sourcePtr, String geoJson);
+    native void generateClientDataTiles(long sourcePtr);
+    native void clearClientDataFeatures(long sourcePtr);
 
     native void setDebugFlag(int flag, boolean on);
 
