@@ -90,7 +90,7 @@ Node Importer::loadSceneData(Platform& _platform, const Url& _sceneUrl, const st
     Node textures = root["textures"];
     for (auto& sceneNode : m_sceneNodes) {
         auto sceneUrl = sceneNode.first;
-        for (auto& node : sceneNode.second.unresolvedTextures) {
+        for (auto& node : sceneNode.second.pendingUrlNodes) {
             // If the node does not contain a named texture in the final scene, treat it as a URL relative to the scene
             // file where it was originally encountered.
             if (!textures[node.Scalar()]) {
@@ -198,7 +198,7 @@ void Importer::addSceneYaml(const Url& sceneUrl, const char* sceneYaml, size_t l
 
     sceneNode.imports = getResolvedImportUrls(sceneNode.yaml, sceneUrl);
 
-    sceneNode.unresolvedTextures = getTextureUrlNodes(sceneNode.yaml);
+    sceneNode.pendingUrlNodes = getTextureUrlNodes(sceneNode.yaml);
 
     // Remove 'import' values so they don't get merged.
     sceneNode.yaml.remove("import");
@@ -403,7 +403,6 @@ void Importer::resolveSceneUrls(Node& root, const Url& baseUrl) {
         for (auto texture : textures) {
             if (Node textureUrlNode = texture.second["url"]) {
                 if (nodeIsPotentialUrl(textureUrlNode)) {
-
                     textureUrlNode = base.resolve(Url(textureUrlNode.Scalar())).string();
                 }
             }

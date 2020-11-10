@@ -81,7 +81,7 @@ protected:
     struct SceneNode {
         Node yaml{};
         std::vector<Url> imports;
-        std::vector<Node> unresolvedTextures;
+        std::vector<Node> pendingUrlNodes;
     };
     std::unordered_map<Url, SceneNode> m_sceneNodes = {};
 
