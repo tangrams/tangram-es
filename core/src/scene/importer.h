@@ -43,6 +43,8 @@ public:
     // against the given base URL.
     static void resolveSceneUrls(Node& root, const Url& base);
 
+    static std::vector<Node> getTextureUrlNodes(Node& root);
+
     // Start an asynchronous request for the scene resource at the given URL.
     // In addition to the URL types supported by the platform instance, this
     // also supports a custom ZIP URL scheme. ZIP URLs are of the form:
@@ -79,6 +81,7 @@ protected:
     struct SceneNode {
         Node yaml{};
         std::vector<Url> imports;
+        std::vector<Node> pendingUrlNodes;
     };
     std::unordered_map<Url, SceneNode> m_sceneNodes = {};
 

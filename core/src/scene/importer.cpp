@@ -86,6 +86,19 @@ Node Importer::loadSceneData(Platform& _platform, const Url& _sceneUrl, const st
     Node root;
     importScenesRecursive(root, _sceneUrl, imported);
 
+    // After merging all scenes, resolve texture nodes as named textures or URLs.
+    Node textures = root["textures"];
+    for (auto& sceneNode : m_sceneNodes) {
+        auto sceneUrl = sceneNode.first;
+        for (auto& node : sceneNode.second.pendingUrlNodes) {
+            // If the node does not contain a named texture in the final scene, treat it as a URL relative to the scene
+            // file where it was originally encountered.
+            if (!textures[node.Scalar()]) {
+                node = sceneUrl.resolve(Url(node.Scalar())).string();
+            }
+        }
+    }
+
     m_sceneNodes.clear();
 
     return root;
@@ -184,6 +197,8 @@ void Importer::addSceneYaml(const Url& sceneUrl, const char* sceneYaml, size_t l
     }
 
     sceneNode.imports = getResolvedImportUrls(sceneNode.yaml, sceneUrl);
+
+    sceneNode.pendingUrlNodes = getTextureUrlNodes(sceneNode.yaml);
 
     // Remove 'import' values so they don't get merged.
     sceneNode.yaml.remove("import");
@@ -303,7 +318,7 @@ bool nodeIsPotentialUrl(const Node& node) {
     return true;
 }
 
-bool nodeIsTextureUrl(const Node& node, const Node& textures) {
+bool nodeIsPotentialTextureUrl(const Node& node) {
 
     if (!nodeIsPotentialUrl(node)) { return false; }
 
@@ -313,10 +328,64 @@ bool nodeIsTextureUrl(const Node& node, const Node& textures) {
     if (YAML::convert<bool>::decode(node, booleanValue)) { return false; }
     if (YAML::convert<double>::decode(node, numberValue)) { return false; }
 
-    // Check that the node does not name a scene texture.
-    if (textures[node.Scalar()]) { return false; }
-
     return true;
+}
+
+std::vector<Node> Importer::getTextureUrlNodes(Node& root) {
+
+    std::vector<Node> nodes;
+
+    if (Node styles = root["styles"]) {
+
+        for (auto entry : styles) {
+
+            Node style = entry.second;
+            if (!style.IsMap()) { continue; }
+
+            //style->texture
+            if (Node texture = style["texture"]) {
+                if (nodeIsPotentialTextureUrl(texture)) {
+                    nodes.push_back(texture);
+                }
+            }
+
+            //style->material->texture
+            if (Node material = style["material"]) {
+                if (!material.IsMap()) { continue; }
+                for (auto& prop : {"emission", "ambient", "diffuse", "specular", "normal"}) {
+                    if (Node propNode = material[prop]) {
+                        if (!propNode.IsMap()) { continue; }
+                        if (Node matTexture = propNode["texture"]) {
+                            if (nodeIsPotentialTextureUrl(matTexture)) {
+                                nodes.push_back(matTexture);
+                            }
+                        }
+                    }
+                }
+            }
+
+            //style->shader->uniforms->texture
+            if (Node shaders = style["shaders"]) {
+                if (!shaders.IsMap()) { continue; }
+                if (Node uniforms = shaders["uniforms"]) {
+                    for (auto uniformEntry : uniforms) {
+                        Node uniformValue = uniformEntry.second;
+                        if (nodeIsPotentialTextureUrl(uniformValue)) {
+                            nodes.push_back(uniformValue);
+                        } else if (uniformValue.IsSequence()) {
+                            for (Node u : uniformValue) {
+                                if (nodeIsPotentialTextureUrl(u)) {
+                                    nodes.push_back(u);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return nodes;
 }
 
 void Importer::resolveSceneUrls(Node& root, const Url& baseUrl) {
@@ -335,58 +404,6 @@ void Importer::resolveSceneUrls(Node& root, const Url& baseUrl) {
             if (Node textureUrlNode = texture.second["url"]) {
                 if (nodeIsPotentialUrl(textureUrlNode)) {
                     textureUrlNode = base.resolve(Url(textureUrlNode.Scalar())).string();
-                }
-            }
-        }
-    }
-
-    // Resolve inline texture URLs.
-
-    if (Node styles = root["styles"]) {
-
-        for (auto entry : styles) {
-
-            Node style = entry.second;
-            if (!style.IsMap()) { continue; }
-
-            //style->texture
-            if (Node texture = style["texture"]) {
-                if (nodeIsTextureUrl(texture, textures)) {
-                    texture = base.resolve(Url(texture.Scalar())).string();
-                }
-            }
-
-            //style->material->texture
-            if (Node material = style["material"]) {
-                if (!material.IsMap()) { continue; }
-                for (auto& prop : {"emission", "ambient", "diffuse", "specular", "normal"}) {
-                    if (Node propNode = material[prop]) {
-                        if (!propNode.IsMap()) { continue; }
-                        if (Node matTexture = propNode["texture"]) {
-                            if (nodeIsTextureUrl(matTexture, textures)) {
-                                matTexture = base.resolve(Url(matTexture.Scalar())).string();
-                            }
-                        }
-                    }
-                }
-            }
-
-            //style->shader->uniforms->texture
-            if (Node shaders = style["shaders"]) {
-                if (!shaders.IsMap()) { continue; }
-                if (Node uniforms = shaders["uniforms"]) {
-                    for (auto uniformEntry : uniforms) {
-                        Node uniformValue = uniformEntry.second;
-                        if (nodeIsTextureUrl(uniformValue, textures)) {
-                            uniformValue = base.resolve(Url(uniformValue.Scalar())).string();
-                        } else if (uniformValue.IsSequence()) {
-                            for (Node u : uniformValue) {
-                                if (nodeIsTextureUrl(u, textures)) {
-                                    u = base.resolve(Url(u.Scalar())).string();
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
