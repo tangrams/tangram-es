@@ -50,6 +50,9 @@ void JniHelpers::jniOnLoad(JavaVM* jvm, JNIEnv* jniEnv) {
 }
 
 std::string JniHelpers::stringFromJavaString(JNIEnv* jniEnv, jstring javaString) {
+    if (javaString == nullptr) {
+        return {};
+    }
     auto length = jniEnv->GetStringLength(javaString);
     std::u16string chars(length, char16_t());
     if(!chars.empty()) {
@@ -65,6 +68,9 @@ jstring JniHelpers::javaStringFromString(JNIEnv* jniEnv, const std::string& stri
 }
 
 void JniHelpers::cameraPositionToJava(JNIEnv* env, jobject javaCamera, const CameraPosition& camera) {
+    if (javaCamera == nullptr) {
+        return;
+    }
     env->SetDoubleField(javaCamera, cameraPositionLongitudeFID, camera.longitude);
     env->SetDoubleField(javaCamera, cameraPositionLatitudeFID, camera.latitude);
     env->SetFloatField(javaCamera, cameraPositionZoomFID, camera.zoom);
@@ -73,22 +79,34 @@ void JniHelpers::cameraPositionToJava(JNIEnv* env, jobject javaCamera, const Cam
 }
 
 void JniHelpers::vec2ToJava(JNIEnv* env, jobject javaPointF, float x, float y) {
+    if (javaPointF == nullptr) {
+        return;
+    }
     env->SetFloatField(javaPointF, pointFxFID, x);
     env->SetFloatField(javaPointF, pointFyFID, y);
 }
 
 void JniHelpers::lngLatToJava(JNIEnv* env, jobject javaLngLat, const LngLat& lngLat) {
+    if (javaLngLat == nullptr) {
+        return;
+    }
     env->SetDoubleField(javaLngLat, lngLatLongitudeFID, lngLat.longitude);
     env->SetDoubleField(javaLngLat, lngLatLatitudeFID, lngLat.latitude);
 }
 
 LngLat JniHelpers::lngLatFromJava(JNIEnv* env, jobject javaLngLat) {
+    if (javaLngLat == nullptr) {
+        return {};
+    }
     double longitude = env->GetDoubleField(javaLngLat, lngLatLongitudeFID);
     double latitude = env->GetDoubleField(javaLngLat, lngLatLatitudeFID);
     return LngLat{ longitude, latitude };
 }
 
 EdgePadding JniHelpers::edgePaddingFromJava(JNIEnv* env, jobject javaRect) {
+    if (javaRect == nullptr) {
+        return {};
+    }
     int left = env->GetIntField(javaRect, rectLeftFID);
     int top = env->GetIntField(javaRect, rectTopFID);
     int right = env->GetIntField(javaRect, rectRightFID);
