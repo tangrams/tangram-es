@@ -3,7 +3,6 @@
 #include "util/mapProjection.h"
 #include "view/view.h"
 #include <cmath>
-#include "log.h"
 
 namespace Tangram {
 

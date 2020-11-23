@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include "glm/vec4.hpp"
+#include "glm/vec2.hpp"
 #include "gl.h"
 #include "util/color.h"
 

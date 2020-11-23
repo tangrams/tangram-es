@@ -1,7 +1,7 @@
 #pragma once
 
+#include "glm/vec3.hpp"
 #include <functional>
-#include "glm/glm.hpp"
 
 namespace Tangram {
 
