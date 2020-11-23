@@ -64,6 +64,10 @@ if(TANGRAM_BUNDLE_TESTS)
     $<TARGET_PROPERTY:tangram-core,INCLUDE_DIRECTORIES>
   )
 
+  target_compile_definitions(${EXECUTABLE_NAME} PRIVATE
+    $<TARGET_PROPERTY:tangram-core,COMPILE_DEFINITIONS>
+  )
+
   set_target_properties(${EXECUTABLE_NAME}
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
