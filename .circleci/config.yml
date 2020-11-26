@@ -7,10 +7,10 @@ executors:
       GRADLE_OPTS: -Xmx2048m
   macos-executor:
     macos:
-      xcode: "11.7.0"
+      xcode: "12.2.0"
     environment: # Disable some unnecessary homebrew operations to save time.
-      HOMEBREW_NO_AUTO_UPDATE: 1
-      HOMEBREW_NO_INSTALL_CLEANUP: 1
+      # HOMEBREW_NO_AUTO_UPDATE: 1
+      # HOMEBREW_NO_INSTALL_CLEANUP: 1
 jobs:
   build-test-linux:
     docker:
@@ -46,9 +46,10 @@ jobs:
       # Install dependencies.
       - run: brew install cmake
       # Build test app variants. Use simulator target to bypass codesigning.
-      - run: make ios-sim BUILD_TYPE=Debug
-      - run: make ios-static-sim BUILD_TYPE=Debug
-      - run: make ios-swift-sim BUILD_TYPE=Debug
+      - run: make ios-framework-universal
+      # - run: make ios-sim BUILD_TYPE=Debug
+      # - run: make ios-static-sim BUILD_TYPE=Debug
+      # - run: make ios-swift-sim BUILD_TYPE=Debug
   build-deploy-ios-snapshot:
     executor: macos-executor
     steps:
