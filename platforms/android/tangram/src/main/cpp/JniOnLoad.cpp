@@ -10,7 +10,7 @@ extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM* javaVM, void*) {
         return -1;
     }
 
-    Tangram::JniHelpers::jniOnLoad(javaVM);
+    Tangram::JniHelpers::jniOnLoad(javaVM, jniEnv);
     Tangram::AndroidPlatform::jniOnLoad(javaVM, jniEnv);
     Tangram::AndroidMap::jniOnLoad(javaVM, jniEnv);
 

@@ -35,10 +35,10 @@ bool InputHandler::update(float _dt) {
 
     if (isFlinging) {
 
-        m_velocityPan -= _dt * DAMPING_PAN * m_velocityPan;
+        m_velocityPan -= min(_dt * DAMPING_PAN, 1.f) * m_velocityPan;
         m_view.translate(_dt * m_velocityPan.x, _dt * m_velocityPan.y);
 
-        m_velocityZoom -= _dt * DAMPING_ZOOM * m_velocityZoom;
+        m_velocityZoom -= min(_dt * DAMPING_ZOOM, 1.f) * m_velocityZoom;
         m_view.zoom(m_velocityZoom * _dt);
     }
 

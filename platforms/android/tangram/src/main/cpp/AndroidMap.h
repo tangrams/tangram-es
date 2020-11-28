@@ -11,8 +11,8 @@ class AndroidMap : public Map {
 public:
     AndroidMap(JNIEnv* env, jobject mapController, jobject assetManager);
     void pickFeature(float posX, float posY);
-    void pickMarker(float posX, float posY);
     void pickLabel(float posX, float posY);
+    void pickMarker(float posX, float posY);
 
     AndroidPlatform& androidPlatform();
 

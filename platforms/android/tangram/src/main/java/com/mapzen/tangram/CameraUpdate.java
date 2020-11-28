@@ -1,5 +1,7 @@
 package com.mapzen.tangram;
 
+import android.graphics.Rect;
+
 public class CameraUpdate {
 
     final static int SET_LNGLAT = 1 << 0;
@@ -24,7 +26,7 @@ public class CameraUpdate {
     double boundsLat1;
     double boundsLon2;
     double boundsLat2;
-    int[] padding;
+    Rect padding;
     int set;
 
     CameraUpdate() {

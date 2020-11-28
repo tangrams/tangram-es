@@ -136,21 +136,10 @@ void NATIVE_METHOD(captureSnapshot)(JNIEnv* env, jobject obj, jintArray buffer) 
     env->ReleaseIntArrayElements(buffer, ptr, 0);
 }
 
-void NATIVE_METHOD(getCameraPosition)(JNIEnv* env, jobject obj, jdoubleArray lonLat,
-                                      jfloatArray zoomRotationTilt) {
+void NATIVE_METHOD(getCameraPosition)(JNIEnv* env, jobject obj, jobject cameraPositionOut) {
     auto* map = androidMapFromJava(env, obj);
-    jdouble* pos = env->GetDoubleArrayElements(lonLat, nullptr);
-    jfloat* zrt = env->GetFloatArrayElements(zoomRotationTilt, nullptr);
-
-    auto camera = map->getCameraPosition();
-    pos[0] = camera.longitude;
-    pos[1] = camera.latitude;
-    zrt[0] = camera.zoom;
-    zrt[1] = camera.rotation;
-    zrt[2] = camera.tilt;
-
-    env->ReleaseDoubleArrayElements(lonLat, pos, 0);
-    env->ReleaseFloatArrayElements(zoomRotationTilt, zrt, 0);
+    CameraPosition cameraPosition = map->getCameraPosition();
+    JniHelpers::cameraPositionToJava(env, cameraPositionOut, cameraPosition);
 }
 
 void NATIVE_METHOD(updateCameraPosition)(JNIEnv* env, jobject obj,
@@ -160,7 +149,7 @@ void NATIVE_METHOD(updateCameraPosition)(JNIEnv* env, jobject obj,
                                          jfloat tilt, jfloat tiltBy,
                                          jdouble b1lon, jdouble b1lat,
                                          jdouble b2lon, jdouble b2lat,
-                                         jintArray jpad, jfloat duration, jint ease) {
+                                         jobject javaPadding, jfloat duration, jint ease) {
     auto* map = androidMapFromJava(env, obj);
 
     CameraUpdate update;
@@ -174,32 +163,20 @@ void NATIVE_METHOD(updateCameraPosition)(JNIEnv* env, jobject obj,
     update.tilt = tilt;
     update.tiltBy = tiltBy;
     update.bounds = std::array<LngLat,2>{{LngLat{b1lon, b1lat}, LngLat{b2lon, b2lat}}};
-    if (jpad != nullptr) {
-        jint* jpadArray = env->GetIntArrayElements(jpad, nullptr);
-        update.padding = EdgePadding{jpadArray[0], jpadArray[1], jpadArray[2], jpadArray[3]};
-        env->ReleaseIntArrayElements(jpad, jpadArray, JNI_ABORT);
-    }
+    update.padding = JniHelpers::edgePaddingFromJava(env, javaPadding);
     map->updateCameraPosition(update, duration, static_cast<Tangram::EaseType>(ease));
 }
 
 void NATIVE_METHOD(getEnclosingCameraPosition)(JNIEnv* env, jobject obj,
-                                               jdouble aLng, jdouble aLat,
-                                               jdouble bLng, jdouble bLat,
-                                               jintArray jpad, jdoubleArray lngLatZoom) {
+                                               jobject javaLngLatSE, jobject javaLngLatNW,
+                                               jobject javaPadding, jobject cameraPositionOut) {
     auto* map = androidMapFromJava(env, obj);
 
-    EdgePadding padding;
-    if (jpad != nullptr) {
-        jint* jpadArray = env->GetIntArrayElements(jpad, nullptr);
-        padding = EdgePadding(jpadArray[0], jpadArray[1], jpadArray[2], jpadArray[3]);
-        env->ReleaseIntArrayElements(jpad, jpadArray, JNI_ABORT);
-    }
-    CameraPosition camera = map->getEnclosingCameraPosition(LngLat{aLng,aLat}, LngLat{bLng,bLat}, padding);
-    jdouble* arr = env->GetDoubleArrayElements(lngLatZoom, nullptr);
-    arr[0] = camera.longitude;
-    arr[1] = camera.latitude;
-    arr[2] = camera.zoom;
-    env->ReleaseDoubleArrayElements(lngLatZoom, arr, 0);
+    EdgePadding padding = JniHelpers::edgePaddingFromJava(env, javaPadding);
+    LngLat lngLatSE = JniHelpers::lngLatFromJava(env, javaLngLatSE);
+    LngLat lngLatNW = JniHelpers::lngLatFromJava(env, javaLngLatNW);
+    CameraPosition camera = map->getEnclosingCameraPosition(lngLatSE, lngLatNW, padding);
+    JniHelpers::cameraPositionToJava(env, cameraPositionOut, camera);
 }
 
 void NATIVE_METHOD(flyTo)(JNIEnv* env, jobject obj, jdouble lon, jdouble lat,
@@ -219,26 +196,24 @@ void NATIVE_METHOD(cancelCameraAnimation)(JNIEnv* env, jobject obj) {
 }
 
 jboolean NATIVE_METHOD(screenPositionToLngLat)(JNIEnv* env, jobject obj,
-                                               jdoubleArray coordinates) {
+                                               jfloat x, jfloat y, jobject lngLatOut) {
     auto* map = androidMapFromJava(env, obj);
 
-    jdouble* arr = env->GetDoubleArrayElements(coordinates, nullptr);
-    bool result = map->screenPositionToLngLat(arr[0], arr[1], &arr[0], &arr[1]);
-    env->ReleaseDoubleArrayElements(coordinates, arr, 0);
+    LngLat lngLat{};
+    bool result = map->screenPositionToLngLat(x, y, &lngLat.longitude, &lngLat.latitude);
+    JniHelpers::lngLatToJava(env, lngLatOut, lngLat);
     return static_cast<jboolean>(result);
 }
 
 jboolean NATIVE_METHOD(lngLatToScreenPosition)(JNIEnv* env, jobject obj,
-                                               jdoubleArray coordinates, jboolean clipToViewport) {
+                                               jdouble lng, jdouble lat, jobject screenPositionOut, jboolean clipToViewport) {
     auto* map = androidMapFromJava(env, obj);
 
-    jdouble* arr = env->GetDoubleArrayElements(coordinates, nullptr);
-    bool result = map->lngLatToScreenPosition(arr[0], arr[1], &arr[0], &arr[1], clipToViewport);
-    env->ReleaseDoubleArrayElements(coordinates, arr, 0);
+    double x = 0, y = 0;
+    bool result = map->lngLatToScreenPosition(lng, lat, &x, &y, clipToViewport);
+    JniHelpers::vec2ToJava(env, screenPositionOut, static_cast<float>(x), static_cast<float>(y));
     return static_cast<jboolean>(result);
 }
-
-
 
 void NATIVE_METHOD(setPixelScale)(JNIEnv* env, jobject obj, jfloat scale) {
     auto* map = androidMapFromJava(env, obj);
