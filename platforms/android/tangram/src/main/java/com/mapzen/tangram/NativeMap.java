@@ -2,6 +2,8 @@ package com.mapzen.tangram;
 
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.PointF;
+import android.graphics.Rect;
 
 class NativeMap {
 
@@ -27,16 +29,16 @@ class NativeMap {
     native void render();
     native void captureSnapshot(int[] buffer);
 
-    native void getCameraPosition(double[] lonLatOut, float[] zoomRotationTiltOut);
+    native void getCameraPosition(CameraPosition cameraPositionOut);
     native void updateCameraPosition(int set, double lon, double lat, float zoom, float zoomBy,
                                                                 float rotation, float rotateBy, float tilt, float tiltBy,
-                                                                double b1lon, double b1lat, double b2lon, double b2lat, int[] padding,
+                                                                double b1lon, double b1lat, double b2lon, double b2lat, Rect padding,
                                                                 float duration, int ease);
     native void flyTo(double lon, double lat, float zoom, float duration, float speed);
-    native void getEnclosingCameraPosition(double aLng, double aLat, double bLng, double bLat, int[] buffer, double[] lngLatZoom);
+    native void getEnclosingCameraPosition(LngLat lngLatSE, LngLat lngLatNW, Rect padding, CameraPosition cameraPositionOut);
     native void cancelCameraAnimation();
-    native boolean screenPositionToLngLat(double[] coordinates);
-    native boolean lngLatToScreenPosition(double[] coordinates, boolean clipToViewport);
+    native boolean screenPositionToLngLat(float x, float y, LngLat lngLatOut);
+    native boolean lngLatToScreenPosition(double lng, double lat, PointF screenPositionOut, boolean clipToViewport);
     native void setPixelScale(float scale);
     native void setCameraType(int type);
     native int getCameraType();
