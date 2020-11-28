@@ -170,7 +170,7 @@ public class CameraUpdateFactory {
         update.boundsLat1 = sw.latitude;
         update.boundsLon2 = ne.longitude;
         update.boundsLat2 = ne.latitude;
-        update.padding = new int[]{padding.left, padding.top, padding.right, padding.bottom};
+        update.padding = padding;
         return update;
     }
 }
