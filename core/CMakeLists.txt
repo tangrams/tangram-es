@@ -202,7 +202,6 @@ target_include_directories(tangram-core
   # TODO: These headers shouldn't be public, but Platform classes use them.
   src
   # TODO: This header shouldn't be public, but we use it in propertyItem.h
-  deps/glm
   deps/variant/include
   PRIVATE
   generated
@@ -226,6 +225,7 @@ target_include_directories(tangram-core
 # Link core library dependencies.
 target_link_libraries(tangram-core
   PRIVATE
+  glm
   css-color-parser-cpp
   yaml-cpp
   alfons

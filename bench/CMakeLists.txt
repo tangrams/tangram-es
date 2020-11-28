@@ -37,6 +37,10 @@ foreach(_src_file_path ${BENCH_SOURCES})
     $<TARGET_PROPERTY:tangram-core,INCLUDE_DIRECTORIES>
   )
 
+  target_compile_definitions(${EXECUTABLE_NAME} PRIVATE
+    $<TARGET_PROPERTY:tangram-core,COMPILE_DEFINITIONS>
+  )
+
   target_link_libraries(${EXECUTABLE_NAME}
     tangram-core
     benchmark

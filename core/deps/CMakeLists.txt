@@ -5,6 +5,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wno-shorten-64-to-32)
 endif()
 
+## glm ##
+#########
+add_library(glm INTERFACE)
+target_include_directories(glm INTERFACE glm)
+target_compile_definitions(glm INTERFACE GLM_FORCE_CTOR_INIT)
+
 ## yaml-cpp ##
 ##############
 set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "")
@@ -57,6 +63,7 @@ endif()
 ############
 set(GLM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glm)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
+target_compile_definitions(alfons PRIVATE GLM_FORCE_CTOR_INIT)
 
 if (TANGRAM_MBTILES_DATASOURCE)
   ## SQLiteCpp ##
