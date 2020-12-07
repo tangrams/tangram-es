@@ -119,7 +119,6 @@ add_library(TangramMap SHARED
 
 target_link_libraries(TangramMap PRIVATE
   tangram-core
-  sqlite3
   # Frameworks: use quotes so "-framework X" is treated as a single linker flag.
   "-framework CoreFoundation"
   "-framework CoreGraphics"
@@ -157,7 +156,6 @@ add_library(tangram-static STATIC
 
 target_link_libraries(tangram-static PRIVATE
   tangram-core
-  sqlite3
   # Frameworks: use quotes so "-framework X" is treated as a single linker flag.
   "-framework CoreFoundation"
   "-framework CoreGraphics"
