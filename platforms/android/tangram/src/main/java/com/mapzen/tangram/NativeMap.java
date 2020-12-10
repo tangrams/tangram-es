@@ -9,7 +9,7 @@ class NativeMap {
 
     NativeMap(MapController mapController, AssetManager assetManager) {
         nativePointer = init(mapController, assetManager);
-        if (nativePointer <= 0) {
+        if (nativePointer == 0) {
             throw new RuntimeException("Unable to create a native Map object! There may be insufficient memory available.");
         }
     }
