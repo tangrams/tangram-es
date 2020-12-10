@@ -46,6 +46,20 @@ if (IOS_SDK_VERSION VERSION_LESS 11.0)
   set(SQLITE_USE_LEGACY_STRUCT ON CACHE BOOL "")
 endif()
 
+# Some 3rd-party dependencies (SQLiteCpp and Freetype) have CMake scripts that
+# use find_package() to locate and link libraries that they depend on.
+# find_package() successfully sets paths for these library files, but the paths
+# are only valid for the *configured* sysroot. For iOS, this means that the 
+# library paths use the device SDK, not the simulator. See:
+# https://cmake.org/cmake/help/latest/manual/cmake-toolchains.7.html#switching-between-device-and-simulator
+# To allow switching between device and simulator builds, we need to use linker
+# flags so that the final library path can be determined by the linker. If the
+# *_LIBRARY variable is already set when find_package() runs, it will keep the
+# current value. This lets us force dependencies to use linker flags instead of
+# paths to libraries.
+set(ZLIB_LIBRARY "-lz" CACHE STRING "Override zlib library location on iOS")
+set(SQLite3_LIBRARY "-lsqlite3" CACHE STRING "Override sqlite3 library location on iOS")
+
 # Headers must be absolute paths for the copy_if_different command on the
 # static library target, relative paths cause it to fail with an error.
 set(TANGRAM_FRAMEWORK_HEADERS
@@ -105,7 +119,6 @@ add_library(TangramMap SHARED
 
 target_link_libraries(TangramMap PRIVATE
   tangram-core
-  sqlite3
   # Frameworks: use quotes so "-framework X" is treated as a single linker flag.
   "-framework CoreFoundation"
   "-framework CoreGraphics"
@@ -143,7 +156,6 @@ add_library(tangram-static STATIC
 
 target_link_libraries(tangram-static PRIVATE
   tangram-core
-  sqlite3
   # Frameworks: use quotes so "-framework X" is treated as a single linker flag.
   "-framework CoreFoundation"
   "-framework CoreGraphics"
