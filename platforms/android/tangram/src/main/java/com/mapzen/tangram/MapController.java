@@ -670,7 +670,7 @@ public class MapController {
             return mapData;
         }
         final long pointer = nativeMap.addClientDataSource(name, generateCentroid);
-        if (pointer <= 0) {
+        if (pointer == 0) {
             throw new RuntimeException("Unable to create new data source");
         }
         mapData = new MapData(name, pointer, this);
@@ -684,7 +684,9 @@ public class MapController {
      */
     void removeDataLayer(@NonNull final MapData mapData) {
         clientTileSources.remove(mapData.name);
-        checkPointer(mapData.pointer);
+        if (mapData.pointer == 0) {
+            throw new RuntimeException("Tried to remove a MapData that was already disposed");
+        }
         nativeMap.removeClientDataSource(mapData.pointer);
     }
 
@@ -1081,14 +1083,6 @@ public class MapController {
 
     void onLowMemory() {
         nativeMap.onLowMemory();
-    }
-
-    void checkPointer(final long ptr) {
-        if (ptr <= 0) {
-            throw new RuntimeException("Tried to perform an operation on an invalid pointer!"
-                    + " This means you may have used an object that has been disposed and is no"
-                    + " longer valid.");
-        }
     }
 
     void checkId(final long id) {

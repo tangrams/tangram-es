@@ -92,7 +92,7 @@ public class MapData {
     }
 
     private void checkPointer(final long ptr) {
-        if (ptr <= 0) {
+        if (ptr == 0) {
             throw new RuntimeException("Tried to perform an operation on an invalid pointer!"
                     + " This means you may have used a MapData that has already been removed.");
         }
