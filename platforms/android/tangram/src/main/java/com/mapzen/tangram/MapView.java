@@ -101,7 +101,7 @@ public class MapView extends FrameLayout {
                                final GLViewHolderFactory glViewHolderFactory,
                                @Nullable final HttpHandler handler) {
         if (viewHolder != null) {
-            Log.e("Tangram", "MapView already initialized");
+            Log.e(BuildConfig.TAG, "MapView already initialized");
             return false;
         }
 
@@ -159,12 +159,12 @@ public class MapView extends FrameLayout {
         }
 
         if (mapController != null) {
-            Log.e("Tangram", "MapView already initialized");
+            Log.e(BuildConfig.TAG, "MapView already initialized");
             return mapController;
         }
         viewHolder = glViewHolderFactory.build(getContext());
         if (viewHolder == null) {
-            Log.e("Tangram", "Unable to initialize MapController: Failed to initialize OpenGL view");
+            Log.e(BuildConfig.TAG, "Unable to initialize MapController: Failed to initialize OpenGL view");
             return null;
         }
 
@@ -173,14 +173,14 @@ public class MapView extends FrameLayout {
         mapController = getMapInstance(getContext());
 
         long now = System.currentTimeMillis();
-        Log.d("Tangram", "MapController creation took " + (now - time)+ "ms");
+        Log.d(BuildConfig.TAG, "MapController creation took " + (now - time)+ "ms");
         time = now;
 
         if (mapController != null) {
             mapController.UIThreadInit(viewHolder, handler);
 
             now = System.currentTimeMillis();
-            Log.d("Tangram", "MapController init took " + (now - time) + "ms");
+            Log.d(BuildConfig.TAG, "MapController init took " + (now - time) + "ms");
 
             addView(viewHolder.getView());
         }
@@ -189,7 +189,7 @@ public class MapView extends FrameLayout {
 
     public MapController getMapController() {
         if (mapController == null) {
-            Log.e("Tangram", "MapView not initialized");
+            Log.e(BuildConfig.TAG, "MapView not initialized");
         }
         return mapController;
     }
@@ -204,10 +204,10 @@ public class MapView extends FrameLayout {
         if (NativeLibraryLoader.sNativeLibraryLoaded) {
             libraryLoaded = true;
             time = System.currentTimeMillis() - time;
-            Log.d("Tangram", "Loading native library took " + time + "ms");
+            Log.d(BuildConfig.TAG, "Loading native library took " + time + "ms");
             return true;
         }
-        Log.e("Tangram", "Unable to initialize MapController: Failed to load native library");
+        Log.e(BuildConfig.TAG, "Unable to initialize MapController: Failed to load native library");
         return false;
     }
 

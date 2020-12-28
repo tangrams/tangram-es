@@ -22,6 +22,7 @@ android {
     versionCode buildVersionCode()
     versionName VERSION_NAME
     consumerProguardFiles 'tangram-proguard-rules.txt'
+    buildConfigField 'String', 'TAG', '"Tangram"'
     externalNativeBuild {
       cmake {
         targets 'tangram'

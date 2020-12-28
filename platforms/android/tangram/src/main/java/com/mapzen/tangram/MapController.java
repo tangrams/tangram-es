@@ -207,19 +207,16 @@ public class MapController {
      */
     protected synchronized void dispose() {
 
-        Log.e("TANGRAM", ">>> dispose");
+        Log.v(BuildConfig.TAG, "Start MapController dispose");
         nativeMap.shutdown();
-        Log.e("TANGRAM", "<<< http requests: " + httpRequestHandles.size());
+        Log.v(BuildConfig.TAG, "Remaining HTTP requests: " + httpRequestHandles.size());
 
+        Log.v(BuildConfig.TAG, "MapData instances to remove: " + clientTileSources.size());
         for (MapData mapData : clientTileSources.values()) {
             mapData.remove();
         }
-
-        Log.e("TANGRAM", "<<< 1");
         clientTileSources.clear();
-        Log.e("TANGRAM", "<<< 2");
         markers.clear();
-        Log.e("TANGRAM", "<<< 3");
 
         // Dispose all listener and callbacks associated with mapController
         // This will help prevent leaks of references from the client code, possibly used in these
@@ -239,12 +236,13 @@ public class MapController {
         // NOTE: It is possible for the MapView held by a ViewGroup to be removed, calling detachFromWindow which
         // stops the Render Thread associated with GLSurfaceView, possibly resulting in leaks from render thread
         // queue. Because of the above, destruction lifecycle of the GLSurfaceView will not be triggered.
-        // To avoid the above senario, nativeDispose is called from the UIThread.
+        // To avoid the above scenario, nativeDispose is called from the UIThread.
         //
         // Since all gl resources will be freed when GLSurfaceView is deleted this is safe until
         // we support sharing gl contexts.
+        Log.v(BuildConfig.TAG, "Dispose NativeMap");
         disposingNativeMap.dispose();
-        Log.e("TANGRAM", "<<< disposed");
+        Log.v(BuildConfig.TAG, "Finish MapController dispose");
 
     }
 
