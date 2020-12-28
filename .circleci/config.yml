@@ -36,7 +36,7 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init
-      - run: cd platforms/android && ./gradlew uploadArchives
+      - run: cd platforms/android && ./gradlew publish
   build-ios:
     executor: macos-executor
     steps:

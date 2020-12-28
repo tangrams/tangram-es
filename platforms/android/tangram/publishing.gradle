@@ -1,6 +1,6 @@
 /*
  * Copyright 2013 Chris Banes
- * Copyright 2018 Matt Blair
+ * Copyright 2020 Matt Blair
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,92 +15,96 @@
  * limitations under the License.
  */
 
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
-def isReleaseBuild() {
-  return VERSION_NAME.contains('SNAPSHOT') == false
-}
-
-def getRepositoryUsername() {
-  return project.hasProperty('bintrayUsername') ? bintrayUsername : System.env.BINTRAY_USERNAME
-}
-
-def getRepositoryPassword() {
-  return project.hasProperty('bintrayApiKey') ? bintrayApiKey : System.env.BINTRAY_API_KEY
-}
-
+// Components from the Android Gradle plugin are only created during the afterEvaluate phase, so
+// configure publications using the afterEvaluate() lifecycle method.
+// https://developer.android.com/studio/build/maven-publish-plugin
 afterEvaluate { project ->
-  uploadArchives {
-    repositories {
-      mavenDeployer {
-        pom.groupId = GROUP
-        pom.artifactId = POM_ARTIFACT_ID
-        pom.version = VERSION_NAME
 
-        repository(url: 'https://api.bintray.com/maven/tangrams/maven/tangram/') {
-          authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
-        }
-        snapshotRepository(url: 'https://oss.jfrog.org/artifactory/oss-snapshot-local/') {
-          authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
-        }
-
-        pom.project {
-          name POM_NAME
-          packaging POM_PACKAGING
-          description POM_DESCRIPTION
-          url POM_URL
-
-          scm {
-            url POM_SCM_URL
-            connection POM_SCM_CONNECTION
-            developerConnection POM_SCM_DEV_CONNECTION
-          }
-
+  publishing {
+    publications {
+      // Create a publication named 'maven'.
+      maven(MavenPublication) {
+        // Configure package information.
+        groupId = GROUP
+        artifactId = POM_ARTIFACT_ID
+        version = VERSION_NAME
+        pom {
+          name = POM_NAME
+          description = POM_DESCRIPTION
+          url = POM_URL
           licenses {
             license {
-              name POM_LICENCE_NAME
-              url POM_LICENCE_URL
-              distribution POM_LICENCE_DIST
+              name = POM_LICENSE_NAME
+              url = POM_LICENSE_URL
+              distribution = POM_LICENSE_DIST
             }
           }
-
           developers {
             developer {
-              id POM_DEVELOPER_ID
-              name POM_DEVELOPER_NAME
+              name = POM_DEVELOPER_NAME
             }
           }
+          scm {
+            connection = POM_SCM_CONNECTION
+            developerConnection = POM_SCM_DEV_CONNECTION
+            url = POM_SCM_URL
+          }
+        }
+
+        // Apply the component for the 'release' build variant.
+        from components.release
+
+        // Apply the sources and javadoc jars.
+        artifact androidSourcesJar
+        artifact androidJavadocsJar
+      }
+    }
+
+    repositories {
+      maven {
+        // Publish releases to Bintray and snapshots to OJO.
+        def releaseUrl = 'https://api.bintray.com/maven/tangrams/maven/tangram/'
+        def snapshotUrl = 'https://oss.jfrog.org/artifactory/oss-snapshot-local/'
+        url = VERSION_NAME.contains('SNAPSHOT') ? snapshotUrl : releaseUrl
+        credentials {
+          username = project.hasProperty('bintrayUsername') ? bintrayUsername : System.env.BINTRAY_USERNAME
+          password = project.hasProperty('bintrayApiKey') ? bintrayApiKey : System.env.BINTRAY_API_KEY
         }
       }
     }
   }
+}
 
-  task androidJavadocs(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    failOnError = false
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    exclude '**/*.kt'
-    exclude 'com/almeros/android/multitouch'
+// Configure tasks for javadoc and sources jars.
 
-    if (JavaVersion.current().isJava8Compatible()) {
-      allprojects {
-        tasks.withType(Javadoc) {
-          options.addStringOption('Xdoclint:none', '-quiet')
-        }
-      }
+task androidJavadocs(type: Javadoc) {
+  source = android.sourceSets.main.java.srcDirs
+  // TODO: Fix errors caused by Android dependencies not on classpath for javadoc task.
+  failOnError = false
+  // Add Android SDK to classpath.
+  classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+  // Exclude internal dependency classes.
+  exclude 'com/almeros/android/multitouch'
+}
+
+task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+  from androidJavadocs.destinationDir
+  // Add archiveClassifier so that the publishing task correctly resolves names of jar artifacts.
+  archiveClassifier = 'javadoc'
+}
+
+task androidSourcesJar(type: Jar) {
+  from android.sourceSets.main.java.sourceFiles
+  // Add archiveClassifier so that the publishing task correctly resolves names of jar artifacts.
+  archiveClassifier = 'sources'
+}
+
+if (JavaVersion.current().isJava8Compatible()) {
+  allprojects {
+    tasks.withType(Javadoc) {
+      options.addStringOption('Xdoclint:none', '-quiet')
     }
-  }
-
-  task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
-    from androidJavadocs.destinationDir
-  }
-
-  task androidSourcesJar(type: Jar) {
-    from android.sourceSets.main.java.sourceFiles
-  }
-
-  artifacts {
-    archives androidSourcesJar
-    archives androidJavadocsJar
   }
 }
