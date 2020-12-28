@@ -137,7 +137,7 @@ public class TextureViewHolder implements GLViewHolder, SurfaceTextureListener {
     }
 
     @Override
-    public void queueEvent(Runnable runnable) {
+    public void queueEvent(@NonNull Runnable runnable) {
         synchronized (syncGLThread) {
             glThread.qEvents.add(runnable);
             syncGLThread.notifyAll();
@@ -250,7 +250,7 @@ public class TextureViewHolder implements GLViewHolder, SurfaceTextureListener {
             setName("MapTextureGLThread " + getId());
             try {
                 guardedRun();
-            } catch (InterruptedException r) {
+            } catch (InterruptedException ignored) {
             } finally {
                 eglHelper.cleanup();
                 synchronized (syncGLThread) {

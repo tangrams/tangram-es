@@ -81,7 +81,7 @@ public class DefaultHttpHandler implements HttpHandler {
             }
 
             @Override
-            public void onResponse(final Call call, final Response response) {
+            public void onResponse(@NonNull final Call call, final Response response) {
                 byte[] data;
                 final ResponseBody body = response.body();
                 if (body != null) {
