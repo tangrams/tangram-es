@@ -20,10 +20,10 @@ public class LabelPickResult {
         TEXT,
     }
 
-    private Map<String, String> properties;
-    private LngLat coordinates;
-    private PointF screenPosition;
-    private LabelType type;
+    private final Map<String, String> properties;
+    private final LngLat coordinates;
+    private final PointF screenPosition;
+    private final LabelType type;
 
 
     LabelPickResult(final Map<String, String> properties, final double longitude, final double latitude, final float screenX, final float screenY, final int type) {

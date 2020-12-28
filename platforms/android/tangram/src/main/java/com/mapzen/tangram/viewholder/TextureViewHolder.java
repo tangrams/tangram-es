@@ -186,7 +186,7 @@ public class TextureViewHolder implements GLViewHolder, SurfaceTextureListener {
 
         private final WeakReference<TextureViewHolder> textureViewHolderWeakReference;
         private final Object syncGLThread;
-        private EGLHelper eglHelper;
+        private final EGLHelper eglHelper;
 
         private boolean shouldExit;
         private boolean exited;

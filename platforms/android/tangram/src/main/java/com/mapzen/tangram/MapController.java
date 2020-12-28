@@ -149,7 +149,6 @@ public class MapController {
         } else {
             clientTileSources = new HashMap<>();
         }
-        markers = new LongSparseArray<>();
 
         // Get configuration info from application
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
@@ -1323,8 +1322,8 @@ public class MapController {
     private SceneLoadListener sceneLoadListener;
     private LabelPickListener labelPickListener;
     private MarkerPickListener markerPickListener;
-    private Map<String, MapData> clientTileSources;
-    private LongSparseArray<Marker> markers;
+    private final Map<String, MapData> clientTileSources;
+    private final LongSparseArray<Marker> markers = new LongSparseArray<>();
     private Handler uiThreadHandler;
     private CameraAnimationCallback cameraAnimationCallback;
     private CameraAnimationCallback pendingCameraAnimationCallback;

@@ -29,7 +29,7 @@ import okhttp3.ResponseBody;
  */
 public class DefaultHttpHandler implements HttpHandler {
 
-    private OkHttpClient okClient;
+    private final OkHttpClient okClient;
 
     /**
      * @return OkHttp client builder with recommended settings for Tangram.
