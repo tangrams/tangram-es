@@ -11,9 +11,9 @@ import androidx.annotation.NonNull;
 @Keep
 public class MarkerPickResult {
 
-    private Marker marker;
-    private LngLat coordinates;
-    private PointF screenPosition;
+    private final Marker marker;
+    private final LngLat coordinates;
+    private final PointF screenPosition;
 
     MarkerPickResult(final Marker marker, final double longitude, final double latitude, final float screenX, final float screenY) {
         this.marker = marker;

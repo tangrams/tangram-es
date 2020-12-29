@@ -1,9 +1,12 @@
 package com.mapzen.tangram.viewholder;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.TextureView;
 
 import androidx.annotation.NonNull;
+
+import com.mapzen.tangram.BuildConfig;
 
 public class TextureViewHolderFactory implements GLViewHolderFactory {
     /**
@@ -25,19 +28,19 @@ public class TextureViewHolderFactory implements GLViewHolderFactory {
             return textureViewHolder;
         } catch(IllegalArgumentException e) {
             // TODO: print available configs to check whether we could support them
-            android.util.Log.e("Tangram", "EGLConfig 8-8-8-0 not supported");
+            Log.e(BuildConfig.TAG, "EGLConfig 8-8-8-0 not supported");
         }
         try {
             textureViewHolder.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 8, 16, 8));
             return textureViewHolder;
         } catch(IllegalArgumentException e) {
-            android.util.Log.e("Tangram", "EGLConfig 8-8-8-8 not supported");
+            Log.e(BuildConfig.TAG, "EGLConfig 8-8-8-8 not supported");
         }
         try {
             textureViewHolder.setEGLConfigChooser(new ConfigChooser(5, 6, 5, 0, 16, 8));
             return textureViewHolder;
         } catch(IllegalArgumentException e) {
-            android.util.Log.e("Tangram", "EGLConfig 5-6-5-0 not supported");
+            Log.e(BuildConfig.TAG, "EGLConfig 5-6-5-0 not supported");
         }
         return null;
     }

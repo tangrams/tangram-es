@@ -55,7 +55,7 @@ class FontConfig {
         parse();
 
         time = System.currentTimeMillis() - time;
-        Log.d("Tangram", "FontConfig init took " + time + "ms");
+        Log.d(BuildConfig.TAG, "FontConfig init took " + time + "ms");
     }
 
     private static void addFallback(final Integer weight, final String filename) {
@@ -331,11 +331,11 @@ class FontConfig {
                 processDocument(parser);
             }
         } catch(final XmlPullParserException e) {
-            Log.e("Tangram", "Could not parse file: " + fileXml.getAbsolutePath() + " " + e.getMessage());
+            Log.e(BuildConfig.TAG, "Could not parse file: " + fileXml.getAbsolutePath() + " " + e.getMessage());
 
             e.printStackTrace();
         } catch(final IOException e) {
-            Log.e("Tangram", "Could not read file: " + fileXml.getAbsolutePath());
+            Log.e(BuildConfig.TAG, "Could not read file: " + fileXml.getAbsolutePath());
             e.printStackTrace();
         }
 

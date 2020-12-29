@@ -25,7 +25,7 @@ class MapRenderer implements GLSurfaceView.Renderer {
     public void onDrawFrame(final GL10 gl) {
         // MapState constants: View is complete when no other flags are set.
         final int VIEW_COMPLETE =    0;
-        final int VIEW_CHANGING =    1 << 0;
+        final int VIEW_CHANGING =    1;
         //final int LABELS_CHANGING =  1 << 1;
         //final int TILES_LOADING =    1 << final int SCENE_PENDING =    1 << 4;
         final int VIEW_ANIMATING =   1 << 5;

@@ -2,6 +2,9 @@ package com.mapzen.tangram.viewholder;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.util.Log;
+
+import com.mapzen.tangram.BuildConfig;
 
 public class GLSurfaceViewHolderFactory implements GLViewHolderFactory {
 
@@ -22,19 +25,19 @@ public class GLSurfaceViewHolderFactory implements GLViewHolderFactory {
             return new GLSurfaceViewHolder(view);
         } catch(IllegalArgumentException e) {
             // TODO: print available configs to check whether we could support them
-            android.util.Log.e("Tangram", "EGLConfig 8-8-8-0 not supported");
+            Log.e(BuildConfig.TAG, "EGLConfig 8-8-8-0 not supported");
         }
         try {
             view.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 8, 16, 8));
             return new GLSurfaceViewHolder(view);
         } catch(IllegalArgumentException e) {
-            android.util.Log.e("Tangram", "EGLConfig 8-8-8-8 not supported");
+            Log.e(BuildConfig.TAG, "EGLConfig 8-8-8-8 not supported");
         }
         try {
             view.setEGLConfigChooser(new ConfigChooser(5, 6, 5, 0, 16, 8));
             return new GLSurfaceViewHolder(view);
         } catch(IllegalArgumentException e) {
-            android.util.Log.e("Tangram", "EGLConfig 5-6-5-0 not supported");
+            Log.e(BuildConfig.TAG, "EGLConfig 5-6-5-0 not supported");
         }
         return null;
     }

@@ -6,8 +6,8 @@ import java.util.Map;
 
 public class FeaturePickResult {
 
-    private Map<String, String> properties;
-    private PointF screenPosition;
+    private final Map<String, String> properties;
+    private final PointF screenPosition;
 
     FeaturePickResult(Map<String, String> properties, float screenX, float screenY) {
         this.properties = properties;

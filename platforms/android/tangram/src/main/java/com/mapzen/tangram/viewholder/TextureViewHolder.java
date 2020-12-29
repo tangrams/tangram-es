@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import androidx.annotation.NonNull;
 import androidx.annotation.UiThread;
 
+import com.mapzen.tangram.BuildConfig;
+
 /*
 How TextureView, SurfaceTexture, EGLSurface and gl texture related:
     - Render thread draws with GL on its local EGLSurface on a window surface it created.
@@ -135,7 +137,7 @@ public class TextureViewHolder implements GLViewHolder, SurfaceTextureListener {
     }
 
     @Override
-    public void queueEvent(Runnable runnable) {
+    public void queueEvent(@NonNull Runnable runnable) {
         synchronized (syncGLThread) {
             glThread.qEvents.add(runnable);
             syncGLThread.notifyAll();
@@ -184,7 +186,7 @@ public class TextureViewHolder implements GLViewHolder, SurfaceTextureListener {
 
         private final WeakReference<TextureViewHolder> textureViewHolderWeakReference;
         private final Object syncGLThread;
-        private EGLHelper eglHelper;
+        private final EGLHelper eglHelper;
 
         private boolean shouldExit;
         private boolean exited;
@@ -248,7 +250,7 @@ public class TextureViewHolder implements GLViewHolder, SurfaceTextureListener {
             setName("MapTextureGLThread " + getId());
             try {
                 guardedRun();
-            } catch (InterruptedException r) {
+            } catch (InterruptedException ignored) {
             } finally {
                 eglHelper.cleanup();
                 synchronized (syncGLThread) {
@@ -484,7 +486,7 @@ public class TextureViewHolder implements GLViewHolder, SurfaceTextureListener {
             }
 
             if (eglSurface == null || eglSurface == EGL10.EGL_NO_SURFACE) {
-                Log.e("EGLHelper", eglErrorToString(egl.eglGetError()));
+                Log.e(BuildConfig.TAG, "eglCreateWindowSurface error: " + eglErrorToString(egl.eglGetError()));
                 return false;
             }
 
@@ -493,7 +495,7 @@ public class TextureViewHolder implements GLViewHolder, SurfaceTextureListener {
 
         boolean makeCurrent() {
             if (!egl.eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext)) {
-                Log.w("EGLHelper", eglErrorToString(egl.eglGetError()));
+                Log.w(BuildConfig.TAG, "eglMakeCurrent error: " + eglErrorToString(egl.eglGetError()));
                 return false;
             }
             return true;
@@ -510,7 +512,7 @@ public class TextureViewHolder implements GLViewHolder, SurfaceTextureListener {
         // destroy surface
         private void destroySurface() {
             if (eglSurface != EGL10.EGL_NO_SURFACE && !egl.eglDestroySurface(eglDisplay, eglSurface)) {
-                Log.w("EGLHelper", eglErrorToString(egl.eglGetError()));
+                Log.w(BuildConfig.TAG, "eglDestroySurface error: " + eglErrorToString(egl.eglGetError()));
             }
             eglSurface = EGL10.EGL_NO_SURFACE;
         }
@@ -518,7 +520,7 @@ public class TextureViewHolder implements GLViewHolder, SurfaceTextureListener {
         // destroy context
         private void destroyContext() {
             if (eglContext != EGL10.EGL_NO_CONTEXT && !egl.eglDestroyContext(eglDisplay, eglContext)) {
-                Log.w("EGLHelper", eglErrorToString(egl.eglGetError()));
+                Log.w(BuildConfig.TAG, "eglDestroyContext error: " + eglErrorToString(egl.eglGetError()));
             }
             eglContext = EGL10.EGL_NO_CONTEXT;
         }
@@ -526,7 +528,7 @@ public class TextureViewHolder implements GLViewHolder, SurfaceTextureListener {
         // destroy display
         private void terminate() {
             if (eglDisplay != EGL10.EGL_NO_DISPLAY && !egl.eglTerminate(eglDisplay)) {
-                Log.w("EGLHelper", eglErrorToString(egl.eglGetError()));
+                Log.w(BuildConfig.TAG, "eglTerminate error: " + eglErrorToString(egl.eglGetError()));
             }
             eglDisplay = EGL10.EGL_NO_DISPLAY;
         }

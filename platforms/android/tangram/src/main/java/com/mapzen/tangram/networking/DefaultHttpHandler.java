@@ -12,6 +12,9 @@ import java.util.concurrent.TimeUnit;
 import javax.net.SocketFactory;
 
 import androidx.annotation.NonNull;
+
+import com.mapzen.tangram.BuildConfig;
+
 import okhttp3.Call;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -26,7 +29,7 @@ import okhttp3.ResponseBody;
  */
 public class DefaultHttpHandler implements HttpHandler {
 
-    private OkHttpClient okClient;
+    private final OkHttpClient okClient;
 
     /**
      * @return OkHttp client builder with recommended settings for Tangram.
@@ -78,7 +81,7 @@ public class DefaultHttpHandler implements HttpHandler {
             }
 
             @Override
-            public void onResponse(final Call call, final Response response) {
+            public void onResponse(@NonNull final Call call, final Response response) {
                 byte[] data;
                 final ResponseBody body = response.body();
                 if (body != null) {
@@ -86,7 +89,7 @@ public class DefaultHttpHandler implements HttpHandler {
                         data = body.bytes();
                         cb.onResponse(response.code(), data);
                     } catch (final IOException e) {
-                        Log.e("Tangram", "Error reading bytes from response body:" + e.getMessage());
+                        Log.e(BuildConfig.TAG, "Error reading bytes from response body:" + e.getMessage());
                         onFailure(call, e);
                     } finally {
                         response.close();

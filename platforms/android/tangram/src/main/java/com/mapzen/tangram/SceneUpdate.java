@@ -6,8 +6,8 @@ package com.mapzen.tangram;
 
 public class SceneUpdate {
 
-    private String componentPath;
-    private String componentValue;
+    private final String componentPath;
+    private final String componentValue;
 
     /**
      * Add a point feature to this collection.

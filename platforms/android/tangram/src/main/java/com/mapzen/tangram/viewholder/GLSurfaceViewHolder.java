@@ -7,7 +7,7 @@ import androidx.annotation.NonNull;
 
 
 public class GLSurfaceViewHolder implements GLViewHolder {
-    private GLSurfaceView glSurfaceView;
+    private final GLSurfaceView glSurfaceView;
 
     public GLSurfaceViewHolder(final GLSurfaceView glSurfaceView) {
         this.glSurfaceView = glSurfaceView;
