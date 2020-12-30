@@ -22,6 +22,32 @@ apply plugin: 'maven-publish'
 // https://developer.android.com/studio/build/maven-publish-plugin
 afterEvaluate { project ->
 
+  // Configure tasks for javadoc and sources jars.
+
+  task androidJavadocs(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    // Add Android SDK to classpath.
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    // Also add the classpath and files from a library variant (fixes Javadoc errors).
+    def libraryVariantCompile = android.libraryVariants.first().javaCompileProvider.get()
+    classpath += libraryVariantCompile.classpath
+    classpath += libraryVariantCompile.outputs.files
+    // Exclude internal dependency classes.
+    exclude 'com/almeros/android/multitouch'
+  }
+
+  task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+    from androidJavadocs.destinationDir
+    // Add archiveClassifier so that the publishing task correctly resolves names of jar artifacts.
+    archiveClassifier = 'javadoc'
+  }
+
+  task androidSourcesJar(type: Jar) {
+    from android.sourceSets.main.java.sourceFiles
+    // Add archiveClassifier so that the publishing task correctly resolves names of jar artifacts.
+    archiveClassifier = 'sources'
+  }
+
   publishing {
     publications {
       // Create a publication named 'maven'.
@@ -75,30 +101,6 @@ afterEvaluate { project ->
       }
     }
   }
-}
-
-// Configure tasks for javadoc and sources jars.
-
-task androidJavadocs(type: Javadoc) {
-  source = android.sourceSets.main.java.srcDirs
-  // TODO: Fix errors caused by Android dependencies not on classpath for javadoc task.
-  failOnError = false
-  // Add Android SDK to classpath.
-  classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-  // Exclude internal dependency classes.
-  exclude 'com/almeros/android/multitouch'
-}
-
-task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
-  from androidJavadocs.destinationDir
-  // Add archiveClassifier so that the publishing task correctly resolves names of jar artifacts.
-  archiveClassifier = 'javadoc'
-}
-
-task androidSourcesJar(type: Jar) {
-  from android.sourceSets.main.java.sourceFiles
-  // Add archiveClassifier so that the publishing task correctly resolves names of jar artifacts.
-  archiveClassifier = 'sources'
 }
 
 if (JavaVersion.current().isJava8Compatible()) {
