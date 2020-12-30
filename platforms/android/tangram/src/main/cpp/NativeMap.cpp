@@ -11,7 +11,7 @@ AndroidMap* androidMapFromJava(JNIEnv* env, jobject nativeMapObject) {
     static jclass nativeMapClass = env->FindClass("com/mapzen/tangram/NativeMap");
     static jfieldID nativePointerFID = env->GetFieldID(nativeMapClass, "nativePointer", "J");
     jlong nativePointer = env->GetLongField(nativeMapObject, nativePointerFID);
-    assert(nativePointer > 0);
+    assert(nativePointer != 0);
     return reinterpret_cast<AndroidMap*>(nativePointer);
 }
 
