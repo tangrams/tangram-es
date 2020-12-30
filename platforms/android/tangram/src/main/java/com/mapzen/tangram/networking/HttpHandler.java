@@ -11,7 +11,8 @@ import androidx.annotation.Nullable;
 /**
  * {@code HttpHandler} interface for handling network requests for map resources,
  * it can be implemented to provide non-default http network request or caching behavior.
- * To use client implemented HttpHandler provide one during map initialization {@link MapView#getMap(MapController.SceneLoadListener, HttpHandler)}
+ * To use client implemented HttpHandler provide one during map initialization
+ * {@link MapView#getMapAsync(MapView.MapReadyCallback, HttpHandler)}
  */
 public interface HttpHandler {
     /**
