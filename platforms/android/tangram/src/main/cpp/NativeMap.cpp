@@ -505,6 +505,8 @@ jlong NATIVE_METHOD(addClientDataSource)(JNIEnv* env, jobject obj,
 void NATIVE_METHOD(removeClientDataSource)(JNIEnv* env, jobject obj, jlong sourcePtr) {
     auto* map = androidMapFromJava(env, obj);
     auto* clientDataSource = reinterpret_cast<ClientDataSource*>(sourcePtr);
+    // Map holds the only reference of the shared_ptr to the ClientDataSource, so removing the
+    // reference in Map will also implicitly free the ClientDataSource.
     map->removeTileSource(*clientDataSource);
 }
 

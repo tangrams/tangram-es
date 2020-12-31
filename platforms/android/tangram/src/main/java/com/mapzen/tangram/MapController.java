@@ -211,7 +211,8 @@ public class MapController {
 
         Log.v(BuildConfig.TAG, "MapData instances to remove: " + clientTileSources.size());
         for (MapData mapData : clientTileSources.values()) {
-            mapData.remove();
+            nativeMap.removeClientDataSource(mapData.pointer);
+            mapData.dispose();
         }
         clientTileSources.clear();
         markers.clear();
@@ -686,6 +687,7 @@ public class MapController {
             throw new RuntimeException("Tried to remove a MapData that was already disposed");
         }
         nativeMap.removeClientDataSource(mapData.pointer);
+        mapData.dispose();
     }
 
     /**
