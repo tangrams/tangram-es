@@ -211,7 +211,7 @@ public class MapController {
 
         Log.v(BuildConfig.TAG, "MapData instances to remove: " + clientTileSources.size());
         for (MapData mapData : clientTileSources.values()) {
-            mapData.remove();
+            mapData.dispose(nativeMap);
         }
         clientTileSources.clear();
         markers.clear();
@@ -662,30 +662,25 @@ public class MapController {
      * object will be returned.
      */
     @NonNull
-    public MapData addDataLayer(final String name, final boolean generateCentroid) {
+    public MapData addDataLayer(@NonNull final String name, final boolean generateCentroid) {
         MapData mapData = clientTileSources.get(name);
         if (mapData != null) {
             return mapData;
         }
         final long pointer = nativeMap.addClientDataSource(name, generateCentroid);
-        if (pointer == 0) {
-            throw new RuntimeException("Unable to create new data source");
-        }
-        mapData = new MapData(name, pointer, this);
+        mapData = new MapData(name, pointer);
         clientTileSources.put(name, mapData);
         return mapData;
     }
 
     /**
-     * For package-internal use only; remove a {@code MapData} from this map
-     * @param mapData The {@code MapData} to remove
+     * Remove a {@link MapData} from this map and dispose its data.
+     * Using the {@link MapData} after this will cause an exception to be thrown.
+     * @param mapData The {@link MapData} to remove
      */
-    void removeDataLayer(@NonNull final MapData mapData) {
-        clientTileSources.remove(mapData.name);
-        if (mapData.pointer == 0) {
-            throw new RuntimeException("Tried to remove a MapData that was already disposed");
-        }
-        nativeMap.removeClientDataSource(mapData.pointer);
+    public void removeDataLayer(@NonNull final MapData mapData) {
+        clientTileSources.remove(mapData.name());
+        mapData.dispose(nativeMap);
     }
 
     /**

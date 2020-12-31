@@ -16,6 +16,7 @@ add_library(tangram SHARED
   platforms/android/tangram/src/main/cpp/AndroidPlatform.cpp
   platforms/android/tangram/src/main/cpp/AndroidMap.cpp
   platforms/android/tangram/src/main/cpp/NativeMap.cpp
+  platforms/android/tangram/src/main/cpp/NativeMapData.cpp
 )
 
 if(TANGRAM_MBTILES_DATASOURCE)
