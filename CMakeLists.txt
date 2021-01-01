@@ -14,7 +14,9 @@ option(TANGRAM_MBTILES_DATASOURCE "Build MBTiles Datasource" ON)
 option(TANGRAM_BUILD_TESTS "Build unit tests" OFF)
 option(TANGRAM_BUNDLE_TESTS "Compile all tests into a single binary" ON)
 option(TANGRAM_BUILD_BENCHMARKS "Build benchmarks" OFF)
+
 option(TANGRAM_DEV_MODE "For developers only: Don't omit the frame pointer" OFF)
+option(TANGRAM_DEV_DEBUG_RENDERER "Build debug TextDisplay, RenderLayers and other things to toggle via DebugFlags" OFF)
 
 message(STATUS "Build type configuration: ${CMAKE_BUILD_TYPE}")
 
@@ -73,6 +75,10 @@ if (TANGRAM_IOS OR TANGRAM_OSX OR TANGRAM_USE_JSCORE_STATIC)
 endif()
 if (TANGRAM_JSCORE_AVAILABLE AND TANGRAM_USE_JSCORE)
   set(TANGRAM_JSCORE_ENABLED ON)
+endif()
+
+if (TANGRAM_OSX OR TANGRAM_LINUX)
+  set(TANGRAM_DEV_DEBUG_RENDERER ON)
 endif()
 
 # Add core library.

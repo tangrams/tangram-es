@@ -12,6 +12,7 @@
 #include "stb_easy_font.h"
 
 namespace Tangram {
+namespace Debug {
 
 TextDisplay::TextDisplay() : m_textDisplayResolution(350.0), m_initialized(false) {
     m_vertexBuffer = new char[VERTEX_BUFFER_SIZE];
@@ -142,7 +143,6 @@ void TextDisplay::draw(RenderState& rs, const std::vector<std::string>& _infos) 
     rs.culling(GL_TRUE);
     rs.vertexBuffer(boundbuffer);
 }
-
 }
-
+}
 

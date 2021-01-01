@@ -185,7 +185,7 @@ FrameBuffer::~FrameBuffer() {
 void FrameBuffer::drawDebug(RenderState& _rs, glm::vec2 _dim) {
 
     if (m_texture) {
-        Primitives::drawTexture(_rs, *m_texture, glm::vec2{}, _dim);
+        Debug::Primitives::drawTexture(_rs, *m_texture, glm::vec2{}, _dim);
     }
 }
 
