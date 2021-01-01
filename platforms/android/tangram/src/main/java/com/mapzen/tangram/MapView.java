@@ -27,7 +27,7 @@ public class MapView extends FrameLayout {
 
     protected MapController mapController;
     protected GLViewHolder viewHolder;
-    protected AsyncTask loadLibraryTask;
+    protected AsyncTask<Void, Void, Boolean> loadLibraryTask;
     protected static boolean libraryLoaded = false;
 
     /**
@@ -105,7 +105,7 @@ public class MapView extends FrameLayout {
             return false;
         }
 
-        final WeakReference mapViewRef = new WeakReference<>(this);
+        final WeakReference<MapView> mapViewRef = new WeakReference<>(this);
 
         loadLibraryTask = loadNativeLibraryAsync(new NativeLibraryLoadCb() {
             @Override
@@ -115,7 +115,7 @@ public class MapView extends FrameLayout {
 
             @Override
             public void onLibraryReady(Boolean ok) {
-                MapView view = (MapView) mapViewRef.get();
+                MapView view = mapViewRef.get();
                 if (ok && view != null) {
                     readyCallback.onMapReady(view.initMapController(glViewHolderFactory, handler));
                 } else {
@@ -220,7 +220,7 @@ public class MapView extends FrameLayout {
      * Responsible for doing the native map library loading in an AsyncTask.
      * @return AsyncTask
      */
-    public static AsyncTask loadNativeLibraryAsync(final @Nullable NativeLibraryLoadCb readyCb) {
+    public static AsyncTask<Void, Void, Boolean> loadNativeLibraryAsync(final @Nullable NativeLibraryLoadCb readyCb) {
          class InitTask extends AsyncTask<Void, Void, Boolean> {
             @Override
             protected Boolean doInBackground(Void... voids) {

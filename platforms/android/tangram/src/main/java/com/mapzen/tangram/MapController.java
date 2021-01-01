@@ -96,8 +96,8 @@ public class MapController {
 
     /**
      * Interface for listening to scene load status information.
-     * Triggered after a call of {@link #loadSceneYamlAsync(String, String, List<SceneUpdate>)} or
-     * {@link #loadSceneFileAsync(String, List<SceneUpdate>)} or {@link #loadSceneFile(String, List<SceneUpdate>)}
+     * Triggered after a call of {@link #loadSceneYamlAsync(String, String, List)} or
+     * {@link #loadSceneFileAsync(String, List)} or {@link #loadSceneFile(String, List)}
      * Listener should be set with {@link #setSceneLoadListener(SceneLoadListener)}
      * The callbacks will be run on the main (UI) thread.
      */
@@ -105,8 +105,8 @@ public class MapController {
     public interface SceneLoadListener {
         /**
          * Received when a scene load or update finishes. If sceneError is not null then the operation did not succeed.
-         * @param sceneId The identifier returned by {@link #loadSceneYamlAsync(String, String, List<SceneUpdate>)} or
-         * {@link #loadSceneFileAsync(String, List<SceneUpdate>)}.
+         * @param sceneId The identifier returned by {@link #loadSceneYamlAsync(String, String, List)} or
+         * {@link #loadSceneFileAsync(String, List)}.
          * @param sceneError A {@link SceneError} holding error information, or null if no error occurred.
          */
         void onSceneReady(final int sceneId, final SceneError sceneError);
