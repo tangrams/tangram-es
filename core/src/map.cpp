@@ -37,9 +37,9 @@ namespace Tangram {
 struct CameraEase {
     struct {
         glm::dvec2 pos;
-        float zoom;
-        float rotation;
-        float tilt;
+        float zoom = 0;
+        float rotation = 0;
+        float tilt = 0;
     } start, end;
 };
 
@@ -66,8 +66,6 @@ public:
     void syncClientTileSources(bool _firstUpdate);
     bool updateCameraEase(float _dt);
 
-    std::mutex sceneMutex;
-
     Platform& platform;
     RenderState renderState;
     JobQueue jobQueue;
@@ -79,7 +77,6 @@ public:
     std::unique_ptr<Ease> ease;
 
     std::shared_ptr<Scene> scene;
-    std::condition_variable blockUntilSceneReady;
 
     std::unique_ptr<FrameBuffer> selectionBuffer = std::make_unique<FrameBuffer>(0, 0);
 
@@ -105,7 +102,7 @@ static std::bitset<9> g_flags = 0;
 
 Map::Map(std::unique_ptr<Platform> _platform) : platform(std::move(_platform)) {
     LOGTOInit();
-    impl.reset(new Impl(*platform));
+    impl = std::make_unique<Impl>(*platform);
 }
 
 Map::~Map() {
@@ -120,7 +117,6 @@ Map::~Map() {
     impl->asyncWorker.reset();
 
     impl->scene.reset();
-    impl->blockUntilSceneReady.notify_all();
 
     // Make sure other threads are stopped before calling stop()!
     // All jobs will be executed immediately on add() afterwards.
