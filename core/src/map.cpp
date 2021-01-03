@@ -58,7 +58,7 @@ public:
     explicit Impl(Platform& _platform) :
         platform(_platform),
         inputHandler(view),
-        scene(std::make_shared<Scene>(_platform)) {}
+        scene(std::make_unique<Scene>(_platform)) {}
 
     void setPixelScale(float _pixelsPerPoint);
     SceneID loadScene(SceneOptions&& _sceneOptions);
@@ -76,7 +76,7 @@ public:
 
     std::unique_ptr<Ease> ease;
 
-    std::shared_ptr<Scene> scene;
+    std::unique_ptr<Scene> scene;
 
     std::unique_ptr<FrameBuffer> selectionBuffer = std::make_unique<FrameBuffer>(0, 0);
 
@@ -116,8 +116,6 @@ Map::~Map() {
     // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
     impl->asyncWorker.reset();
 
-    impl->scene.reset();
-
     // Make sure other threads are stopped before calling stop()!
     // All jobs will be executed immediately on add() afterwards.
     impl->jobQueue.stop();
@@ -138,7 +136,7 @@ SceneID Map::loadScene(SceneOptions&& _sceneOptions, bool _async) {
 SceneID Map::Impl::loadScene(SceneOptions&& _sceneOptions) {
 
     // NB: This also disposes old scene which might be blocking
-    scene = std::make_shared<Scene>(platform, std::move(_sceneOptions));
+    scene = std::make_unique<Scene>(platform, std::move(_sceneOptions));
 
     scene->load();
 
@@ -151,8 +149,10 @@ SceneID Map::Impl::loadScene(SceneOptions&& _sceneOptions) {
 
 SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
 
-    // Avoid to keep loading old scene and tiles
-    auto oldScene = std::move(scene);
+    // Move the previous scene into a shared_ptr so that it can be captured in a std::function
+    // (unique_ptr can't be captured because std::function is copyable).
+    std::shared_ptr<Scene> oldScene = std::move(scene);
+
     oldScene->cancelTasks();
 
     // Add callback for tile prefetching
@@ -165,9 +165,12 @@ SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
         platform.requestRender();
     };
 
-    scene = std::make_shared<Scene>(platform, std::move(_sceneOptions), prefetchCallback);
+    scene = std::make_unique<Scene>(platform, std::move(_sceneOptions), prefetchCallback);
 
-    asyncWorker->enqueue([this, newScene = scene]() {
+    // This async task gets a raw pointer to the new scene and the following task takes ownership of the shared_ptr to
+    // the old scene. Tasks in the async queue are executed one at a time in FIFO order, so even if another scene starts
+    // to load before this loading task finishes, the current scene won't be freed until after this task finishes.
+    asyncWorker->enqueue([this, newScene = scene.get()]() {
         newScene->load();
 
         if (onSceneReady) {
@@ -177,9 +180,11 @@ SceneID Map::Impl::loadSceneAsync(SceneOptions&& _sceneOptions) {
         platform.requestRender();
     });
 
-    // Disposing TileWorker is blocking: Do this async just in case
-    asyncWorker->enqueue([s = std::move(oldScene)]() mutable {
-        LOG("ASYNC DISPOSE OF OLD SCENE - %d", s.use_count() == 1);
+    asyncWorker->enqueue([disposingScene = std::move(oldScene)]() mutable {
+        if (disposingScene.use_count() != 1) {
+            LOGE("Incorrect use count for old scene pointer: %d. Scene may be leaked!", disposingScene.use_count());
+        }
+        disposingScene.reset();
     });
 
     return scene->id;
