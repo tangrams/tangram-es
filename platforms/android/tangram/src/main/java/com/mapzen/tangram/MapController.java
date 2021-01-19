@@ -293,8 +293,11 @@ public class MapController {
      */
     public int loadSceneFile(final String path, @Nullable final List<SceneUpdate> sceneUpdates) {
         final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        final int sceneId = nativeMap.loadScene(path, updateStrings);
-        removeAllMarkers();
+        final int sceneId;
+        synchronized (mapRenderer.nativeMapLock) {
+            sceneId = nativeMap.loadScene(path, updateStrings);
+            removeAllMarkers();
+        }
         requestRender();
         return sceneId;
     }
@@ -311,8 +314,11 @@ public class MapController {
      */
     public int loadSceneFileAsync(final String path, @Nullable final List<SceneUpdate> sceneUpdates) {
         final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        final int sceneId = nativeMap.loadSceneAsync(path, updateStrings);
-        removeAllMarkers();
+        final int sceneId;
+        synchronized (mapRenderer.nativeMapLock) {
+            sceneId = nativeMap.loadSceneAsync(path, updateStrings);
+            removeAllMarkers();
+        }
         requestRender();
         return sceneId;
     }
@@ -330,8 +336,11 @@ public class MapController {
     public int loadSceneYaml(final String yaml, final String resourceRoot,
                              @Nullable final List<SceneUpdate> sceneUpdates) {
         final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        final int sceneId = nativeMap.loadSceneYaml(yaml, resourceRoot, updateStrings);
-        removeAllMarkers();
+        final int sceneId;
+        synchronized (mapRenderer.nativeMapLock) {
+            sceneId = nativeMap.loadSceneYaml(yaml, resourceRoot, updateStrings);
+            removeAllMarkers();
+        }
         requestRender();
         return sceneId;
     }
@@ -349,8 +358,11 @@ public class MapController {
     public int loadSceneYamlAsync(final String yaml, final String resourceRoot,
                                   @Nullable final List<SceneUpdate> sceneUpdates) {
         final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        final int sceneId = nativeMap.loadSceneYamlAsync(yaml, resourceRoot, updateStrings);
-        removeAllMarkers();
+        final int sceneId;
+        synchronized (mapRenderer.nativeMapLock) {
+            sceneId = nativeMap.loadSceneYamlAsync(yaml, resourceRoot, updateStrings);
+            removeAllMarkers();
+        }
         requestRender();
         return sceneId;
     }
