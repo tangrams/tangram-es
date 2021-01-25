@@ -15,6 +15,10 @@ class NativeMap {
     }
 
     private native long init(MapController mapController, AssetManager assetManager);
+
+    // Declare all methods called by MapController and MapRenderer to be synchronized. These methods
+    // potentially have mutable access to shared native memory and can be called from different
+    // threads. If these calls interleave, it can lead to states that cause a segmentation fault.
     native synchronized void dispose();
     native synchronized void shutdown();
     native synchronized void onLowMemory();
