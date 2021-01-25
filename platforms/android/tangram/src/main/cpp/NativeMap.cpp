@@ -117,15 +117,11 @@ void NATIVE_METHOD(resize)(JNIEnv* env, jobject obj, jint width, jint height) {
     map->resize(width, height);
 }
 
-jint NATIVE_METHOD(update)(JNIEnv* env, jobject obj, jfloat dt) {
+jint NATIVE_METHOD(render)(JNIEnv* env, jobject obj, jfloat dt) {
     auto* map = androidMapFromJava(env, obj);
     auto result = map->update(dt);
-    return static_cast<jint>(result.flags);
-}
-
-void NATIVE_METHOD(render)(JNIEnv* env, jobject obj) {
-    auto* map = androidMapFromJava(env, obj);
     map->render();
+    return static_cast<jint>(result.flags);
 }
 
 void NATIVE_METHOD(captureSnapshot)(JNIEnv* env, jobject obj, jintArray buffer) {

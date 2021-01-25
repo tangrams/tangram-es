@@ -217,21 +217,18 @@ public class MapController {
         clientTileSources.clear();
         markers.clear();
 
-        // Acquire the lock to ensure mapRenderer is not currently accessing nativeMap.
-        synchronized (mapRenderer.nativeMapLock) {
-            // NativeMap dispose makes GL calls to free GPU resources so we _should_ call it on the
-            // render thread, where the GL context is active. However, it is possible for the render
-            // thread associated with GLSurfaceView to be stopped without running all of the queued
-            // events. This would cause the native memory to be leaked.
-            //
-            // To avoid this, we dispose the NativeMap on the UI thread. The GL calls produce an
-            // error in logcat, but otherwise have no effect. The GPU resources are eventually freed
-            // when the SurfaceView is destroyed, so nothing is leaked.
-            Log.v(BuildConfig.TAG, "Dispose NativeMap");
-            NativeMap disposingNativeMap = nativeMap;
-            nativeMap = null;
-            disposingNativeMap.dispose();
-        }
+        // NativeMap dispose makes GL calls to free GPU resources so we _should_ call it on the
+        // render thread, where the GL context is active. However, it is possible for the render
+        // thread associated with GLSurfaceView to be stopped without running all of the queued
+        // events. This would cause the native memory to be leaked.
+        //
+        // To avoid this, we dispose the NativeMap on the UI thread. The GL calls produce an
+        // error in logcat, but otherwise have no effect. The GPU resources are eventually freed
+        // when the SurfaceView is destroyed, so nothing is leaked.
+        Log.v(BuildConfig.TAG, "Dispose NativeMap");
+        NativeMap disposingNativeMap = nativeMap;
+        nativeMap = null;
+        disposingNativeMap.dispose();
 
         // Dispose all listener and callbacks associated with mapController
         // This will help prevent leaks of references from the client code, possibly used in these
@@ -293,11 +290,8 @@ public class MapController {
      */
     public int loadSceneFile(final String path, @Nullable final List<SceneUpdate> sceneUpdates) {
         final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        final int sceneId;
-        synchronized (mapRenderer.nativeMapLock) {
-            sceneId = nativeMap.loadScene(path, updateStrings);
-            removeAllMarkers();
-        }
+        final int sceneId = nativeMap.loadScene(path, updateStrings);
+        removeAllMarkers();
         requestRender();
         return sceneId;
     }
@@ -314,11 +308,8 @@ public class MapController {
      */
     public int loadSceneFileAsync(final String path, @Nullable final List<SceneUpdate> sceneUpdates) {
         final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        final int sceneId;
-        synchronized (mapRenderer.nativeMapLock) {
-            sceneId = nativeMap.loadSceneAsync(path, updateStrings);
-            removeAllMarkers();
-        }
+        final int sceneId = nativeMap.loadSceneAsync(path, updateStrings);
+        removeAllMarkers();
         requestRender();
         return sceneId;
     }
@@ -336,11 +327,8 @@ public class MapController {
     public int loadSceneYaml(final String yaml, final String resourceRoot,
                              @Nullable final List<SceneUpdate> sceneUpdates) {
         final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        final int sceneId;
-        synchronized (mapRenderer.nativeMapLock) {
-            sceneId = nativeMap.loadSceneYaml(yaml, resourceRoot, updateStrings);
-            removeAllMarkers();
-        }
+        final int sceneId = nativeMap.loadSceneYaml(yaml, resourceRoot, updateStrings);
+        removeAllMarkers();
         requestRender();
         return sceneId;
     }
@@ -358,11 +346,8 @@ public class MapController {
     public int loadSceneYamlAsync(final String yaml, final String resourceRoot,
                                   @Nullable final List<SceneUpdate> sceneUpdates) {
         final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        final int sceneId;
-        synchronized (mapRenderer.nativeMapLock) {
-            sceneId = nativeMap.loadSceneYamlAsync(yaml, resourceRoot, updateStrings);
-            removeAllMarkers();
-        }
+        final int sceneId = nativeMap.loadSceneYamlAsync(yaml, resourceRoot, updateStrings);
+        removeAllMarkers();
         requestRender();
         return sceneId;
     }
