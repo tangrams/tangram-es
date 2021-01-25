@@ -113,8 +113,10 @@ Map::~Map() {
     // In any case after shutdown Platform may not call back into Map!
     platform->shutdown();
 
-    // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
+    // Impl will be automatically destroyed by unique_ptr, but threads owned by AsyncWorker and
+    // Scene need to be destroyed before JobQueue stops.
     impl->asyncWorker.reset();
+    impl->scene.reset();
 
     // Make sure other threads are stopped before calling stop()!
     // All jobs will be executed immediately on add() afterwards.
