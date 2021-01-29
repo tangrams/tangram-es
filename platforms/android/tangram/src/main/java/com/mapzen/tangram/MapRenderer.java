@@ -10,12 +10,13 @@ import javax.microedition.khronos.opengles.GL10;
 
 import androidx.annotation.NonNull;
 
+import com.mapzen.tangram.viewholder.GLViewHolder;
+
 class MapRenderer implements GLSurfaceView.Renderer {
 
     MapRenderer(MapController mapController, Handler uiThreadHandler) {
         this.uiThreadHandler = uiThreadHandler;
         this.map = mapController;
-        this.nativeMap = mapController.nativeMap;
     }
 
     // GLSurfaceView.Renderer methods
@@ -34,19 +35,18 @@ class MapRenderer implements GLSurfaceView.Renderer {
         final float delta = (newTime - time) / 1000000000.0f;
         time = newTime;
 
-        boolean mapViewComplete;
-        boolean isCameraEasing;
-        boolean isAnimating;
-
-        synchronized(map) {
-            int state = nativeMap.update(delta);
-
-            nativeMap.render();
-
-            mapViewComplete = (state == VIEW_COMPLETE);
-            isCameraEasing = (state & VIEW_CHANGING) != 0;
-            isAnimating = (state & VIEW_ANIMATING) != 0;
+        if (map.nativeMap == null)
+        {
+            // Stop here if nativeMap is null. This can happen during Activity/Fragment teardown
+            // when MapController has been disposed but the View hasn't been destroyed yet.
+            return;
         }
+
+        int state = map.nativeMap.render(delta);
+
+        boolean mapViewComplete = (state == VIEW_COMPLETE);
+        boolean isCameraEasing = (state & VIEW_CHANGING) != 0;
+        boolean isAnimating = (state & VIEW_ANIMATING) != 0;
 
         if (isCameraEasing) {
             if (!isPrevCameraEasing) {
@@ -87,16 +87,12 @@ class MapRenderer implements GLSurfaceView.Renderer {
 
     @Override
     public void onSurfaceChanged(final GL10 gl, final int width, final int height) {
-        synchronized (map) {
-            nativeMap.resize(width, height);
-        }
+        map.nativeMap.resize(width, height);
     }
 
     @Override
     public void onSurfaceCreated(final GL10 gl, final EGLConfig config) {
-        synchronized (map) {
-            nativeMap.setupGL();
-        }
+        map.nativeMap.setupGL();
     }
 
     void captureFrame(MapController.FrameCaptureCallback callback, boolean waitForCompleteView) {
@@ -106,7 +102,12 @@ class MapRenderer implements GLSurfaceView.Renderer {
 
     @NonNull
     private Bitmap capture() {
-        View view = map.getGLViewHolder().getView();
+        GLViewHolder viewHolder = map.getGLViewHolder();
+        if (viewHolder == null) {
+            throw new IllegalStateException("MapController GLViewHolder is null");
+        }
+
+        View view = viewHolder.getView();
 
         final int w = view.getWidth();
         final int h = view.getHeight();
@@ -114,9 +115,8 @@ class MapRenderer implements GLSurfaceView.Renderer {
         final int[] b = new int[w * h];
         final int[] bt = new int[w * h];
 
-        synchronized (map) {
-            nativeMap.captureSnapshot(b);
-        }
+        map.nativeMap.captureSnapshot(b);
+
         for (int i = 0; i < h; i++) {
             for (int j = 0; j < w; j++) {
                 final int pix = b[i * w + j];
@@ -132,7 +132,6 @@ class MapRenderer implements GLSurfaceView.Renderer {
 
     private final Handler uiThreadHandler;
     private final MapController map;
-    private final NativeMap nativeMap;
     private long time = System.nanoTime();
     private boolean isPrevCameraEasing = false;
     private boolean isPrevMapViewComplete = false;

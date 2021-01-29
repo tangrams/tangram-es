@@ -11,7 +11,7 @@ AndroidMap* androidMapFromJava(JNIEnv* env, jobject nativeMapObject) {
     static jclass nativeMapClass = env->FindClass("com/mapzen/tangram/NativeMap");
     static jfieldID nativePointerFID = env->GetFieldID(nativeMapClass, "nativePointer", "J");
     jlong nativePointer = env->GetLongField(nativeMapObject, nativePointerFID);
-    assert(nativePointer > 0);
+    assert(nativePointer != 0);
     return reinterpret_cast<AndroidMap*>(nativePointer);
 }
 
@@ -117,15 +117,11 @@ void NATIVE_METHOD(resize)(JNIEnv* env, jobject obj, jint width, jint height) {
     map->resize(width, height);
 }
 
-jint NATIVE_METHOD(update)(JNIEnv* env, jobject obj, jfloat dt) {
+jint NATIVE_METHOD(render)(JNIEnv* env, jobject obj, jfloat dt) {
     auto* map = androidMapFromJava(env, obj);
     auto result = map->update(dt);
-    return static_cast<jint>(result.flags);
-}
-
-void NATIVE_METHOD(render)(JNIEnv* env, jobject obj) {
-    auto* map = androidMapFromJava(env, obj);
     map->render();
+    return static_cast<jint>(result.flags);
 }
 
 void NATIVE_METHOD(captureSnapshot)(JNIEnv* env, jobject obj, jintArray buffer) {
@@ -505,6 +501,8 @@ jlong NATIVE_METHOD(addClientDataSource)(JNIEnv* env, jobject obj,
 void NATIVE_METHOD(removeClientDataSource)(JNIEnv* env, jobject obj, jlong sourcePtr) {
     auto* map = androidMapFromJava(env, obj);
     auto* clientDataSource = reinterpret_cast<ClientDataSource*>(sourcePtr);
+    // Map holds the only reference of the shared_ptr to the ClientDataSource, so removing the
+    // reference in Map will also implicitly free the ClientDataSource.
     map->removeTileSource(*clientDataSource);
 }
 

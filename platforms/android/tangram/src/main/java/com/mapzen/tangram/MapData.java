@@ -76,7 +76,9 @@ public class MapData {
             return;
         }
         map.removeDataLayer(this);
+    }
 
+    void dispose() {
         mapController = null;
         pointer = 0;
     }

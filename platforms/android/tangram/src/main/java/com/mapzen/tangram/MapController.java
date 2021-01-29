@@ -204,18 +204,31 @@ public class MapController {
      * Responsible to dispose internals of MapController during Map teardown.
      * If client code extends MapController and overrides this method, then it must call super.dispose()
      */
-    protected synchronized void dispose() {
-
+    protected void dispose() {
         Log.v(BuildConfig.TAG, "Start MapController dispose");
         nativeMap.shutdown();
         Log.v(BuildConfig.TAG, "Remaining HTTP requests: " + httpRequestHandles.size());
 
         Log.v(BuildConfig.TAG, "MapData instances to remove: " + clientTileSources.size());
         for (MapData mapData : clientTileSources.values()) {
-            mapData.remove();
+            nativeMap.removeClientDataSource(mapData.pointer);
+            mapData.dispose();
         }
         clientTileSources.clear();
         markers.clear();
+
+        // NativeMap dispose makes GL calls to free GPU resources so we _should_ call it on the
+        // render thread, where the GL context is active. However, it is possible for the render
+        // thread associated with GLSurfaceView to be stopped without running all of the queued
+        // events. This would cause the native memory to be leaked.
+        //
+        // To avoid this, we dispose the NativeMap on the UI thread. The GL calls produce an
+        // error in logcat, but otherwise have no effect. The GPU resources are eventually freed
+        // when the SurfaceView is destroyed, so nothing is leaked.
+        Log.v(BuildConfig.TAG, "Dispose NativeMap");
+        NativeMap disposingNativeMap = nativeMap;
+        nativeMap = null;
+        disposingNativeMap.dispose();
 
         // Dispose all listener and callbacks associated with mapController
         // This will help prevent leaks of references from the client code, possibly used in these
@@ -228,21 +241,7 @@ public class MapController {
         markerPickListener = null;
         cameraAnimationCallback = null;
 
-        // Prevent any calls to native functions - except dispose.
-        final NativeMap disposingNativeMap = nativeMap;
-        nativeMap = null;
-
-        // NOTE: It is possible for the MapView held by a ViewGroup to be removed, calling detachFromWindow which
-        // stops the Render Thread associated with GLSurfaceView, possibly resulting in leaks from render thread
-        // queue. Because of the above, destruction lifecycle of the GLSurfaceView will not be triggered.
-        // To avoid the above scenario, nativeDispose is called from the UIThread.
-        //
-        // Since all gl resources will be freed when GLSurfaceView is deleted this is safe until
-        // we support sharing gl contexts.
-        Log.v(BuildConfig.TAG, "Dispose NativeMap");
-        disposingNativeMap.dispose();
         Log.v(BuildConfig.TAG, "Finish MapController dispose");
-
     }
 
     /**
@@ -685,6 +684,7 @@ public class MapController {
             throw new RuntimeException("Tried to remove a MapData that was already disposed");
         }
         nativeMap.removeClientDataSource(mapData.pointer);
+        mapData.dispose();
     }
 
     /**
