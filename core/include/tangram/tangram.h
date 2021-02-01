@@ -6,7 +6,7 @@
 #pragma once
 
 #define TANGRAM_VERSION_MAJOR 0
-#define TANGRAM_VERSION_MINOR 13
+#define TANGRAM_VERSION_MINOR 14
 #define TANGRAM_VERSION_PATCH 0
 
 #include "data/clientDataSource.h"
