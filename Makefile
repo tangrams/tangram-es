@@ -215,32 +215,35 @@ ios-framework: cmake-ios
 	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramMap -configuration ${BUILD_TYPE} -sdk iphoneos ${XCPRETTY}
 
 ios-framework-sim: cmake-ios
-	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramMap -configuration ${BUILD_TYPE} -sdk iphonesimulator -arch x86_64 ${XCPRETTY}
+	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramMap -configuration ${BUILD_TYPE} -sdk iphonesimulator ${XCPRETTY}
 
-ios-framework-universal: ios-framework ios-framework-sim
-	@mkdir -p ${IOS_BUILD_DIR}/${BUILD_TYPE}-universal
-	@cp -r ${IOS_BUILD_DIR}/${BUILD_TYPE}-iphoneos/TangramMap.framework ${IOS_BUILD_DIR}/${BUILD_TYPE}-universal
-	lipo ${IOS_BUILD_DIR}/${BUILD_TYPE}-iphoneos/TangramMap.framework/TangramMap \
-		${IOS_BUILD_DIR}/${BUILD_TYPE}-iphonesimulator/TangramMap.framework/TangramMap \
-		-create -output ${IOS_BUILD_DIR}/${BUILD_TYPE}-universal/TangramMap.framework/TangramMap
+ios-xcframework: ios-framework ios-framework-sim
+	rm -rf ${IOS_BUILD_DIR}/${BUILD_TYPE}/TangramMap.xcframework
+	xcodebuild -create-xcframework \
+		-framework ${IOS_BUILD_DIR}/${BUILD_TYPE}-iphoneos/TangramMap.framework \
+		-framework ${IOS_BUILD_DIR}/${BUILD_TYPE}-iphonesimulator/TangramMap.framework \
+		-output ${IOS_BUILD_DIR}/${BUILD_TYPE}/TangramMap.xcframework
 
 ios-static: cmake-ios
 	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo-static -configuration ${BUILD_TYPE} -sdk iphoneos ${XCPRETTY}
 
 ios-static-sim: cmake-ios
-	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo-static -configuration ${BUILD_TYPE} -sdk iphonesimulator -arch x86_64 ${XCPRETTY}
+	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo-static -configuration ${BUILD_TYPE} -sdk iphonesimulator ${XCPRETTY}
 
 ios-static-lib: cmake-ios
 	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme tangram-static -configuration ${BUILD_TYPE} -sdk iphoneos ${XCPRETTY}
 
 ios-static-lib-sim: cmake-ios
-	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme tangram-static -configuration ${BUILD_TYPE} -sdk iphonesimulator -arch x86_64 ${XCPRETTY}
+	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme tangram-static -configuration ${BUILD_TYPE} -sdk iphonesimulator ${XCPRETTY}
 
-ios-static-lib-universal: ios-static-lib ios-static-lib-sim
-	@mkdir -p ${IOS_BUILD_DIR}/${BUILD_TYPE}-universal
-	lipo ${IOS_BUILD_DIR}/${BUILD_TYPE}-iphoneos/libtangram-static.a \
-		${IOS_BUILD_DIR}/${BUILD_TYPE}-iphonesimulator/libtangram-static.a \
-		-create -output ${IOS_BUILD_DIR}/${BUILD_TYPE}-universal/libtangram-static.a
+ios-static-xcframework: ios-static-lib ios-static-lib-sim
+	rm -rf ${IOS_BUILD_DIR}/${BUILD_TYPE}/TangramMapStatic.xcframework
+	xcodebuild -create-xcframework \
+		-library ${IOS_BUILD_DIR}/${BUILD_TYPE}-iphoneos/libtangram-static.a \
+		-headers ${IOS_BUILD_DIR}/Headers \
+		-library ${IOS_BUILD_DIR}/${BUILD_TYPE}-iphonesimulator/libtangram-static.a \
+		-headers ${IOS_BUILD_DIR}/Headers \
+		-output ${IOS_BUILD_DIR}/${BUILD_TYPE}/TangramMapStatic.xcframework
 
 rpi: cmake-rpi
 	cmake --build ${RPI_BUILD_DIR}
