@@ -58,6 +58,8 @@ endif
 # Default build type is Release
 BUILD_TYPE ?= Release
 
+IOS_SIM_ARCH ?= $(shell uname -m)
+
 BENCH_CMAKE_PARAMS = \
 	-DTANGRAM_BUILD_BENCHMARKS=1 \
 	-DCMAKE_BUILD_TYPE=Release \
@@ -189,13 +191,13 @@ ios: cmake-ios
 	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo -configuration ${BUILD_TYPE} -sdk iphoneos ${XCPRETTY}
 
 ios-sim: cmake-ios
-	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo -configuration ${BUILD_TYPE} -sdk iphonesimulator -arch x86_64 ${XCPRETTY}
+	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo -configuration ${BUILD_TYPE} -sdk iphonesimulator -arch ${IOS_SIM_ARCH} ${XCPRETTY}
 
 ios-swift: cmake-ios
 	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemoSwift -configuration ${BUILD_TYPE} -sdk iphoneos ${XCPRETTY}
 
 ios-swift-sim: cmake-ios
-	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemoSwift -configuration ${BUILD_TYPE} -sdk iphonesimulator -arch x86_64 ${XCPRETTY}
+	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemoSwift -configuration ${BUILD_TYPE} -sdk iphonesimulator -arch ${IOS_SIM_ARCH} ${XCPRETTY}
 
 ios-xcode: cmake-ios
 	open platforms/ios/Tangram.xcworkspace
@@ -228,7 +230,7 @@ ios-static: cmake-ios
 	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo-static -configuration ${BUILD_TYPE} -sdk iphoneos ${XCPRETTY}
 
 ios-static-sim: cmake-ios
-	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo-static -configuration ${BUILD_TYPE} -sdk iphonesimulator ${XCPRETTY}
+	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo-static -configuration ${BUILD_TYPE} -sdk iphonesimulator -arch ${IOS_SIM_ARCH} ${XCPRETTY}
 
 ios-static-lib: cmake-ios
 	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme tangram-static -configuration ${BUILD_TYPE} -sdk iphoneos ${XCPRETTY}
