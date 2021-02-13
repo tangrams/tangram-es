@@ -224,6 +224,8 @@ set_target_properties(TangramMap tangram-static PROPERTIES
   XCODE_ATTRIBUTE_GCC_TREAT_WARNINGS_AS_ERRORS "YES"
   # Generate dsym for all build types to ensure symbols are available in profiling.
   XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS "YES"
+  # Ensure that archives are built for distribution.
+  XCODE_ATTRIBUTE_BUILD_LIBRARY_FOR_DISTRIBUTION "YES"
 )
 
 # Copy the framework headers into a directory in the build folder, for use by
