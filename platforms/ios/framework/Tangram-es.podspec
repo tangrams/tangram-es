@@ -22,7 +22,7 @@ Pod::Spec.new do |s|
 
   s.requires_arc = true
 
-  s.vendored_frameworks = 'TangramMap.framework'
+  s.vendored_frameworks = 'TangramMap.xcframework'
   s.module_name = 'TangramMap'
 
 end
