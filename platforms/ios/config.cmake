@@ -145,6 +145,8 @@ set_target_properties(TangramMap PROPERTIES
   # This ensures that the dynamic linker loads the framework from its embedded path in an app, not
   # from the location it was originally built.
   XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
+  # Ensure that archives are built for distribution.
+  XCODE_ATTRIBUTE_BUILD_LIBRARY_FOR_DISTRIBUTION "YES"
 )
 # Other properties that are common to dynamic and static framework targets are set below.
 
@@ -222,6 +224,8 @@ set_target_properties(TangramMap tangram-static PROPERTIES
   XCODE_ATTRIBUTE_GCC_TREAT_WARNINGS_AS_ERRORS "YES"
   # Generate dsym for all build types to ensure symbols are available in profiling.
   XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS "YES"
+  # Ensure that archives are built for distribution.
+  XCODE_ATTRIBUTE_BUILD_LIBRARY_FOR_DISTRIBUTION "YES"
 )
 
 # Copy the framework headers into a directory in the build folder, for use by
@@ -229,9 +233,9 @@ set_target_properties(TangramMap tangram-static PROPERTIES
 add_custom_command(TARGET tangram-static POST_BUILD
   COMMAND
   ${CMAKE_COMMAND} -E make_directory
-  "${PROJECT_BINARY_DIR}/Include/TangramMap/"
+  "${PROJECT_BINARY_DIR}/Headers/"
   COMMAND
   ${CMAKE_COMMAND} -E copy_if_different
   ${TANGRAM_FRAMEWORK_HEADERS}
-  "${PROJECT_BINARY_DIR}/Include/TangramMap/"
+  "${PROJECT_BINARY_DIR}/Headers/"
 )

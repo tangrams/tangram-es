@@ -59,16 +59,16 @@ jobs:
       - run: sudo gem install jazzy --no-document --version 0.10.0
       - run: brew install cmake
       # Build the framework and package it into pod.zip.
-      - run: make ios-framework-universal BUILD_TYPE=Release
+      - run: make ios-xcframework BUILD_TYPE=Release
       # Check that bitcode is included for required archs.
-      - run: source scripts/check_bitcode.sh build/ios/Release-universal/TangramMap.framework/TangramMap armv7 arm64
+      - run: source scripts/check_bitcode.sh build/ios/Release/TangramMap.xcframework/ios-arm64_armv7/TangramMap.framework/TangramMap arm64 armv7
       # Build the docs and package them into docs.zip.
       - run: make ios-docs
       - run: cd build/ios-docs && zip -r ~/docs.zip .
       - store_artifacts:
           path: ~/docs.zip
       # To produce the intended structure within the zip archive, we must cd to each file's location.
-      - run: cd build/ios/Release-universal && zip -r ~/pod.zip TangramMap.framework
+      - run: cd build/ios/Release && zip -r ~/pod.zip TangramMap.xcframework
       # Add the readme and license files.
       - run: cd platforms/ios/framework && zip ~/pod.zip README.md
       - run: zip ~/pod.zip LICENSE
@@ -98,15 +98,15 @@ jobs:
       - run: sudo gem install jazzy --no-document --version 0.10.0
       - run: brew install cmake jfrog-cli-go
       # Build the framework in release mode and package it into pod.zip
-      - run: make ios-framework-universal BUILD_TYPE=Release
+      - run: make ios-xcframework BUILD_TYPE=Release
       # Check that bitcode is included for required archs.
-      - run: source scripts/check_bitcode.sh build/ios/Release-universal/TangramMap.framework/TangramMap armv7 arm64
+      - run: source scripts/check_bitcode.sh build/ios/Release/TangramMap.xcframework/ios-arm64_armv7/TangramMap.framework/TangramMap arm64 armv7
       - run: make ios-docs
       - run: cd build/ios-docs && zip -r ~/docs.zip .
       - store_artifacts:
           path: ~/docs.zip
       # To produce the intended structure within the zip archive, we must cd to each file's location.
-      - run: cd build/ios/Release-universal && zip -r ~/pod.zip TangramMap.framework
+      - run: cd build/ios/Release && zip -r ~/pod.zip TangramMap.xcframework
       # Add the readme and license files.
       - run: cd platforms/ios/framework && zip ~/pod.zip README.md
       - run: zip ~/pod.zip LICENSE
