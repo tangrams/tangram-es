@@ -82,5 +82,5 @@ Document release notes at [https://github.com/tangrams/tangram-es/releases][5].
 [1]: https://app.circleci.com/pipelines/github/tangrams/tangram-es
 [2]: https://oss.sonatype.org/
 [3]: https://central.sonatype.org/pages/ossrh-guide.html
-[4]: https://search.maven.org/search?q=g:com.mapzen.tangram
+[4]: https://search.maven.org/artifact/com.mapzen.tangram/tangram
 [5]: https://github.com/tangrams/tangram-es/releases
