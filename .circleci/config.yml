@@ -96,7 +96,7 @@ jobs:
       - run: git submodule update --init
       # Install dependencies.
       - run: sudo gem install jazzy --no-document --version 0.10.0
-      - run: brew install cmake jfrog-cli-go
+      - run: brew install cmake gh
       # Build the framework in release mode and package it into pod.zip
       - run: make ios-xcframework BUILD_TYPE=Release
       # Check that bitcode is included for required archs.
@@ -110,9 +110,9 @@ jobs:
       # Add the readme and license files.
       - run: cd platforms/ios/framework && zip ~/pod.zip README.md
       - run: zip ~/pod.zip LICENSE
-      # Upload and publish the Cocoapods archive to Bintray.
-      - run: jfrog bt config --user=${BINTRAY_USER} --key=${BINTRAY_API_KEY} --licenses=MIT
-      - run: jfrog bt upload --publish=true ~/pod.zip tangrams/cocoapods/Tangram-es/${CIRCLE_TAG} ${CIRCLE_TAG}-release.zip
+      # Upload and publish the Cocoapods archive to GitHub.
+      - run: echo "$GITHUB_TOKEN" | gh auth login --with-token
+      - run: gh release upload ${CIRCLE_TAG} ~/pod.zip#tangram-ios-${CIRCLE_TAG}.zip
       - store_artifacts:
           path: ~/pod.zip
 

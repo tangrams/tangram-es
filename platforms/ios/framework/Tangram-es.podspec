@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.documentation_url = 'https://tangrams.readthedocs.io/en/latest/API-Reference/ios-framework/0.10.0/index.html'
 
   s.source = {
-    :http => "https://dl.bintray.com/tangrams/cocoapods/#{s.version}-release.zip"
+    :http => "https://github.com/tangrams/tangram-es/releases/download/#{s.version}/tangram-ios-#{s.version}.zip"
   }
 
   s.platform              = :ios
