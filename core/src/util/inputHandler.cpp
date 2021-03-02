@@ -101,14 +101,15 @@ void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, fl
     cancelFling();
 
     // Early out for an invalid scale
-    if (_scale == 0.f) {
+    if (_scale <= 0.f) {
+        // 'scale' should be a ratio between two sizes with the same sign.
         return;
     }
+
     float z = m_view.getZoom();
     static float invLog2 = 1 / log(2);
 
-    // Make sure log is valid with absolute value of scale
-    m_view.zoom(log(abs(_scale)) * invLog2);
+    m_view.zoom(log(_scale) * invLog2);
 
     m_view.screenToGroundPlane(_posX, _posY);
     float s = pow(2, m_view.getZoom() - z) - 1;
