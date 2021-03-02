@@ -111,7 +111,6 @@ jobs:
       - run: cd platforms/ios/framework && zip ~/pod.zip README.md
       - run: zip ~/pod.zip LICENSE
       # Upload and publish the Cocoapods archive to GitHub.
-      - run: echo "$GITHUB_TOKEN" | gh auth login --with-token
       - run: gh release upload ${CIRCLE_TAG} ~/pod.zip#tangram-ios-${CIRCLE_TAG}.zip
       - store_artifacts:
           path: ~/pod.zip
