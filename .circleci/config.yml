@@ -110,10 +110,11 @@ jobs:
       # Add the readme and license files.
       - run: cd platforms/ios/framework && zip ~/pod.zip README.md
       - run: zip ~/pod.zip LICENSE
-      # Upload and publish the Cocoapods archive to GitHub.
-      - run: gh release upload ${CIRCLE_TAG} ~/pod.zip#tangram-ios-${CIRCLE_TAG}.zip
+      # Upload and publish the Cocoapods archive to GitHub. The download URL on GitHub uses the file name, labels have no effect.
+      - run: mv ~/pod.zip ~/tangram-ios-${CIRCLE_TAG}.zip
+      - run: gh release upload ${CIRCLE_TAG} ~/tangram-ios-${CIRCLE_TAG}.zip
       - store_artifacts:
-          path: ~/pod.zip
+          path: ~/tangram-ios-${CIRCLE_TAG}.zip
 
 workflows:
   version: 2
