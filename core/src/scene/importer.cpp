@@ -90,6 +90,9 @@ Node Importer::loadSceneData(Platform& _platform, const Url& _sceneUrl, const st
     Node textures = root["textures"];
     for (auto& sceneNode : m_sceneNodes) {
         auto sceneUrl = sceneNode.first;
+        if (isZipArchiveUrl(sceneUrl)) {
+            sceneUrl = getBaseUrlForZipArchive(sceneUrl);
+        }
         for (auto& node : sceneNode.second.pendingUrlNodes) {
             // If the node does not contain a named texture in the final scene, treat it as a URL relative to the scene
             // file where it was originally encountered.
