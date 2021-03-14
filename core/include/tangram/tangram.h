@@ -6,8 +6,8 @@
 #pragma once
 
 #define TANGRAM_VERSION_MAJOR 0
-#define TANGRAM_VERSION_MINOR 14
-#define TANGRAM_VERSION_PATCH 2
+#define TANGRAM_VERSION_MINOR 15
+#define TANGRAM_VERSION_PATCH 0
 
 #include "data/clientDataSource.h"
 #include "data/properties.h"
