@@ -36,7 +36,10 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init
-      - run: cd platforms/android && ./gradlew publish
+      # Configure publishing credentials.
+      - run: echo "$SIGNING_SECRET_KEYRING_BASE64" | base64 --decode > platforms/android/tangram/secring.gpg
+      # Build and upload snapshot.
+      - run: cd platforms/android && ./gradlew publish -Psigning.keyId="$SIGNING_KEY_ID" -Psigning.password="$SIGNING_PASSWORD" -Psigning.secretKeyRingFile=secring.gpg
   build-ios:
     executor: macos-executor
     steps:

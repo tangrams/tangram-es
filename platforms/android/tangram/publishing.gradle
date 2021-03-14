@@ -16,6 +16,7 @@
  */
 
 apply plugin: 'maven-publish'
+apply plugin: 'signing'
 
 // Components from the Android Gradle plugin are only created during the afterEvaluate phase, so
 // configure publications using the afterEvaluate() lifecycle method.
@@ -90,16 +91,21 @@ afterEvaluate { project ->
 
     repositories {
       maven {
-        // Publish releases to Bintray and snapshots to OJO.
-        def releaseUrl = 'https://api.bintray.com/maven/tangrams/maven/tangram/'
-        def snapshotUrl = 'https://oss.jfrog.org/artifactory/oss-snapshot-local/'
+        name = "mavencentral"
+        def releaseUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+        def snapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
         url = VERSION_NAME.contains('SNAPSHOT') ? snapshotUrl : releaseUrl
         credentials {
-          username = project.hasProperty('bintrayUsername') ? bintrayUsername : System.env.BINTRAY_USERNAME
-          password = project.hasProperty('bintrayApiKey') ? bintrayApiKey : System.env.BINTRAY_API_KEY
+          username = project.findProperty('sonatypeUsername') ?: System.env.SONATYPE_USERNAME
+          password = project.findProperty('sonatypePassword') ?: System.env.SONATYPE_PASSWORD
         }
       }
     }
+  }
+
+  signing {
+    required { gradle.taskGraph.hasTask("publish") }
+    sign publishing.publications.maven
   }
 }
 
