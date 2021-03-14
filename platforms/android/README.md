@@ -1,16 +1,15 @@
 Android
 =======
-[ ![Download](https://api.bintray.com/packages/tangrams/maven/tangram/images/download.svg) ](https://bintray.com/tangrams/maven/tangram/_latestVersion)
 
-The recommended way use tangram-es in an Android project is to add it as a Gradle dependency. The library is hosted on jcenter in the package 'com.mapzen.tangram'. To see all available versions, check [Bintray](https://bintray.com/tangrams/maven/tangram).
+The recommended way use tangram-es in an Android project is to add it as a Gradle dependency. The library is hosted on Maven Central in the package 'com.mapzen.tangram'. To see all available versions, check [Maven Central](https://search.maven.org/artifact/com.mapzen.tangram/tangram).
 
-If jcenter is not set up as a dependency repository, add it in your project's 'build.gradle' file:
+If Maven Central is not set up as a dependency repository, add it in your project's 'build.gradle' file:
 
 ```
 allprojects {
   dependencies {
     repositories {
-      jcenter()
+      mavenCentral()
     }
   }
 }

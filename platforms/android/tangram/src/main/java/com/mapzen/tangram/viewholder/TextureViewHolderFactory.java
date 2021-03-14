@@ -9,6 +9,24 @@ import androidx.annotation.NonNull;
 import com.mapzen.tangram.BuildConfig;
 
 public class TextureViewHolderFactory implements GLViewHolderFactory {
+
+    private final boolean translucent;
+
+    /**
+     * Create a {@link GLViewHolderFactory} that builds a {@link TextureViewHolder}.
+     * @param translucent Enables translucency in the {@link TextureView}
+     */
+    public TextureViewHolderFactory(boolean translucent) {
+        this.translucent = translucent;
+    }
+
+    /**
+     * Create a {@link GLViewHolderFactory} that builds a {@link TextureViewHolder}.
+     */
+    public TextureViewHolderFactory() {
+        this(false);
+    }
+
     /**
      * Responsible to create an instance of {@link TextureViewHolder} which holds
      * an instance of {@link TextureView} for map display.
@@ -23,25 +41,11 @@ public class TextureViewHolderFactory implements GLViewHolderFactory {
 
         textureViewHolder.setEGLContextClientVersion(2);
         textureViewHolder.setPreserveEGLContextOnPause(true);
-        try {
-            textureViewHolder.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 0, 16, 8));
-            return textureViewHolder;
-        } catch(IllegalArgumentException e) {
-            // TODO: print available configs to check whether we could support them
-            Log.e(BuildConfig.TAG, "EGLConfig 8-8-8-0 not supported");
-        }
-        try {
-            textureViewHolder.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 8, 16, 8));
-            return textureViewHolder;
-        } catch(IllegalArgumentException e) {
-            Log.e(BuildConfig.TAG, "EGLConfig 8-8-8-8 not supported");
-        }
-        try {
-            textureViewHolder.setEGLConfigChooser(new ConfigChooser(5, 6, 5, 0, 16, 8));
-            return textureViewHolder;
-        } catch(IllegalArgumentException e) {
-            Log.e(BuildConfig.TAG, "EGLConfig 5-6-5-0 not supported");
-        }
-        return null;
+
+        int alphaBits = translucent ? 8 : 0;
+        textureViewHolder.setEGLConfigChooser(new ConfigChooser(8, 8, 8, alphaBits, 16, 8));
+        textureView.setOpaque(!translucent);
+
+        return textureViewHolder;
     }
 }

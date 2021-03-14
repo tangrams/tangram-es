@@ -52,9 +52,11 @@ pod trunk push Tangram-es.podspec
 ```
 
 ### 4. Promote Android artifact to production
-Once [Travis CI][2] completes the release build, log into [Bintray][3] and publish the new artifacts to production.
+Once [CircleCI][1] completes the release build, log into [OSS Sonatype Nexus][2] and release to Central.
 
-The new artifact should appear soon in [JCenter][4].
+For details on this process see the [Sonatype OSS Repository Hosting Guide][3]
+
+The new artifact should appear soon in [Maven Central][4].
 
 ### 5. Prepare next development cycle
 For the Android library, update the version name and restore `-SNAPSHOT` to prepare the next development cycle.
@@ -77,8 +79,8 @@ $ git push
 ### 6. Document release
 Document release notes at [https://github.com/tangrams/tangram-es/releases][5].
 
-[1]: https://circleci.com/gh/tangrams/tangram-es
-[2]: https://travis-ci.org/tangrams/tangram-es
-[3]: https://bintray.com/tangrams/maven/tangram
-[4]: https://bintray.com/bintray/jcenter
+[1]: https://app.circleci.com/pipelines/github/tangrams/tangram-es
+[2]: https://oss.sonatype.org/
+[3]: https://central.sonatype.org/pages/ossrh-guide.html
+[4]: https://search.maven.org/artifact/com.mapzen.tangram/tangram
 [5]: https://github.com/tangrams/tangram-es/releases
