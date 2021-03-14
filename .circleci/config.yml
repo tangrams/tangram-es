@@ -122,28 +122,28 @@ workflows:
     jobs:
       # Run on all pushes
       - build-test-linux
-      # Run on pushes to all branches except master
+      # Run on pushes to all branches except main
       - build-android:
           filters:
             branches:
-              ignore: master
+              ignore: main
       - build-ios:
           filters:
             branches:
-              ignore: master
-      # Run on pushes to master
+              ignore: main
+      # Run on pushes to main
       - build-deploy-android-snapshot:
           filters:
             branches:
-              only: master
+              only: main
       - build-deploy-macos-snapshot:
           filters:
             branches:
-              only: master
+              only: main
       - build-deploy-ios-snapshot:
           filters:
             branches:
-              only: master
+              only: main
       # Run on tag pushes
       - build-deploy-ios-release:
           filters:
