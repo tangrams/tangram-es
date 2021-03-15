@@ -31,7 +31,7 @@ jobs:
       - checkout
       - run: git submodule update --init
       - run: cd platforms/android && ./gradlew demo:assembleDebug -Ptangram.abis=armeabi-v7a
-  build-deploy-android-snapshot:
+  build-deploy-android:
     executor: android-executor
     steps:
       - checkout
@@ -52,7 +52,7 @@ jobs:
       - run: make ios-sim BUILD_TYPE=Debug
       - run: make ios-static-sim BUILD_TYPE=Debug
       - run: make ios-swift-sim BUILD_TYPE=Debug
-  build-deploy-ios-snapshot:
+  build-deploy-ios:
     executor: macos-executor
     steps:
       # Check out repository with submodules.
@@ -77,7 +77,14 @@ jobs:
       - run: zip ~/pod.zip LICENSE
       - store_artifacts:
           path: ~/pod.zip
-  build-deploy-macos-snapshot:
+      - when:
+          condition: << pipeline.git.tag >>
+          steps:
+            # Upload and publish the Cocoapods archive to GitHub. The download URL on GitHub uses the file name, labels have no effect.
+            - run: brew install gh
+            - run: mv ~/pod.zip ~/tangram-ios-<< pipeline.git.tag >>.zip
+            - run: gh release upload << pipeline.git.tag >> ~/tangram-ios-<< pipeline.git.tag >>.zip
+  build-deploy-macos:
     executor: macos-executor
     steps:
       # Check out repository with submodules.
@@ -91,34 +98,6 @@ jobs:
       - run: cd build/osx && zip -r ~/demo.zip tangram.app
       - store_artifacts:
           path: ~/demo.zip
-  build-deploy-ios-release:
-    executor: macos-executor
-    steps:
-      # Check out repository with submodules.
-      - checkout
-      - run: git submodule update --init
-      # Install dependencies.
-      - run: sudo gem install jazzy --no-document --version 0.10.0
-      - run: brew install cmake gh
-      # Build the framework in release mode and package it into pod.zip
-      - run: make ios-xcframework BUILD_TYPE=Release
-      # Check that bitcode is included for required archs.
-      - run: source scripts/check_bitcode.sh build/ios/Release/TangramMap.xcframework/ios-arm64_armv7/TangramMap.framework/TangramMap arm64 armv7
-      - run: make ios-docs
-      - run: cd build/ios-docs && zip -r ~/docs.zip .
-      - store_artifacts:
-          path: ~/docs.zip
-      # To produce the intended structure within the zip archive, we must cd to each file's location.
-      - run: cd build/ios/Release && zip -r ~/pod.zip TangramMap.xcframework
-      # Add the readme and license files.
-      - run: cd platforms/ios/framework && zip ~/pod.zip README.md
-      - run: zip ~/pod.zip LICENSE
-      # Upload and publish the Cocoapods archive to GitHub. The download URL on GitHub uses the file name, labels have no effect.
-      - run: mv ~/pod.zip ~/tangram-ios-${CIRCLE_TAG}.zip
-      - run: gh release upload ${CIRCLE_TAG} ~/tangram-ios-${CIRCLE_TAG}.zip
-      - store_artifacts:
-          path: ~/tangram-ios-${CIRCLE_TAG}.zip
-
 workflows:
   version: 2
   build-and-deploy:
@@ -135,20 +114,20 @@ workflows:
             branches:
               ignore: main
       # Run on pushes to main
-      - build-deploy-android-snapshot:
+      - build-deploy-android:
           filters:
             branches:
               only: main
-      - build-deploy-macos-snapshot:
+      - build-deploy-macos:
           filters:
             branches:
               only: main
-      - build-deploy-ios-snapshot:
+      - build-deploy-ios:
           filters:
             branches:
               only: main
       # Run on tag pushes
-      - build-deploy-ios-release:
+      - build-deploy-ios:
           filters:
             # For any tag of the form 1, 1.2.3, 1.4-beta2, etc. we will deploy a release build.
             tags:
