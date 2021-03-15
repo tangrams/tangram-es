@@ -30,7 +30,17 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init
-      - run: cd platforms/android && ./gradlew demo:assembleDebug -Ptangram.abis=armeabi-v7a
+      - run: sudo apt-get update && sudo apt-get install -y ccache
+      - restore_cache:
+          keys:
+            - android-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+            - android-ccache-v1-{{ .Branch }}
+            - android-ccache-v1
+      - run: cd platforms/android && ./gradlew demo:assembleDebug -Ptangram.abis=armeabi-v7a -Ptangram.ccache=true
+      - save_cache:
+          key: android-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - ~/.ccache
   build-deploy-android:
     executor: android-executor
     steps:
