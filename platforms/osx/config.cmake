@@ -6,6 +6,9 @@ find_package(OpenGL REQUIRED)
 
 include(cmake/glfw.cmake)
 
+# Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
+set(SQLITECPP_INTERNAL_SQLITE OFF CACHE BOOL "")
+
 add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes" "Resources")
 
 add_executable(tangram
