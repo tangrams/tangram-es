@@ -61,10 +61,25 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init
+      - run: sudo apt-get update && sudo apt-get install -y ccache
+      - restore_cache:
+          keys:
+            - android-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+            - android-release-ccache-v1-{{ .Branch }}
+            - android-release-ccache-v1
       # Configure publishing credentials.
       - run: echo "$SIGNING_SECRET_KEYRING_BASE64" | base64 --decode > platforms/android/tangram/secring.gpg
       # Build and upload snapshot.
-      - run: cd platforms/android && ./gradlew publish -Psigning.keyId="$SIGNING_KEY_ID" -Psigning.password="$SIGNING_PASSWORD" -Psigning.secretKeyRingFile=secring.gpg
+      - run: |
+          cd platforms/android && ./gradlew publish \
+          -Psigning.keyId="$SIGNING_KEY_ID" \
+          -Psigning.password="$SIGNING_PASSWORD" \
+          -Psigning.secretKeyRingFile=secring.gpg \
+          -Ptangram.ccache=true
+      - save_cache:
+          key: android-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - ~/.ccache
   build-ios:
     executor: macos-executor
     steps:
