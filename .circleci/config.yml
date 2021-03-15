@@ -91,9 +91,18 @@ jobs:
       - checkout
       - run: git submodule update --init
       # Install dependencies.
-      - run: brew install cmake ninja
+      - run: brew install cmake ninja ccache
+      - restore_cache:
+          keys:
+            - macos-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+            - macos-ccache-v1-{{ .Branch }}
+            - macos-ccache-v1
       # Build the MacOS demo app and package it into demo.zip
-      - run: make osx MACOSX_DEPLOYMENT_TARGET=10.10.0 BUILD_TYPE=Debug CMAKE_OPTIONS="-GNinja"
+      - run: make osx MACOSX_DEPLOYMENT_TARGET=10.10.0 BUILD_TYPE=Debug CMAKE_OPTIONS="-DCMAKE_CXX_COMPILER_LAUNCHER=ccache -GNinja"
+      - save_cache:
+          key: macos-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - ~/Library/Caches/ccache
       # To produce the intended structure within the zip archive, we must cd to each file's location.
       - run: cd build/osx && zip -r ~/demo.zip tangram.app
       - store_artifacts:
