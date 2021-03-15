@@ -3,18 +3,18 @@
 ## Requirements
 - Have cocoapods installed
 - Have ownership privileges to update the cocoapods trunk spec
-- Have credentials for Bintray
+- Have credentials for Sonatype
 
-Steps to release the Tangram ES iOS Framework to Cocoapods and release the Android AAR to JCenter:
+Steps to release the Tangram ES iOS Framework to Cocoapods and release the Android AAR to Maven Central:
 
 ### 1. Prepare release commit
-For the Android library, remove `-SNAPSHOT` from the version name in `gradle.properties`.
+For the Android library, remove `-SNAPSHOT` from the version name in `platforms/android/tangram/gradle.properties`.
 ```
 GROUP=com.mapzen.tangram
 VERSION_NAME=1.0.0
 ```
 
-For the iOS framework, remove `-dev` from the version name in `iOS.framework.cmake`:
+For the iOS framework, remove `-dev` from the version name in `platforms/ios/config.cmake`:
 ```
 set(FRAMEWORK_VERSION "1.0.0")
 ```
@@ -65,7 +65,7 @@ GROUP=com.mapzen.tangram
 VERSION_NAME=1.0.1-SNAPSHOT
 ```
 
-For the iOS framework, update the version name and restore `-dev` in `iOS.framework.cmake`:
+For the iOS framework, update the version name and restore `-dev`:
 ```
 set(FRAMEWORK_VERSION "1.0.1-dev")
 ```
