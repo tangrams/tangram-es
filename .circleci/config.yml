@@ -5,16 +5,20 @@ executors:
       - image: circleci/android:api-28-ndk
     environment:
       GRADLE_OPTS: -Xmx2048m
+      CCACHE_MAX_SIZE: 400M
   macos-executor:
     macos:
       xcode: "12.2.0"
     environment: # Disable some unnecessary homebrew operations to save time.
       HOMEBREW_NO_AUTO_UPDATE: 1
       HOMEBREW_NO_INSTALL_CLEANUP: 1
+      CCACHE_MAX_SIZE: 400M
 jobs:
   build-test-linux:
     docker:
       - image: matteblair/docker-tangram-linux:0.2.0
+    environment:
+      CCACHE_MAX_SIZE: 400M
     steps:
       - checkout
       - run: git submodule update --init
