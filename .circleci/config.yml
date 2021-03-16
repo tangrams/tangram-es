@@ -5,22 +5,21 @@ executors:
       - image: circleci/android:api-28-ndk
     environment:
       GRADLE_OPTS: -Xmx2048m
-      CCACHE_MAX_SIZE: 400M
+      CCACHE_MAXSIZE: 400M
       CCACHE_DEBUG: 1
-      CCACHE_DEBUGDIR: /home/circleci/ccache-debug
   macos-executor:
     macos:
       xcode: "12.2.0"
     environment: # Disable some unnecessary homebrew operations to save time.
       HOMEBREW_NO_AUTO_UPDATE: 1
       HOMEBREW_NO_INSTALL_CLEANUP: 1
-      CCACHE_MAX_SIZE: 400M
+      CCACHE_MAXSIZE: 400M
 jobs:
   build-test-linux:
     docker:
       - image: matteblair/docker-tangram-linux:0.2.0
     environment:
-      CCACHE_MAX_SIZE: 400M
+      CCACHE_MAXSIZE: 400M
     steps:
       - checkout
       - run: git submodule update --init
@@ -50,10 +49,6 @@ jobs:
       - run: source scripts/run_bench.sh build/linux
   build-android:
     executor: android-executor
-    environment:
-      CCACHE_MAX_SIZE: 400M
-      CCACHE_DEBUG: 1
-      CCACHE_DEBUGDIR: /home/circleci/ccache-debug
     steps:
       - checkout
       - run: git submodule update --init
@@ -70,7 +65,7 @@ jobs:
           key: android-ccache-v2-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/.ccache
-      - run: zip -r ~/ccache-debug.zip $CCACHE_DEBUGDIR
+      - run: cd platforms/android/tangram/.cxx/cmake/debug && zip -r ~/ccache-debug.zip arm64-v8a
       - store_artifacts:
           path: ~/ccache-debug.zip
   build-deploy-android:
