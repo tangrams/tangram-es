@@ -6,6 +6,8 @@ executors:
     environment:
       GRADLE_OPTS: -Xmx2048m
       CCACHE_MAX_SIZE: 400M
+      CCACHE_DEBUG: 1
+      CCACHE_DEBUGDIR: /home/circleci/ccache-debug
   macos-executor:
     macos:
       xcode: "12.2.0"
@@ -64,6 +66,9 @@ jobs:
           key: android-ccache-v2-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/.ccache
+      - run: zip -r ~/ccache-debug.zip $CCACHE_DEBUGDIR
+      - store_artifacts:
+          path: ~/ccache-debug.zip
   build-deploy-android:
     executor: android-executor
     steps:
