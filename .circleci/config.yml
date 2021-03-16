@@ -167,17 +167,17 @@ workflows:
   build-and-deploy:
     jobs:
       # Run on all pushes
-      - build-test-linux
-      - build-macos
+      # - build-test-linux
+      # - build-macos
       # Run on pushes to all branches except main
       - build-android:
           filters:
             branches:
               ignore: main
-      - build-ios:
-          filters:
-            branches:
-              ignore: main
+      # - build-ios:
+      #     filters:
+      #       branches:
+      #         ignore: main
       # Run on pushes to main
       - build-deploy-android:
           filters:
