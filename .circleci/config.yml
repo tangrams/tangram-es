@@ -50,6 +50,10 @@ jobs:
       - run: source scripts/run_bench.sh build/linux
   build-android:
     executor: android-executor
+    environment:
+      CCACHE_MAX_SIZE: 400M
+      CCACHE_DEBUG: 1
+      CCACHE_DEBUGDIR: /home/circleci/ccache-debug
     steps:
       - checkout
       - run: git submodule update --init
