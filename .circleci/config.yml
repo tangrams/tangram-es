@@ -6,7 +6,6 @@ executors:
     environment:
       GRADLE_OPTS: -Xmx2048m
       CCACHE_MAXSIZE: 400M
-      CCACHE_DEBUG: 1
       CCACHE_COMPILERCHECK: content
   macos-executor:
     macos:
@@ -66,9 +65,6 @@ jobs:
           key: android-ccache-v2-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/.ccache
-      - run: cd platforms/android/tangram/.cxx/cmake/debug && zip -r ~/ccache-debug.zip arm64-v8a
-      - store_artifacts:
-          path: ~/ccache-debug.zip
   build-deploy-android:
     executor: android-executor
     steps:
