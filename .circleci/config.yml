@@ -55,14 +55,14 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y ccache
       - restore_cache:
           keys:
-            - android-ccache-v2-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-            - android-ccache-v2-{{ .Branch }}
-            - android-ccache-v2
+            - android-ccache-v3-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+            - android-ccache-v3-{{ .Branch }}
+            - android-ccache-v3
       - run: ccache --zero-stats
       - run: cd platforms/android && ./gradlew demo:assembleDebug -Ptangram.abis=arm64-v8a -Ptangram.ccache=true
       - run: ccache --show-stats
       - save_cache:
-          key: android-ccache-v2-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          key: android-ccache-v3-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/.ccache
   build-deploy-android:
