@@ -7,6 +7,7 @@ executors:
       GRADLE_OPTS: -Xmx2048m
       CCACHE_MAXSIZE: 400M
       CCACHE_DEBUG: 1
+      CCACHE_COMPILERCHECK: content
   macos-executor:
     macos:
       xcode: "12.2.0"
