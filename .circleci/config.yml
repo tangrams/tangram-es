@@ -6,7 +6,7 @@ executors:
     environment:
       GRADLE_OPTS: -Xmx2048m
       CCACHE_MAXSIZE: 400M
-      CCACHE_COMPILERCHECK: content
+      CCACHE_COMPILERCHECK: content # Default timestamp check fails because NDK compiler is installed for each job.
   macos-executor:
     macos:
       xcode: "12.2.0"
@@ -76,6 +76,7 @@ jobs:
             - android-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
             - android-release-ccache-v1-{{ .Branch }}
             - android-release-ccache-v1
+      - run: ccache --zero-stats
       # Configure publishing credentials.
       - run: echo "$SIGNING_SECRET_KEYRING_BASE64" | base64 --decode > platforms/android/tangram/secring.gpg
       # Build and upload snapshot.
@@ -85,6 +86,7 @@ jobs:
           -Psigning.password="$SIGNING_PASSWORD" \
           -Psigning.secretKeyRingFile=secring.gpg \
           -Ptangram.ccache=true
+      - run: ccache --show-stats
       - save_cache:
           key: android-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
@@ -163,17 +165,17 @@ workflows:
   build-and-deploy:
     jobs:
       # Run on all pushes
-      # - build-test-linux
-      # - build-macos
+      - build-test-linux
+      - build-macos
       # Run on pushes to all branches except main
       - build-android:
           filters:
             branches:
               ignore: main
-      # - build-ios:
-      #     filters:
-      #       branches:
-      #         ignore: main
+      - build-ios:
+          filters:
+            branches:
+              ignore: main
       # Run on pushes to main
       - build-deploy-android:
           filters:
