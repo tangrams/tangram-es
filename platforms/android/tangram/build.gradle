@@ -49,6 +49,7 @@ android {
                  '-Wno-unknown-warning-option'
         if (project.findProperty('tangram.ccache')) {
           arguments += '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache'
+          arguments += '-DCMAKE_C_COMPILER_LAUNCHER=ccache'
         }
         if (abi == 'all') {
           abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
