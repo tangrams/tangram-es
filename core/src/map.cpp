@@ -369,10 +369,10 @@ void Map::cancelCameraAnimation() {
 void Map::setCameraPosition(const CameraPosition& _camera) {
     cancelCameraAnimation();
 
-    impl->view.setCenterCoordinates(LngLat(_camera.longitude, _camera.latitude));
     impl->view.setZoom(_camera.zoom);
     impl->view.setRoll(_camera.rotation);
     impl->view.setPitch(_camera.tilt);
+    impl->view.setCenterCoordinates(LngLat(_camera.longitude, _camera.latitude));
 
     impl->platform.requestRender();
 }
