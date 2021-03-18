@@ -31,10 +31,6 @@ else()
   add_definitions(-DLOG_LEVEL=2)
 endif()
 
-if($ENV{CIRCLE_BUILD_NUM})
-  add_definitions(-DBUILD_NUM_STRING="\($ENV{CIRCLE_BUILD_NUM}\)")
-endif()
-
 include(cmake/utils.cmake)
 
 # If target platform isn't specified, use the local platform.

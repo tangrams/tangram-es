@@ -5,22 +5,45 @@ executors:
       - image: circleci/android:api-28-ndk
     environment:
       GRADLE_OPTS: -Xmx2048m
+      CCACHE_MAXSIZE: 400M
+      CCACHE_COMPILERCHECK: content # Default timestamp check fails because NDK compiler is installed for each job.
   macos-executor:
     macos:
       xcode: "12.2.0"
     environment: # Disable some unnecessary homebrew operations to save time.
       HOMEBREW_NO_AUTO_UPDATE: 1
       HOMEBREW_NO_INSTALL_CLEANUP: 1
+      CCACHE_MAXSIZE: 400M
 jobs:
   build-test-linux:
     docker:
       - image: matteblair/docker-tangram-linux:0.2.0
+    environment:
+      CCACHE_MAXSIZE: 400M
     steps:
       - checkout
       - run: git submodule update --init
-      - run: apt-get update && apt-get install -y wget
-      - run: make cmake-linux CMAKE_OPTIONS="-DTANGRAM_USE_SYSTEM_FONT_LIBS=1 -DTANGRAM_USE_SYSTEM_GLFW_LIBS=1 -DTANGRAM_BUILD_TESTS=1 -DTANGRAM_BUILD_BENCHMARKS=1 -GNinja"
+      - run: apt-get update && apt-get install -y ccache
+      - restore_cache:
+          keys:
+            - linux-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+            - linux-ccache-v1-{{ .Branch }}
+            - linux-ccache-v1
+      - run: ccache --zero-stats
+      - run: |
+          cmake -H. -Bbuild/linux -GNinja \
+          -DTANGRAM_USE_SYSTEM_FONT_LIBS=1 \
+          -DTANGRAM_USE_SYSTEM_GLFW_LIBS=1 \
+          -DTANGRAM_BUILD_TESTS=1 \
+          -DTANGRAM_BUILD_BENCHMARKS=1 \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
       - run: ninja -C build/linux -j 4
+      - run: ccache --show-stats
+      - save_cache:
+          key: linux-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - ~/.ccache
       - run: source scripts/run_tests.sh build/linux ~/test-results/catch
       - store_test_results:
           path: ~/test-results
@@ -30,16 +53,45 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init
-      - run: cd platforms/android && ./gradlew demo:assembleDebug -Ptangram.abis=armeabi-v7a
+      - run: sudo apt-get update && sudo apt-get install -y ccache
+      - restore_cache:
+          keys:
+            - android-ccache-v3-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+            - android-ccache-v3-{{ .Branch }}
+            - android-ccache-v3
+      - run: ccache --zero-stats
+      - run: cd platforms/android && ./gradlew demo:assembleDebug -Ptangram.abis=arm64-v8a -Ptangram.ccache=true
+      - run: ccache --show-stats
+      - save_cache:
+          key: android-ccache-v3-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - ~/.ccache
   build-deploy-android:
     executor: android-executor
     steps:
       - checkout
       - run: git submodule update --init
+      - run: sudo apt-get update && sudo apt-get install -y ccache
+      - restore_cache:
+          keys:
+            - android-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+            - android-release-ccache-v1-{{ .Branch }}
+            - android-release-ccache-v1
+      - run: ccache --zero-stats
       # Configure publishing credentials.
       - run: echo "$SIGNING_SECRET_KEYRING_BASE64" | base64 --decode > platforms/android/tangram/secring.gpg
       # Build and upload snapshot.
-      - run: cd platforms/android && ./gradlew publish -Psigning.keyId="$SIGNING_KEY_ID" -Psigning.password="$SIGNING_PASSWORD" -Psigning.secretKeyRingFile=secring.gpg
+      - run: |
+          cd platforms/android && ./gradlew publish \
+          -Psigning.keyId="$SIGNING_KEY_ID" \
+          -Psigning.password="$SIGNING_PASSWORD" \
+          -Psigning.secretKeyRingFile=secring.gpg \
+          -Ptangram.ccache=true
+      - run: ccache --show-stats
+      - save_cache:
+          key: android-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - ~/.ccache
   build-ios:
     executor: macos-executor
     steps:
@@ -97,8 +149,10 @@ jobs:
             - macos-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
             - macos-ccache-v1-{{ .Branch }}
             - macos-ccache-v1
+      - run: ccache --zero-stats
       # Build the MacOS demo app and package it into demo.zip
-      - run: make osx MACOSX_DEPLOYMENT_TARGET=10.10.0 BUILD_TYPE=Debug CMAKE_OPTIONS="-DCMAKE_CXX_COMPILER_LAUNCHER=ccache -GNinja"
+      - run: make osx MACOSX_DEPLOYMENT_TARGET=10.10.0 BUILD_TYPE=Debug CMAKE_OPTIONS="-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -GNinja"
+      - run: ccache --show-stats
       - save_cache:
           key: macos-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
