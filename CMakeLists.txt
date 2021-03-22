@@ -18,11 +18,6 @@ option(TANGRAM_DEV_MODE "For developers only: Don't omit the frame pointer" OFF)
 
 message(STATUS "Build type configuration: ${CMAKE_BUILD_TYPE}")
 
-# Check that submodules are present.
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/core/deps/harfbuzz-icu-freetype/harfbuzz/README")
-  message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init'")
-  return()
-endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   add_definitions(-DDEBUG)

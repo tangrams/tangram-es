@@ -1,0 +1,34 @@
+{
+    "name": "tangram-es",
+    "version-string": "0.1.0",
+    "dependencies": [
+        "glm",
+        "duktape",
+        "yaml-cpp",
+        "mapbox-variant",
+        "glfw3",
+        "rapidjson",
+        "stb",
+        "miniz",
+        "benchmark",
+        {
+            "name": "harfbuzz",
+            "features": [
+                "icu",
+                "graphite2"
+            ]
+        },
+        {
+            "name": "sqlitecpp",
+            "features": [
+                "sqlite"
+            ]
+        },
+        {
+            "name": "imgui",
+            "features": [
+                "docking-experimental"
+            ]
+        }
+    ]
+}

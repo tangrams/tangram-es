@@ -7,19 +7,11 @@ endif()
 
 ## glm ##
 #########
-add_library(glm INTERFACE)
-target_include_directories(glm INTERFACE glm)
-target_compile_definitions(glm INTERFACE GLM_FORCE_CTOR_INIT)
+find_package(glm CONFIG REQUIRED)
 
 ## yaml-cpp ##
 ##############
-set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "")
-set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "")
-set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "")
-set(YAML_CPP_INSTALL OFF CACHE BOOL "")
-add_subdirectory(yaml-cpp)
-
-target_include_directories(yaml-cpp PUBLIC yaml-cpp/include)
+find_package(yaml-cpp CONFIG REQUIRED)
 
 ## css-color-parser-cpp ##
 ##########################
@@ -31,25 +23,19 @@ target_include_directories(css-color-parser-cpp PUBLIC css-color-parser-cpp)
 
 ## duktape ##
 #############
-add_subdirectory(duktape)
+find_package(duktape CONFIG REQUIRED)
 
 
 ## miniz ##
 ###########
-add_library(miniz
-    ${CMAKE_CURRENT_SOURCE_DIR}/miniz/miniz.c)
-
-target_include_directories(miniz
-  PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/miniz)
+find_package(miniz CONFIG REQUIRED)
 
 
 
 if(NOT TANGRAM_USE_SYSTEM_FONT_LIBS)
   ## Harfbuzz - ICU-Common - Freetype2 ##
   #######################################
-  set(HARFBUZZ_BUILD_ICU ON CACHE BOOL "Enable building of ICU")
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/harfbuzz-icu-freetype)
+  find_package(harfbuzz CONFIG REQUIRED)
 
   message(STATUS "harfbuzz" ${HARFBUZZ_LIBRARIES})
 
@@ -61,33 +47,13 @@ endif()
 
 ## alfons ##
 ############
-set(GLM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glm)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
 target_compile_definitions(alfons PRIVATE GLM_FORCE_CTOR_INIT)
 
 if (TANGRAM_MBTILES_DATASOURCE)
   ## SQLiteCpp ##
   ###############
-  set(SQLITECPP_RUN_CPPLINT OFF CACHE BOOL "")
-  set(SQLITECPP_RUN_CPPCHECK OFF CACHE BOOL "")
-  set(SQLITE_ENABLE_COLUMN_METADATA OFF CACHE BOOL "")
-
-  if (TANGRAM_USE_SYSTEM_SQLITE_LIBS)
-    set(SQLITECPP_INTERNAL_SQLITE OFF CACHE BOOL "")
-  endif()
-
-  add_subdirectory(SQLiteCpp)
-
-  # Extensions aren't needed for MBTiles and aren't available in older versions of sqlite3.
-  target_compile_definitions(SQLiteCpp PRIVATE SQLITE_OMIT_LOAD_EXTENSION)
-
-  # needed for sqlite3 to work for ndk15c+ and android api level < 21
-  # refer:
-  # https://github.com/android-ndk/ndk/issues/477 and
-  # https://android.googlesource.com/platform/bionic/+/master/docs/32-bit-abi.md
-  if (ANDROID)
-    target_compile_definitions(sqlite3 PRIVATE _FILE_OFFSET_BITS=32)
-  endif()
+  find_package(SQLiteCpp CONFIG REQUIRED)
 endif()
 
 ## double-conversion ##

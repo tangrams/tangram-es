@@ -1,5 +1,8 @@
 project(tangram-core)
 
+find_package (SQLite3)
+find_package(RapidJSON CONFIG REQUIRED)
+find_path(STB_INCLUDE_DIRS "stb.h")
 # Build core library dependencies.
 add_subdirectory(deps)
 
@@ -211,11 +214,8 @@ target_include_directories(tangram-core
   deps/hash-library
   deps/mapbox
   deps/pbf
-  deps/rapidjson
+  ${RAPIDJSON_INCLUDE_DIRS}
   deps/sdf
-  deps/SQLiteCpp
-  deps/stb
-  deps/miniz
   deps/geojson-vt-cpp/geometry.hpp/include
   deps/geojson-vt-cpp/geojson.hpp/include
   deps/geojson-vt-cpp/include
@@ -225,12 +225,12 @@ target_include_directories(tangram-core
 # Link core library dependencies.
 target_link_libraries(tangram-core
   PRIVATE
-  glm
+  glm::glm
   css-color-parser-cpp
   yaml-cpp
   alfons
   double-conversion
-  miniz
+  miniz::miniz
   z
 )
 
@@ -245,7 +245,7 @@ if(TANGRAM_JSCORE_ENABLED)
   target_compile_definitions(tangram-core PRIVATE TANGRAM_USE_JSCORE=1)
 else()
   target_sources(tangram-core PRIVATE src/js/DuktapeContext.cpp src/js/DuktapeContext.h)
-  target_link_libraries(tangram-core PRIVATE duktape)
+  target_link_libraries(tangram-core PRIVATE ${DUKTAPE_LIBRARY})
 endif()
 
 # Add MBTiles implementation.
