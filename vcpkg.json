@@ -1,0 +1,31 @@
+{
+    "name": "tangram-es",
+    "version-string": "0.1.0",
+    "dependencies": [
+        {
+            "name":"curl",
+            "features":[
+                "ssl",
+                "http2"
+            ]
+        },
+        "glad",
+        "zlib",
+        "yaml-cpp",
+        "glfw3",
+        "benchmark",
+        {
+            "name": "harfbuzz",
+            "features": [
+                "icu",
+                "graphite2"
+            ]
+        },
+        {
+            "name": "imgui",
+            "features": [
+                "docking-experimental"
+            ]
+        }
+    ]
+}

@@ -55,7 +55,15 @@ using Value = variant<none_type, double, std::string>;
 
 class Value : public detail::Value {
     using Base = detail::Value;
-    using Base::Base;
+
+public:
+    Value(): Base() {}
+
+    template<typename T>
+    Value(const T& val): Base(val) {}
+
+    template<typename T>
+    Value(T&& val): Base(val) {}
 };
 
 const static Value NOT_A_VALUE(none_type{});

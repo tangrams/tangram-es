@@ -26,9 +26,13 @@
 #endif
 
 namespace protobuf {
-
+#if defined(__GNUC__)
 #define FORCEINLINE inline __attribute__((always_inline))
 #define NOINLINE __attribute__((noinline))
+#else
+#define FORCEINLINE inline
+#define NOINLINE 
+#endif
 #define PBF_INLINE FORCEINLINE
 
 class message {
