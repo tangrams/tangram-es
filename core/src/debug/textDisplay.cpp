@@ -7,6 +7,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include <cstdarg>
+#include <string_view>
 
 #define STB_EASY_FONT_IMPLEMENTATION
 #include "stb_easy_font.h"
@@ -89,7 +90,8 @@ void TextDisplay::draw(RenderState& rs, const std::string& _text, int _posx, int
     std::vector<glm::vec2> vertices;
     int nquads;
 
-    nquads = stb_easy_font_print(_posx, _posy, _text.c_str(), NULL, m_vertexBuffer, VERTEX_BUFFER_SIZE);
+    // evil const cast. best would be to create a copy of the string. Needs to check the effectivness.
+    nquads = stb_easy_font_print(_posx, _posy, const_cast<char*>(&_text[0]), NULL, m_vertexBuffer, VERTEX_BUFFER_SIZE);
 
     float* data = reinterpret_cast<float*>(m_vertexBuffer);
 
@@ -144,5 +146,3 @@ void TextDisplay::draw(RenderState& rs, const std::vector<std::string>& _infos) 
 }
 
 }
-
-

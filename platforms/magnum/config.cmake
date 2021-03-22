@@ -22,8 +22,6 @@ add_definitions(-DTANGRAM_LINUX)
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 
-include(cmake/glfw.cmake)
-
 # System font config
 include(FindPkgConfig)
 
@@ -42,7 +40,6 @@ target_include_directories(tangram
 target_link_libraries(tangram
   PRIVATE
   tangram-core
-  ${OPENGL_LIBRARIES}
   ${CURL_LIBRARIES}
 )
 

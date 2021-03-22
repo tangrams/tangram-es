@@ -3,7 +3,10 @@ project(tangram-core)
 find_package (SQLite3)
 find_package(RapidJSON CONFIG REQUIRED)
 find_path(STB_INCLUDE_DIRS "stb.h")
-# Build core library dependencies.
+find_package(miniz CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(yaml-cpp CONFIG REQUIRED)
+find_path(MAPBOX_VARIANT_INCLUDE_DIRS "mapbox/optional.hpp")
 add_subdirectory(deps)
 
 add_library(tangram-core
@@ -213,6 +216,7 @@ target_include_directories(tangram-core
   deps/isect2d/include
   deps/hash-library
   deps/mapbox
+  ${MAPBOX_VARIANT_INCLUDE_DIRS}
   deps/pbf
   ${RAPIDJSON_INCLUDE_DIRS}
   deps/sdf
@@ -236,6 +240,7 @@ target_link_libraries(tangram-core
 
 # Add JavaScript implementation.
 if(TANGRAM_JSCORE_ENABLED)
+  find_package(duktape CONFIG REQUIRED)
   target_sources(tangram-core PRIVATE src/js/JSCoreContext.cpp src/js/JSCoreContext.h)
   if (TANGRAM_USE_JSCORE_STATIC)
     target_link_libraries(tangram-core PRIVATE jscore-static)
@@ -260,6 +265,7 @@ if(UNIX AND NOT APPLE)
   target_link_libraries(tangram-core PRIVATE dl)
 endif()
 
+target_compile_definitions(tangram-core PUBLIC _USE_MATH_DEFINES)
 if(TANGRAM_WARN_ON_RULE_CONFLICT)
   target_compile_definitions(tangram-core
     PRIVATE
@@ -277,7 +283,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # C++14 is required for compiling tangram-core and for using the interface headers.
-set_property(TARGET tangram-core PROPERTY CXX_STANDARD 14)
+set_property(TARGET tangram-core PROPERTY CXX_STANDARD 20)
 
 # We include GLSL shader sources into the library by generating header files with the source text
 # printed into a string constant. A CMake script generates one of these headers for each shader source

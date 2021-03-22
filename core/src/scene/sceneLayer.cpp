@@ -19,7 +19,7 @@ SceneLayer::SceneLayer(std::string name, Filter filter,
     // Sort sublayers for precedence in matching operations. If multiple values for a parameter are assigned to the same
     // draw group at the same layer depth, then the value that comes *first* in the layer list will be the final value.
     std::sort(m_sublayers.begin(), m_sublayers.end(),
-              [](const SceneLayer& a, const SceneLayer& b) {
+              [](const auto& a, const auto& b) {
                   if (a.exclusive() != b.exclusive()) {
                       // Exclusive layers always precede non-exclusive layers.
                       return a.exclusive();

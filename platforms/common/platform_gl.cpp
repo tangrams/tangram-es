@@ -11,7 +11,7 @@ GLenum GL::getError() {
 
 const GLubyte* GL::getString(GLenum name) {
     auto result = glGetString(name);
-    GL_CHECK();
+    GL_CHECK("");
     return result;
 }
 

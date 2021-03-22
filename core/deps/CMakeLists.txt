@@ -5,14 +5,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wno-shorten-64-to-32)
 endif()
 
-## glm ##
-#########
-find_package(glm CONFIG REQUIRED)
-
-## yaml-cpp ##
-##############
-find_package(yaml-cpp CONFIG REQUIRED)
-
 ## css-color-parser-cpp ##
 ##########################
 add_library(css-color-parser-cpp css-color-parser-cpp/csscolorparser.cpp)
@@ -21,14 +13,6 @@ set_target_properties(css-color-parser-cpp PROPERTIES CXX_STANDARD 14 CXX_STANDA
 
 target_include_directories(css-color-parser-cpp PUBLIC css-color-parser-cpp)
 
-## duktape ##
-#############
-find_package(duktape CONFIG REQUIRED)
-
-
-## miniz ##
-###########
-find_package(miniz CONFIG REQUIRED)
 
 
 

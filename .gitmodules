@@ -9,7 +9,7 @@
 	url = https://github.com/tangrams/earcut.hpp
 [submodule "core/dependencies/geojson-vt-cpp"]
 	path = core/deps/geojson-vt-cpp
-	url = https://github.com/tangrams/geojson-vt-cpp.git
+	url = https://github.com/mapbox/geojson-vt-cpp.git
 [submodule "external/alfons"]
 	path = core/deps/alfons
 	url = https://github.com/hjanetzek/alfons

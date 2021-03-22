@@ -2,8 +2,8 @@
 
 #define MINIZ_NO_ZLIB_APIS // Remove all ZLIB-style compression/decompression API's.
 #define MINIZ_NO_ZLIB_COMPATIBLE_NAMES // Disable zlib names, to prevent conflicts against stock zlib.
-#include <miniz.h>
-
+#include <miniz/miniz.h>
+#include <miniz/miniz_zip.h>
 #include <string>
 #include <vector>
 
@@ -60,6 +60,7 @@ protected:
 
     // Archive data used by miniz.
     mz_zip_archive minizData;
+
 };
 
 } // namespace Tangram

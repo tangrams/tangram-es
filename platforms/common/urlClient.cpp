@@ -4,7 +4,12 @@
 #include <cassert>
 #include <cstring>
 #include <curl/curl.h>
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+#else
 #include <unistd.h>
+#endif
 #include <time.h>
 
 constexpr char const* requestCancelledError = "Request cancelled";
@@ -29,7 +34,7 @@ struct UrlClient::Task {
 
     Request request;
     std::vector<char> content;
-    CURL *handle = nullptr;
+    CURL* handle = nullptr;
     char curlErrorString[CURL_ERROR_SIZE] = {0};
     bool active = false;
     bool canceled = false;
@@ -71,8 +76,7 @@ struct UrlClient::Task {
     }
 
     void clear() {
-        bool shrink = content.capacity() > limit_capacity &&
-            !content.empty() && content.size() < limit_capacity / 2;
+        bool shrink = content.capacity() > limit_capacity && !content.empty() && content.size() < limit_capacity / 2;
 
         if (shrink) {
             LOGD("Release content buffer %u / %u", content.size(), content.capacity());
@@ -84,13 +88,10 @@ struct UrlClient::Task {
         active = false;
     }
 
-    ~Task() {
-        curl_easy_cleanup(handle);
-    }
+    ~Task() { curl_easy_cleanup(handle); }
 
     Task(const Task&) = delete;
     Task& operator=(const Task&) = delete;
-
 };
 
 
@@ -105,11 +106,13 @@ UrlClient::UrlClient(Options options) : m_options(options) {
     // startPendingRequests()
     m_tasks.emplace_back(m_options);
 
-    // Using a pipe to notify select() in curl-thread of new requests..
-    // https://www.linuxquestions.org/questions/programming-9/exit-from-blocked-pselect-661200/
-    if (pipe(m_requestNotify) < 0) {
-        LOGE("Could not initialize select breaker!");
-    }
+// Using a pipe to notify select() in curl-thread of new requests..
+// https://www.linuxquestions.org/questions/programming-9/exit-from-blocked-pselect-661200/
+#ifdef _WIN32
+    if (_pipe(m_requestNotify, 512, _O_BINARY | O_NOINHERIT) < 0) { LOGE("Could not initialize select breaker!"); }
+#else
+    if (pipe(m_requestNotify) < 0) { LOGE("Could not initialize select breaker!"); }
+#endif
 }
 
 UrlClient::~UrlClient() {
@@ -126,9 +129,7 @@ UrlClient::~UrlClient() {
             }
         }
         m_requests.clear();
-        for (auto& task : m_tasks) {
-            task.canceled = true;
-        }
+        for (auto& task : m_tasks) { task.canceled = true; }
     }
 
     // Stop the curl threads.
@@ -144,9 +145,7 @@ UrlClient::~UrlClient() {
 
     // This is probably not needed since all task have been canceled and joined
     for (auto& task : m_tasks) {
-        if (task.active) {
-            curl_multi_remove_handle(m_curlHandle, task.handle);
-        }
+        if (task.active) { curl_multi_remove_handle(m_curlHandle, task.handle); }
     }
     curl_multi_cleanup(m_curlHandle);
 }
@@ -154,11 +153,11 @@ UrlClient::~UrlClient() {
 void UrlClient::curlWakeUp() {
 
     if (!m_curlNotified) {
-        if (write(m_requestNotify[1], "\0", 1) <= 0) {
+        if (_write(m_requestNotify[1], "\0", 1) <= 0) {
             // err
             return;
         }
-        //LOG("wake up!");
+        // LOG("wake up!");
         m_curlNotified = true;
     }
 }
@@ -207,12 +206,9 @@ void UrlClient::cancelRequest(UrlClient::RequestId _id) {
     // Check requests that are already active.
     {
         std::lock_guard<std::mutex> lock(m_requestMutex);
-        auto it = std::find_if(m_tasks.begin(), m_tasks.end(),
-                               [&](auto& t) { return t.request.id == _id; });
+        auto it = std::find_if(m_tasks.begin(), m_tasks.end(), [&](auto& t) { return t.request.id == _id; });
 
-        if (it != std::end(m_tasks)) {
-            it->canceled = true;
-        }
+        if (it != std::end(m_tasks)) { it->canceled = true; }
     }
 }
 
@@ -223,9 +219,7 @@ void UrlClient::startPendingRequests() {
 
         if (m_requests.empty()) { break; }
 
-        if (m_tasks.front().active) {
-            m_tasks.emplace_front(m_options);
-        }
+        if (m_tasks.front().active) { m_tasks.emplace_front(m_options); }
 
         m_activeTasks++;
 
@@ -261,7 +255,9 @@ void UrlClient::curlLoop() {
         FD_ZERO(&fdexcep);
 
         // 100ms select() default timeout
-        struct timeval timeout{0, 100 * 1000};
+        struct timeval timeout {
+            0, 100 * 1000
+        };
 
         int maxfd = -1;
         long curl_timeo = -1;
@@ -280,12 +276,11 @@ void UrlClient::curlLoop() {
             } else {
                 timeout.tv_usec = (curl_timeo % 1000) * 1000;
             }
-            //printf ("Timeout %ld.%06ld\n", timeout.tv_sec, timeout.tv_usec);
+            // printf ("Timeout %ld.%06ld\n", timeout.tv_sec, timeout.tv_usec);
         }
 
         // Get file descriptors from the transfers
-        CURLMcode mc = curl_multi_fdset(m_curlHandle, &fdread, &fdwrite, &fdexcep,
-                                        &maxfd);
+        CURLMcode mc = curl_multi_fdset(m_curlHandle, &fdread, &fdwrite, &fdexcep, &maxfd);
         if (mc != CURLM_OK) {
             LOGE("curl_multi_fdset() failed, code %d.", mc);
             continue;
@@ -309,9 +304,9 @@ void UrlClient::curlLoop() {
             if (FD_ISSET(m_requestNotify[0], &fdread)) {
                 // Clear notify fd
                 char buffer[1];
-                int n = read(m_requestNotify[0], buffer, sizeof(buffer));
+                int n = _read(m_requestNotify[0], buffer, sizeof(buffer));
                 if (n <= 0) { LOGE("Read request notify %d", n); }
-                //LOG("Got request notifies %d %d", n, m_curlNotified);
+                // LOG("Got request notifies %d %d", n, m_curlNotified);
                 m_curlNotified = false;
             }
 
@@ -326,10 +321,10 @@ void UrlClient::curlLoop() {
         while (true) {
             // how many messages are left
             int msgs_left;
-            struct CURLMsg *msg = curl_multi_info_read(m_curlHandle, &msgs_left);
+            struct CURLMsg* msg = curl_multi_info_read(m_curlHandle, &msgs_left);
             if (!msg) break;
 
-            //LOG("Messages left: %d / active %d", msgs_left, m_activeTasks);
+            // LOG("Messages left: %d / active %d", msgs_left, m_activeTasks);
 
             // Easy handle must be removed for reuse
             curl_multi_remove_handle(m_curlHandle, msg->easy_handle);
@@ -348,8 +343,7 @@ void UrlClient::curlLoop() {
             {
                 std::lock_guard<std::mutex> lock(m_requestMutex);
                 // Find Task for this message
-                auto it = std::find_if(m_tasks.begin(), m_tasks.end(),
-                                       [&](auto& t) { return t.handle == handle; });
+                auto it = std::find_if(m_tasks.begin(), m_tasks.end(), [&](auto& t) { return t.handle == handle; });
                 if (it == std::end(m_tasks)) {
                     assert(false);
                     continue;
@@ -382,12 +376,11 @@ void UrlClient::curlLoop() {
 
             // Always run callback regardless of request result.
             if (callback) {
-                m_dispatcher.enqueue([callback = std::move(callback),
-                                      response = std::move(response)]() mutable {
-                                         callback(std::move(response));
-                                     });
+                m_dispatcher.enqueue([callback = std::move(callback), response = std::move(response)]() mutable {
+                    callback(std::move(response));
+                });
 
-                //callback(std::move(response));
+                // callback(std::move(response));
             }
             m_activeTasks--;
         }

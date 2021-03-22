@@ -2,10 +2,10 @@
 
 #include <string>
 #include <vector>
+#include "util/variant.h"
 
 namespace Tangram {
 
-class Value;
 struct PropertyItem;
 
 // Helper to cleanup double string values from trailing 0s
