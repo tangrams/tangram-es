@@ -1,5 +1,7 @@
 #pragma once
 
+#include <MagnumExternal/OpenGL/GL/flextGL.h>
+
 #ifdef TANGRAM_ANDROID
 #include <GLES2/gl2platform.h>
 
@@ -65,5 +67,3 @@ static void glGenVertexArrays(GLsizei n, GLuint *arrays) {}
     #define glMapBuffer glMapBufferOES
     #define glUnmapBuffer glUnmapBufferOES
 #endif // defined(TANGRAM_ANDROID) || defined(TANGRAM_IOS) || defined(TANGRAM_RPI)
-
-#include <MagnumExternal/OpenGL/GL/flextGL.h>
