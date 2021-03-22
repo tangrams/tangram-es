@@ -19,6 +19,7 @@ For more information about building Tangram ES or using it in your project, see 
 - [Mac OS X](platforms/osx)
 - [Ubuntu Linux](platforms/linux)
 - [Raspberry Pi](platforms/rpi)
+- [Windows](platforms/windows)
 
 ## Support
 

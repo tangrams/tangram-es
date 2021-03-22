@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <cassert>
+#include <algorithm>
 
 namespace Tangram {
 
@@ -239,6 +240,12 @@ Url Url::resolve(const Url& b, const Url& r) {
         // If the relative URL's path starts with '/', it is absolute.
         if (r.buffer[r.parts.path.start] == '/') {
             t.buffer.append(r.buffer, r.parts.path.start, r.parts.path.count);
+#ifdef TANGRAM_WINDOWS
+        // On Windows if the relative URL's path starts with '<letter>:', it is absolute path starting with driver name.
+        } else if (r.parts.path.count > 1 && r.buffer[r.parts.path.start + 1] == ':') {
+            if (!t.buffer.empty() && t.buffer.back() != '/') { t.buffer += '/'; }
+            t.buffer.append(r.buffer, r.parts.path.start, r.parts.path.count);
+#endif
         } else {
             // Merge the relative path with the base path.
             if (b.hasNetLocation() && !b.hasPath()) {
@@ -320,6 +327,10 @@ std::string Url::removeDotSegmentsFromString(std::string path) {
 }
 
 void Url::parse() {
+#ifdef TANGRAM_WINDOWS
+    // Normalize Windows paths. Chromium also does this.
+    std::replace(buffer.begin(), buffer.end(), '\\', '/');
+#endif
 
     // The parsing process roughly follows https://tools.ietf.org/html/rfc1808#section-2.4
 
@@ -351,7 +362,12 @@ void Url::parse() {
         }
 
         // If a scheme is present, it must be followed by a ':'.
+#ifdef TANGRAM_WINDOWS
+        // Check also if 'scheme' is longer than 1 - could be a Windows disk drive
+        if (c == ':' && i - start > 1) {
+#else
         if (c == ':') {
+#endif
             parts.scheme.start = start;
             parts.scheme.count = i - start;
 
