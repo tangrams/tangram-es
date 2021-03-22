@@ -4,7 +4,9 @@
 #include <cassert>
 #include <cstring>
 #include <curl/curl.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 #include <time.h>
 
 constexpr char const* requestCancelledError = "Request cancelled";
@@ -21,6 +23,92 @@ struct CurlGlobals {
         curl_global_cleanup();
     }
 } s_curl;
+
+UrlClient::SelfPipe::~SelfPipe() {
+#if defined(_WIN32)
+    if(pipeFds[0] != SocketInvalid) {
+        closesocket(pipeFds[0]);
+    }
+    if(pipeFds[1] != SocketInvalid) {
+        closesocket(pipeFds[1]);
+    }
+#endif
+}
+
+bool  UrlClient::SelfPipe::initialize() {
+#if defined(_WIN32)
+    // https://stackoverflow.com/questions/3333361/how-to-cancel-waiting-in-select-on-windows
+    struct sockaddr_in inaddr;
+    int len = sizeof(inaddr);
+    memset(&inaddr, 0, len);
+    struct sockaddr addr;
+    memset(&addr, 0, sizeof(addr));
+
+    inaddr.sin_family = AF_INET;
+    inaddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    inaddr.sin_port = 0;
+    int yes = 1;
+    SOCKET lst = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if(lst == INVALID_SOCKET) {
+        return false;
+    }
+    if(
+        setsockopt(lst, SOL_SOCKET, SO_REUSEADDR, (char*)&yes, sizeof(yes)) == SOCKET_ERROR ||
+        bind(lst, (struct sockaddr *)&inaddr, sizeof(inaddr)) == SOCKET_ERROR ||
+        listen(lst, 1) == SOCKET_ERROR ||
+        getsockname(lst, &addr, &len) ||
+        (pipeFds[0] = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET
+    ) {
+        closesocket(lst);
+        return false;
+    }
+
+    if(
+        (connect(pipeFds[0], &addr, len)) == SOCKET_ERROR ||
+        (pipeFds[1] = accept(lst, 0, 0)) == INVALID_SOCKET
+    ) {
+        closesocket(pipeFds[0]);
+        closesocket(lst);
+        pipeFds[0] = -1;
+        return false;
+    }
+
+    closesocket(lst);
+    return true;
+#else
+    return pipe(pipeFds) >= 0;
+#endif
+}
+
+bool UrlClient::SelfPipe::write() {
+#if defined(_WIN32)
+    return send(pipeFds[1], "\0", 1, 0) >= 0;
+#else
+    return ::write(pipeFds[1], "\0", 1) >= 0;
+#endif
+}
+
+bool UrlClient::SelfPipe::read(int *error) {
+    char buffer[1];
+#if defined(_WIN32)
+    int n = recv(pipeFds[0], buffer, sizeof(buffer), 0);
+    if(n == SOCKET_ERROR) {
+        *error = WSAGetLastError();
+        return false;
+    }
+#else
+    int n = ::read(pipeFds[0], buffer, sizeof(buffer));
+    if (n <= 0) {
+        *error = n;
+        return false;
+    }
+#endif
+    return true;
+}
+
+UrlClient::SelfPipe::Socket UrlClient::SelfPipe::getReadFd() {
+    return pipeFds[0];
+}
 
 struct UrlClient::Task {
     // Reduce Task content capacity when it's more than 128kb and last
@@ -96,6 +184,11 @@ struct UrlClient::Task {
 
 
 UrlClient::UrlClient(Options options) : m_options(options) {
+    // Using a pipe to notify select() in curl-thread of new requests..
+    // https://www.linuxquestions.org/questions/programming-9/exit-from-blocked-pselect-661200/
+    if (!m_requestNotify.initialize()) {
+        LOGE("Could not initialize select breaker!");
+    }
 
     // Start the curl thread
     m_curlHandle = curl_multi_init();
@@ -105,12 +198,6 @@ UrlClient::UrlClient(Options options) : m_options(options) {
     // Init at least one task to avoid checking whether m_tasks is empty in
     // startPendingRequests()
     m_tasks.emplace_back(m_options);
-
-    // Using a pipe to notify select() in curl-thread of new requests..
-    // https://www.linuxquestions.org/questions/programming-9/exit-from-blocked-pselect-661200/
-    if (pipe(m_requestNotify) < 0) {
-        LOGE("Could not initialize select breaker!");
-    }
 }
 
 UrlClient::~UrlClient() {
@@ -155,7 +242,7 @@ UrlClient::~UrlClient() {
 void UrlClient::curlWakeUp() {
 
     if (!m_curlNotified) {
-        if (write(m_requestNotify[1], "\0", 1) <= 0) {
+        if (!m_requestNotify.write()) {
             // err
             return;
         }
@@ -293,7 +380,7 @@ void UrlClient::curlLoop() {
         }
 
         // Listen on requestNotify to break select when new requests are added.
-        FD_SET(m_requestNotify[0], &fdread);
+        FD_SET(m_requestNotify.getReadFd(), &fdread);
 
         // Wait for transfers
         // On success the value of maxfd is guaranteed to be >= -1. We call
@@ -307,11 +394,12 @@ void UrlClient::curlLoop() {
             continue;
 
         } else {
-            if (FD_ISSET(m_requestNotify[0], &fdread)) {
+            if (FD_ISSET(m_requestNotify.getReadFd(), &fdread)) {
                 // Clear notify fd
-                char buffer[1];
-                int n = read(m_requestNotify[0], buffer, sizeof(buffer));
-                if (n <= 0) { LOGE("Read request notify %d", n); }
+                int error;
+                if(!m_requestNotify.read(&error)) {
+                    LOGE("Read request notify %d", error);
+                }
                 //LOG("Got request notifies %d %d", n, m_curlNotified);
                 m_curlNotified = false;
             }

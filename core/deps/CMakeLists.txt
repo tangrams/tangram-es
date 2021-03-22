@@ -13,13 +13,15 @@ target_compile_definitions(glm INTERFACE GLM_FORCE_CTOR_INIT)
 
 ## yaml-cpp ##
 ##############
-set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "")
-set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "")
-set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "")
-set(YAML_CPP_INSTALL OFF CACHE BOOL "")
-add_subdirectory(yaml-cpp)
+if (NOT MSVC)
+  set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "")
+  set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "")
+  set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "")
+  set(YAML_CPP_INSTALL OFF CACHE BOOL "")
+  add_subdirectory(yaml-cpp)
 
-target_include_directories(yaml-cpp PUBLIC yaml-cpp/include)
+  target_include_directories(yaml-cpp PUBLIC yaml-cpp/include)
+endif()
 
 ## css-color-parser-cpp ##
 ##########################
@@ -48,14 +50,21 @@ target_include_directories(miniz
 if(NOT TANGRAM_USE_SYSTEM_FONT_LIBS)
   ## Harfbuzz - ICU-Common - Freetype2 ##
   #######################################
-  set(HARFBUZZ_BUILD_ICU ON CACHE BOOL "Enable building of ICU")
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/harfbuzz-icu-freetype)
+  if(MSVC)
+    #find_package(ICU REQUIRED COMPONENTS common)
+    find_package(harfbuzz CONFIG REQUIRED)
+    set(HARFBUZZ_LIB_NAME harfbuzz::harfbuzz)
+  else()
+    set(HARFBUZZ_BUILD_ICU ON CACHE BOOL "Enable building of ICU")
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/harfbuzz-icu-freetype)
 
-  message(STATUS "harfbuzz" ${HARFBUZZ_LIBRARIES})
+    message(STATUS "harfbuzz" ${HARFBUZZ_LIBRARIES})
+    set(HARFBUZZ_LIB_NAME harfbuzz ${HARFBUZZ_LIBRARIES})
+  endif()
 
   set(ALFONS_DEPS_LIBRARIES
     ${ALFONS_DEPS_LIBRARIES}
-    harfbuzz ${HARFBUZZ_LIBRARIES}
+    ${HARFBUZZ_LIB_NAME}
     CACHE INTERNAL "alfons-libs" FORCE)
 endif()
 

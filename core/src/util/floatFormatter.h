@@ -20,14 +20,14 @@ struct ff {
 
     static double stod(const std::string& _string) {
         int end = 0;
-        return stod(_string.data(), _string.size(), &end);
+        return stod(_string.data(), static_cast<int>(_string.size()), &end);
     }
 
     static float stof(const char* _string, int _length, int* _end);
 
     static float stof(const std::string& _string) {
         int end = 0;
-        return stof(_string.data(), _string.size(), &end);
+        return stof(_string.data(), static_cast<int>(_string.size()), &end);
     }
 
 };
