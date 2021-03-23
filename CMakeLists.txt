@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(tangram)
+project(tangram VERSION 1.0.0)
 
 # Options
 option(TANGRAM_USE_JSCORE "Use system libraries for JavaScriptCore and enable it on iOS and macOS" OFF)

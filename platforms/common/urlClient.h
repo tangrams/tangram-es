@@ -3,7 +3,6 @@
 #include "platform.h" // UrlResponse
 #include "util/asyncWorker.h"
 
-#include <atomic>
 #include <condition_variable>
 #include <functional>
 #include <list>
@@ -46,7 +45,6 @@ private:
     struct Task;
 
     void curlLoop();
-    void curlWakeUp();
 
     void startPendingRequests();
 
@@ -56,7 +54,6 @@ private:
     void *m_curlHandle = nullptr;
 
     bool m_curlRunning = false;
-    bool m_curlNotified = false;
 
     std::unique_ptr<std::thread> m_curlWorker;
     AsyncWorker m_dispatcher;
@@ -70,10 +67,7 @@ private:
     std::mutex m_requestMutex;
 
     // RequestIds
-    std::atomic<uint64_t> m_requestCount{0};
-
-    // File descriptors to break waiting select.
-    int m_requestNotify[2] = { -1, -1 };
+    std::atomic_uint64_t m_requestCount{0};
 };
 
 } // namespace Tangram

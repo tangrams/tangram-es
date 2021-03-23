@@ -4,22 +4,28 @@
 #include <cassert>
 #include <cstring>
 #include <curl/curl.h>
-#ifdef _WIN32
-#include <io.h>
-#include <fcntl.h>
-#else
-#include <unistd.h>
-#endif
-#include <time.h>
 
 constexpr char const* requestCancelledError = "Request cancelled";
+
+#ifdef DEBUG
+#define CURL_CHECK(STMT) do { CURLcode err = STMT; assert(err == CURLE_OK); } while (0)
+#define CURLM_CHECK(STMT) do { \
+    CURLMcode err = STMT; \
+    if (err != CURLM_OK) \
+        LOGE("%s", curl_multi_strerror(err)); \
+    assert(err == CURLM_OK); \
+} while (0)
+#else
+#define CURL_CHECK(STMT) do { STMT; } while (0)
+#define CURLM_CHECK(STMT) do { STMT; } while (0)
+#endif
 
 namespace Tangram {
 
 struct CurlGlobals {
     CurlGlobals() {
         LOGD("curl global init");
-        curl_global_init(CURL_GLOBAL_ALL);
+        CURL_CHECK(curl_global_init(CURL_GLOBAL_ALL));
     }
     ~CurlGlobals() {
         LOGD("curl global shutdown");
@@ -34,7 +40,7 @@ struct UrlClient::Task {
 
     Request request;
     std::vector<char> content;
-    CURL* handle = nullptr;
+    CURL *handle = nullptr;
     char curlErrorString[CURL_ERROR_SIZE] = {0};
     bool active = false;
     bool canceled = false;
@@ -55,19 +61,24 @@ struct UrlClient::Task {
     Task(const Options& _options) {
         // Set up an easy handle for reuse.
         handle = curl_easy_init();
-        curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, &curlWriteCallback);
-        curl_easy_setopt(handle, CURLOPT_WRITEDATA, this);
-        curl_easy_setopt(handle, CURLOPT_NOPROGRESS, 1L);
-        curl_easy_setopt(handle, CURLOPT_HEADER, 0L);
-        curl_easy_setopt(handle, CURLOPT_VERBOSE, 0L);
-        curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "gzip");
-        curl_easy_setopt(handle, CURLOPT_ERRORBUFFER, curlErrorString);
-        curl_easy_setopt(handle, CURLOPT_FAILONERROR, 1L);
-        curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT_MS, _options.connectionTimeoutMs);
-        curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, _options.requestTimeoutMs);
-        curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1);
-        curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 20);
-        curl_easy_setopt(handle, CURLOPT_TCP_NODELAY, 1);
+        assert(handle != nullptr);
+        CURL_CHECK(curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, &curlWriteCallback));
+        CURL_CHECK(curl_easy_setopt(handle, CURLOPT_WRITEDATA, this));
+        CURL_CHECK(curl_easy_setopt(handle, CURLOPT_NOPROGRESS, 1L));
+        CURL_CHECK(curl_easy_setopt(handle, CURLOPT_HEADER, 0L));
+        CURL_CHECK(curl_easy_setopt(handle, CURLOPT_VERBOSE, 0L));
+        CURL_CHECK(curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "gzip"));
+        CURL_CHECK(curl_easy_setopt(handle, CURLOPT_ERRORBUFFER, curlErrorString));
+        CURL_CHECK(curl_easy_setopt(handle, CURLOPT_FAILONERROR, 1L));
+        CURL_CHECK(curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT_MS, _options.connectionTimeoutMs));
+        CURL_CHECK(curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, _options.requestTimeoutMs));
+        CURL_CHECK(curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1));
+        CURL_CHECK(curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 20));
+        CURL_CHECK(curl_easy_setopt(handle, CURLOPT_TCP_NODELAY, 1));
+#ifdef _WIN32
+        CURL_CHECK(curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0L));
+        CURL_CHECK(curl_easy_setopt(handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4));
+#endif
     }
 
     void setup() {
@@ -76,7 +87,8 @@ struct UrlClient::Task {
     }
 
     void clear() {
-        bool shrink = content.capacity() > limit_capacity && !content.empty() && content.size() < limit_capacity / 2;
+        bool shrink = content.capacity() > limit_capacity &&
+            !content.empty() && content.size() < limit_capacity / 2;
 
         if (shrink) {
             LOGD("Release content buffer %u / %u", content.size(), content.capacity());
@@ -88,10 +100,13 @@ struct UrlClient::Task {
         active = false;
     }
 
-    ~Task() { curl_easy_cleanup(handle); }
+    ~Task() {
+        curl_easy_cleanup(handle);
+    }
 
     Task(const Task&) = delete;
     Task& operator=(const Task&) = delete;
+
 };
 
 
@@ -99,20 +114,13 @@ UrlClient::UrlClient(Options options) : m_options(options) {
 
     // Start the curl thread
     m_curlHandle = curl_multi_init();
+    assert(m_curlHandle != nullptr);
     m_curlWorker = std::make_unique<std::thread>(&UrlClient::curlLoop, this);
     m_curlRunning = true;
 
     // Init at least one task to avoid checking whether m_tasks is empty in
     // startPendingRequests()
     m_tasks.emplace_back(m_options);
-
-// Using a pipe to notify select() in curl-thread of new requests..
-// https://www.linuxquestions.org/questions/programming-9/exit-from-blocked-pselect-661200/
-#ifdef _WIN32
-    if (_pipe(m_requestNotify, 512, _O_BINARY | O_NOINHERIT) < 0) { LOGE("Could not initialize select breaker!"); }
-#else
-    if (pipe(m_requestNotify) < 0) { LOGE("Could not initialize select breaker!"); }
-#endif
 }
 
 UrlClient::~UrlClient() {
@@ -129,12 +137,13 @@ UrlClient::~UrlClient() {
             }
         }
         m_requests.clear();
-        for (auto& task : m_tasks) { task.canceled = true; }
+        for (auto& task : m_tasks) {
+            task.canceled = true;
+        }
     }
 
     // Stop the curl threads.
     m_curlRunning = false;
-    curlWakeUp();
 
     m_curlWorker->join();
 
@@ -145,21 +154,11 @@ UrlClient::~UrlClient() {
 
     // This is probably not needed since all task have been canceled and joined
     for (auto& task : m_tasks) {
-        if (task.active) { curl_multi_remove_handle(m_curlHandle, task.handle); }
+        if (task.active) {
+            CURLM_CHECK(curl_multi_remove_handle(m_curlHandle, task.handle));
+        }
     }
     curl_multi_cleanup(m_curlHandle);
-}
-
-void UrlClient::curlWakeUp() {
-
-    if (!m_curlNotified) {
-        if (_write(m_requestNotify[1], "\0", 1) <= 0) {
-            // err
-            return;
-        }
-        // LOG("wake up!");
-        m_curlNotified = true;
-    }
 }
 
 UrlClient::RequestId UrlClient::addRequest(const std::string& _url, UrlCallback _onComplete) {
@@ -174,7 +173,6 @@ UrlClient::RequestId UrlClient::addRequest(const std::string& _url, UrlCallback 
         std::lock_guard<std::mutex> lock(m_requestMutex);
         m_requests.push_back(request);
     }
-    curlWakeUp();
 
     return id;
 }
@@ -206,9 +204,12 @@ void UrlClient::cancelRequest(UrlClient::RequestId _id) {
     // Check requests that are already active.
     {
         std::lock_guard<std::mutex> lock(m_requestMutex);
-        auto it = std::find_if(m_tasks.begin(), m_tasks.end(), [&](auto& t) { return t.request.id == _id; });
+        auto it = std::find_if(m_tasks.begin(), m_tasks.end(),
+                               [&](auto& t) { return t.request.id == _id; });
 
-        if (it != std::end(m_tasks)) { it->canceled = true; }
+        if (it != std::end(m_tasks)) {
+            it->canceled = true;
+        }
     }
 }
 
@@ -219,7 +220,9 @@ void UrlClient::startPendingRequests() {
 
         if (m_requests.empty()) { break; }
 
-        if (m_tasks.front().active) { m_tasks.emplace_front(m_options); }
+        if (m_tasks.front().active) {
+            m_tasks.emplace_front(m_options);
+        }
 
         m_activeTasks++;
 
@@ -239,7 +242,7 @@ void UrlClient::startPendingRequests() {
 
         LOGD("Tasks %d - starting request for url: %s", int(m_activeTasks), url);
 
-        curl_multi_add_handle(m_curlHandle, task.handle);
+        CURLM_CHECK(curl_multi_add_handle(m_curlHandle, task.handle));
     }
 }
 
@@ -255,13 +258,11 @@ void UrlClient::curlLoop() {
         FD_ZERO(&fdexcep);
 
         // 100ms select() default timeout
-        struct timeval timeout {
-            0, 100 * 1000
-        };
+        struct timeval timeout{0, 100 * 1000};
 
         int maxfd = -1;
         long curl_timeo = -1;
-        curl_multi_timeout(m_curlHandle, &curl_timeo);
+        CURLM_CHECK(curl_multi_timeout(m_curlHandle, &curl_timeo));
 
         if (curl_timeo >= 0) {
             timeout.tv_usec = 0;
@@ -276,58 +277,50 @@ void UrlClient::curlLoop() {
             } else {
                 timeout.tv_usec = (curl_timeo % 1000) * 1000;
             }
-            // printf ("Timeout %ld.%06ld\n", timeout.tv_sec, timeout.tv_usec);
         }
-
         // Get file descriptors from the transfers
-        CURLMcode mc = curl_multi_fdset(m_curlHandle, &fdread, &fdwrite, &fdexcep, &maxfd);
-        if (mc != CURLM_OK) {
-            LOGE("curl_multi_fdset() failed, code %d.", mc);
-            continue;
+        CURLM_CHECK(curl_multi_fdset(m_curlHandle, &fdread, &fdwrite, &fdexcep, &maxfd));
+
+        int ready;
+        if (maxfd == -1) {
+#ifdef _WIN32
+            Sleep(100);
+            ready = 0;
+#else
+            ready = select(0, NULL, NULL, NULL, &timeout);
+#endif
+        } else {
+            // Wait for transfers
+            // On success the value of maxfd is guaranteed to be >= -1. We call
+            // select(maxfd + 1, ...); specially in case of (maxfd == -1) there are
+            // no fds ready yet so we call select(0, ...) to sleep 100ms, which is
+            // the minimum suggested value in the curl_multi_fdset() doc.
+            ready = select(maxfd + 2, &fdread, &fdwrite, &fdexcep, &timeout);
         }
-
-        // Listen on requestNotify to break select when new requests are added.
-        FD_SET(m_requestNotify[0], &fdread);
-
-        // Wait for transfers
-        // On success the value of maxfd is guaranteed to be >= -1. We call
-        // select(maxfd + 1, ...); specially in case of (maxfd == -1) there are
-        // no fds ready yet so we call select(0, ...) to sleep 100ms, which is
-        // the minimum suggested value in the curl_multi_fdset() doc.
-        int ready = select(maxfd + 2, &fdread, &fdwrite, &fdexcep, &timeout);
 
         if (ready == -1) {
             LOGE("select() error!");
+            assert(false);
             continue;
-
         } else {
-            if (FD_ISSET(m_requestNotify[0], &fdread)) {
-                // Clear notify fd
-                char buffer[1];
-                int n = _read(m_requestNotify[0], buffer, sizeof(buffer));
-                if (n <= 0) { LOGE("Read request notify %d", n); }
-                // LOG("Got request notifies %d %d", n, m_curlNotified);
-                m_curlNotified = false;
-            }
-
             // Create tasks from request queue
             startPendingRequests();
 
             //
             int activeRequests = 0;
-            curl_multi_perform(m_curlHandle, &activeRequests);
+            CURLM_CHECK(curl_multi_perform(m_curlHandle, &activeRequests));
         }
 
         while (true) {
             // how many messages are left
             int msgs_left;
-            struct CURLMsg* msg = curl_multi_info_read(m_curlHandle, &msgs_left);
+            struct CURLMsg *msg = curl_multi_info_read(m_curlHandle, &msgs_left);
             if (!msg) break;
 
-            // LOG("Messages left: %d / active %d", msgs_left, m_activeTasks);
+            //LOG("Messages left: %d / active %d", msgs_left, m_activeTasks);
 
             // Easy handle must be removed for reuse
-            curl_multi_remove_handle(m_curlHandle, msg->easy_handle);
+            CURLM_CHECK(curl_multi_remove_handle(m_curlHandle, msg->easy_handle));
 
             // NB: DONE is the only defined message type.
             if (msg->msg != CURLMSG_DONE) {
@@ -343,7 +336,8 @@ void UrlClient::curlLoop() {
             {
                 std::lock_guard<std::mutex> lock(m_requestMutex);
                 // Find Task for this message
-                auto it = std::find_if(m_tasks.begin(), m_tasks.end(), [&](auto& t) { return t.handle == handle; });
+                auto it = std::find_if(m_tasks.begin(), m_tasks.end(),
+                                       [&](auto& t) { return t.handle == handle; });
                 if (it == std::end(m_tasks)) {
                     assert(false);
                     continue;
@@ -366,7 +360,7 @@ void UrlClient::curlLoop() {
                     response.error = requestCancelledError;
 
                 } else {
-                    LOGW("Failed with error for url: %s", task.curlErrorString, url);
+                    LOGW("Failed with error %s for url: %s", task.curlErrorString, url);
                     response.error = task.curlErrorString;
                 }
 
@@ -376,11 +370,12 @@ void UrlClient::curlLoop() {
 
             // Always run callback regardless of request result.
             if (callback) {
-                m_dispatcher.enqueue([callback = std::move(callback), response = std::move(response)]() mutable {
-                    callback(std::move(response));
-                });
+                m_dispatcher.enqueue([callback = std::move(callback),
+                                      response = std::move(response)]() mutable {
+                                         callback(std::move(response));
+                                     });
 
-                // callback(std::move(response));
+                //callback(std::move(response));
             }
             m_activeTasks--;
         }

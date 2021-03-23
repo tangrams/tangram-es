@@ -213,25 +213,25 @@ add_library(tangram-core
 # Include headers from core library and dependencies.
 target_include_directories(tangram-core
   PUBLIC
-  include/tangram
-  # TODO: These headers shouldn't be public, but Platform classes use them.
-  src
-  # TODO: This header shouldn't be public, but we use it in propertyItem.h
-  deps/variant/include
+    include/tangram
+    # TODO: These headers shouldn't be public, but Platform classes use them.
+    src
+    # TODO: This header shouldn't be public, but we use it in propertyItem.h
+    deps/variant/include
   PRIVATE
-  generated
-  deps
-  deps/earcut/include
-  deps/isect2d/include
-  deps/hash-library
-  deps/mapbox
-  ${MAPBOX_VARIANT_INCLUDE_DIRS}
-  deps/pbf
-  ${RAPIDJSON_INCLUDE_DIRS}
-  deps/sdf
-  ${GEOJSON_CPP_INCLUDE_DIRS}
-  ${GEOJSON_VT_CPP_INCLUDE_DIRS}
-  deps/double-conversion/include
+    generated
+    deps
+    deps/earcut/include
+    deps/isect2d/include
+    deps/hash-library
+    deps/mapbox
+    ${MAPBOX_VARIANT_INCLUDE_DIRS}
+    deps/pbf
+    ${RAPIDJSON_INCLUDE_DIRS}
+    deps/sdf
+    ${GEOJSON_CPP_INCLUDE_DIRS}
+    ${GEOJSON_VT_CPP_INCLUDE_DIRS}
+    deps/double-conversion/include
 )
 
 # Link core library dependencies.
@@ -245,6 +245,7 @@ target_link_libraries(tangram-core
   miniz::miniz
   #ZLIB::ZLIB
 )
+
 
 # Add JavaScript implementation.
 if(TANGRAM_JSCORE_ENABLED)

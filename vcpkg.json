@@ -16,6 +16,13 @@
         "geojson-cpp",
         "geojson-vt-cpp",
         {
+            "name": "magnum",
+            "features": [
+                "sdl2application",
+                "gl"
+            ]
+        },
+        {
             "name": "harfbuzz",
             "features": [
                 "icu",
