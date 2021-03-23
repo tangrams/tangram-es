@@ -36,7 +36,7 @@ geojsonvt::Options options() {
 
 struct ClientDataSource::Storage {
     std::unique_ptr<geojsonvt::GeoJSONVT> tiles;
-    geojson::feature_collection features;
+    feature::feature_collection<double> features;
     std::vector<Properties> properties;
 };
 
@@ -133,6 +133,8 @@ struct add_centroid {
             if (g.empty()){
                 continue;
             }
+            
+            signedArea(g.front().begin(), g.front().end());
             auto area = signedArea(g.front().begin(), g.front().end());
             if (area > largestArea) {
                 largestArea = area;

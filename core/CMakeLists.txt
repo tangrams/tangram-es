@@ -6,6 +6,13 @@ find_path(STB_INCLUDE_DIRS "stb.h")
 find_package(miniz CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
+find_package(ZLIB REQUIRED)
+if (TANGRAM_MBTILES_DATASOURCE)
+  ## SQLiteCpp ##
+  ###############
+  find_package(SQLiteCpp CONFIG REQUIRED)
+endif()
+
 find_path(MAPBOX_VARIANT_INCLUDE_DIRS "mapbox/optional.hpp")
 find_path(GEOJSON_VT_CPP_INCLUDE_DIRS "mapbox/geojsonvt.hpp")
 find_path(GEOJSON_CPP_INCLUDE_DIRS "mapbox/geojson.hpp")
@@ -236,7 +243,7 @@ target_link_libraries(tangram-core
   alfons
   double-conversion
   miniz::miniz
-  z
+  #ZLIB::ZLIB
 )
 
 # Add JavaScript implementation.
@@ -257,7 +264,7 @@ endif()
 # Add MBTiles implementation.
 if(TANGRAM_MBTILES_DATASOURCE)
   target_sources(tangram-core PRIVATE src/data/mbtilesDataSource.cpp)
-  target_link_libraries(tangram-core PRIVATE SQLiteCpp sqlite3)
+  target_link_libraries(tangram-core PRIVATE SQLiteCpp)
   target_compile_definitions(tangram-core PRIVATE TANGRAM_MBTILES_DATASOURCE=1)
 endif()
 

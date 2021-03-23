@@ -17,30 +17,28 @@ endif()
 
 check_unsupported_compiler_version()
 
-add_definitions(-DTANGRAM_LINUX)
-
-set(OpenGL_GL_PREFERENCE GLVND)
-find_package(OpenGL REQUIRED)
-
-# System font config
-include(FindPkgConfig)
-
+find_package(Magnum CONFIG REQUIRED GL Sdl2Application)
 find_package(CURL REQUIRED)
 
 add_library(tangram SHARED
   platforms/common/platform_gl.cpp
   platforms/common/urlClient.cpp
+  platforms/magnum/src/platform_magnum.cpp
 )
 
 target_include_directories(tangram
   PRIVATE
   platforms/common
+
 )
 
 target_link_libraries(tangram
   PRIVATE
   tangram-core
   ${CURL_LIBRARIES}
+  Magnum::Magnum
+  Magnum::GL
+  Magnum::Sdl2Application # for flextGL
 )
 
 
