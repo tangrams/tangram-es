@@ -40,7 +40,7 @@ public:
     void render(const double time);
 
 private:
-    void update();
+    void loadSceneFile(bool setPosition = false, const std::vector<SceneUpdate>& updates = {});
     void createBuffers();
     void create(uint32_t maxActiveTasks, uint32_t connectionTimeoutMs, uint32_t requestTimeoutMs);
 

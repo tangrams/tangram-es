@@ -26,7 +26,9 @@ void logMsg(const char* fmt, ...) {
 
 void setCurrentThreadPriority(int priority) {}
 
-void initGLExtensions() { Tangram::Hardware::supportsMapBuffer = true; }
+void initGLExtensions() {
+    // Tangram::Hardware::supportsMapBuffer = true;
+}
 
 /////////// PlatformMagnum
 PlatformMagnum::PlatformMagnum(uint32_t maxActiveTasks, uint32_t connectionTimeoutMs, uint32_t requestTimeoutMs)
@@ -61,7 +63,8 @@ MagnumTexture::MagnumTexture(uint32_t maxActiveTasks, uint32_t connectionTimeout
 }
 
 void MagnumTexture::render(const double time) {
-    update();
+    loadSceneFile();
+
     auto& platform = static_cast<PlatformMagnum&>(map_->getPlatform());
     if (platform.isDirty()) {
 
@@ -148,9 +151,8 @@ void MagnumTexture::createBuffers() {
     framebuffer_.attachRenderbuffer(GL::Framebuffer::BufferAttachment::DepthStencil, depth_stencil_);
 }
 
-void MagnumTexture::update() {
-#if 0
-    for (auto& update : sceneUpdates) {
+void MagnumTexture::loadSceneFile(bool setPosition, const std::vector<SceneUpdate>& updates) {
+    for (auto& update : updates) {
         bool found = false;
         for (auto& prev : sceneUpdates) {
             if (update.path == prev.path) {
@@ -162,7 +164,6 @@ void MagnumTexture::update() {
         if (!found) { sceneUpdates.push_back(update); }
     }
 
-#endif
     if (need_scene_reload_) {
         need_scene_reload_ = false;
         bool load_async = false;
