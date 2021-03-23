@@ -11,6 +11,10 @@
         "stb",
         "miniz",
         "benchmark",
+        "mapbox-geometry",
+        "mapbox-polylabel",
+        "geojson-cpp",
+        "geojson-vt-cpp",
         {
             "name": "harfbuzz",
             "features": [

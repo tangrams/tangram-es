@@ -9,10 +9,10 @@
 #include "tile/tile.h"
 #include "view/view.h"
 
-#include "mapbox/geojsonvt.hpp"
+#include <mapbox/geojsonvt.hpp>
 
 // RapidJson parser
-#include "mapbox/geojson.hpp"
+#include <mapbox/geojson.hpp>
 #include <mapbox/geojson_impl.hpp>
 
 
@@ -27,7 +27,7 @@ geojsonvt::Options options() {
     opt.maxZoom = 18;
     opt.indexMaxZoom = 5;
     opt.indexMaxPoints = 100000;
-    opt.solidChildren = true;
+    //opt.solidChildren = true;
     opt.tolerance = 3;
     opt.extent = 4096;
     opt.buffer = 0;
@@ -36,7 +36,7 @@ geojsonvt::Options options() {
 
 struct ClientDataSource::Storage {
     std::unique_ptr<geojsonvt::GeoJSONVT> tiles;
-    geometry::feature_collection<double> features;
+    geojson::feature_collection features;
     std::vector<Properties> properties;
 };
 
@@ -184,7 +184,9 @@ void ClientDataSource::generateTiles() {
             const auto& properties = m_store->properties[feat.id.get<uint64_t>()];
             if (geometry::geometry<double>::visit(feat.geometry, add_centroid{ centroid })) {
                 uint64_t id = m_store->features.size();
-                m_store->features.emplace_back(centroid, id);
+                feature::feature<double>(centroid);
+                m_store->features.push_back(centroid);
+                //m_store->features.emplace_back(centroid, id);
                 m_store->properties.push_back(properties);
                 auto& props = m_store->properties.back();
                 props.set("label_placement", 1.0);
@@ -253,7 +255,7 @@ void ClientDataSource::addPointFeature(Properties&& properties, LngLat coordinat
     geometry::point<double> geom {coordinates.longitude, coordinates.latitude};
 
     uint64_t id = m_store->features.size();
-    m_store->features.emplace_back(geom, id);
+    m_store->features.emplace_back(geom);
     m_store->properties.emplace_back(properties);
 }
 
@@ -263,7 +265,8 @@ void ClientDataSource::addPolylineFeature(Properties&& properties, PolylineBuild
 
     uint64_t id = m_store->features.size();
     auto geom = std::move(polyline.data);
-    m_store->features.emplace_back(*geom, id);
+    geometry::line_string<double>& g{*(geom.get())};
+    m_store->features.emplace_back(g);
     m_store->properties.emplace_back(properties);
 }
 
@@ -273,7 +276,9 @@ void ClientDataSource::addPolygonFeature(Properties&& properties, PolygonBuilder
 
     uint64_t id = m_store->features.size();
     auto geom = std::move(polygon.data);
-    m_store->features.emplace_back(*geom, id);
+    geometry::polygon<double>& g{*(geom.get())};
+
+    m_store->features.emplace_back(g);
     m_store->properties.emplace_back(properties);
 }
 

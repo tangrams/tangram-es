@@ -10,6 +10,3 @@
 [submodule "external/alfons"]
 	path = core/deps/alfons
 	url = https://github.com/hjanetzek/alfons
-[submodule "core/deps/geojson-vt-cpp"]
-	path = core/deps/geojson-vt-cpp
-	url = https://github.com/mapbox/geojson-vt-cpp.git

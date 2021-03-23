@@ -7,6 +7,8 @@ find_package(miniz CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
 find_path(MAPBOX_VARIANT_INCLUDE_DIRS "mapbox/optional.hpp")
+find_path(GEOJSON_VT_CPP_INCLUDE_DIRS "mapbox/geojsonvt.hpp")
+find_path(GEOJSON_CPP_INCLUDE_DIRS "mapbox/geojson.hpp")
 add_subdirectory(deps)
 
 add_library(tangram-core
@@ -220,9 +222,8 @@ target_include_directories(tangram-core
   deps/pbf
   ${RAPIDJSON_INCLUDE_DIRS}
   deps/sdf
-  deps/geojson-vt-cpp/geometry.hpp/include
-  deps/geojson-vt-cpp/geojson.hpp/include
-  deps/geojson-vt-cpp/include
+  ${GEOJSON_CPP_INCLUDE_DIRS}
+  ${GEOJSON_VT_CPP_INCLUDE_DIRS}
   deps/double-conversion/include
 )
 

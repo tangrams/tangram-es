@@ -14,6 +14,15 @@
         "xstring": "cpp",
         "regex": "cpp",
         "sstream": "cpp",
-        "strstream": "cpp"
+        "strstream": "cpp",
+        "memory": "cpp",
+        "variant": "cpp",
+        "vector": "cpp",
+        "xutility": "cpp",
+        "locale": "cpp",
+        "thread": "cpp",
+        "xlocale": "cpp",
+        "xlocmes": "cpp",
+        "xloctime": "cpp"
     }
 }

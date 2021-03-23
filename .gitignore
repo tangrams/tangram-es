@@ -1,5 +1,5 @@
 # Created by http://www.gitignore.io
-
+.vscode
 ### OSX ###
 .DS_Store
 .AppleDouble
