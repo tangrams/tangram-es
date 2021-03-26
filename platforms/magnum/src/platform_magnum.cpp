@@ -63,36 +63,22 @@ void PlatformMagnum::setDirty(bool dirty) { needs_render_ = dirty; }
 
 class MagnumTexture::Impl {
 public:
-    Impl(uint32_t maxActiveTasks, uint32_t connectionTimeoutMs, uint32_t requestTimeoutMs)
+    Impl(const std::string& scene_file, const std::string& api_env_name, const std::string& api_env_scene_key,
+         uint32_t maxActiveTasks, uint32_t connectionTimeoutMs, uint32_t requestTimeoutMs)
         : msaa_level_{4}, scene_size_{500, 500}, framebuffer_{{{}, scene_size_}}, renderbuffer_{{{}, scene_size_}},
-          need_scene_reload_{false} {
+          need_scene_reload_{false}, env_name_{api_env_name}, scene_env_key_{api_env_scene_key} {
+        setSceneFile(scene_file);
         create(maxActiveTasks, connectionTimeoutMs, requestTimeoutMs);
     }
 
 private:
     void create(uint32_t maxActiveTasks, uint32_t connectionTimeoutMs, uint32_t requestTimeoutMs) {
-
-        char* nextzenApiKeyEnvVar = std::getenv("NEXTZEN_API_KEY");
-        if (nextzenApiKeyEnvVar && strlen(nextzenApiKeyEnvVar) > 0) {
-            api_key_ = nextzenApiKeyEnvVar;
-        } else {
-            LOGW("No API key found!\n\nNextzen data sources require an API key. "
-                 "Sign up for a key at https://developers.nextzen.org/about.html and then set it from the command line "
-                 "with: "
-                 "\n\n\texport NEXTZEN_API_KEY=YOUR_KEY_HERE"
-                 "\n\nOr, if using an IDE on macOS, with: "
-                 "\n\n\tlaunchctl setenv NEXTZEN_API_KEY YOUR_API_KEY\n");
-        }
-
-        const char* apiKeyScenePath = "global.sdk_api_key";
-
-        if (!api_key_.empty()) { sceneUpdates.push_back(SceneUpdate(apiKeyScenePath, api_key_)); }
-
         createBuffers();
 
         const auto api_update = updateApiKey();
         if (!api_update.value.empty()) { sceneUpdates.push_back(api_update); }
-        
+
+#if 0
         scene_file_ = "scene.yaml";
         {
             Url baseUrl("file:///");
@@ -105,12 +91,11 @@ private:
             scene_file_ = sceneUrl.string();
             LOG("Scene URL: %s", scene_file_.c_str());
         }
-
-        setSceneFile("file://D:/dev/tangram-test/build/scene.yaml");
-
+#endif
         map_ = std::make_unique<Tangram::Map>(
             std::make_unique<PlatformMagnum>(maxActiveTasks, connectionTimeoutMs, requestTimeoutMs));
         map_->setupGL();
+        need_scene_reload_ = true;
     }
 
     void setSceneFile(const std::string& scene_file) {
@@ -169,13 +154,14 @@ private:
 
     SceneUpdate updateApiKey(bool apply_update = false) {
         char* api_key_env_var = std::getenv(env_name_.c_str());
+        std::string api_key = "";
         if (api_key_env_var && strlen(api_key_env_var) > 0) {
-            api_key_ = api_key_env_var;
+            api_key = api_key_env_var;
         } else {
             LOGW("No API key found!\n\n");
         }
-        if (!api_key_.empty()) {
-            const SceneUpdate update{scene_env_key_, api_key_};
+        if (!api_key.empty()) {
+            const SceneUpdate update{scene_env_key_, api_key};
 
             if (apply_update) {
                 std::unique_lock l{scene_update_mtx_};
@@ -192,7 +178,6 @@ private:
 
 private:
     friend MagnumTexture;
-    std::string api_key_;
     std::string env_name_;
     std::string scene_env_key_;
     std::string scene_yaml_;
@@ -214,11 +199,14 @@ private:
 };
 
 
-MagnumTexture::MagnumTexture(uint32_t maxActiveTasks, uint32_t connectionTimeoutMs, uint32_t requestTimeoutMs)
-    : impl_{new Impl{maxActiveTasks, connectionTimeoutMs, requestTimeoutMs}} {}
+MagnumTexture::MagnumTexture(const std::string& scene_file, const std::string& api_env_name,
+                             const std::string& api_env_scene_key, uint32_t maxActiveTasks,
+                             uint32_t connectionTimeoutMs, uint32_t requestTimeoutMs)
+    : impl_{new Impl{scene_file, api_env_name, api_env_scene_key, maxActiveTasks, connectionTimeoutMs,
+                     requestTimeoutMs}} {}
 
 void MagnumTexture::render(const double time) {
-    impl_->loadSceneFile(false, false);
+    impl_->loadSceneFile(true, false);
 
     auto& platform = static_cast<PlatformMagnum&>(impl_->map_->getPlatform());
     if (platform.isDirty()) {
