@@ -7,6 +7,7 @@ find_package(miniz CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(double-conversion CONFIG REQUIRED)
 if (TANGRAM_MBTILES_DATASOURCE)
   ## SQLiteCpp ##
   ###############
@@ -237,7 +238,7 @@ target_link_libraries(tangram-core
   yaml-cpp
   alfons
   hashlib
-  double-conversion
+  double-conversion::double-conversion
   miniz::miniz
   #ZLIB::ZLIB
 )
