@@ -15,12 +15,12 @@ public:
                            uint32_t requestTimeoutMs = 30000);
     Magnum::GL::Texture2D& texture();
     void render(const double time);
+    void setApiKeyFromEnv(const std::string& env_name, const std::string& scene_key);
+    void updateApiKey();
+
+    void setSceneFile(const std::string& scene_file);
 
     ~MagnumTexture();
-
-private:
-    void loadSceneFile(bool setPosition = false, const std::vector<SceneUpdate>& updates = {});
-
 private:
     class Impl;
     Impl* impl_;

@@ -10,10 +10,10 @@
 #include <Magnum/GL/Renderbuffer.h>
 #include <Magnum/GL/RenderbufferFormat.h>
 #include <Magnum/GL/TextureFormat.h>
-#include <dirent.h>
+#include <cstdarg>
+#include <cstdio>
 #include <filesystem>
-#include <stdarg.h>
-#include <stdio.h>
+#include <mutex>
 namespace Tangram {
 
 void setContext(Magnum::GL::Context& ctx) {
@@ -71,9 +71,10 @@ public:
 
 private:
     void create(uint32_t maxActiveTasks, uint32_t connectionTimeoutMs, uint32_t requestTimeoutMs) {
-        char* nextzenApiKeyEnvVar = getenv("NEXTZEN_API_KEY");
+
+        char* nextzenApiKeyEnvVar = std::getenv("NEXTZEN_API_KEY");
         if (nextzenApiKeyEnvVar && strlen(nextzenApiKeyEnvVar) > 0) {
-            apiKey = nextzenApiKeyEnvVar;
+            api_key_ = nextzenApiKeyEnvVar;
         } else {
             LOGW("No API key found!\n\nNextzen data sources require an API key. "
                  "Sign up for a key at https://developers.nextzen.org/about.html and then set it from the command line "
@@ -85,11 +86,14 @@ private:
 
         const char* apiKeyScenePath = "global.sdk_api_key";
 
-        if (!apiKey.empty()) { sceneUpdates.push_back(SceneUpdate(apiKeyScenePath, apiKey)); }
+        if (!api_key_.empty()) { sceneUpdates.push_back(SceneUpdate(apiKeyScenePath, api_key_)); }
 
         createBuffers();
 
-        sceneFile = "scene.yaml";
+        const auto api_update = updateApiKey();
+        if (!api_update.value.empty()) { sceneUpdates.push_back(api_update); }
+        
+        scene_file_ = "scene.yaml";
         {
             Url baseUrl("file:///");
             LOG("curr URL: %s", std::filesystem::current_path().generic_string().c_str());
@@ -97,20 +101,20 @@ private:
 
             LOG("Base URL: %s", baseUrl.string().c_str());
 
-            Url sceneUrl = baseUrl.resolve(Url(sceneFile));
-            sceneFile = sceneUrl.string();
-            LOG("Scene URL: %s", sceneFile.c_str());
+            Url sceneUrl = baseUrl.resolve(Url(scene_file_));
+            scene_file_ = sceneUrl.string();
+            LOG("Scene URL: %s", scene_file_.c_str());
         }
 
-        sceneFile = "file://D:/dev/tangram-test/build/scene.yaml";
-
+        setSceneFile("file://D:/dev/tangram-test/build/scene.yaml");
 
         map_ = std::make_unique<Tangram::Map>(
             std::make_unique<PlatformMagnum>(maxActiveTasks, connectionTimeoutMs, requestTimeoutMs));
-
-
         map_->setupGL();
+    }
 
+    void setSceneFile(const std::string& scene_file) {
+        scene_file_ = scene_file;
         need_scene_reload_ = true;
     }
 
@@ -128,13 +132,74 @@ private:
         framebuffer_.attachRenderbuffer(GL::Framebuffer::ColorAttachment{0}, color_);
         framebuffer_.attachRenderbuffer(GL::Framebuffer::BufferAttachment::DepthStencil, depth_stencil_);
     }
+    void loadSceneFile(bool setPosition = false, bool load_async = false) {
+        {
+            std::unique_lock l{scene_update_mtx_};
+            for (auto& update : scene_updates_to_apply_) {
+                bool found = false;
+                for (auto& prev : sceneUpdates) {
+                    if (update.path == prev.path) {
+                        prev = update;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) { sceneUpdates.push_back(update); }
+            }
+            scene_updates_to_apply_.clear();
+        }
+
+        if (need_scene_reload_) {
+            need_scene_reload_ = false;
+            if (load_async) {
+                if (!scene_yaml_.empty()) {
+                    map_->loadSceneYamlAsync(scene_yaml_, scene_file_, setPosition, sceneUpdates);
+                } else {
+                    map_->loadSceneAsync(scene_file_, setPosition, sceneUpdates);
+                }
+            } else {
+                if (!scene_yaml_.empty()) {
+                    map_->loadSceneYaml(scene_yaml_, scene_file_, setPosition, sceneUpdates);
+                } else {
+                    map_->loadScene(scene_file_, setPosition, sceneUpdates);
+                }
+            }
+        }
+    }
+
+    SceneUpdate updateApiKey(bool apply_update = false) {
+        char* api_key_env_var = std::getenv(env_name_.c_str());
+        if (api_key_env_var && strlen(api_key_env_var) > 0) {
+            api_key_ = api_key_env_var;
+        } else {
+            LOGW("No API key found!\n\n");
+        }
+        if (!api_key_.empty()) {
+            const SceneUpdate update{scene_env_key_, api_key_};
+
+            if (apply_update) {
+                std::unique_lock l{scene_update_mtx_};
+                scene_updates_to_apply_.push_back(update);
+                need_scene_reload_ = true;
+            }
+
+            return update;
+        }
+        return SceneUpdate{};
+    }
+
+    void applySceneUpdates() {}
 
 private:
     friend MagnumTexture;
-    std::string apiKey;
-    std::string sceneYaml;
-    std::string sceneFile;
+    std::string api_key_;
+    std::string env_name_;
+    std::string scene_env_key_;
+    std::string scene_yaml_;
+    std::string scene_file_;
+    std::mutex scene_update_mtx_;
     std::vector<SceneUpdate> sceneUpdates;
+    std::vector<SceneUpdate> scene_updates_to_apply_;
     std::unique_ptr<Tangram::Map> map_;
     double last_time_;
     bool need_scene_reload_;
@@ -153,7 +218,7 @@ MagnumTexture::MagnumTexture(uint32_t maxActiveTasks, uint32_t connectionTimeout
     : impl_{new Impl{maxActiveTasks, connectionTimeoutMs, requestTimeoutMs}} {}
 
 void MagnumTexture::render(const double time) {
-    loadSceneFile();
+    impl_->loadSceneFile(false, false);
 
     auto& platform = static_cast<PlatformMagnum&>(impl_->map_->getPlatform());
     if (platform.isDirty()) {
@@ -180,42 +245,14 @@ void MagnumTexture::render(const double time) {
     }
 }
 
-Magnum::GL::Texture2D& MagnumTexture::texture() { return impl_->render_texture_; }
-
-
-void MagnumTexture::loadSceneFile(bool setPosition, const std::vector<SceneUpdate>& updates) {
-    for (auto& update : updates) {
-        bool found = false;
-        for (auto& prev : impl_->sceneUpdates) {
-            if (update.path == prev.path) {
-                prev = update;
-                found = true;
-                break;
-            }
-        }
-        if (!found) { impl_->sceneUpdates.push_back(update); }
-    }
-
-    if (impl_->need_scene_reload_) {
-        impl_->need_scene_reload_ = false;
-        bool load_async = false;
-        bool setPosition = true;
-        if (load_async) {
-            if (!impl_->sceneYaml.empty()) {
-                impl_->map_->loadSceneYamlAsync(impl_->sceneYaml, impl_->sceneFile, setPosition, impl_->sceneUpdates);
-            } else {
-                impl_->map_->loadSceneAsync(impl_->sceneFile, setPosition, impl_->sceneUpdates);
-            }
-        } else {
-            if (!impl_->sceneYaml.empty()) {
-                impl_->map_->loadSceneYaml(impl_->sceneYaml, impl_->sceneFile, setPosition, impl_->sceneUpdates);
-            } else {
-                impl_->map_->loadScene(impl_->sceneFile, setPosition, impl_->sceneUpdates);
-            }
-        }
-    }
+void MagnumTexture::setApiKeyFromEnv(const std::string& env_name, const std::string& scene_key) {
+    impl_->env_name_ = env_name;
+    impl_->scene_env_key_ = scene_key;
 }
 
+void MagnumTexture::updateApiKey() { impl_->updateApiKey(true); }
+void MagnumTexture::setSceneFile(const std::string& scene_file) { impl_->setSceneFile(scene_file); }
+Magnum::GL::Texture2D& MagnumTexture::texture() { return impl_->render_texture_; }
 MagnumTexture::~MagnumTexture() { delete impl_; }
 
 } // namespace Tangram
