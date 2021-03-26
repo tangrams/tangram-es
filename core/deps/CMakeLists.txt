@@ -5,25 +5,39 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wno-shorten-64-to-32)
 endif()
 
+## hash-library ##
+##########################
 add_subdirectory(hash-library)
 
+## sdf ##
+##########################
 add_library(sdf INTERFACE)
 target_include_directories(sdf INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/sdf)
+
+## pbf ##
+##########################
 add_library(pbf INTERFACE)
 target_include_directories(pbf INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+
+## earcut ##
+##########################
 add_library(earcut INTERFACE)
 target_include_directories(earcut INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/earcut/include)
+
+## isect2d ##
+##########################
 add_library(isect2d INTERFACE)
 target_include_directories(isect2d INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/isect2d/include)
 
 ## css-color-parser-cpp ##
 ##########################
 add_library(css-color-parser-cpp css-color-parser-cpp/csscolorparser.cpp)
-
 set_target_properties(css-color-parser-cpp PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED ON)
-
 target_include_directories(css-color-parser-cpp PUBLIC css-color-parser-cpp)
 
+## double-conversion ##
+##########################
+add_subdirectory(double-conversion)
 
 
 
@@ -36,18 +50,9 @@ if(NOT TANGRAM_USE_SYSTEM_FONT_LIBS)
     harfbuzz::harfbuzz
     CACHE INTERNAL "alfons-libs" FORCE)
 endif()
-
-## alfons ##
-############
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
 target_compile_definitions(alfons PRIVATE GLM_FORCE_CTOR_INIT)
 
-
-
-
-## double-conversion ##
-#######################
-add_subdirectory(double-conversion)
 
 
 ## Prebuild JavascriptCore ##
