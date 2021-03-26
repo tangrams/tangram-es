@@ -4,6 +4,7 @@
     "dependencies": [
         "glm",
         "duktape",
+        "double-conversion",
         "yaml-cpp",
         "mapbox-variant",
         "glfw3",
