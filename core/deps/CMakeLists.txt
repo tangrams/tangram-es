@@ -35,11 +35,6 @@ add_library(css-color-parser-cpp css-color-parser-cpp/csscolorparser.cpp)
 set_target_properties(css-color-parser-cpp PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED ON)
 target_include_directories(css-color-parser-cpp PUBLIC css-color-parser-cpp)
 
-## double-conversion ##
-##########################
-add_subdirectory(double-conversion)
-
-
 
 if(NOT TANGRAM_USE_SYSTEM_FONT_LIBS)
   ## Harfbuzz - ICU-Common - Freetype2 ##
