@@ -63,17 +63,18 @@ void PlatformMagnum::setDirty(bool dirty) { needs_render_ = dirty; }
 
 class MagnumTexture::Impl {
 public:
-    Impl(const std::string& scene_file, const std::string& api_env_name, const std::string& api_env_scene_key,
-         uint32_t maxActiveTasks, uint32_t connectionTimeoutMs, uint32_t requestTimeoutMs)
-        : msaa_level_{4}, scene_size_{500, 500}, framebuffer_{{{}, scene_size_}}, renderbuffer_{{{}, scene_size_}},
-          need_scene_reload_{false}, env_name_{api_env_name}, scene_env_key_{api_env_scene_key} {
+    Impl(const int width, const int height, const std::string& scene_file, const std::string& api_env_name,
+         const std::string& api_env_scene_key, uint32_t maxActiveTasks, uint32_t connectionTimeoutMs,
+         uint32_t requestTimeoutMs)
+        : msaa_level_{1}, scene_size_{width, height}, framebuffer_{{{}, scene_size_}}, renderbuffer_{{{}, scene_size_}},
+          need_scene_reload_{false}, env_name_{api_env_name}, scene_env_key_{api_env_scene_key}, is_panning_{false} {
         setSceneFile(scene_file);
+        createBuffers();
         create(maxActiveTasks, connectionTimeoutMs, requestTimeoutMs);
     }
 
 private:
     void create(uint32_t maxActiveTasks, uint32_t connectionTimeoutMs, uint32_t requestTimeoutMs) {
-        createBuffers();
 
         const auto api_update = updateApiKey();
         if (!api_update.value.empty()) { sceneUpdates.push_back(api_update); }
@@ -95,12 +96,40 @@ private:
         map_ = std::make_unique<Tangram::Map>(
             std::make_unique<PlatformMagnum>(maxActiveTasks, connectionTimeoutMs, requestTimeoutMs));
         map_->setupGL();
+
+        map_->resize(scene_size_.x(), scene_size_.y());
+
+
+#if 0
+        auto id = map_->markerAdd();
+        if (id > 0) {
+            LOG("add marker");
+            map_->markerSetStylingFromPath(id, "layers.pick-result.draw.pick-marker");
+            map_->markerSetPoint(id, LngLat{-40.8481358, -33.6079875});
+
+
+            CameraPosition pos{};
+            pos.latitude = -33.6079875;
+            pos.longitude = -40.8481358;
+            pos.zoom = 16;
+            map_->setCameraPositionEased(pos, 10000);
+        }
+#endif
+
         need_scene_reload_ = true;
     }
 
     void setSceneFile(const std::string& scene_file) {
         scene_file_ = scene_file;
         need_scene_reload_ = true;
+    }
+
+    void setSzeneSize(const int width, const int height, bool force = false) {
+        if (force || (width != scene_size_.x() || height != scene_size_.y())) {
+            scene_size_ = Magnum::Vector2i{width, height};
+            createBuffers();
+            if (map_) { map_->resize(width, height); }
+        }
     }
 
     void createBuffers() {
@@ -176,6 +205,23 @@ private:
 
     void applySceneUpdates() {}
 
+    void handleStartPan(const double x, const double y) {
+        last_click_x_ = x;
+        last_click_y_ = y;
+        is_panning_ = true;
+        LOG("drag start");
+    }
+    void handlePan(const double x, const double y) {
+        if (!is_panning_) return;
+
+        LOG("drag %f %f %f %f", last_click_x_, last_click_y_, x, y);
+        map_->handlePanGesture(last_click_x_, last_click_y_, x, y);
+
+        last_click_x_ = x;
+        last_click_y_ = y;
+    }
+    void handlePanEnd() { is_panning_ = false; }
+
 private:
     friend MagnumTexture;
     std::string env_name_;
@@ -196,13 +242,17 @@ private:
     Magnum::GL::Renderbuffer color_;
     Magnum::GL::Renderbuffer depth_stencil_;
     Magnum::GL::Texture2D render_texture_;
+
+    bool is_panning_;
+    double last_click_x_;
+    double last_click_y_;
 };
 
 
-MagnumTexture::MagnumTexture(const std::string& scene_file, const std::string& api_env_name,
-                             const std::string& api_env_scene_key, uint32_t maxActiveTasks,
-                             uint32_t connectionTimeoutMs, uint32_t requestTimeoutMs)
-    : impl_{new Impl{scene_file, api_env_name, api_env_scene_key, maxActiveTasks, connectionTimeoutMs,
+MagnumTexture::MagnumTexture(const int width, const int height, const std::string& scene_file,
+                             const std::string& api_env_name, const std::string& api_env_scene_key,
+                             uint32_t maxActiveTasks, uint32_t connectionTimeoutMs, uint32_t requestTimeoutMs)
+    : impl_{new Impl{width, height, scene_file, api_env_name, api_env_scene_key, maxActiveTasks, connectionTimeoutMs,
                      requestTimeoutMs}} {}
 
 void MagnumTexture::render(const double time) {
@@ -210,11 +260,10 @@ void MagnumTexture::render(const double time) {
 
     auto& platform = static_cast<PlatformMagnum&>(impl_->map_->getPlatform());
     if (platform.isDirty()) {
-
-
         platform.setDirty(false);
         const double delta = time - impl_->last_time_;
         impl_->last_time_ = time;
+
 
         MapState state = impl_->map_->update(static_cast<float>(delta));
 
@@ -238,9 +287,17 @@ void MagnumTexture::setApiKeyFromEnv(const std::string& env_name, const std::str
     impl_->scene_env_key_ = scene_key;
 }
 
+void MagnumTexture::resizeScene(const int width, const int height) { impl_->setSzeneSize(width, height); }
+void MagnumTexture::handleClick(const double x, const double y) {}
+void MagnumTexture::handleDoubleClick(const double x, const double y) {}
+void MagnumTexture::handleStartDrag(const double x, const double y) { impl_->handleStartPan(x, y); }
+void MagnumTexture::handleDrag(const double x, const double y) { impl_->handlePan(x, y); }
+void MagnumTexture::handleEndDrag() { impl_->handlePanEnd(); }
+
 void MagnumTexture::updateApiKey() { impl_->updateApiKey(true); }
 void MagnumTexture::setSceneFile(const std::string& scene_file) { impl_->setSceneFile(scene_file); }
 Magnum::GL::Texture2D& MagnumTexture::texture() { return impl_->render_texture_; }
+std::pair<int, int> MagnumTexture::getSize() const { return {impl_->scene_size_.x(), impl_->scene_size_.y()}; }
 MagnumTexture::~MagnumTexture() { delete impl_; }
 
 } // namespace Tangram
