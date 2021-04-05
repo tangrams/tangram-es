@@ -41,11 +41,17 @@ void Style::build(const Scene& _scene) {
     constructVertexLayout();
     constructShaderProgram();
 
-    if (m_blend == Blending::inlay) {
-        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_BLEND_INLAY\n", false);
-    } else if (m_blend == Blending::overlay) {
-        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_BLEND_OVERLAY\n", false);
+    const char* blendingDefine = "";
+    switch (m_blend) {
+    case Blending::opaque: blendingDefine = "#define TANGRAM_BLEND_OPAQUE\n"; break;
+    case Blending::add: blendingDefine = "#define TANGRAM_BLEND_ADD\n"; break;
+    case Blending::multiply: blendingDefine = "#define TANGRAM_BLEND_MULTIPLY\n"; break;
+    case Blending::inlay: blendingDefine = "#define TANGRAM_BLEND_INLAY\n"; break;
+    case Blending::translucent: blendingDefine = "#define TANGRAM_BLEND_TRANSLUCENT\n"; break;
+    case Blending::overlay: blendingDefine = "#define TANGRAM_BLEND_OVERLAY\n"; break;
     }
+
+    m_shaderSource->addSourceBlock("defines", blendingDefine, false);
 
     if (m_material.material) {
         m_material.uniforms = m_material.material->injectOnProgram(*m_shaderSource);
