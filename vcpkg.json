@@ -14,8 +14,8 @@
         "benchmark",
         "mapbox-geometry",
         "mapbox-polylabel",
-        "geojson-cpp",
-        "geojson-vt-cpp",
+        "mapbox-geojson-cpp",
+        "mapbox-geojson-vt-cpp",
         {
             "name": "magnum",
             "features": [
