@@ -3,6 +3,13 @@
     "version-string": "0.1.0",
     "dependencies": [
         "glm",
+        {
+            "name":"curl",
+            "features":[
+                "ssl",
+                "http2"
+            ]
+        },
         "duktape",
         "double-conversion",
         "yaml-cpp",
