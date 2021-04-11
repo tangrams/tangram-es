@@ -114,7 +114,7 @@ jobs:
       - save_cache:
           key: ios-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
-            - ~/.ccache
+            - ~/Library/Caches/ccache
   build-deploy-ios:
     executor: macos-executor
     steps:
@@ -157,7 +157,7 @@ jobs:
       - save_cache:
           key: ios-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
-            - ~/.ccache
+            - ~/Library/Caches/ccache
   build-macos:
     executor: macos-executor
     steps:
