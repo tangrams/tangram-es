@@ -99,11 +99,22 @@ jobs:
       - checkout
       - run: git submodule update --init
       # Install dependencies.
-      - run: brew install cmake
+      - run: brew install cmake ccache
+      - restore_cache:
+          keys:
+            - ios-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+            - ios-ccache-v1-{{ .Branch }}
+            - ios-ccache-v1
+      - run: ccache --zero-stats
       # Build test app variants. Use simulator target to bypass codesigning.
-      - run: make ios-sim BUILD_TYPE=Debug
-      - run: make ios-static-sim BUILD_TYPE=Debug
-      - run: make ios-swift-sim BUILD_TYPE=Debug
+      - run: make ios-sim BUILD_TYPE=Debug CMAKE_OPTIONS="-DTANGRAM_XCODE_USE_CCACHE=1"
+      - run: make ios-static-sim BUILD_TYPE=Debug CMAKE_OPTIONS="-DTANGRAM_XCODE_USE_CCACHE=1"
+      - run: make ios-swift-sim BUILD_TYPE=Debug CMAKE_OPTIONS="-DTANGRAM_XCODE_USE_CCACHE=1"
+      - run: ccache --show-stats
+      - save_cache:
+          key: ios-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - ~/Library/Caches/ccache
   build-deploy-ios:
     executor: macos-executor
     steps:
@@ -112,9 +123,15 @@ jobs:
       - run: git submodule update --init
       # Install dependencies.
       - run: sudo gem install jazzy --no-document --version 0.10.0
-      - run: brew install cmake
+      - run: brew install cmake ccache
+      - restore_cache:
+          keys:
+            - ios-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+            - ios-release-ccache-v1-{{ .Branch }}
+            - ios-release-ccache-v1
+      - run: ccache --zero-stats
       # Build the framework and package it into pod.zip.
-      - run: make ios-xcframework BUILD_TYPE=Release
+      - run: make ios-xcframework BUILD_TYPE=Release CMAKE_OPTIONS="-DTANGRAM_XCODE_USE_CCACHE=1"
       # Check that bitcode is included for required archs.
       - run: source scripts/check_bitcode.sh build/ios/Release/TangramMap.xcframework/ios-arm64_armv7/TangramMap.framework/TangramMap arm64 armv7
       # Build the docs and package them into docs.zip.
@@ -136,6 +153,11 @@ jobs:
             - run: brew install gh
             - run: mv ~/pod.zip ~/tangram-ios-<< pipeline.git.tag >>.zip
             - run: gh release upload << pipeline.git.tag >> ~/tangram-ios-<< pipeline.git.tag >>.zip
+      - run: ccache --show-stats
+      - save_cache:
+          key: ios-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - ~/Library/Caches/ccache
   build-macos:
     executor: macos-executor
     steps:
