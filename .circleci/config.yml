@@ -14,6 +14,7 @@ executors:
       HOMEBREW_NO_AUTO_UPDATE: 1
       HOMEBREW_NO_INSTALL_CLEANUP: 1
       CCACHE_MAXSIZE: 400M
+      CCACHE_DEBUG: 1
 jobs:
   build-test-linux:
     docker:
@@ -115,6 +116,8 @@ jobs:
           key: ios-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/.ccache
+      - store_artifacts:
+          path: ./build/ios/core/tangram.build
   build-deploy-ios:
     executor: macos-executor
     steps:
