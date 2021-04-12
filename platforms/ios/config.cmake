@@ -12,6 +12,20 @@ execute_process(COMMAND xcrun --sdk iphoneos --show-sdk-version OUTPUT_VARIABLE 
 # Set 'marker' for other configs to make debug builds install-able on devices.
 set(CMAKE_XCODE_ATTRIBUTE_BITCODE_GENERATION_MODE "$<IF:$<CONFIG:Release>,bitcode,marker>")
 
+if(TANGRAM_XCODE_USE_CCACHE)
+  # Following technique described here: https://crascit.com/2016/04/09/using-ccache-with-cmake/
+  find_program(CCACHE_PROGRAM ccache REQUIRED)
+  # Set up wrapper scripts.
+  configure_file("${PROJECT_SOURCE_DIR}/platforms/ios/xcode-ccache-c.in" ccache-c)
+  configure_file("${PROJECT_SOURCE_DIR}/platforms/ios/xcode-ccache-cxx.in" ccache-cxx)
+  execute_process(COMMAND chmod a+rx "${CMAKE_BINARY_DIR}/ccache-c" "${CMAKE_BINARY_DIR}/ccache-cxx")
+  # Set Xcode project attributes to route compilation and linking through our scripts.
+  set(CMAKE_XCODE_ATTRIBUTE_CC "${CMAKE_BINARY_DIR}/ccache-c")
+  set(CMAKE_XCODE_ATTRIBUTE_CXX "${CMAKE_BINARY_DIR}/ccache-cxx")
+  set(CMAKE_XCODE_ATTRIBUTE_LD "${CMAKE_BINARY_DIR}/ccache-c")
+  set(CMAKE_XCODE_ATTRIBUTE_LDPLUSPLUS "${CMAKE_BINARY_DIR}/ccache-cxx")
+endif()
+
 # Copy necessary workspace settings into a user-specific location in the iOS workspace.
 # See platforms/ios/DEVELOPING.md for details.
 configure_file(
