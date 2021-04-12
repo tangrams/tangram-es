@@ -13,6 +13,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <filesystem>
+#include <iostream>
 #include <mutex>
 namespace Tangram {
 
@@ -66,7 +67,7 @@ public:
     Impl(const int width, const int height, const std::string& scene_file, const std::string& api_env_name,
          const std::string& api_env_scene_key, uint32_t maxActiveTasks, uint32_t connectionTimeoutMs,
          uint32_t requestTimeoutMs)
-        : msaa_level_{1}, scene_size_{width, height}, framebuffer_{{{}, scene_size_}}, renderbuffer_{{{}, scene_size_}},
+        : msaa_level_{4}, scene_size_{width, height}, framebuffer_{{{}, scene_size_}}, renderbuffer_{{{}, scene_size_}},
           need_scene_reload_{false}, env_name_{api_env_name}, scene_env_key_{api_env_scene_key}, is_panning_{false} {
         setSceneFile(scene_file);
         createBuffers();
@@ -95,7 +96,9 @@ private:
 #endif
         map_ = std::make_unique<Tangram::Map>(
             std::make_unique<PlatformMagnum>(maxActiveTasks, connectionTimeoutMs, requestTimeoutMs));
+        Magnum::GL::Context::current().resetState(Magnum::GL::Context::State::EnterExternal);
         map_->setupGL();
+        Magnum::GL::Context::current().resetState(Magnum::GL::Context::State::ExitExternal);
 
         map_->resize(scene_size_.x(), scene_size_.y());
 
@@ -203,8 +206,6 @@ private:
         return SceneUpdate{};
     }
 
-    void applySceneUpdates() {}
-
     void handleStartPan(const double x, const double y) {
         last_click_x_ = x;
         last_click_y_ = y;
@@ -298,6 +299,11 @@ void MagnumTexture::updateApiKey() { impl_->updateApiKey(true); }
 void MagnumTexture::setSceneFile(const std::string& scene_file) { impl_->setSceneFile(scene_file); }
 Magnum::GL::Texture2D& MagnumTexture::texture() { return impl_->render_texture_; }
 std::pair<int, int> MagnumTexture::getSize() const { return {impl_->scene_size_.x(), impl_->scene_size_.y()}; }
+void MagnumTexture::zoomDelta(float factor) {
+    impl_->map_->setZoom(static_cast<int>(impl_->map_->getZoom() + factor));
+    // impl_->map_->setZoom(14.f);
+    impl_->map_->setPosition(8.800900262, 53.080924466);
+}
 MagnumTexture::~MagnumTexture() { delete impl_; }
 
 } // namespace Tangram

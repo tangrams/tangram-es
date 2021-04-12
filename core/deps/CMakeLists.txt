@@ -46,7 +46,7 @@ if(NOT TANGRAM_USE_SYSTEM_FONT_LIBS)
     CACHE INTERNAL "alfons-libs" FORCE)
 endif()
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
-target_compile_definitions(alfons PRIVATE GLM_FORCE_CTOR_INIT)
+#target_compile_definitions(alfons PRIVATE GLM_FORCE_CTOR_INIT)
 
 
 

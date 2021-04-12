@@ -30,6 +30,7 @@ public:
     void handleStartDrag(const double x, const double y);
     void handleDrag(const double x, const double y);
     void handleEndDrag();
+    void zoomDelta(float factor);
 
 
     ~MagnumTexture();
