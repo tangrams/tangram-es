@@ -26,7 +26,7 @@
 
 constexpr float extrusion_scale = 4096.0f;
 constexpr float position_scale = 8192.0f;
-constexpr float texture_scale = 8192.0f;
+constexpr float texture_scale = 2048.0f;
 constexpr float order_scale = 2.0f;
 constexpr float dash_scale = 20.f;
 
