@@ -7,8 +7,7 @@ executors:
       GRADLE_OPTS: -Xmx2048m
       CCACHE_MAXSIZE: 400M
       CCACHE_COMPILERCHECK: content # Default timestamp check fails because NDK compiler is installed for each job.
-      NDK_VERSION: 20.0.5594570 # Use pre-installed NDK version, according to CircleCI dockerfile (https://github.com/CircleCI-Public/circleci-dockerfiles/tree/master/android/images)
-      BUILD_TOOLS_VERSION: 30.0.2
+      # The CircleCI android-ndk images export ANDROID_NDK_HOME with the location of the pre-installed NDK (https://github.com/CircleCI-Public/circleci-dockerfiles/tree/master/android/images).
   macos-executor:
     macos:
       xcode: "12.2.0"
@@ -64,8 +63,7 @@ jobs:
       - run: ccache --zero-stats
       - run: |
           cd platforms/android && ./gradlew demo:assembleDebug \
-          -Pandroid.ndkVersion=$NDK_VERSION \
-          -Pandroid.buildToolsVersion=$BUILD_TOOLS_VERSION \
+          -Pandroid.ndkPath=$ANDROID_NDK_HOME \
           -Ptangram.abis=arm64-v8a \
           -Ptangram.ccache=true
       - run: ccache --show-stats
@@ -90,8 +88,7 @@ jobs:
       # Build and upload snapshot.
       - run: |
           cd platforms/android && ./gradlew publish \
-          -Pandroid.ndkVersion=$NDK_VERSION \
-          -Pandroid.buildToolsVersion=$BUILD_TOOLS_VERSION \
+          -Pandroid.ndkPath=$ANDROID_NDK_HOME \
           -Psigning.keyId="$SIGNING_KEY_ID" \
           -Psigning.password="$SIGNING_PASSWORD" \
           -Psigning.secretKeyRingFile=secring.gpg \
