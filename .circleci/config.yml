@@ -61,6 +61,8 @@ jobs:
             - android-ccache-v3-{{ .Branch }}
             - android-ccache-v3
       - run: ccache --zero-stats
+      # Tell gradle to use pre-installed NDK. This setting is deprecated, but android.ndkPath is ignored for some reason.
+      - run: echo "ndk.dir=$ANDROID_NDK_HOME" > platforms/android/local.properties
       - run: |
           cd platforms/android && ./gradlew demo:assembleDebug \
           -Ptangram.abis=arm64-v8a \
@@ -82,6 +84,8 @@ jobs:
             - android-release-ccache-v1-{{ .Branch }}
             - android-release-ccache-v1
       - run: ccache --zero-stats
+      # Tell gradle to use pre-installed NDK. This setting is deprecated, but android.ndkPath is ignored for some reason.
+      - run: echo "ndk.dir=$ANDROID_NDK_HOME" > platforms/android/local.properties
       # Configure publishing credentials.
       - run: echo "$SIGNING_SECRET_KEYRING_BASE64" | base64 --decode > platforms/android/tangram/secring.gpg
       # Build and upload snapshot.
