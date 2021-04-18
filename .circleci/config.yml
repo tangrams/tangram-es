@@ -63,7 +63,6 @@ jobs:
       - run: ccache --zero-stats
       - run: |
           cd platforms/android && ./gradlew demo:assembleDebug \
-          -Pandroid.ndkPath="$ANDROID_NDK_HOME" \
           -Ptangram.abis=arm64-v8a \
           -Ptangram.ccache=true
       - run: ccache --show-stats
@@ -88,7 +87,6 @@ jobs:
       # Build and upload snapshot.
       - run: |
           cd platforms/android && ./gradlew publish \
-          -Pandroid.ndkPath="$ANDROID_NDK_HOME" \
           -Psigning.keyId="$SIGNING_KEY_ID" \
           -Psigning.password="$SIGNING_PASSWORD" \
           -Psigning.secretKeyRingFile=secring.gpg \
