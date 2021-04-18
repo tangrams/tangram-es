@@ -7,6 +7,7 @@ apply from: 'versioning.gradle'
 
 android {
   compileSdkVersion 30
+  ndkVersion '20.0.5594570'
 
   // Specific ABI targets can be chosen with the 'abis' property as a comma-separated list of ABIs.
   // From the command line, add '-Ptangram.abis=armeabi-v7a,x86,...' to only build those ABIs.
