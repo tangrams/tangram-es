@@ -56,9 +56,9 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y ccache
       - restore_cache:
           keys:
-            - android-ccache-v3-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-            - android-ccache-v3-{{ .Branch }}
-            - android-ccache-v3
+            - android-ccache-v4-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+            - android-ccache-v4-{{ .Branch }}
+            - android-ccache-v4
       - run: ccache --zero-stats
       # Tell gradle to use pre-installed NDK. This setting is deprecated, but android.ndkPath is ignored for some reason.
       - run: echo "ndk.dir=$ANDROID_NDK_HOME" > platforms/android/local.properties
@@ -68,7 +68,7 @@ jobs:
           -Ptangram.ccache=true
       - run: ccache --show-stats
       - save_cache:
-          key: android-ccache-v3-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          key: android-ccache-v4-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/.ccache
   build-deploy-android:
@@ -79,9 +79,9 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y ccache
       - restore_cache:
           keys:
-            - android-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-            - android-release-ccache-v1-{{ .Branch }}
-            - android-release-ccache-v1
+            - android-release-ccache-v2-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+            - android-release-ccache-v2-{{ .Branch }}
+            - android-release-ccache-v2
       - run: ccache --zero-stats
       # Tell gradle to use pre-installed NDK. This setting is deprecated, but android.ndkPath is ignored for some reason.
       - run: echo "ndk.dir=$ANDROID_NDK_HOME" > platforms/android/local.properties
@@ -96,7 +96,7 @@ jobs:
           -Ptangram.ccache=true
       - run: ccache --show-stats
       - save_cache:
-          key: android-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          key: android-release-ccache-v2-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/.ccache
   build-ios:
