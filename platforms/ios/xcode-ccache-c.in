@@ -1,0 +1,3 @@
+#!/bin/sh
+export CCACHE_CPP2=true
+exec "${CCACHE_PROGRAM}" "${CMAKE_C_COMPILER}" "$@"
