@@ -99,6 +99,8 @@ jobs:
           key: android-release-ccache-v2-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/.ccache
+      - store_artifacts:
+          path: platforms/android/tangram/build/outputs/aar/tangram-release.aar
   build-ios:
     executor: macos-executor
     steps:
