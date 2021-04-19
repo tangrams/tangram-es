@@ -1,6 +1,6 @@
 add_definitions(-DTANGRAM_IOS)
 
-set(TANGRAM_FRAMEWORK_VERSION "0.16.1-dev")
+set(TANGRAM_FRAMEWORK_VERSION "0.16.1")
 set(TANGRAM_BUNDLE_IDENTIFIER "com.mapzen.TangramMap")
 
 ### Configure iOS toolchain.
