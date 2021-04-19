@@ -2,11 +2,11 @@ version: 2.1
 executors:
   android-executor:
     docker:
-      - image: circleci/android:api-28-ndk
+      - image: circleci/android:api-30-ndk
     environment:
       GRADLE_OPTS: -Xmx2048m
       CCACHE_MAXSIZE: 400M
-      CCACHE_COMPILERCHECK: content # Default timestamp check fails because NDK compiler is installed for each job.
+      # The CircleCI android-ndk images export ANDROID_NDK_HOME with the location of the pre-installed NDK (https://github.com/CircleCI-Public/circleci-dockerfiles/tree/master/android/images).
   macos-executor:
     macos:
       xcode: "12.2.0"
@@ -56,14 +56,19 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y ccache
       - restore_cache:
           keys:
-            - android-ccache-v3-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-            - android-ccache-v3-{{ .Branch }}
-            - android-ccache-v3
+            - android-ccache-v4-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+            - android-ccache-v4-{{ .Branch }}
+            - android-ccache-v4
       - run: ccache --zero-stats
-      - run: cd platforms/android && ./gradlew demo:assembleDebug -Ptangram.abis=arm64-v8a -Ptangram.ccache=true
+      # Tell gradle to use pre-installed NDK. This setting is deprecated, but android.ndkPath is ignored for some reason.
+      - run: echo "ndk.dir=$ANDROID_NDK_HOME" > platforms/android/local.properties
+      - run: |
+          cd platforms/android && ./gradlew demo:assembleDebug \
+          -Ptangram.abis=arm64-v8a \
+          -Ptangram.ccache=true
       - run: ccache --show-stats
       - save_cache:
-          key: android-ccache-v3-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          key: android-ccache-v4-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/.ccache
   build-deploy-android:
@@ -74,10 +79,12 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y ccache
       - restore_cache:
           keys:
-            - android-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-            - android-release-ccache-v1-{{ .Branch }}
-            - android-release-ccache-v1
+            - android-release-ccache-v2-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+            - android-release-ccache-v2-{{ .Branch }}
+            - android-release-ccache-v2
       - run: ccache --zero-stats
+      # Tell gradle to use pre-installed NDK. This setting is deprecated, but android.ndkPath is ignored for some reason.
+      - run: echo "ndk.dir=$ANDROID_NDK_HOME" > platforms/android/local.properties
       # Configure publishing credentials.
       - run: echo "$SIGNING_SECRET_KEYRING_BASE64" | base64 --decode > platforms/android/tangram/secring.gpg
       # Build and upload snapshot.
@@ -89,7 +96,7 @@ jobs:
           -Ptangram.ccache=true
       - run: ccache --show-stats
       - save_cache:
-          key: android-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          key: android-release-ccache-v2-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/.ccache
   build-ios:
