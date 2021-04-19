@@ -99,6 +99,8 @@ jobs:
           key: android-release-ccache-v2-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/.ccache
+      - store_artifacts:
+          path: platforms/android/tangram/build/outputs/aar/tangram-release.aar
   build-ios:
     executor: macos-executor
     steps:
@@ -159,7 +161,7 @@ jobs:
             # Upload and publish the Cocoapods archive to GitHub. The download URL on GitHub uses the file name, labels have no effect.
             - run: brew install gh
             - run: mv ~/pod.zip ~/tangram-ios-<< pipeline.git.tag >>.zip
-            - run: gh release upload << pipeline.git.tag >> ~/tangram-ios-<< pipeline.git.tag >>.zip
+            - run: gh release create << pipeline.git.tag >> --draft ~/tangram-ios-<< pipeline.git.tag >>.zip
       - run: ccache --show-stats
       - save_cache:
           key: ios-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
