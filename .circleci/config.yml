@@ -6,7 +6,6 @@ executors:
     environment:
       GRADLE_OPTS: -Xmx2048m
       CCACHE_MAXSIZE: 400M
-      CCACHE_COMPILERCHECK: content # Default timestamp check fails because NDK compiler is installed for each job.
       # The CircleCI android-ndk images export ANDROID_NDK_HOME with the location of the pre-installed NDK (https://github.com/CircleCI-Public/circleci-dockerfiles/tree/master/android/images).
   macos-executor:
     macos:
