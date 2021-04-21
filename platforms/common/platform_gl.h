@@ -1,5 +1,7 @@
 #pragma once
 
+#include <MagnumExternal/OpenGL/GL/flextGL.h>
+
 #ifdef TANGRAM_ANDROID
 #include <GLES2/gl2platform.h>
 

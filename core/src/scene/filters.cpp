@@ -32,33 +32,33 @@ void Filter::print(int _indent) const {
 
     switch (data.which()) {
 
-    case Data::type<OperatorAny>::value: {
+    case Data::which<OperatorAny>(): {
         logMsg("%*s any\n", _indent, "");
         for (const auto& filt : data.get<OperatorAny>().operands) {
             filt.print(_indent + 2);
         }
         break;
     }
-    case Data::type<OperatorAll>::value: {
+    case Data::which<OperatorAll>(): {
         logMsg("%*s all\n", _indent, "");
         for (const auto& filt : data.get<OperatorAll>().operands) {
             filt.print(_indent + 2);
         }
         break;
     }
-    case Data::type<OperatorNone>::value: {
+    case Data::which<OperatorNone>(): {
         logMsg("%*s none\n", _indent, "");
         for (const auto& filt : data.get<OperatorNone>().operands) {
             filt.print(_indent + 2);
         }
         break;
     }
-    case Data::type<Existence>::value: {
+    case Data::which<Existence>(): {
         auto& f = data.get<Existence>();
         logMsg("%*s existence - key:%s\n", _indent, "", f.key.c_str());
         break;
     }
-    case Data::type<EqualitySet>::value: {
+    case Data::which<EqualitySet>(): {
         auto& f = data.get<EqualitySet>();
         if (f.values[0].is<std::string>()) {
             logMsg("%*s equality set - keyword:%d key:%s val:%s\n", _indent, "",
@@ -74,7 +74,7 @@ void Filter::print(int _indent) const {
         }
         break;
     }
-    case Data::type<Equality>::value: {
+    case Data::which<Equality>(): {
         auto& f = data.get<Equality>();
         if (f.value.is<std::string>()) {
             logMsg("%*s equality - keyword:%d key:%s val:%s\n", _indent, "",
@@ -90,14 +90,14 @@ void Filter::print(int _indent) const {
         }
         break;
     }
-    case Data::type<Range>::value: {
+    case Data::which<Range>(): {
         auto& f = data.get<Range>();
         logMsg("%*s range - keyword:%d key:%s min:%f max:%f\n", _indent, "",
                f.keyword != FilterKeyword::undefined,
                f.key.c_str(), f.min, f.max);
         return;
     }
-    case Data::type<Function>::value: {
+    case Data::which<Function>(): {
         logMsg("%*s function\n", _indent, "");
         break;
     }
@@ -113,33 +113,33 @@ int Filter::filterCost() const {
     int sum = 100;
 
     switch (data.which()) {
-    case Data::type<OperatorAny>::value:
+    case Data::which<OperatorAny>():
         for (auto& f : operands()) { sum += f.filterCost(); }
         return sum;
 
-    case Data::type<OperatorAll>::value:
+    case Data::which<OperatorAll>():
         for (auto& f : operands()) { sum += f.filterCost(); }
         return sum;
 
-    case Data::type<OperatorNone>::value:
+    case Data::which<OperatorNone>():
         for (auto& f : operands()) { sum += f.filterCost(); }
         return sum;
 
-    case Data::type<Existence>::value:
+    case Data::which<Existence>():
         // Equality and Range are more specific for increasing
         // the chance to fail early check them before Existence
         return 20;
 
-    case Data::type<EqualitySet>::value:
+    case Data::which<EqualitySet>():
         return data.get<EqualitySet>().keyword == FilterKeyword::undefined ? 10 : 1;
 
-    case Data::type<Equality>::value:
+    case Data::which<Equality>():
         return data.get<Equality>().keyword == FilterKeyword::undefined ? 10 : 1;
 
-    case Data::type<Filter::Range>::value:
+    case Data::which<Filter::Range>():
         return data.get<Range>().keyword == FilterKeyword::undefined ? 10 : 1;
 
-    case Data::type<Function>::value:
+    case Data::which<Function>():
         // Most expensive filter should be checked last
         return 1000;
     }
@@ -151,16 +151,16 @@ const std::string& Filter::key() const {
 
     switch (data.which()) {
 
-    case Data::type<Existence>::value:
+    case Data::which<Existence>():
         return data.get<Existence>().key;
 
-    case Data::type<EqualitySet>::value:
+    case Data::which<EqualitySet>():
         return data.get<EqualitySet>().key;
 
-    case Data::type<Equality>::value:
+    case Data::which<Equality>():
         return data.get<Equality>().key;
 
-    case Data::type<Filter::Range>::value:
+    case Data::which<Filter::Range>():
         return data.get<Range>().key;
 
     default:
@@ -173,13 +173,13 @@ const std::vector<Filter>& Filter::operands() const {
     static const std::vector<Filter> empty;
 
     switch (data.which()) {
-    case Data::type<OperatorAny>::value:
+    case Data::which<OperatorAny>():
         return data.get<OperatorAny>().operands;
 
-    case Data::type<OperatorAll>::value:
+    case Data::which<OperatorAll>():
         return data.get<OperatorAll>().operands;
 
-    case Data::type<OperatorNone>::value:
+    case Data::which<OperatorNone>():
         return data.get<OperatorNone>().operands;
 
     default:
@@ -191,13 +191,13 @@ const std::vector<Filter>& Filter::operands() const {
 bool Filter::isOperator() const {
 
     switch (data.which()) {
-    case Data::type<OperatorAny>::value:
+    case Data::which<OperatorAny>():
         return true;
 
-    case Data::type<OperatorAll>::value:
+    case Data::which<OperatorAll>():
         return true;
 
-    case Data::type<OperatorNone>::value:
+    case Data::which<OperatorNone>():
         return true;
 
     default:

@@ -2,7 +2,7 @@
 
 #include "platform.h"
 
-#include "yaml-cpp/yaml.h"
+#include <yaml-cpp/yaml.h>
 
 #include <atomic>
 #include <memory>

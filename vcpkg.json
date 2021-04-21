@@ -1,0 +1,53 @@
+{
+    "name": "tangram-es",
+    "version-string": "0.1.0",
+    "dependencies": [
+        "glm",
+        {
+            "name":"curl",
+            "features":[
+                "ssl",
+                "http2"
+            ]
+        },
+        "duktape",
+        "double-conversion",
+        "yaml-cpp",
+        "mapbox-variant",
+        "glfw3",
+        "rapidjson",
+        "stb",
+        "miniz",
+        "benchmark",
+        "mapbox-geometry",
+        "mapbox-polylabel",
+        "mapbox-geojson-cpp",
+        "mapbox-geojson-vt-cpp",
+        {
+            "name": "magnum",
+            "features": [
+                "sdl2application",
+                "gl"
+            ]
+        },
+        {
+            "name": "harfbuzz",
+            "features": [
+                "icu",
+                "graphite2"
+            ]
+        },
+        {
+            "name": "sqlitecpp",
+            "features": [
+                "sqlite"
+            ]
+        },
+        {
+            "name": "imgui",
+            "features": [
+                "docking-experimental"
+            ]
+        }
+    ]
+}

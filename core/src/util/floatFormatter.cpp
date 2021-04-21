@@ -1,6 +1,5 @@
 #include "util/floatFormatter.h"
-
-#include "double-conversion.h"
+#include <double-conversion/double-conversion.h>
 #include <cmath>
 
 namespace Tangram {

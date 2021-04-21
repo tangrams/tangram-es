@@ -1,6 +1,22 @@
 project(tangram-core)
 
-# Build core library dependencies.
+find_package (SQLite3)
+find_package(RapidJSON CONFIG REQUIRED)
+find_path(STB_INCLUDE_DIRS "stb.h")
+find_package(miniz CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(yaml-cpp CONFIG REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(double-conversion CONFIG REQUIRED)
+if (TANGRAM_MBTILES_DATASOURCE)
+  ## SQLiteCpp ##
+  ###############
+  find_package(SQLiteCpp CONFIG REQUIRED)
+endif()
+
+find_path(MAPBOX_VARIANT_INCLUDE_DIRS "mapbox/optional.hpp")
+find_path(GEOJSON_VT_CPP_INCLUDE_DIRS "mapbox/geojsonvt.hpp")
+find_path(GEOJSON_CPP_INCLUDE_DIRS "mapbox/geojson.hpp")
 add_subdirectory(deps)
 
 add_library(tangram-core
@@ -198,44 +214,39 @@ add_library(tangram-core
 # Include headers from core library and dependencies.
 target_include_directories(tangram-core
   PUBLIC
-  include/tangram
-  # TODO: These headers shouldn't be public, but Platform classes use them.
-  src
-  # TODO: This header shouldn't be public, but we use it in propertyItem.h
-  deps/variant/include
+    include/tangram
+    # TODO: These headers shouldn't be public, but Platform classes use them.
+    src
   PRIVATE
-  generated
-  deps
-  deps/earcut/include
-  deps/isect2d/include
-  deps/hash-library
-  deps/mapbox
-  deps/pbf
-  deps/rapidjson
-  deps/sdf
-  deps/SQLiteCpp
-  deps/stb
-  deps/miniz
-  deps/geojson-vt-cpp/geometry.hpp/include
-  deps/geojson-vt-cpp/geojson.hpp/include
-  deps/geojson-vt-cpp/include
-  deps/double-conversion/include
+    generated
+    deps/mapbox
+    ${MAPBOX_VARIANT_INCLUDE_DIRS}
+    ${RAPIDJSON_INCLUDE_DIRS}
+    ${GEOJSON_CPP_INCLUDE_DIRS}
+    ${GEOJSON_VT_CPP_INCLUDE_DIRS}
 )
 
 # Link core library dependencies.
 target_link_libraries(tangram-core
   PRIVATE
-  glm
+  sdf
+  pbf
+  earcut
+  isect2d
+  glm::glm
   css-color-parser-cpp
   yaml-cpp
   alfons
-  double-conversion
-  miniz
-  z
+  hashlib
+  double-conversion::double-conversion
+  miniz::miniz
+  #ZLIB::ZLIB
 )
+
 
 # Add JavaScript implementation.
 if(TANGRAM_JSCORE_ENABLED)
+  find_package(duktape CONFIG REQUIRED)
   target_sources(tangram-core PRIVATE src/js/JSCoreContext.cpp src/js/JSCoreContext.h)
   if (TANGRAM_USE_JSCORE_STATIC)
     target_link_libraries(tangram-core PRIVATE jscore-static)
@@ -245,13 +256,13 @@ if(TANGRAM_JSCORE_ENABLED)
   target_compile_definitions(tangram-core PRIVATE TANGRAM_USE_JSCORE=1)
 else()
   target_sources(tangram-core PRIVATE src/js/DuktapeContext.cpp src/js/DuktapeContext.h)
-  target_link_libraries(tangram-core PRIVATE duktape)
+  target_link_libraries(tangram-core PRIVATE ${DUKTAPE_LIBRARY})
 endif()
 
 # Add MBTiles implementation.
 if(TANGRAM_MBTILES_DATASOURCE)
   target_sources(tangram-core PRIVATE src/data/mbtilesDataSource.cpp)
-  target_link_libraries(tangram-core PRIVATE SQLiteCpp sqlite3)
+  target_link_libraries(tangram-core PRIVATE SQLiteCpp)
   target_compile_definitions(tangram-core PRIVATE TANGRAM_MBTILES_DATASOURCE=1)
 endif()
 
@@ -260,6 +271,7 @@ if(UNIX AND NOT APPLE)
   target_link_libraries(tangram-core PRIVATE dl)
 endif()
 
+target_compile_definitions(tangram-core PUBLIC _USE_MATH_DEFINES)
 if(TANGRAM_WARN_ON_RULE_CONFLICT)
   target_compile_definitions(tangram-core
     PRIVATE
@@ -277,7 +289,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # C++14 is required for compiling tangram-core and for using the interface headers.
-set_property(TARGET tangram-core PROPERTY CXX_STANDARD 14)
+set_property(TARGET tangram-core PROPERTY CXX_STANDARD 20)
 
 # We include GLSL shader sources into the library by generating header files with the source text
 # printed into a string constant. A CMake script generates one of these headers for each shader source
