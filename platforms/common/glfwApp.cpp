@@ -374,8 +374,8 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
         map->getPosition(current.longitude, current.latitude);
         auto pos = map->getCameraPosition();
         pos.zoom += 1.f;
-        pos.longitude = 0.5 * (tapped.longitude + current.longitude);
-        pos.latitude = 0.5 * (tapped.latitude + current.latitude);
+        pos.longitude = tapped.longitude;
+        pos.latitude = tapped.latitude;
 
         map->setCameraPositionEased(pos, duration, EaseType::quint);
     } else if ((time - last_time_pressed) < single_tap_time) {
@@ -724,6 +724,10 @@ void showViewportGUI() {
         }
         if (ImGui::SliderAngle("Rotation", &camera.rotation, 0.f, 360.f)) {
             map->setCameraPosition(camera);
+        }
+        EdgePadding padding = map->getPadding();
+        if (ImGui::InputInt4("Left/Top/Right/Bottom", &padding.left)) {
+            map->setPadding(padding);
         }
     }
 }

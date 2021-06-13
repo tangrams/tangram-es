@@ -101,10 +101,18 @@ struct EdgePadding {
     int right = 0;
     int bottom = 0;
 
-    EdgePadding() {}
+    EdgePadding() = default;
 
     EdgePadding(int left, int top, int right, int bottom)
         : left(left), top(top), right(right), bottom(bottom) {}
+
+    bool operator==(const EdgePadding& other) const {
+        return left == other.left && top == other.top && right == other.right && bottom == other.bottom;
+    }
+
+    bool operator!=(const EdgePadding& other) const {
+        return !(*this == other);
+    }
 };
 
 struct CameraUpdate {
@@ -251,7 +259,7 @@ public:
     void setMinZoom(float _minZoom);
 
     // Get the minimum zoom level for the view.
-    float getMinZoom();
+    float getMinZoom() const;
 
     // Set the maximum zoom level for the view; values greater than 20.5 will be
     // clamped to 20.5; values less than the current minimum zoom level will set
@@ -259,7 +267,7 @@ public:
     void setMaxZoom(float _maxZoom);
 
     // Get the maximum zoom level for the view.
-    float getMaxZoom();
+    float getMaxZoom() const;
 
     // Set the counter-clockwise rotation of the view in radians; 0 corresponds to
     // North pointing up
@@ -275,9 +283,19 @@ public:
     // Get the tilt angle of the view in radians; 0 corresponds to straight down
     float getTilt();
 
+    // Set the padding on the map view. The center position of the map will be drawn at the center of the view area
+    // inside the padding.
+    void setPadding(const EdgePadding& padding);
+
+    // Get the current padding on the map view.
+    EdgePadding getPadding() const;
+
+    // Get the CameraPosition that encloses the bounds given by a and b using the current view padding.
+    CameraPosition getEnclosingCameraPosition(LngLat a, LngLat b) const;
+
     // Get the CameraPosition that encloses the bounds given by _a and _b and
     // leaves at least the given amount of padding on each side (in logical pixels).
-    CameraPosition getEnclosingCameraPosition(LngLat _a, LngLat _b, EdgePadding _pad);
+    CameraPosition getEnclosingCameraPosition(LngLat a, LngLat b, EdgePadding padding) const;
 
     // Run flight animation to change postion and zoom  of the map
     // If _duration is 0, speed is used as factor to change the duration that is

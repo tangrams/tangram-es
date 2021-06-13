@@ -517,7 +517,7 @@ void Map::setMinZoom(float _minZoom) {
     impl->view.setMinZoom(_minZoom);
 }
 
-float Map::getMinZoom() {
+float Map::getMinZoom() const {
     return impl->view.getMinZoom();
 }
 
@@ -525,7 +525,7 @@ void Map::setMaxZoom(float _maxZoom) {
     impl->view.setMaxZoom(_maxZoom);
 }
 
-float Map::getMaxZoom() {
+float Map::getMaxZoom() const {
     return impl->view.getMaxZoom();
 }
 
@@ -551,17 +551,29 @@ float Map::getTilt() {
     return impl->view.getPitch();
 }
 
-CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, EdgePadding _pad) {
+void Map::setPadding(const EdgePadding& padding) {
+    impl->view.setPadding(padding);
+}
+
+EdgePadding Map::getPadding() const {
+    return impl->view.getPadding();
+}
+
+CameraPosition Map::getEnclosingCameraPosition(LngLat a, LngLat b) const {
+    return getEnclosingCameraPosition(a, b, getPadding());
+}
+
+CameraPosition Map::getEnclosingCameraPosition(LngLat a, LngLat b, EdgePadding padding) const {
     const View& view = impl->view;
 
     // Convert the bounding coordinates into Mercator meters.
-    ProjectedMeters aMeters = MapProjection::lngLatToProjectedMeters(_a);
-    ProjectedMeters bMeters = MapProjection::lngLatToProjectedMeters(_b);
+    ProjectedMeters aMeters = MapProjection::lngLatToProjectedMeters(a);
+    ProjectedMeters bMeters = MapProjection::lngLatToProjectedMeters(b);
     ProjectedMeters dMeters = glm::abs(aMeters - bMeters);
 
     // Calculate the inner size of the view that the bounds must fit within.
     glm::dvec2 innerSize(view.getWidth() / view.pixelScale(), view.getHeight() / view.pixelScale());
-    innerSize -= glm::dvec2((_pad.left + _pad.right), (_pad.top + _pad.bottom));
+    innerSize -= glm::dvec2((padding.left + padding.right), (padding.top + padding.bottom));
 
     // Calculate the map scale that fits the bounds into the inner size in each dimension.
     glm::dvec2 metersPerPixel = dMeters / innerSize;
@@ -573,7 +585,7 @@ CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, EdgePadding
     double finalMetersPerPixel = MapProjection::metersPerPixelAtZoom(finalZoom);
 
     // Adjust the center of the final visible region using the padding converted to Mercator meters.
-    glm::dvec2 paddingMeters = glm::dvec2(_pad.right - _pad.left, _pad.top - _pad.bottom) * finalMetersPerPixel;
+    glm::dvec2 paddingMeters = glm::dvec2(padding.right - padding.left, padding.top - padding.bottom) * finalMetersPerPixel;
     glm::dvec2 centerMeters = 0.5 * (aMeters + bMeters + paddingMeters);
 
     LngLat centerLngLat = MapProjection::projectedMetersToLngLat(centerMeters);
