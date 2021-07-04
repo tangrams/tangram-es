@@ -63,6 +63,7 @@ struct UrlClient::Task {
         curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1);
         curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 20);
         curl_easy_setopt(handle, CURLOPT_TCP_NODELAY, 1);
+        curl_easy_setopt(handle, CURLOPT_USERAGENT, _options.userAgentString);
     }
 
     void setup() {
