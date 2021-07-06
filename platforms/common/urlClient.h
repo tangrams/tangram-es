@@ -24,6 +24,7 @@ public:
         uint32_t maxActiveTasks = 20;
         uint32_t connectionTimeoutMs = 3000;
         uint32_t requestTimeoutMs = 30000;
+        const char* userAgentString = "tangram";
     };
 
     UrlClient(Options options);
