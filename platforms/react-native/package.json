@@ -1,0 +1,31 @@
+{
+  "name": "tangram-es-react-native",
+  "description": "Tangram ES react native module",
+  "version": "0.9.2",
+  "author": {
+    "name": "Saeed Tabrizi",
+    "email": "saeed@nowcando.com",
+    "url": "http://www.nowcando.com"
+  },
+  "main": "dist/lib/index.js",
+  "types": "dist/typings/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+   
+  },
+  "devDependencies": {
+    "@types/react": "^16.3.12",
+    "@types/react-native": "^0.55.7",
+    "jest": "^22.4.3",
+    "@types/prop-types": "^15.5.2",
+    "prop-types": "^15.6.1",
+    "react": "^16.3.2",
+    "react-native": "^0.55.3"
+  },
+  "jest": {
+    "preset": "react-native"
+  }
+}
