@@ -95,9 +95,9 @@ public:
 
     virtual bool checkRule(const DrawRule& _rule) const;
 
-    virtual void addLayoutItems(LabelCollider& _layout) {}
+    virtual void addLayoutItems(LabelCollider& /*_layout*/) {}
 
-    virtual void addSelectionItems(LabelCollider& _layout) {}
+    virtual void addSelectionItems(LabelCollider& /*_layout*/) {}
 
     virtual const Style& style() const = 0;
 };
@@ -248,7 +248,7 @@ public:
 
     virtual void onBeginUpdate() {}
 
-    virtual void onBeginFrame(RenderState& rs) {}
+    virtual void onBeginFrame(RenderState& /*rs*/) {}
 
     /* Create <VertexLayout> corresponding to this style; subclasses must
      * implement this and call it on construction
