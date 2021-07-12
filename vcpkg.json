@@ -13,14 +13,16 @@
         "duktape",
         "double-conversion",
         "yaml-cpp",
-        "mapbox-variant",
         "glfw3",
         "glad",
         "rapidjson",
         "stb",
         "miniz",
         "benchmark",
-        "mapbox-polylabel",
+        "mapbox-variant",
+        "mapbox-geometry",
+        "mapbox-geojson-cpp",
+        "mapbox-geojson-vt-cpp",
         {
             "name": "harfbuzz",
             "features": [
@@ -38,6 +40,7 @@
             "name": "imgui",
             "features": [
                 "glfw-binding",
+                "opengl3-glad-binding",
                 "docking-experimental"
             ]
         }

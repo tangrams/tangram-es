@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.10)
-set(CMAKE_CXX_STANDARD 14)
+cmake_minimum_required(VERSION 3.14)
+
 # needs before first project() call
 if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(VCPKG_OVERLAY_PORTS

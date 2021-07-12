@@ -1,6 +1,7 @@
 project(tangram-core)
 
-find_package (SQLite3)
+find_package(duktape CONFIG REQUIRED)
+find_package (SQLite3 REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
 find_path(STB_INCLUDE_DIRS "stb.h")
 find_package(miniz CONFIG REQUIRED)
@@ -8,6 +9,7 @@ find_package(glm CONFIG REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(double-conversion CONFIG REQUIRED)
+find_package(SQLiteCpp CONFIG REQUIRED)
 
 find_path(MAPBOX_VARIANT_INCLUDE_DIRS "mapbox/optional.hpp")
 find_path(GEOJSON_VT_CPP_INCLUDE_DIRS "mapbox/geojsonvt.hpp")
@@ -223,12 +225,8 @@ target_include_directories(tangram-core
     generated
     deps/mapbox
     ${MAPBOX_VARIANT_INCLUDE_DIRS}
-    ${RAPIDJSON_INCLUDE_DIRS}
     ${GEOJSON_CPP_INCLUDE_DIRS}
     ${GEOJSON_VT_CPP_INCLUDE_DIRS}
-    deps/geojson-vt-cpp/geometry.hpp/include
-    deps/geojson-vt-cpp/geojson.hpp/include
-    deps/geojson-vt-cpp/include
 )
 
 if (WIN32)
@@ -252,6 +250,7 @@ target_link_libraries(tangram-core
   hashlib
   double-conversion::double-conversion
   miniz::miniz
+  rapidjson
   ${ZLIB_NAME}
 )
 
@@ -266,13 +265,13 @@ if(TANGRAM_JSCORE_ENABLED)
   target_compile_definitions(tangram-core PRIVATE TANGRAM_USE_JSCORE=1)
 else()
   target_sources(tangram-core PRIVATE src/js/DuktapeContext.cpp src/js/DuktapeContext.h)
-  target_link_libraries(tangram-core PRIVATE duktape)
+  target_link_libraries(tangram-core PRIVATE ${DUKTAPE_LIBRARY})
 endif()
 
 # Add MBTiles implementation.
 if(TANGRAM_MBTILES_DATASOURCE)
   target_sources(tangram-core PRIVATE src/data/mbtilesDataSource.cpp)
-  target_link_libraries(tangram-core PRIVATE SQLiteCpp sqlite3)
+  target_link_libraries(tangram-core PRIVATE SQLiteCpp SQLite::SQLite3)
   target_compile_definitions(tangram-core PRIVATE TANGRAM_MBTILES_DATASOURCE=1)
 endif()
 
