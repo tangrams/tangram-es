@@ -3,6 +3,12 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_stl.h"
+
+#ifdef TANGRAM_WINDOWS
+#define GLFW_INCLUDE_NONE
+#include <glad/glad.h>
+#endif // TANGRAM_WINDOWS
+
 #define GLFW_INCLUDE_GLEXT
 #define GL_SILENCE_DEPRECATION
 #include <GLFW/glfw3.h>
@@ -202,6 +208,10 @@ void create(std::unique_ptr<Platform> p, int w, int h) {
     // Make the main_window's context current
     glfwMakeContextCurrent(main_window);
     glfwSwapInterval(1); // Enable vsync
+
+#ifdef TANGRAM_WINDOWS
+    gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+#endif
 
     // Set input callbacks
     glfwSetFramebufferSizeCallback(main_window, framebufferResizeCallback);
@@ -535,17 +545,19 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 map->loadSceneYamlAsync("{ scene: { background: { color: red } } }", std::string(""));
                 break;
             case GLFW_KEY_G:
-                static bool geoJSON = false;
-                if (!geoJSON) {
-                    loadSceneFile(false,
-                                  { SceneUpdate{"sources.osm.type", "GeoJSON"},
-                                    SceneUpdate{"sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.json"}});
-                } else {
-                    loadSceneFile(false,
-                                  { SceneUpdate{"sources.osm.type", "MVT"},
-                                    SceneUpdate{"sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt"}});
+                {
+                    static bool geoJSON = false;
+                    if (!geoJSON) {
+                        loadSceneFile(false,
+                                      { SceneUpdate{"sources.osm.type", "GeoJSON"},
+                                        SceneUpdate{"sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.json"}});
+                    } else {
+                        loadSceneFile(false,
+                                      { SceneUpdate{"sources.osm.type", "MVT"},
+                                        SceneUpdate{"sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt"}});
+                    }
+                    geoJSON = !geoJSON;
                 }
-                geoJSON = !geoJSON;
                 break;
             case GLFW_KEY_ESCAPE:
                 glfwSetWindowShouldClose(window, true);
@@ -603,7 +615,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             case GLFW_KEY_W:
                 map->onMemoryWarning();
                 break;
-        default:
+            default:
                 break;
         }
     }
@@ -661,7 +673,7 @@ void showMarkerGUI() {
             }
             point_markers.clear();
         }
-        
+
         ImGui::Checkbox("Add polyline marker points on click", &add_polyline_marker_on_click);
         if (ImGui::Button("Clear polyline marker")) {
             if (!polyline_marker_coordinates.empty()) {

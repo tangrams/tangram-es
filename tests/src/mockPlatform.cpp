@@ -6,13 +6,21 @@
 #include <fstream>
 #include <string>
 
+#ifndef TANGRAM_WINDOWS
 #include <libgen.h>
 #include <unistd.h>
+#else
+#include <direct.h> // _getcwd
+#endif
 #include <limits.h>
 
 #define DEFAULT_FONT "res/fonts/NotoSans-Regular.ttf"
 
 #include "log.h"
+
+#ifdef TANGRAM_WINDOWS
+#define PATH_MAX 512
+#endif
 
 namespace Tangram {
 
