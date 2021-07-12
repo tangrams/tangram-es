@@ -49,9 +49,7 @@ extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
 #define GL_GLEXT_PROTOTYPES
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-// Resolve aliased names on Windows
-#define glClearDepthf glClearDepth
-#define glDepthRangef glDepthRange
+
 #endif // TANGRAM_WINDOWS
 
 #ifdef TANGRAM_RPI

@@ -1,5 +1,18 @@
 project(tangram-core)
 
+find_package (SQLite3)
+find_package(RapidJSON CONFIG REQUIRED)
+find_path(STB_INCLUDE_DIRS "stb.h")
+find_package(miniz CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(yaml-cpp CONFIG REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(double-conversion CONFIG REQUIRED)
+
+find_path(MAPBOX_VARIANT_INCLUDE_DIRS "mapbox/optional.hpp")
+find_path(GEOJSON_VT_CPP_INCLUDE_DIRS "mapbox/geojsonvt.hpp")
+find_path(GEOJSON_CPP_INCLUDE_DIRS "mapbox/geojson.hpp")
+
 # Build core library dependencies.
 if (WIN32)
   find_package(yaml-cpp CONFIG REQUIRED)
@@ -206,25 +219,16 @@ target_include_directories(tangram-core
   include/tangram
   # TODO: These headers shouldn't be public, but Platform classes use them.
   src
-  # TODO: This header shouldn't be public, but we use it in propertyItem.h
-  deps/variant/include
   PRIVATE
-  generated
-  deps
-  deps/earcut/include
-  deps/isect2d/include
-  deps/hash-library
-  deps/mapbox
-  deps/pbf
-  deps/rapidjson
-  deps/sdf
-  deps/SQLiteCpp
-  deps/stb
-  deps/miniz
-  deps/geojson-vt-cpp/geometry.hpp/include
-  deps/geojson-vt-cpp/geojson.hpp/include
-  deps/geojson-vt-cpp/include
-  deps/double-conversion/include
+    generated
+    deps/mapbox
+    ${MAPBOX_VARIANT_INCLUDE_DIRS}
+    ${RAPIDJSON_INCLUDE_DIRS}
+    ${GEOJSON_CPP_INCLUDE_DIRS}
+    ${GEOJSON_VT_CPP_INCLUDE_DIRS}
+    deps/geojson-vt-cpp/geometry.hpp/include
+    deps/geojson-vt-cpp/geojson.hpp/include
+    deps/geojson-vt-cpp/include
 )
 
 if (WIN32)
@@ -237,12 +241,17 @@ endif()
 # Link core library dependencies.
 target_link_libraries(tangram-core
   PRIVATE
-  glm
+  sdf
+  pbf
+  earcut
+  isect2d
+  glm::glm
   css-color-parser-cpp
   yaml-cpp
   alfons
-  double-conversion
-  miniz
+  hashlib
+  double-conversion::double-conversion
+  miniz::miniz
   ${ZLIB_NAME}
 )
 

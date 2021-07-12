@@ -1,5 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
-
+set(CMAKE_CXX_STANDARD 14)
+# needs before first project() call
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set(VCPKG_OVERLAY_PORTS
+      "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-geojson-vt-cpp" 
+      "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-geojson-cpp"
+      "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-geometry"
+      "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-variant"
+    )
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake")
+endif()
 project(tangram)
 
 # Options

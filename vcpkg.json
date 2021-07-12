@@ -2,6 +2,7 @@
     "name": "tangram-es",
     "version-string": "0.1.0",
     "dependencies": [
+        "glm",
         {
             "name":"curl",
             "features":[
@@ -9,11 +10,17 @@
                 "http2"
             ]
         },
-        "glad",
-        "zlib",
+        "duktape",
+        "double-conversion",
         "yaml-cpp",
+        "mapbox-variant",
         "glfw3",
+        "glad",
+        "rapidjson",
+        "stb",
+        "miniz",
         "benchmark",
+        "mapbox-polylabel",
         {
             "name": "harfbuzz",
             "features": [
@@ -22,8 +29,15 @@
             ]
         },
         {
+            "name": "sqlitecpp",
+            "features": [
+                "sqlite"
+            ]
+        },
+        {
             "name": "imgui",
             "features": [
+                "glfw-binding",
                 "docking-experimental"
             ]
         }
