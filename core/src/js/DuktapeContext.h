@@ -5,7 +5,7 @@
 #pragma once
 
 #include "js/JavaScriptFwd.h"
-#include "duktape/duktape.h"
+#include <duktape.h>
 
 #include <string>
 

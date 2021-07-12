@@ -13,6 +13,9 @@
 #include <thread>
 #include <vector>
 
+#if defined(_WIN32)
+#include <winsock2.h>
+#endif
 
 namespace Tangram {
 
@@ -42,6 +45,24 @@ private:
         std::string url;
         UrlCallback callback;
         RequestId id;
+    };
+
+    class SelfPipe {
+    public:
+#if defined(_WIN32)
+        using Socket = SOCKET;
+        const Socket SocketInvalid = INVALID_SOCKET;
+#else
+        using Socket = int;
+        const Socket SocketInvalid = -1;
+#endif
+        ~SelfPipe();
+        bool initialize();
+        bool write();
+        bool read(int *error);
+        Socket getReadFd();
+    private:
+        Socket pipeFds[2] = { SocketInvalid, SocketInvalid };
     };
 
     struct Task;
@@ -74,7 +95,7 @@ private:
     std::atomic<uint64_t> m_requestCount{0};
 
     // File descriptors to break waiting select.
-    int m_requestNotify[2] = { -1, -1 };
+    SelfPipe m_requestNotify;
 };
 
 } // namespace Tangram

@@ -67,7 +67,7 @@ int TextWrapper::draw(alfons::TextBatch& _batch, float _maxWidth, const alfons::
                       TextLabelProperty::Align _alignment, float _lineSpacing,
                       alfons::LineMetrics& _layoutMetrics) {
     size_t shapeStart = 0;
-    glm::vec2 position;
+    glm::vec2 position{};
 
     for (auto wrap : m_lineWraps) {
         alfons::LineMetrics lineMetrics;

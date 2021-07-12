@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstdint>
 #include <string>
+#include <algorithm>
 
 /* An immutable identifier for a map tile
  *

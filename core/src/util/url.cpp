@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <cassert>
+#include <algorithm>
 
 namespace Tangram {
 
@@ -321,6 +322,13 @@ std::string Url::removeDotSegmentsFromString(std::string path) {
 
 void Url::parse() {
 
+    // Normalize Windows paths. Chromium also does this.
+    for(auto &c: buffer) {
+        if(c == '\\') {
+            c = '/';
+        }
+    }
+
     // The parsing process roughly follows https://tools.ietf.org/html/rfc1808#section-2.4
 
     size_t start = 0;
@@ -351,7 +359,8 @@ void Url::parse() {
         }
 
         // If a scheme is present, it must be followed by a ':'.
-        if (c == ':') {
+        // Check if 'scheme' is longer than 1 - could be a Windows disk drive
+        if (c == ':' && i - start > 1) {
             parts.scheme.start = start;
             parts.scheme.count = i - start;
 

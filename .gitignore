@@ -1,5 +1,9 @@
 # Created by http://www.gitignore.io
 
+### Windows ###
+.vscode
+.vs
+
 ### OSX ###
 .DS_Store
 .AppleDouble
@@ -142,3 +146,5 @@ core/generated/*.h
 # CLion build directories
 /cmake-build-debug/
 /cmake-build-release/
+
+.vscode

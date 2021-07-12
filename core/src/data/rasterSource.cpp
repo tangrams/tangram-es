@@ -208,7 +208,7 @@ std::shared_ptr<Texture> RasterSource::cacheTexture(const TileID& _tileId, std::
     }
 
     texture = std::shared_ptr<Texture>(_texture.release(),
-                                       [c = std::weak_ptr<Cache>(m_textures), id](auto t) {
+                                       [c = std::weak_ptr<Cache>(m_textures), id](auto* t) {
                                            if (auto cache = c.lock()) {
                                                cache->erase(id);
                                                LOGD("%d - remove %s", cache->size(), id.toString().c_str());

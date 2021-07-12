@@ -137,7 +137,7 @@ TEST_CASE("Resolve a URL against an absolute base URL", "[Url]") {
 
     Url base("http://a/b/c/d;p?q");
 
-    CHECK(base.resolve(Url("g:h")).string() == "g:h");
+    CHECK(base.resolve(Url("scheme:h")).string() == "scheme:h");
     CHECK(base.resolve(Url("g")).string() == "http://a/b/c/g");
     CHECK(base.resolve(Url("./g")).string() == "http://a/b/c/g");
     CHECK(base.resolve(Url("g/")).string() == "http://a/b/c/g/");
@@ -158,7 +158,7 @@ TEST_CASE("Resolve a URL against a relative base URL", "[Url]") {
 
     Url base("a/b/c/d;p?q");
 
-    CHECK(base.resolve(Url("g:h")).string() == "g:h");
+    CHECK(base.resolve(Url("scheme:h")).string() == "scheme:h");
     CHECK(base.resolve(Url("g")).string() == "a/b/c/g");
     CHECK(base.resolve(Url("./g")).string() == "a/b/c/g");
     CHECK(base.resolve(Url("g/")).string() == "a/b/c/g/");
@@ -179,7 +179,7 @@ TEST_CASE("Resolve a relative URL against an empty base URL", "[Url]") {
 
     Url base("");
 
-    CHECK(base.resolve(Url("g:h")).string() == "g:h");
+    CHECK(base.resolve(Url("scheme:h")).string() == "scheme:h");
     CHECK(base.resolve(Url("g")).string() == "g");
     CHECK(base.resolve(Url("./g")).string() == "g");
     CHECK(base.resolve(Url("g/")).string() == "g/");

@@ -7,7 +7,6 @@
 #include "data/tileData.h"
 #include "util/variant.h"
 
-#include "duktape/duktape.h"
 #include "glm/vec2.hpp"
 
 namespace Tangram {
