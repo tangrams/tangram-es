@@ -142,3 +142,5 @@ core/generated/*.h
 # CLion build directories
 /cmake-build-debug/
 /cmake-build-release/
+
+.vscode
