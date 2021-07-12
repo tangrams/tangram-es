@@ -40,10 +40,12 @@ target_include_directories(css-color-parser-cpp PUBLIC css-color-parser-cpp)
 if(NOT TANGRAM_USE_SYSTEM_FONT_LIBS)
 ## Harfbuzz - ICU-Common - Freetype2 ##
 #######################################
-#find_package(ICU REQUIRED COMPONENTS common)
+find_package(ICU COMPONENTS io i18n REQUIRED)
 find_package(harfbuzz CONFIG REQUIRED)
 set(ALFONS_DEPS_LIBRARIES
   harfbuzz::harfbuzz
+  ICU::io
+  ICU::i18n
   CACHE INTERNAL "alfons-libs" FORCE)
 endif()
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
@@ -58,11 +60,10 @@ add_library(jscore-static STATIC IMPORTED GLOBAL)
 if(NOT EXISTS "${PROJECT_SOURCE_DIR}/deps/jscore/lib/libJavaScriptCore.a")
   message(SEND_ERROR "Please add static JavaScriptCore libary to core/deps/jscore/")
 endif()
-find_package(ICU COMPONENTS io i18n REQUIRED)
-link_directories(${ICU_LIBRARY_DIRS})
 
 set(JSCORE_LIBS
-  ${ICU_LIBRARIES}
+  ICU::io
+  ICU::i18n
   "${CMAKE_CURRENT_SOURCE_DIR}/jscore/lib/libJavaScriptCore.a"
   "${CMAKE_CURRENT_SOURCE_DIR}/jscore/lib/libWTF.a"
   "${CMAKE_CURRENT_SOURCE_DIR}/jscore/lib/libbmalloc.a")
