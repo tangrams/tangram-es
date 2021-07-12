@@ -15,12 +15,6 @@ find_path(MAPBOX_VARIANT_INCLUDE_DIRS "mapbox/optional.hpp")
 find_path(GEOJSON_VT_CPP_INCLUDE_DIRS "mapbox/geojsonvt.hpp")
 find_path(GEOJSON_CPP_INCLUDE_DIRS "mapbox/geojson.hpp")
 
-# Build core library dependencies.
-if (WIN32)
-  find_package(yaml-cpp CONFIG REQUIRED)
-  find_package(ZLIB REQUIRED)
-endif()
-
 add_subdirectory(deps)
 
 add_library(tangram-core
