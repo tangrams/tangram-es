@@ -16,7 +16,10 @@
         "duktape",
         "freetype",
         "glad",
-        "glfw3",
+        {
+            "name": "glfw3",
+            "platform": "!android "
+        },
         "glm",
         {
             "name": "harfbuzz",
