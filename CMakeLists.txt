@@ -7,6 +7,7 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
       "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-geojson-cpp"
       "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-geometry"
       "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-variant"
+      "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/glm"
     )
     set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake")
 endif()

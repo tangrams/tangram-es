@@ -6,12 +6,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 add_compile_options(-Wno-shorten-64-to-32)
 endif()
 
-## glm ##
-#########
-add_library(glm INTERFACE)
-target_include_directories(glm INTERFACE glm)
-target_compile_definitions(glm INTERFACE GLM_FORCE_CTOR_INIT)
-
 ## hash-library ##
 ##########################
 add_subdirectory(hash-library)
@@ -42,21 +36,18 @@ add_library(css-color-parser-cpp css-color-parser-cpp/csscolorparser.cpp)
 set_target_properties(css-color-parser-cpp PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED ON)
 target_include_directories(css-color-parser-cpp PUBLIC css-color-parser-cpp)
 
-
+set(ALFONS_DEPS_LIBRARIES glm::glm)
 if(NOT TANGRAM_USE_SYSTEM_FONT_LIBS)
   ## Harfbuzz - ICU-Common - Freetype2 ##
   #######################################
   find_package(harfbuzz CONFIG REQUIRED)
-  set(ALFONS_DEPS_LIBRARIES
-    harfbuzz::harfbuzz
-    CACHE INTERNAL "alfons-libs" FORCE)
+  list(APPEND ALFONS_DEPS_LIBRARIES harfbuzz::harfbuzz)
 endif()
 
 
 
 ## alfons ##
 ############
-set(GLM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glm)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
 target_compile_definitions(alfons PRIVATE GLM_FORCE_CTOR_INIT)
 

@@ -17,6 +17,7 @@
         "freetype",
         "glad",
         "glfw3",
+        "glm",
         {
             "name": "harfbuzz",
             "features": [
