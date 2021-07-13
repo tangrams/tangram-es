@@ -1,48 +1,53 @@
 {
     "name": "tangram-es",
     "version-string": "0.1.0",
+    "description": "",
+    "builtin-baseline": "b1b4808228377515acd849b8706ee2ad25ba455d",
     "dependencies": [
-        "glm",
+        "benchmark",
         {
-            "name":"curl",
-            "features":[
-                "ssl",
-                "http2"
+            "name": "curl",
+            "features": [
+                "http2",
+                "ssl"
             ]
         },
-        "duktape",
         "double-conversion",
-        "yaml-cpp",
-        "glfw3",
+        "duktape",
+        "freetype",
         "glad",
-        "rapidjson",
-        "stb",
-        "miniz",
-        "benchmark",
-        "mapbox-variant",
-        "mapbox-geometry",
-        "mapbox-geojson-cpp",
-        "mapbox-geojson-vt-cpp",
+        "glfw3",
         {
             "name": "harfbuzz",
             "features": [
-                "icu",
-                "graphite2"
+                "graphite2",
+                "icu"
             ]
         },
+        "icu",
+        {
+            "name": "imgui",
+            "features": [
+                "docking-experimental",
+                "glfw-binding",
+                "opengl3-glad-binding"
+            ]
+        },
+        "mapbox-geojson-cpp",
+        "mapbox-geojson-vt-cpp",
+        "mapbox-geometry",
+        "mapbox-variant",
+        "miniz",
+        "stb",
+        "rapidjson",
         {
             "name": "sqlitecpp",
             "features": [
                 "sqlite"
             ]
         },
-        {
-            "name": "imgui",
-            "features": [
-                "glfw-binding",
-                "opengl3-glad-binding",
-                "docking-experimental"
-            ]
-        }
+        "yaml-cpp"
+    ],
+    "overrides": [
     ]
 }

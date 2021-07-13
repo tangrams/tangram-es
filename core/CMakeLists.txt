@@ -5,7 +5,6 @@ find_package (SQLite3 REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
 find_path(STB_INCLUDE_DIRS "stb.h")
 find_package(miniz CONFIG REQUIRED)
-find_package(glm CONFIG REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(double-conversion CONFIG REQUIRED)
@@ -237,7 +236,7 @@ target_link_libraries(tangram-core
   pbf
   earcut
   isect2d
-  glm::glm
+  glm
   css-color-parser-cpp
   yaml-cpp
   alfons
