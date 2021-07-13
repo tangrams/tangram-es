@@ -1,5 +1,24 @@
 # Created by http://www.gitignore.io
 
+### Windows ###
+.vscode/
+.vs/
+ipch/
+build/
+out/
+
+CMakeSettings.json
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.VC.db
+*.vspx
+
 ### OSX ###
 .DS_Store
 .AppleDouble

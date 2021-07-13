@@ -72,7 +72,7 @@ float signedArea(InputIt begin, InputIt end) {
     float area = 0;
     auto prev = end - 1;
     for (auto curr = begin; curr != end; ++curr) {
-        area += curr->x * prev->y - curr->y * prev->x;
+        area += static_cast<float>(curr->x * prev->y - curr->y * prev->x);
         prev = curr;
     }
     return 0.5f * area;
@@ -82,14 +82,14 @@ float signedArea(InputIt begin, InputIt end) {
 /// If the polygon has no area, the coordinates returned are NaN.
 template<class InputIt, class Vector = typename InputIt::value_type>
 Vector centroid(InputIt begin, InputIt end) {
-    Vector centroid;
+    Vector centroid{};
     float area = 0.f;
     const Vector offset(begin->x, begin->y);
 
     for (auto curr = begin, prev = end - 1; curr != end; prev = curr, ++curr) {
         const Vector prevPoint(prev->x - offset.x, prev->y - offset.y);
         const Vector currPoint(curr->x - offset.x, curr->y - offset.y);
-        float a = (prevPoint.x * currPoint.y - currPoint.x * prevPoint.y);
+        float a = static_cast<float>(prevPoint.x * currPoint.y - currPoint.x * prevPoint.y);
         centroid.x += (prevPoint.x + currPoint.x) * a;
         centroid.y += (prevPoint.y + currPoint.y) * a;
         area += a;

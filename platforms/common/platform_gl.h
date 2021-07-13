@@ -45,6 +45,15 @@ extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
 #include <GLFW/glfw3.h>
 #endif // TANGRAM_LINUX
 
+#ifdef TANGRAM_WINDOWS
+#define GL_GLEXT_PROTOTYPES
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+// Resolve aliased names on Windows
+#define glClearDepthf glClearDepth
+#define glDepthRangef glDepthRange
+#endif // TANGRAM_WINDOWS
+
 #ifdef TANGRAM_RPI
 // Broadcom library for direct GPU access
 #include "bcm_host.h"

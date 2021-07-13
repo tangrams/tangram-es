@@ -1,6 +1,11 @@
 project(tangram-core)
 
 # Build core library dependencies.
+find_package(ZLIB REQUIRED)
+if (MSVC)
+  find_package(yaml-cpp CONFIG REQUIRED)
+endif()
+
 add_subdirectory(deps)
 
 add_library(tangram-core
@@ -222,6 +227,10 @@ target_include_directories(tangram-core
   deps/double-conversion/include
 )
 
+if (WIN32)
+  target_compile_definitions(tangram-core PUBLIC _USE_MATH_DEFINES)
+endif()
+
 # Link core library dependencies.
 target_link_libraries(tangram-core
   PRIVATE
@@ -231,7 +240,7 @@ target_link_libraries(tangram-core
   alfons
   double-conversion
   miniz
-  z
+  ZLIB::ZLIB
 )
 
 # Add JavaScript implementation.
