@@ -11,7 +11,7 @@ GLenum GL::getError() {
 
 const GLubyte* GL::getString(GLenum name) {
     auto result = glGetString(name);
-    GL_CHECK();
+    GL_CHECK({});
     return result;
 }
 
@@ -86,12 +86,12 @@ void GL::deleteShader(GLuint shader) {
 }
 GLuint GL::createShader(GLenum type) {
     auto result = glCreateShader(type);
-    GL_CHECK();
+    GL_CHECK({});
     return result;
 }
 GLuint GL::createProgram() {
     auto result = glCreateProgram();
-    GL_CHECK();
+    GL_CHECK({});
     return result;
 }
 
@@ -117,12 +117,12 @@ void GL::getProgramInfoLog(GLuint program, GLsizei bufSize, GLsizei *length, GLc
 }
 GLint GL::getUniformLocation(GLuint program, const GLchar *name) {
     auto result = glGetUniformLocation(program, name);
-    GL_CHECK();
+    GL_CHECK({});
     return result;
 }
 GLint GL::getAttribLocation(GLuint program, const GLchar *name) {
     auto result = glGetAttribLocation(program, name);
-    GL_CHECK();
+    GL_CHECK({});
     return result;
 }
 void GL::getProgramiv(GLuint program, GLenum pname, GLint *params) {
@@ -263,12 +263,12 @@ void GL::uniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, co
 // mapbuffer
 void* GL::mapBuffer(GLenum target, GLenum access) {
     auto result =  glMapBuffer(target, access);
-    GL_CHECK();
+    GL_CHECK({});
     return result;
 }
 GLboolean GL::unmapBuffer(GLenum target) {
     auto result = glUnmapBuffer(target);
-    GL_CHECK();
+    GL_CHECK({});
     return result;
 }
 
@@ -329,7 +329,7 @@ void GL::deleteRenderbuffers(GLsizei n, const GLuint *renderbuffers) {
 
 GLenum GL::checkFramebufferStatus(GLenum target) {
     GLenum status = glCheckFramebufferStatus(target);
-    GL_CHECK();
+    GL_CHECK({});
     return status;
 }
 
