@@ -9,6 +9,7 @@ find_package(yaml-cpp CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(double-conversion CONFIG REQUIRED)
 find_package(SQLiteCpp CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 find_path(MAPBOX_VARIANT_INCLUDE_DIRS "mapbox/optional.hpp")
 find_path(GEOJSON_VT_CPP_INCLUDE_DIRS "mapbox/geojsonvt.hpp")
@@ -236,7 +237,7 @@ target_link_libraries(tangram-core
   pbf
   earcut
   isect2d
-  glm
+  glm::glm
   css-color-parser-cpp
   yaml-cpp
   alfons
