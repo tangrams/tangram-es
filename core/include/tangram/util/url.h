@@ -131,7 +131,7 @@ private:
     // parts describes URL components by their location within the buffer.
     struct Parts {
         struct Range {
-            uint16_t start = 0, count = 0;
+            size_t start = 0, count = 0;
         } scheme, location, path, parameters, query, fragment, media, data;
     } parts;
 
