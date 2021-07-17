@@ -2,16 +2,15 @@ global:
     mapzen_api_key: ''
 
 sources:
-    stamen-terrain:
+    osm-raster:
         type: Raster
-        #url: http://a.tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg
-        url: http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
+        url: https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
         url_subdomains: [a, b, c]
 
 layers:
     terrain:
-        data: { source: stamen-terrain }
+        data: 
+            source: osm-raster
         draw:
             raster:
-                #color: [0.8, 0.8, 0.8]
                 order: 0 # draw on bottom
