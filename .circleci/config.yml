@@ -1,4 +1,6 @@
 version: 2.1
+orbs:
+  win: circleci/windows@2.4.0
 executors:
   android-executor:
     docker:
@@ -192,6 +194,14 @@ jobs:
       - run: cd build/osx && zip -r ~/demo.zip tangram.app
       - store_artifacts:
           path: ~/demo.zip
+  build-test-windows:
+    executor: win/default
+    steps:
+      - checkout
+      - run: git submodule update --init
+      - run: choco install cmake
+      - run: cmake -S . -B build/windows -G "Visual Studio 16 2019"
+      - run: cmake --build build/windows
 workflows:
   version: 2
   build-and-deploy:
