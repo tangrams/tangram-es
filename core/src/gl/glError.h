@@ -25,6 +25,8 @@ private:
 
 };
 
+// On Windows you should provide valid C++ statement for macro to compile
+// using {} works good enough
 #ifdef DEBUG
 #define GL_CHECK(STMT) do { STMT; Tangram::GLError::error(#STMT, __FILE__, __LINE__); } while (0)
 #else
