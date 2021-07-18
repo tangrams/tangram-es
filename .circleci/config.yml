@@ -206,33 +206,34 @@ workflows:
   version: 2
   build-and-deploy:
     jobs:
-      # Run on all pushes
-      - build-test-linux
-      - build-macos
-      # Run on pushes to all branches except main
-      - build-android:
-          filters:
-            branches:
-              ignore: main
-      - build-ios:
-          filters:
-            branches:
-              ignore: main
-      # Run on pushes to main
-      - build-deploy-android:
-          filters:
-            branches:
-              only: main
-      - build-deploy-ios:
-          filters:
-            branches:
-              only: main
-      # Run on tag pushes
-      - build-deploy-ios:
-          name: build-deploy-ios-tag
-          filters:
-            # For any tag of the form 1, 1.2.3, 1.4-beta2, etc. we will deploy a release build.
-            tags:
-              only: /[0-9]+(\.[0-9]+)*(-beta[0-9]*)?/
-            branches:
-              ignore: /.*/
+      - build-test-windows
+      # # Run on all pushes
+      # - build-test-linux
+      # - build-macos
+      # # Run on pushes to all branches except main
+      # - build-android:
+      #     filters:
+      #       branches:
+      #         ignore: main
+      # - build-ios:
+      #     filters:
+      #       branches:
+      #         ignore: main
+      # # Run on pushes to main
+      # - build-deploy-android:
+      #     filters:
+      #       branches:
+      #         only: main
+      # - build-deploy-ios:
+      #     filters:
+      #       branches:
+      #         only: main
+      # # Run on tag pushes
+      # - build-deploy-ios:
+      #     name: build-deploy-ios-tag
+      #     filters:
+      #       # For any tag of the form 1, 1.2.3, 1.4-beta2, etc. we will deploy a release build.
+      #       tags:
+      #         only: /[0-9]+(\.[0-9]+)*(-beta[0-9]*)?/
+      #       branches:
+      #         ignore: /.*/
