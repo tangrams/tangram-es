@@ -199,7 +199,7 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init
-      - run: choco install cmake
+      - run: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
       - run: cmake -S . -B build/windows -G "Visual Studio 16 2019"
       - run: cmake --build build/windows
 workflows:
