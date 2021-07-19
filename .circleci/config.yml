@@ -202,7 +202,9 @@ jobs:
       - run: choco install cmake --version 3.20.5 --installargs 'ADD_CMAKE_TO_PATH=System'
       - run: git clone --branch 2021.05.12 https://github.com/microsoft/vcpkg
       - run: .\vcpkg\bootstrap-vcpkg.bat
-      - run: cmake -S . -B build/windows -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE="$pwd\vcpkg\scripts\buildsystems\vcpkg.cmake"
+      - run: 
+          command: cmake -S . -B build/windows -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE="$pwd\vcpkg\scripts\buildsystems\vcpkg.cmake"
+          no_output_timeout: 30m
       - run: cmake --build build/windows
 workflows:
   version: 2
