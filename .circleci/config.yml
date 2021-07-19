@@ -204,6 +204,9 @@ jobs:
       - run: .\vcpkg\bootstrap-vcpkg.bat
       - run: cmake -S . -B build/windows -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE="$pwd\vcpkg\scripts\buildsystems\vcpkg.cmake"
       - run: cmake --build build/windows
+      - run:
+          command: type build\windows\vcpkg-manifest-install.log
+          when: always
 workflows:
   version: 2
   build-and-deploy:
