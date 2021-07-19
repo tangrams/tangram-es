@@ -202,7 +202,7 @@ jobs:
       - run: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
       - run: git clone --branch 2021.05.12 https://github.com/microsoft/vcpkg
       - run: .\vcpkg\bootstrap-vcpkg.bat
-      - run: cmake -S . -B build/windows -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE="$pwd\vcpkg\scripts\buildsystems\vcpkg.cmake"
+      - run: cmake -S . -B build/windows -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE="$pwd\vcpkg\scripts\buildsystems\vcpkg.cmake" --log-level=DEBUG
       - run: cmake --build build/windows
       - run:
           command: tar -cvzf build.tar build/windows
