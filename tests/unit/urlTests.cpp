@@ -131,46 +131,13 @@ TEST_CASE("Maintain URL components when 'standardized'", "[URL]") {
 
 }
 
-#ifdef TANGRAM_WINDOWS
-TEST_CASE("Windows specific URL tests", "[Url]") {
-    {
-        Url base("http://a/b/c/d;p?q");
-        CHECK(base.resolve(Url("g:")).string() == "http://a/g:");
-        CHECK(base.resolve(Url("g:\\")).string() == "http://a/g:/");
-        CHECK(base.resolve(Url("g:/")).string() == "http://a/g:/");
-        CHECK(base.resolve(Url("g:\\a")).string() == "http://a/g:/a");
-    }
-
-    {
-        Url base("a/b/c/d;p?q");
-        CHECK(base.resolve(Url("g:")).string() == "g:");
-        CHECK(base.resolve(Url("g:\\")).string() == "g:/");
-        CHECK(base.resolve(Url("g:/")).string() == "g:/");
-        CHECK(base.resolve(Url("g:\\a")).string() == "g:/a");
-    }
-
-    {
-        Url base("");
-        CHECK(base.resolve(Url("g:")).string() == "g:");
-        CHECK(base.resolve(Url("g:\\")).string() == "g:/");
-        CHECK(base.resolve(Url("g:/")).string() == "g:/");
-        CHECK(base.resolve(Url("g:\\a")).string() == "g:/a");
-    }
-
-    {
-        Url base("file:///a/b/c");
-        CHECK(base.resolve(Url("d:")).string() == "file://d:");
-    }
-}
-#endif
-
 TEST_CASE("Resolve a URL against an absolute base URL", "[Url]") {
 
     // https://tools.ietf.org/html/rfc3986#section-5.4.1
 
     Url base("http://a/b/c/d;p?q");
 
-    CHECK(base.resolve(Url("scheme:h")).string() == "scheme:h");
+    CHECK(base.resolve(Url("g:h")).string() == "g:h");
     CHECK(base.resolve(Url("g")).string() == "http://a/b/c/g");
     CHECK(base.resolve(Url("./g")).string() == "http://a/b/c/g");
     CHECK(base.resolve(Url("g/")).string() == "http://a/b/c/g/");
@@ -191,7 +158,7 @@ TEST_CASE("Resolve a URL against a relative base URL", "[Url]") {
 
     Url base("a/b/c/d;p?q");
 
-    CHECK(base.resolve(Url("scheme:h")).string() == "scheme:h");
+    CHECK(base.resolve(Url("g:h")).string() == "g:h");
     CHECK(base.resolve(Url("g")).string() == "a/b/c/g");
     CHECK(base.resolve(Url("./g")).string() == "a/b/c/g");
     CHECK(base.resolve(Url("g/")).string() == "a/b/c/g/");
@@ -212,7 +179,7 @@ TEST_CASE("Resolve a relative URL against an empty base URL", "[Url]") {
 
     Url base("");
 
-    CHECK(base.resolve(Url("scheme:h")).string() == "scheme:h");
+    CHECK(base.resolve(Url("g:h")).string() == "g:h");
     CHECK(base.resolve(Url("g")).string() == "g");
     CHECK(base.resolve(Url("./g")).string() == "g");
     CHECK(base.resolve(Url("g/")).string() == "g/");
