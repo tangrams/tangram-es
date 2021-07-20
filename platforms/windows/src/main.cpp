@@ -18,10 +18,10 @@ int main(int argc, char* argv[]) {
     GlfwApp::parseArgs(argc, argv);
 
     // Resolve the input path against the current directory.
-    Url baseUrl("file:///");
+    Url baseUrl("file://");
     char pathBuffer[PATH_MAX] = {0};
     if (getcwd(pathBuffer, PATH_MAX) != nullptr) {
-        baseUrl = baseUrl.resolve(Url(std::string(pathBuffer) + "/"));
+        baseUrl = baseUrl.resolve(Url("/" + std::string(pathBuffer) + "/"));
     }
 
     LOG("Base URL: %s", baseUrl.string().c_str());
