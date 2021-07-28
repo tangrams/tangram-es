@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <cassert>
+#include <algorithm>
 
 namespace Tangram {
 
@@ -320,6 +321,10 @@ std::string Url::removeDotSegmentsFromString(std::string path) {
 }
 
 void Url::parse() {
+#ifdef TANGRAM_WINDOWS
+    // Normalize Windows paths. Chromium also does this.
+    std::replace(buffer.begin(), buffer.end(), '\\', '/');
+#endif
 
     // The parsing process roughly follows https://tools.ietf.org/html/rfc1808#section-2.4
 
