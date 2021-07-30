@@ -40,6 +40,7 @@ target_link_libraries(tangram
   /opt/vc/lib/libbrcmGLESv2.so
   /opt/vc/lib/libvchiq_arm.so
   /opt/vc/lib/libvcos.so
+  /usr/lib/arm-linux-gnueabihf/libatomic.so.1
 )
 
 target_compile_options(tangram
