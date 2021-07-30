@@ -15,6 +15,8 @@ find_path(MAPBOX_VARIANT_INCLUDE_DIRS "mapbox/optional.hpp")
 find_path(GEOJSON_VT_CPP_INCLUDE_DIRS "mapbox/geojsonvt.hpp")
 find_path(GEOJSON_CPP_INCLUDE_DIRS "mapbox/geojson.hpp")
 
+set(SHADER_INC_DIR "${CMAKE_CURRENT_BINARY_DIR}/shaders")
+
 add_subdirectory(deps)
 
 add_library(tangram-core
@@ -209,43 +211,42 @@ add_library(tangram-core
   src/view/viewConstraint.cpp
 )
 
+add_library(tangram::core ALIAS tangram-core)
+
 # Include headers from core library and dependencies.
 target_include_directories(tangram-core
   PUBLIC
-  include/tangram
-  # TODO: These headers shouldn't be public, but Platform classes use them.
-  src
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/tangram>"
+    "$<INSTALL_INTERFACE:include/tangram>"
   PRIVATE
-    generated
+    ${SHADER_INC_DIR}
     deps/mapbox
     ${MAPBOX_VARIANT_INCLUDE_DIRS}
     ${GEOJSON_CPP_INCLUDE_DIRS}
     ${GEOJSON_VT_CPP_INCLUDE_DIRS}
 )
 
-if (WIN32)
-  set(ZLIB_NAME ZLIB::ZLIB)
+if(MSVC)
   target_compile_definitions(tangram-core PUBLIC _USE_MATH_DEFINES)
-else()
-  set(ZLIB_NAME z)
 endif()
 
 # Link core library dependencies.
 target_link_libraries(tangram-core
   PRIVATE
-  sdf
-  pbf
-  earcut
-  isect2d
-  glm::glm
-  css-color-parser-cpp
-  yaml-cpp
-  alfons
-  hashlib
-  double-conversion::double-conversion
-  miniz::miniz
-  rapidjson
-  ${ZLIB_NAME}
+    sdf
+    pbf
+    earcut
+    isect2d
+    glm::glm
+    css-color-parser-cpp
+    yaml-cpp
+    alfons
+    hashlib
+    double-conversion::double-conversion
+    miniz::miniz
+    rapidjson
+    ZLIB::ZLIB
 )
 
 # Add JavaScript implementation.
@@ -271,7 +272,7 @@ endif()
 
 if(UNIX AND NOT APPLE)
   # SQLite needs dl dynamic library loader when Linux
-  target_link_libraries(tangram-core PRIVATE dl)
+  target_link_libraries(tangram-core PRIVATE ${CMAKE_DL_LIBS})
 endif()
 
 if(TANGRAM_WARN_ON_RULE_CONFLICT)
@@ -291,7 +292,11 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # C++14 is required for compiling tangram-core and for using the interface headers.
-set_property(TARGET tangram-core PROPERTY CXX_STANDARD 14)
+set_target_properties(tangram-core PROPERTIES
+  CXX_STANDARD 14
+  CXX_EXTENSIONS OFF
+  CXX_STANDARD_REQUIRED ON
+)
 
 # We include GLSL shader sources into the library by generating header files with the source text
 # printed into a string constant. A CMake script generates one of these headers for each shader source
@@ -326,7 +331,7 @@ foreach(_shader ${SHADER_FILES})
   get_filename_component(_shader_ext "${_shader}" EXT)
   string(REGEX REPLACE "\\." "" _shader_ext "${_shader_ext}")
   set(_shader_name "${_shader_name}_${_shader_ext}")
-  set(SHADER_OUTPUT "${PROJECT_SOURCE_DIR}/generated/${_shader_name}.h")
+  set(SHADER_OUTPUT "${SHADER_INC_DIR}/${_shader_name}.h")
   add_custom_command(
     OUTPUT "${SHADER_OUTPUT}"
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
@@ -343,3 +348,7 @@ if(CMAKE_VERSION VERSION_GREATER "3.8")
   get_target_property(TANGRAM_CORE_SOURCES tangram-core SOURCES)
   source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${TANGRAM_CORE_SOURCES})
 endif()
+
+tangram_install(tangram-core)
+install(DIRECTORY include/ TYPE INCLUDE)
+install(DIRECTORY src/ TYPE INCLUDE FILES_MATCHING PATTERN "*.h")

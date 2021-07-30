@@ -13,28 +13,53 @@ add_subdirectory(hash-library)
 ## sdf ##
 ##########################
 add_library(sdf INTERFACE)
-target_include_directories(sdf INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/sdf)
+target_include_directories(sdf INTERFACE
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/sdf>"
+  "$<INSTALL_INTERFACE:include>"
+)
+tangram_install(sdf)
+tangram_install_dir("${CMAKE_CURRENT_SOURCE_DIR}/sdf/")
 
 ## pbf ##
 ##########################
 add_library(pbf INTERFACE)
-target_include_directories(pbf INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(pbf INTERFACE   
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+  "$<INSTALL_INTERFACE:include>"
+)
+tangram_install(pbf)
+tangram_install_dir("${CMAKE_CURRENT_SOURCE_DIR}/pbf")
 
 ## earcut ##
 ##########################
 add_library(earcut INTERFACE)
-target_include_directories(earcut INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/earcut/include)
+target_include_directories(earcut INTERFACE   
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/earcut/include>"
+  "$<INSTALL_INTERFACE:include>"
+)
+tangram_install(earcut)
+tangram_install_dir("${CMAKE_CURRENT_SOURCE_DIR}/earcut/include/")
 
 ## isect2d ##
 ##########################
 add_library(isect2d INTERFACE)
-target_include_directories(isect2d INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/isect2d/include)
+target_include_directories(isect2d INTERFACE   
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/isect2d/include>"
+  "$<INSTALL_INTERFACE:include>"
+)
+tangram_install(isect2d)
+tangram_install_dir("${CMAKE_CURRENT_SOURCE_DIR}/isect2d/include/")
 
 ## css-color-parser-cpp ##
 ##########################
 add_library(css-color-parser-cpp css-color-parser-cpp/csscolorparser.cpp)
 set_target_properties(css-color-parser-cpp PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED ON)
-target_include_directories(css-color-parser-cpp PUBLIC css-color-parser-cpp)
+target_include_directories(css-color-parser-cpp PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/css-color-parser-cpp>"
+  "$<INSTALL_INTERFACE:include>" 
+)
+tangram_install(css-color-parser-cpp)
+tangram_install_files("${CMAKE_CURRENT_SOURCE_DIR}/css-color-parser-cpp/csscolorparser.hpp")
 
 set(ALFONS_DEPS_LIBRARIES glm::glm)
 if(NOT TANGRAM_USE_SYSTEM_FONT_LIBS)
@@ -45,11 +70,13 @@ if(NOT TANGRAM_USE_SYSTEM_FONT_LIBS)
 endif()
 
 
-
 ## alfons ##
 ############
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
 target_compile_definitions(alfons PRIVATE GLM_FORCE_CTOR_INIT)
+tangram_install(alfons)
+tangram_install(linebreak)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/alfons/src/" TYPE INCLUDE FILES_MATCHING PATTERN "*.h")
 
 
 ## Prebuild JavascriptCore ##
