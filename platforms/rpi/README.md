@@ -17,10 +17,10 @@ git submodule update --init
 
 To build on Rasberry Pi you will need a C++ toolchain with support for C++14. GCC 4.9.2 (or higher) and Clang 3.4 (or higher) are known to work (refer [here](https://community.thinger.io/t/starting-with-the-raspberry-pi/36) for instructions on getting GCC 4.9).
 
-You will also need to install development packages for libcurl:
+You will also need to install some development packages:
 
 ```
-sudo apt-get install libcurl4-openssl-dev
+sudo apt-get install libcurl4-openssl-dev libfontconfig1-dev
 ```
 
 The demo application uses the Nextzen vector tile service, so you will need a Nextzen API key to build and run the demo. 
