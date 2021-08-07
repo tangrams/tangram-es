@@ -214,8 +214,7 @@ jobs:
       - save_cache:
           key: windows-vcpkg-v1-{{ checksum "vcpkg.json" }}
           paths:
-            - vcpkg/installed
-            - vcpkg/packages
+            - C:\Users\circleci\AppData\Local\vcpkg\archives
       - run: cmake --build build/windows
 workflows:
   version: 2
