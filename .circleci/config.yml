@@ -206,13 +206,13 @@ jobs:
       - run: .\vcpkg\bootstrap-vcpkg.bat
       - restore_cache:
           keys:
-            - windows-vcpkg-v1-{{ .Environment.VCPKG_VERSION }}
+            - windows-vcpkg-v1-{{ checksum "vcpkg.json" }}
             - windows-vcpkg-v1
       - run: 
           command: cmake -S . -B build/windows -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE="$pwd\vcpkg\scripts\buildsystems\vcpkg.cmake"
           no_output_timeout: 30m
       - save_cache:
-          key: windows-vcpkg-v1-{{ .Environment.VCPKG_VERSION }}
+          key: windows-vcpkg-v1-{{ checksum "vcpkg.json" }}
           paths:
             - vcpkg/installed
             - vcpkg/packages
