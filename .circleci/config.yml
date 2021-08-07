@@ -209,13 +209,20 @@ jobs:
             - windows-vcpkg-v1-{{ checksum "vcpkg.json" }}
             - windows-vcpkg-v1
       - run: 
-          command: cmake -S . -B build/windows -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE="$pwd\vcpkg\scripts\buildsystems\vcpkg.cmake"
+          command: cmake -S . -B build/windows -G "Visual Studio 16 2019" \
+            -DCMAKE_TOOLCHAIN_FILE="$pwd\vcpkg\scripts\buildsystems\vcpkg.cmake" \
+            -DTANGRAM_BUILD_TESTS=1
           no_output_timeout: 30m
       - save_cache:
           key: windows-vcpkg-v1-{{ checksum "vcpkg.json" }}
           paths:
             - C:\Users\circleci\AppData\Local\vcpkg\archives
       - run: cmake --build build/windows
+      - run:
+          command: source scripts/run_tests.sh build/windows ~/test-results/catch
+          shell: bash.exe
+      - store_test_results:
+          path: C:\Users\circleci\test-results
 workflows:
   version: 2
   build-and-deploy:
