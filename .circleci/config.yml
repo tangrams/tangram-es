@@ -204,19 +204,18 @@ jobs:
       - run: .\vcpkg\bootstrap-vcpkg.bat
       - restore_cache:
           keys:
-            - windows-vcpkg-v2-{{ .Branch }}-{{ checksum "vcpkg.json" }}
-            - windows-vcpkg-v2-{{ .Branch }}
-            - windows-vcpkg-v2
+            - windows-vcpkg-v1-{{ .Branch }}-{{ checksum "vcpkg.json" }}
+            - windows-vcpkg-v1-{{ .Branch }}
+            - windows-vcpkg-v1
       - run: 
           command: cmake -S . -B build/windows -G "Visual Studio 16 2019" \
             -DCMAKE_TOOLCHAIN_FILE="$pwd\vcpkg\scripts\buildsystems\vcpkg.cmake" \
             -DTANGRAM_BUILD_TESTS=1
           no_output_timeout: 30m
       - save_cache:
-          key: windows-vcpkg-v2-{{ .Branch }}-{{ checksum "vcpkg.json" }}
+          key: windows-vcpkg-v1-{{ .Branch }}-{{ checksum "vcpkg.json" }}
           paths:
             - C:\Users\circleci\AppData\Local\vcpkg\archives
-            - .\vcpkg\downloads\tools
       - run: cmake --build build\windows
       - run: |
           mkdir C:\users\circleci\test-results\catch
