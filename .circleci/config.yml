@@ -218,9 +218,10 @@ jobs:
             - C:\Users\circleci\AppData\Local\vcpkg\archives
             - .\vcpkg\downloads\tools
       - run: cmake --build build\windows
-      - run:
-          command: source scripts/run_tests.sh build/windows ~/test-results/catch
-          shell: bash.exe
+      - run: |
+          mkdir C:\users\circleci\test-results\catch
+          cd .\build\windows
+          .\tests\tests.out.exe -r junit -o C:\Users\circleci\test-results\catch\test-results.xml
       - store_test_results:
           path: C:\Users\circleci\test-results
 workflows:
