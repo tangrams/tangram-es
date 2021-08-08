@@ -196,28 +196,28 @@ jobs:
           path: ~/demo.zip
   build-test-windows:
     executor: win/default
-    environment:
-      VCPKG_VERSION: 2021.05.12
     steps:
       - checkout
       - run: git submodule update --init
       - run: choco install cmake --version 3.20.5 --installargs 'ADD_CMAKE_TO_PATH=System'
-      - run: git clone --branch $env:VCPKG_VERSION https://github.com/microsoft/vcpkg
+      - run: git clone --branch 2021.05.12 https://github.com/microsoft/vcpkg
       - run: .\vcpkg\bootstrap-vcpkg.bat
       - restore_cache:
           keys:
-            - windows-vcpkg-v1-{{ checksum "vcpkg.json" }}
-            - windows-vcpkg-v1
+            - windows-vcpkg-v2-{{ .Branch }}-{{ checksum "vcpkg.json" }}
+            - windows-vcpkg-v2-{{ .Branch }}
+            - windows-vcpkg-v2
       - run: 
           command: cmake -S . -B build/windows -G "Visual Studio 16 2019" \
             -DCMAKE_TOOLCHAIN_FILE="$pwd\vcpkg\scripts\buildsystems\vcpkg.cmake" \
             -DTANGRAM_BUILD_TESTS=1
           no_output_timeout: 30m
       - save_cache:
-          key: windows-vcpkg-v1-{{ checksum "vcpkg.json" }}
+          key: windows-vcpkg-v2-{{ .Branch }}-{{ checksum "vcpkg.json" }}
           paths:
             - C:\Users\circleci\AppData\Local\vcpkg\archives
-      - run: cmake --build build/windows
+            - .\vcpkg\downloads\tools
+      - run: cmake --build build\windows
       - run:
           command: source scripts/run_tests.sh build/windows ~/test-results/catch
           shell: bash.exe
