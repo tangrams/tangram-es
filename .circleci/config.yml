@@ -218,8 +218,9 @@ jobs:
             - C:\Users\circleci\AppData\Local\vcpkg\archives
       - run: cmake --build build\windows
       - run: |
-          mkdir C:\users\circleci\test-results\catch
+          mkdir C:\Users\circleci\test-results\catch
           cd .\build\windows
+          ls
           .\tests\tests.out.exe -r junit -o C:\Users\circleci\test-results\catch\test-results.xml
       - store_test_results:
           path: C:\Users\circleci\test-results
