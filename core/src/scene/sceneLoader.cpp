@@ -145,7 +145,7 @@ void SceneLoader::applyScene(const Node& _node, Color& backgroundColor,
                              Stops& backgroundStops, Scene::animate& animated) {
     if (!_node) { return; }
     if (!_node.IsMap()) {
-        LOGNode("Invalid 'scene' section", _node);
+        LOGNode("Invalid 'scene' section", _node, "");
         return;
     }
 
@@ -302,7 +302,7 @@ Scene::Lights SceneLoader::applyLights(const Node& _node) {
             }
         }
     } else if (_node) {
-        LOGNode("Invalid 'lights'", _node);
+        LOGNode("Invalid 'lights'", _node, "");
     }
 
     if (lights.empty()) {
@@ -436,14 +436,14 @@ void SceneLoader::parseLightPosition(const Node& _positionNode, PointLight& _lig
         }
         _light.setPosition(positionResult);
     } else {
-        LOGNode("Invalid light position parameter:", _positionNode);
+        LOGNode("Invalid light position parameter:", _positionNode, "");
     }
 }
 
 void SceneLoader::applyTextures(const Node& _node, SceneTextures& _textures) {
     if (!_node) { return; }
     if (!_node.IsMap()) {
-        LOGNode("Invalid 'textures' section", _node);
+        LOGNode("Invalid 'textures' section", _node, "");
         return;
     }
 
@@ -543,7 +543,7 @@ bool SceneLoader::parseTexFiltering(const Node& _filteringNode, TextureOptions& 
 void SceneLoader::applyFonts(const Node& _node, SceneFonts& _fonts) {
     if (!_node) { return; }
     if (!_node.IsMap()) {
-        LOGNode("Invalid 'fonts' section", _node);
+        LOGNode("Invalid 'fonts' section", _node, "");
         return;
     }
 
@@ -570,7 +570,7 @@ void SceneLoader::applyFonts(const Node& _node, SceneFonts& _fonts) {
 void SceneLoader::loadFontDescription(const Node& _node, const std::string& _family, SceneFonts& _fonts) {
     if (!_node) { return; }
     if (!_node.IsMap()) {
-        LOGNode("Invalid 'font' section", _node);
+        LOGNode("Invalid 'font' section", _node, "");
         return;
     }
 
@@ -634,18 +634,18 @@ Scene::TileSources SceneLoader::applySources(const Node& _config, const SceneOpt
 
         if (const Node& rasters = source.second["rasters"]) {
             if (!rasters.IsSequence()) {
-                LOGNode("Invalid 'rasters'", rasters);
+                LOGNode("Invalid 'rasters'", rasters, "");
                 continue;
             }
             for (const auto& raster : rasters) {
                 if (!raster.IsScalar()) {
-                    LOGNode("Invalid 'raster'", raster);
+                    LOGNode("Invalid 'raster'", raster, "");
                     continue;
                 }
                 if (auto rasterSource = getTileSource(raster.Scalar())) {
                     tileSource->addRasterSource(rasterSource);
                 } else {
-                    LOGNode("Missing raster source", raster);
+                    LOGNode("Missing raster source", raster, "");
                 }
             }
         }
@@ -676,7 +676,7 @@ Scene::TileSources SceneLoader::applySources(const Node& _config, const SceneOpt
             if (!data_source) { continue;}
 
             if (!data_source.IsScalar()) {
-                LOGNode("Invalid 'source", data);
+                LOGNode("Invalid 'source", data, "");
                 continue;
             }
             auto source = data_source.Scalar();
@@ -875,7 +875,7 @@ Scene::Styles SceneLoader::applyStyles(const Node& _node, SceneTextures& _textur
 
     if (!_node) { return styles; }
     if (!_node.IsMap()) {
-        LOGNode("Invalid 'styles' section", _node);
+        LOGNode("Invalid 'styles' section", _node, "");
         return styles;
     }
 
@@ -1256,7 +1256,7 @@ void SceneLoader::loadShaderConfig(const Node& _shaders, Style& _style, SceneTex
 
                 _style.styleUniforms().emplace_back(name, styleUniform.value);
             } else {
-                LOGNode("Style uniform parsing failure", uniform.second);
+                LOGNode("Style uniform parsing failure", uniform.second, "");
             }
         }
     }
@@ -1387,7 +1387,7 @@ void SceneLoader::loadMaterial(const Node& _matNode, Material& _material, Style&
             // Handled as texture
             break;
         default:
-            LOGNode("Invalid 'material'", prop);
+            LOGNode("Invalid 'material'", prop, "");
             break;
         }
         return glm::vec4(0.0);
@@ -1441,7 +1441,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(const Node& _matCompNode, Style
 
     Node textureNode = _matCompNode["texture"];
     if (!textureNode) {
-        LOGNode("Expected a 'texture' parameter", _matCompNode);
+        LOGNode("Expected a 'texture' parameter", _matCompNode, "");
 
         return MaterialTexture{};
     }
@@ -1501,7 +1501,7 @@ std::vector<DataLayer> SceneLoader::applyLayers(const Node& _node,  SceneFunctio
                                                 SceneStops& _stops, DrawRuleNames& _ruleNames) {
     if (!_node) { return {}; }
     if (!_node.IsMap()) {
-        LOGNode("Invalid 'layers' section", _node);
+        LOGNode("Invalid 'layers' section", _node, "");
         return {};
     }
 
