@@ -216,14 +216,14 @@ jobs:
       - save_cache:
           key: windows-vcpkg-v1-{{ .Branch }}-{{ checksum "vcpkg.json" }}
           paths:
-            - C:\Users\circleci\AppData\Local\vcpkg\archives
+            - ~\AppData\Local\vcpkg\archives
       - run: cmake --build build\windows
       - run: |
-          mkdir C:\Users\circleci\test-results\catch
+          mkdir ~\test-results\catch
           cd .\build\windows
-          .\tests\Debug\tests.out.exe -r junit -o C:\Users\circleci\test-results\catch\test-results.xml
+          .\tests\Debug\tests.out.exe -r junit -o ~\test-results\catch\test-results.xml
       - store_test_results:
-          path: C:\Users\circleci\test-results
+          path: ~\test-results
 workflows:
   version: 2
   build-and-deploy:
