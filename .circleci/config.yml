@@ -208,8 +208,9 @@ jobs:
             - windows-vcpkg-v1-{{ .Branch }}
             - windows-vcpkg-v1
       - run: 
-          command: cmake -S . -B build/windows -G "Visual Studio 16 2019" \
+          command: cmake -S . -B build\windows -G "Visual Studio 16 2019" \
             -DCMAKE_TOOLCHAIN_FILE="$pwd\vcpkg\scripts\buildsystems\vcpkg.cmake" \
+            -DCMAKE_BUILD_TYPE=Debug
             -DTANGRAM_BUILD_TESTS=1
           no_output_timeout: 30m
       - save_cache:
@@ -220,8 +221,7 @@ jobs:
       - run: |
           mkdir C:\Users\circleci\test-results\catch
           cd .\build\windows
-          ls
-          .\tests\tests.out.exe -r junit -o C:\Users\circleci\test-results\catch\test-results.xml
+          .\tests\Debug\tests.out.exe -r junit -o C:\Users\circleci\test-results\catch\test-results.xml
       - store_test_results:
           path: C:\Users\circleci\test-results
 workflows:
