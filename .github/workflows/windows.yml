@@ -23,5 +23,5 @@ jobs:
       - name: "Run Build"
         run: cmake --build .\build
       - name: "Run Tests"
-        run: .\Debug\tests.out.exe
+        run: .\tests\Debug\tests.out.exe
         working-directory: .\build
