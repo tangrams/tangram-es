@@ -244,8 +244,6 @@ TEST_CASE("Escape reserved characters in strings with %-encoding") {
     CHECK(Url::unEscapeReservedCharacters("%F0%9F%8D%A9") == "🍩");
     CHECK(Url::unEscapeReservedCharacters("%EB%8F%84%EB%84%9B") == "도넛");
 
-    CHECK(false);
-
 }
 
 // [1]:
