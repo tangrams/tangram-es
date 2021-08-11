@@ -73,6 +73,10 @@ endif()
 set(GLM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glm)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
 target_compile_definitions(alfons PRIVATE GLM_FORCE_CTOR_INIT)
+if(MSVC)
+  # Use a lower warning level on MSVC because -Wall produces excessive output.
+  target_compile_options(alfons PUBLIC "/W1")
+endif()
 
 if (TANGRAM_MBTILES_DATASOURCE)
   ## SQLiteCpp ##
