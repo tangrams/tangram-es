@@ -7,8 +7,6 @@
 
 #define PATH_MAX 512
 
-#error
-
 using namespace Tangram;
 
 int main(int argc, char* argv[]) {
