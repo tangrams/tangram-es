@@ -44,9 +44,9 @@ jobs:
       - name: "Reset ccache stats"
         run: ccache --zero-stats
       - name: "Configure CMake"
-        run: cmake -S . -B ./build -G Ninja \
-          -DCMAKE_BUILD_TYPE=Debug \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+        run: cmake -S . -B ./build -G Ninja
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DTANGRAM_BUILD_TESTS=1
       - name: "Run build"
