@@ -34,7 +34,9 @@ jobs:
         with:
           submodules: true
       - name: "Install dependencies"
-        run: brew install ninja ccache
+        run: |
+          brew update
+          brew install ninja ccache
       - name: "Cache ccache directory"
         uses: actions/cache@v2
         with:
