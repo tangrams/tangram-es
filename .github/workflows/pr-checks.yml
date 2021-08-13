@@ -1,0 +1,56 @@
+name: "PR Checks"
+on: push
+jobs:
+  build-test-windows:
+    name: "Build and Test on Windows"
+    runs-on: windows-2019
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: "Cache vcpkg binaries"
+        uses: actions/cache@v2
+        with:
+          path: ~\AppData\Local\vcpkg\archives
+          key: vcpkg-v1-${{ hashFiles('vcpkg.json') }}
+          restore-keys: vcpkg-v1-
+      - name: "Configure CMake"
+        run: cmake -S . -B .\build -G "Visual Studio 16 2019" \
+          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" \
+          -DCMAKE_BUILD_TYPE=Debug
+          -DTANGRAM_BUILD_TESTS=1
+      - name: "Run Build"
+        run: cmake --build .\build
+      - name: "Run Tests"
+        run: .\tests\Debug\tests.out.exe
+        working-directory: .\build
+  build-test-macos:
+    name: "Build and Test on macOS"
+    runs-on: macos-10.15
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: "Install dependencies"
+        run: brew install ninja ccache
+      - name: "Cache ccache directory"
+        uses: actions/cache@v2
+        with:
+          path: ~/Library/Caches/ccache
+          key: macos-ccache-v1-${{ github.sha }}
+          restore-keys: macos-ccache-v1-
+      - name: "Reset ccache stats"
+        run: ccache --zero-stats
+      - name: "Configure CMake"
+        run: cmake -S . -B ./build -G Ninja \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DTANGRAM_BUILD_TESTS=1
+      - name: "Run build"
+        run: cmake --build ./build
+      - name: "Run Tests"
+        run: ./tests/tests.out
+        working-directory: ./build
