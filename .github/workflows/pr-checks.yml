@@ -16,8 +16,8 @@ jobs:
           key: vcpkg-v1-${{ hashFiles('vcpkg.json') }}
           restore-keys: vcpkg-v1-
       - name: "Configure CMake"
-        run: cmake -S . -B .\build -G "Visual Studio 16 2019" \
-          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" \
+        run: cmake -S . -B .\build -G "Visual Studio 16 2019"
+          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
           -DCMAKE_BUILD_TYPE=Debug
           -DTANGRAM_BUILD_TESTS=1
       - name: "Run Build"
