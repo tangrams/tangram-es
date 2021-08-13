@@ -51,6 +51,8 @@ jobs:
           -DTANGRAM_BUILD_TESTS=1
       - name: "Run build"
         run: cmake --build ./build
+      - name: "Print ccache stats"
+        run: ccache --show-stats
       - name: "Run Tests"
         run: ./tests/tests.out
         working-directory: ./build
