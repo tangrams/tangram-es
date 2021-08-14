@@ -2,7 +2,8 @@ project(tangram-core)
 
 # Build core library dependencies.
 find_package(ZLIB REQUIRED)
-if (MSVC)
+
+if (TANGRAM_USE_VCPKG)
   find_package(yaml-cpp CONFIG REQUIRED)
 endif()
 
