@@ -16,6 +16,7 @@ option(TANGRAM_BUNDLE_TESTS "Compile all tests into a single binary" ON)
 option(TANGRAM_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(TANGRAM_DEV_MODE "For developers only: Don't omit the frame pointer" OFF)
 
+include(CMakeDependentOption)
 # Allow choosing whether to use vcpkg for dependencies when vcpkg toolchain is present, otherwise force off.
 CMAKE_DEPENDENT_OPTION(TANGRAM_USE_VCPKG "Use vcpkg for 3rd-party dependencies" ON "VCPKG_TOOLCHAIN" OFF)
 message(STATUS "Use vcpkg: ${TANGRAM_USE_VCPKG}")
