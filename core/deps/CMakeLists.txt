@@ -49,21 +49,16 @@ target_include_directories(miniz
 #######################################
 if(NOT TANGRAM_USE_SYSTEM_FONT_LIBS)
   if(TANGRAM_USE_VCPKG)
-    #find_package(ICU REQUIRED COMPONENTS common)
+    find_package(ICU REQUIRED COMPONENTS data)
     find_package(harfbuzz CONFIG REQUIRED)
-    set(HARFBUZZ_LIB_NAME harfbuzz::harfbuzz)
+    set(HARFBUZZ_LIBRARIES harfbuzz::harfbuzz ICU::data)
   else()
     set(HARFBUZZ_BUILD_ICU ON CACHE BOOL "Enable building of ICU")
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/harfbuzz-icu-freetype)
-
-    message(STATUS "harfbuzz" ${HARFBUZZ_LIBRARIES})
-    set(HARFBUZZ_LIB_NAME harfbuzz ${HARFBUZZ_LIBRARIES})
+    message(STATUS "Harfbuzz libraries:" ${HARFBUZZ_LIBRARIES})
   endif()
 
-  set(ALFONS_DEPS_LIBRARIES
-    ${ALFONS_DEPS_LIBRARIES}
-    ${HARFBUZZ_LIB_NAME}
-    CACHE INTERNAL "alfons-libs" FORCE)
+  set(ALFONS_DEPS_LIBRARIES ${HARFBUZZ_LIBRARIES} CACHE INTERNAL "alfons-libs" FORCE)
 endif()
 
 ## alfons ##
