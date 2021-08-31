@@ -4,33 +4,6 @@
 [submodule "core/dependencies/csscolorparser"]
 	path = core/deps/css-color-parser-cpp
 	url = https://github.com/tangrams/css-color-parser-cpp
-[submodule "core/include/variant"]
-	path = core/deps/variant
-	url = https://github.com/tangrams/variant
-[submodule "core/include/earcut.hpp"]
-	path = core/deps/earcut
-	url = https://github.com/tangrams/earcut.hpp
-[submodule "core/dependencies/geojson-vt-cpp"]
-	path = core/deps/geojson-vt-cpp
-	url = https://github.com/tangrams/geojson-vt-cpp.git
-[submodule "external/duktape"]
-	path = core/deps/duktape
-	url = https://github.com/tangrams/duktape.git
-[submodule "external/yaml-cpp"]
-	path = core/deps/yaml-cpp
-	url = https://github.com/tangrams/yaml-cpp
-[submodule "external/glfw"]
-	path = platforms/common/glfw
-	url = https://github.com/glfw/glfw
-[submodule "external/benchmark"]
-	path = bench/benchmark
-	url = https://github.com/google/benchmark
-[submodule "external/alfons"]
-	path = core/deps/alfons
-	url = https://github.com/hjanetzek/alfons
-[submodule "external/harfbuzz-icu-freetype"]
-	path = core/deps/harfbuzz-icu-freetype
-	url = https://github.com/tangrams/harfbuzz-icu-freetype.git
-[submodule "external/SQLiteCpp"]
-	path = core/deps/SQLiteCpp
-	url = https://github.com/SRombauts/SQLiteCpp.git
+[submodule "vcpkg"]
+	path = vcpkg
+	url = https://github.com/microsoft/vcpkg

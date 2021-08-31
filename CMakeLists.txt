@@ -1,6 +1,31 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
+include(cmake/get_tangram_version.cmake)
+include(cmake/vcpkg_setup.cmake)
+get_tangram_version()
+vcpkg_setup()
 
-project(tangram)
+project(tangram VERSION ${TANGRAM_VERSION})
+
+# set debug prefix for multi configuration generators
+set(CMAKE_DEBUG_POSTFIX "d")
+
+if(WIN32)
+    set(DEFAULT_BIN_DIR bin)
+    set(DEFAULT_LIB_DIR lib)
+    set(DEFAULT_ARCHIVE_DIR lib)
+else()
+    include(GNUInstallDirs)
+    set(DEFAULT_BIN_DIR ${CMAKE_INSTALL_BINDIR})
+    set(DEFAULT_LIB_DIR ${CMAKE_INSTALL_LIBDIR})
+    set(DEFAULT_ARCHIVE_DIR ${CMAKE_INSTALL_LIBDIR})
+endif()
+# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#runtime-output-artifacts
+set(TANGRAM_BIN_DIR ${DEFAULT_BIN_DIR} CACHE STRING "Install directory for binaries")
+# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#library-output-artifacts
+set(TANGRAM_LIB_DIR ${DEFAULT_LIB_DIR} CACHE STRING "Install directory for libraries")
+# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#archive-output-artifacts
+set(TANGRAM_ARCHIVE_DIR ${DEFAULT_ARCHIVE_DIR} CACHE STRING "Install directory for archives")
+set(INSTALL_CMAKE_DIR ${TANGRAM_LIB_DIR}/cmake/tangram CACHE STRING "Install directory of the cmake targets")
 
 # Options
 option(TANGRAM_USE_JSCORE "Use system libraries for JavaScriptCore and enable it on iOS and macOS" OFF)
@@ -18,11 +43,7 @@ option(TANGRAM_DEV_MODE "For developers only: Don't omit the frame pointer" OFF)
 
 message(STATUS "Build type configuration: ${CMAKE_BUILD_TYPE}")
 
-# Check that submodules are present.
-if(NOT MSVC AND NOT EXISTS "${PROJECT_SOURCE_DIR}/core/deps/harfbuzz-icu-freetype/harfbuzz/README")
-  message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init'")
-  return()
-endif()
+include(cmake/tangram_install.cmake)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   add_definitions(-DDEBUG)
@@ -94,3 +115,34 @@ if(TANGRAM_BUILD_BENCHMARKS)
   message(STATUS "Building benchmarks")
   add_subdirectory(bench)
 endif()
+
+
+# start package tangram
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/tangramConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY ExactVersion
+)
+
+set(INCLUDE_INSTALL_DIR include/)
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/tangramConfig.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/tangramConfig.cmake"
+  INSTALL_DESTINATION ${INSTALL_CMAKE_DIR}
+  PATH_VARS INCLUDE_INSTALL_DIR
+)
+
+install(
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/tangramConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/tangramConfigVersion.cmake"
+    DESTINATION ${INSTALL_CMAKE_DIR}
+)
+
+install(EXPORT tangramTargets
+        FILE tangramTargets.cmake
+        NAMESPACE tangram::
+        DESTINATION ${INSTALL_CMAKE_DIR}
+)
+
+install(DIRECTORY vcpkg-ports/ DESTINATION ${CMAKE_INSTALL_PREFIX}/tangram-vcpkg-overlays)

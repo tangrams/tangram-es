@@ -2,7 +2,7 @@
 
 #include "scene/styleParam.h"
 #include "util/color.h"
-#include "variant.hpp"
+#include <mapbox/variant.hpp>
 
 #include <vector>
 
