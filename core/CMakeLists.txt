@@ -350,5 +350,6 @@ if(CMAKE_VERSION VERSION_GREATER "3.8")
 endif()
 
 tangram_install(tangram-core)
+install(DIRECTORY deps/mapbox TYPE INCLUDE)
 install(DIRECTORY include/ TYPE INCLUDE)
 install(DIRECTORY src/ TYPE INCLUDE FILES_MATCHING PATTERN "*.h")
