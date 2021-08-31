@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     Url baseUrl("file://");
     char pathBuffer[PATH_MAX] = {0};
     if (getcwd(pathBuffer, PATH_MAX) != nullptr) {
-        baseUrl = baseUrl.resolve(Url(std::string(pathBuffer) + "/"));
+        baseUrl = baseUrl.resolve(Url("/" + std::string(pathBuffer) + "/"));
     }
 
     LOG("Base URL: %s", baseUrl.string().c_str());

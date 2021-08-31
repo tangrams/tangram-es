@@ -188,7 +188,7 @@ void Importer::addSceneYaml(const Url& sceneUrl, const char* sceneYaml, size_t l
     auto& sceneNode = m_sceneNodes[sceneUrl];
 
     try {
-#ifdef TANGRAM_WINDOWS
+#ifdef _MSC_VER
         sceneNode.yaml = YAML::Load(sceneYaml);
 #else
         sceneNode.yaml = YAML::Load(sceneYaml, length);

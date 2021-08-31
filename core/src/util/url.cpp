@@ -321,6 +321,10 @@ std::string Url::removeDotSegmentsFromString(std::string path) {
 }
 
 void Url::parse() {
+#ifdef TANGRAM_WINDOWS
+    // Normalize Windows paths. Chromium also does this.
+    std::replace(buffer.begin(), buffer.end(), '\\', '/');
+#endif
 
     // Normalize Windows paths. Chromium also does this.
     for(auto &c: buffer) {
