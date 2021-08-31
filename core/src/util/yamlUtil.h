@@ -9,6 +9,8 @@
 namespace Tangram {
 namespace YamlUtil {
 
+YAML::Node loadNoCopy(const char* input, size_t length);
+
 bool getInt(const YAML::Node& node, int& result, bool allowTrailingJunk = false);
 
 int getIntOrDefault(const YAML::Node& node, int defaultValue, bool allowTrailingJunk = false);
