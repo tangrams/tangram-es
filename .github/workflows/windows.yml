@@ -9,6 +9,12 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
+      - name: "Checkout vcpkg"
+        uses: actions/checkout@v2
+        with:
+          repository: microsoft/vcpkg
+          ref: 2021.05.12
+          path: vcpkg
       - name: "Cache vcpkg binaries"
         uses: actions/cache@v2
         with:
@@ -17,7 +23,7 @@ jobs:
           restore-keys: vcpkg-v1-
       - name: "Configure CMake"
         run: cmake -S . -B .\build -G "Visual Studio 16 2019" \
-          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" \
+          -DCMAKE_TOOLCHAIN_FILE=".\vcpkg\scripts\buildsystems\vcpkg.cmake" \
           -DCMAKE_BUILD_TYPE=Debug
           -DTANGRAM_BUILD_TESTS=1
       - name: "Run Build"
