@@ -17,8 +17,7 @@
         {
             "name": "harfbuzz",
             "features": [
-                "icu",
-                "graphite2"
+                "icu"
             ],
             "platform": "!osx"
         },
