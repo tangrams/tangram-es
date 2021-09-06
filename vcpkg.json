@@ -19,7 +19,16 @@
             "features": [
                 "icu",
                 "graphite2"
-            ]
+            ],
+            "platform": "!osx"
+        },
+        {
+            "name": "harfbuzz",
+            "features": [
+                "icu",
+                "coretext"
+            ],
+            "platform": "osx"
         },
         {
             "name": "imgui",
