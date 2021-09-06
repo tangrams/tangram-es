@@ -51,14 +51,14 @@ if(NOT TANGRAM_USE_SYSTEM_FONT_LIBS)
   if(TANGRAM_USE_VCPKG)
     find_package(ICU REQUIRED COMPONENTS data)
     find_package(harfbuzz CONFIG REQUIRED)
-    set(HARFBUZZ_LIBRARIES harfbuzz::harfbuzz ICU::data)
+    set(ALFONS_LIBS harfbuzz::harfbuzz ICU::data)
   else()
     set(HARFBUZZ_BUILD_ICU ON CACHE BOOL "Enable building of ICU")
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/harfbuzz-icu-freetype)
-    message(STATUS "Harfbuzz libraries:" ${HARFBUZZ_LIBRARIES})
+    set(ALFONS_LIBS harfbuzz ${HARFBUZZ_LIBRARIES})
   endif()
 
-  set(ALFONS_DEPS_LIBRARIES ${HARFBUZZ_LIBRARIES} CACHE INTERNAL "alfons-libs" FORCE)
+  set(ALFONS_DEPS_LIBRARIES ${ALFONS_LIBS} CACHE INTERNAL "alfons-libs" FORCE)
 endif()
 
 ## alfons ##
