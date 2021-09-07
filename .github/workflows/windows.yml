@@ -20,7 +20,7 @@ jobs:
         with:
           path: ~\AppData\Local\vcpkg\archives
           key: vcpkg-v2-${{ hashFiles('vcpkg.json') }}
-          restore-keys: vcpkg-v1-
+          restore-keys: vcpkg-v2-
       - name: "Configure CMake"
         run: cmake -S . -B .\build -G "Visual Studio 16 2019" \
           -DCMAKE_TOOLCHAIN_FILE=".\vcpkg\scripts\buildsystems\vcpkg.cmake" \
