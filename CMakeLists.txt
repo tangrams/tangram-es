@@ -16,10 +16,16 @@ option(TANGRAM_BUNDLE_TESTS "Compile all tests into a single binary" ON)
 option(TANGRAM_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(TANGRAM_DEV_MODE "For developers only: Don't omit the frame pointer" OFF)
 
+include(CMakeDependentOption)
+# Allow choosing whether to use vcpkg for dependencies when vcpkg toolchain is present, otherwise force off.
+CMAKE_DEPENDENT_OPTION(TANGRAM_USE_VCPKG "Use vcpkg for 3rd-party dependencies" ON "VCPKG_TOOLCHAIN" OFF)
+message(STATUS "Use vcpkg: ${TANGRAM_USE_VCPKG}")
+
+
 message(STATUS "Build type configuration: ${CMAKE_BUILD_TYPE}")
 
 # Check that submodules are present.
-if(NOT MSVC AND NOT EXISTS "${PROJECT_SOURCE_DIR}/core/deps/harfbuzz-icu-freetype/harfbuzz/README")
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/core/deps/isect2d/README.md")
   message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init'")
   return()
 endif()

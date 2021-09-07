@@ -123,6 +123,9 @@ public:
     // replaced with the corresponding UTF-8 characters.
     static std::string unEscapeReservedCharacters(const std::string& in);
 
+    // Return a URL representing the given Windows file path.
+    static Url fromWindowsFilePath(const std::string& windowsPath);
+
 private:
 
     // buffer contains the actual text of the URL.

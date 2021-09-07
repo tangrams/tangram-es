@@ -17,9 +17,17 @@
         {
             "name": "harfbuzz",
             "features": [
+                "icu"
+            ],
+            "platform": "!osx"
+        },
+        {
+            "name": "harfbuzz",
+            "features": [
                 "icu",
-                "graphite2"
-            ]
+                "coretext"
+            ],
+            "platform": "osx"
         },
         {
             "name": "imgui",
