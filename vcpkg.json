@@ -40,6 +40,7 @@
         "mapbox-geojson-cpp",
         "mapbox-geojson-vt-cpp",
         "mapbox-geometry",
+        "mapbox-earcut",
         "mapbox-variant",
         "miniz",
         "stb",
@@ -52,6 +53,5 @@
         },
         "yaml-cpp"
     ],
-    "overrides": [
-    ]
+    "overrides": []
 }

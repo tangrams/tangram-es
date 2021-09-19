@@ -14,6 +14,7 @@ find_package(glm CONFIG REQUIRED)
 find_path(MAPBOX_VARIANT_INCLUDE_DIRS "mapbox/optional.hpp")
 find_path(GEOJSON_VT_CPP_INCLUDE_DIRS "mapbox/geojsonvt.hpp")
 find_path(GEOJSON_CPP_INCLUDE_DIRS "mapbox/geojson.hpp")
+find_path(MAPBOX_EARCUT_INCLUDE_DIRS "mapbox/earcut.hpp")
 
 add_subdirectory(deps)
 
@@ -221,6 +222,7 @@ target_include_directories(tangram-core
     ${MAPBOX_VARIANT_INCLUDE_DIRS}
     ${GEOJSON_CPP_INCLUDE_DIRS}
     ${GEOJSON_VT_CPP_INCLUDE_DIRS}
+    ${MAPBOX_EARCUT_INCLUDE_DIRS}
 )
 
 if (WIN32)

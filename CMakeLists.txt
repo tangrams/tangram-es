@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 option(USE_VCPKG "enable vcpkg dependency build" ON)
 # needs before first project() call
 set(VCPKG_OVERLAY_PORTS
+  "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-earcut"
   "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-geojson-vt-cpp" 
   "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-geojson-cpp"
   "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-geometry"

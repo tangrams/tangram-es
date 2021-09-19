@@ -1,0 +1,125 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "default-builddir",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build/${presetName}"
+        },
+        {
+            "name": "generator-ninja",
+            "generator": "Ninja"
+        },
+        {
+            "name": "default-debug",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "default-release",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "windows-default",
+            "displayName": "Windows x64 Debug",
+            "hidden": true,
+            "inherits": [
+                "default-builddir",
+                "generator-ninja"
+            ],
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "toolset": {
+                "value": "host=x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl",
+                "CMAKE_CXX_COMPILER": "cl"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Windows"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "windows-default-debug",
+            "displayName": "Windows x64 Debug",
+            "inherits": [
+                "default-debug",
+                "windows-default"
+            ]
+        },
+        {
+            "name": "windows-default-release",
+            "displayName": "Windows x64 Release",
+            "inherits": [
+                "default-release",
+                "windows-default"
+            ]
+        },
+        {
+            "name": "linux-default",
+            "hidden": true,
+            "inherits": [
+                "default-builddir",
+                "generator-ninja"
+            ]
+        },
+        {
+            "name": "linux-default-debug",
+            "displayName": "linux debug",
+            "inherits": [
+                "default-debug",
+                "linux-default"
+            ]
+        },
+        {
+            "name": "linux-default-release",
+            "displayName": "linux release",
+            "inherits": [
+                "default-release",
+                "linux-default"
+            ]
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "windows-default",
+            "configurePreset": "windows-default-debug"
+        },
+        {
+            "name": "linux-ci",
+            "configurePreset": "linux-default-release"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "linux-ci",
+            "description": "Test",
+            "displayName": "Test Release",
+            "configurePreset": "linux-default-release"
+        },
+        {
+            "name": "windows-ci",
+            "description": "Test",
+            "displayName": "Test Release",
+            "configurePreset": "windows-default-release"
+        }
+    ]
+}
