@@ -1,0 +1,16 @@
+{
+  "name": "alfons",
+  "version-date": "2018-09-22",
+  "port-version": 0,
+  "description": "Text rendering utilities",
+  "homepage": "https://github.com/hjanetzek/alfons",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    },
+    "icu",
+    "harfbuzz",
+    "glm"
+  ]
+}

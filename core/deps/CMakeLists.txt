@@ -20,11 +20,6 @@ target_include_directories(sdf INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/sdf)
 add_library(pbf INTERFACE)
 target_include_directories(pbf INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-## earcut ##
-##########################
-add_library(earcut INTERFACE)
-target_include_directories(earcut INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/earcut/include)
-
 ## isect2d ##
 ##########################
 add_library(isect2d INTERFACE)
@@ -35,26 +30,6 @@ target_include_directories(isect2d INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/isect2d
 add_library(css-color-parser-cpp css-color-parser-cpp/csscolorparser.cpp)
 set_target_properties(css-color-parser-cpp PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED ON)
 target_include_directories(css-color-parser-cpp PUBLIC css-color-parser-cpp)
-
-set(ALFONS_DEPS_LIBRARIES glm::glm)
-if(NOT TANGRAM_USE_SYSTEM_FONT_LIBS)
-  ## Harfbuzz - ICU-Common - Freetype2 ##
-  #######################################
-  find_package(harfbuzz CONFIG REQUIRED)
-  list(APPEND ALFONS_DEPS_LIBRARIES harfbuzz::harfbuzz)
-endif()
-
-
-
-## alfons ##
-############
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
-target_compile_definitions(alfons PRIVATE GLM_FORCE_CTOR_INIT)
-if(MSVC)
-  # Use a lower warning level on MSVC because -Wall produces excessive output.
-  target_compile_options(alfons PUBLIC "/W1")
-endif()
-
 
 ## Prebuild JavascriptCore ##
 #############################

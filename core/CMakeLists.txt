@@ -10,6 +10,7 @@ find_package(ZLIB REQUIRED)
 find_package(double-conversion CONFIG REQUIRED)
 find_package(SQLiteCpp CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(alfons CONFIG REQUIRED)
 
 find_path(MAPBOX_VARIANT_INCLUDE_DIRS "mapbox/optional.hpp")
 find_path(GEOJSON_VT_CPP_INCLUDE_DIRS "mapbox/geojsonvt.hpp")
@@ -233,16 +234,15 @@ else()
 endif()
 
 # Link core library dependencies.
-target_link_libraries(tangram-core
-  PRIVATE
+target_link_libraries(tangram-core PRIVATE
   sdf
   pbf
-  earcut
   isect2d
   glm::glm
   css-color-parser-cpp
   yaml-cpp
-  alfons
+  alfons::alfons 
+  alfons::linebreak
   hashlib
   double-conversion::double-conversion
   miniz::miniz

@@ -1,57 +1,56 @@
 {
-    "name": "tangram-es",
-    "version-string": "0.1.0",
-    "description": "",
-    "builtin-baseline": "b1b4808228377515acd849b8706ee2ad25ba455d",
-    "dependencies": [
-        "benchmark",
-        {
-            "name": "curl",
-            "features": [
-                "http2",
-                "ssl"
-            ]
-        },
-        "double-conversion",
-        "duktape",
-        "freetype",
-        "glad",
-        {
-            "name": "glfw3",
-            "platform": "!android "
-        },
-        "glm",
-        {
-            "name": "harfbuzz",
-            "features": [
-                "graphite2",
-                "icu"
-            ]
-        },
-        "icu",
-        {
-            "name": "imgui",
-            "features": [
-                "docking-experimental",
-                "glfw-binding",
-                "opengl3-glad-binding"
-            ]
-        },
-        "mapbox-geojson-cpp",
-        "mapbox-geojson-vt-cpp",
-        "mapbox-geometry",
-        "mapbox-earcut",
-        "mapbox-variant",
-        "miniz",
-        "stb",
-        "rapidjson",
-        {
-            "name": "sqlitecpp",
-            "features": [
-                "sqlite"
-            ]
-        },
-        "yaml-cpp"
-    ],
-    "overrides": []
+  "name": "tangram-es",
+  "version-string": "0.1.0",
+  "description": "",
+  "dependencies": [
+    "alfons",
+    "benchmark",
+    {
+      "name": "curl",
+      "features": [
+        "http2",
+        "ssl"
+      ]
+    },
+    "double-conversion",
+    "duktape",
+    "freetype",
+    "glad",
+    {
+      "name": "glfw3",
+      "platform": "!android"
+    },
+    "glm",
+    {
+      "name": "harfbuzz",
+      "features": [
+        "graphite2",
+        "icu"
+      ]
+    },
+    "icu",
+    {
+      "name": "imgui",
+      "features": [
+        "docking-experimental",
+        "glfw-binding",
+        "opengl3-binding"
+      ]
+    },
+    "mapbox-earcut",
+    "mapbox-geojson-cpp",
+    "mapbox-geojson-vt-cpp",
+    "mapbox-geometry",
+    "mapbox-variant",
+    "miniz",
+    "rapidjson",
+    {
+      "name": "sqlitecpp",
+      "features": [
+        "sqlite"
+      ]
+    },
+    "stb",
+    "yaml-cpp"
+  ]
 }
