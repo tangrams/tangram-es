@@ -62,3 +62,8 @@ jobs:
       - name: "Run Tests"
         run: ./tests/tests.out
         working-directory: ./build
+      - name: "Upload demo app"
+        uses: actions/upload-artifact@v2
+        with:
+          artifact: macos-app
+          path: build/tangram.app
