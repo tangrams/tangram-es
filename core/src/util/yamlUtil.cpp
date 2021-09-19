@@ -11,6 +11,17 @@
 namespace Tangram {
 namespace YamlUtil {
 
+struct memstream : public std::istream, public std::streambuf {
+    memstream(const char* begin, const char* end): std::istream(this)  {
+        setg(const_cast<char *>(begin), const_cast<char *>(begin), const_cast<char *>(end));
+    }
+};
+
+YAML::Node loadNoCopy(const char* input, size_t length) {
+    memstream stream(input, input + length);
+    return YAML::Load(stream);
+}
+
 glm::vec4 getColorAsVec4(const YAML::Node& node) {
     double val;
     if (getDouble(node, val, false)) {

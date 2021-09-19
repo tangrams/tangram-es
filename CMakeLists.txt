@@ -32,8 +32,13 @@ option(TANGRAM_BUNDLE_TESTS "Compile all tests into a single binary" ON)
 option(TANGRAM_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(TANGRAM_DEV_MODE "For developers only: Don't omit the frame pointer" OFF)
 
-message(STATUS "Build type configuration: ${CMAKE_BUILD_TYPE}")
+include(CMakeDependentOption)
+# Allow choosing whether to use vcpkg for dependencies when vcpkg toolchain is present, otherwise force off.
+CMAKE_DEPENDENT_OPTION(TANGRAM_USE_VCPKG "Use vcpkg for 3rd-party dependencies" ON "VCPKG_TOOLCHAIN" OFF)
+message(STATUS "Use vcpkg: ${TANGRAM_USE_VCPKG}")
 
+
+message(STATUS "Build type configuration: ${CMAKE_BUILD_TYPE}")
 
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)

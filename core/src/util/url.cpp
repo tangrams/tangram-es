@@ -321,14 +321,6 @@ std::string Url::removeDotSegmentsFromString(std::string path) {
 }
 
 void Url::parse() {
-
-    // Normalize Windows paths. Chromium also does this.
-    for(auto &c: buffer) {
-        if(c == '\\') {
-            c = '/';
-        }
-    }
-
     // The parsing process roughly follows https://tools.ietf.org/html/rfc1808#section-2.4
 
     size_t start = 0;
@@ -606,6 +598,25 @@ std::string Url::unEscapeReservedCharacters(const std::string& in) {
         out += *it;
     }
     return out;
+}
+
+Url Url::fromWindowsFilePath(const std::string& windowsPath) {
+    // https://docs.microsoft.com/en-us/archive/blogs/ie/file-uris-in-windows
+    // Strictly speaking this should also %-escape any reserved characters in the Windows path segments,
+    // but in practice this doesn't seem to change file access behavior. 
+    std::string urlString;
+    urlString.reserve(8 + windowsPath.size());
+    urlString += "file:///";
+    for (auto it = windowsPath.begin(), end = windowsPath.end(); it != end; ++it) {
+        // Normalize backward slashes to forward slashes.
+        if (*it == '\\') {
+            urlString += '/';
+        } else {
+            urlString += *it;
+        }
+    }
+
+    return Url(urlString);
 }
 
 } // namespace Tangram

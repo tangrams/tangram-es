@@ -50,6 +50,10 @@ endif()
 ############
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
 target_compile_definitions(alfons PRIVATE GLM_FORCE_CTOR_INIT)
+if(MSVC)
+  # Use a lower warning level on MSVC because -Wall produces excessive output.
+  target_compile_options(alfons PUBLIC "/W1")
+endif()
 
 
 ## Prebuild JavascriptCore ##

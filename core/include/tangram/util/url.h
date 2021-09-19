@@ -123,6 +123,9 @@ public:
     // replaced with the corresponding UTF-8 characters.
     static std::string unEscapeReservedCharacters(const std::string& in);
 
+    // Return a URL representing the given Windows file path.
+    static Url fromWindowsFilePath(const std::string& windowsPath);
+
 private:
 
     // buffer contains the actual text of the URL.
@@ -131,7 +134,7 @@ private:
     // parts describes URL components by their location within the buffer.
     struct Parts {
         struct Range {
-            uint16_t start = 0, count = 0;
+            size_t start = 0, count = 0;
         } scheme, location, path, parameters, query, fragment, media, data;
     } parts;
 
