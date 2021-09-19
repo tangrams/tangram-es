@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.10)
 
 option(USE_VCPKG "enable vcpkg dependency build" ON)
 # needs before first project() call
