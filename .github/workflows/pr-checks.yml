@@ -65,5 +65,6 @@ jobs:
       - name: "Upload demo app"
         uses: actions/upload-artifact@v2
         with:
-          artifact: macos-app
-          path: build/tangram.app
+          name: macos-app
+          path: build/*.app
+          retention-days: 60
