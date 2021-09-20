@@ -167,38 +167,12 @@ jobs:
           key: ios-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/Library/Caches/ccache
-  build-macos:
-    executor: macos-executor
-    steps:
-      # Check out repository with submodules.
-      - checkout
-      - run: git submodule update --init
-      # Install dependencies.
-      - run: brew install cmake ninja ccache
-      - restore_cache:
-          keys:
-            - macos-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-            - macos-ccache-v1-{{ .Branch }}
-            - macos-ccache-v1
-      - run: ccache --zero-stats
-      # Build the MacOS demo app and package it into demo.zip
-      - run: make osx MACOSX_DEPLOYMENT_TARGET=10.10.0 BUILD_TYPE=Debug CMAKE_OPTIONS="-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -GNinja"
-      - run: ccache --show-stats
-      - save_cache:
-          key: macos-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-          paths:
-            - ~/Library/Caches/ccache
-      # To produce the intended structure within the zip archive, we must cd to each file's location.
-      - run: cd build/osx && zip -r ~/demo.zip tangram.app
-      - store_artifacts:
-          path: ~/demo.zip
 workflows:
   version: 2
   build-and-deploy:
     jobs:
       # Run on all pushes
       - build-test-linux
-      - build-macos
       # Run on pushes to all branches except main
       - build-android:
           filters:
