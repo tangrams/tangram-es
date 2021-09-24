@@ -2,6 +2,7 @@
   "name": "tangram-es",
   "version-string": "0.1.0",
   "description": "",
+  "builtin-baseline": "59a3f35e7e5a3281e59863a4a0123c325899f8f9",
   "dependencies": [
     "alfons",
     "benchmark",
@@ -52,5 +53,12 @@
     },
     "stb",
     "yaml-cpp"
+  ],
+  "overrides": [
+    {
+      "$comment": "pinpoint until a newer version as 2.11.0 is released. See https://gitlab.freedesktop.org/freetype/freetype/-/issues/1089",
+      "name": "freetype",
+      "version": "2.10.4"
+    }
   ]
 }
