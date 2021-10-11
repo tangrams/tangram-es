@@ -294,7 +294,7 @@ public:
     CameraPosition getEnclosingCameraPosition(LngLat a, LngLat b) const;
 
     // Get the CameraPosition that encloses the bounds given by _a and _b and
-    // leaves at least the given amount of padding on each side (in logical pixels).
+    // leaves at least the given amount of padding on each side (in pixels).
     CameraPosition getEnclosingCameraPosition(LngLat a, LngLat b, EdgePadding padding) const;
 
     // Run flight animation to change postion and zoom  of the map

@@ -451,7 +451,7 @@ void View::updateMatrices() {
 
     glm::vec2 viewportSize = { m_vpWidth, m_vpHeight };
     glm::vec2 paddingOffset = { m_padding.right - m_padding.left, m_padding.top - m_padding.bottom };
-    glm::vec2 centerOffset = paddingOffset / viewportSize * m_pixelScale;
+    glm::vec2 centerOffset = paddingOffset / viewportSize;
 
     // Generate projection matrix based on camera type
     switch (m_type) {

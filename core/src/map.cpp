@@ -572,8 +572,9 @@ CameraPosition Map::getEnclosingCameraPosition(LngLat a, LngLat b, EdgePadding p
     ProjectedMeters dMeters = glm::abs(aMeters - bMeters);
 
     // Calculate the inner size of the view that the bounds must fit within.
-    glm::dvec2 innerSize(view.getWidth() / view.pixelScale(), view.getHeight() / view.pixelScale());
+    glm::dvec2 innerSize(view.getWidth(), view.getHeight());
     innerSize -= glm::dvec2((padding.left + padding.right), (padding.top + padding.bottom));
+    innerSize /= view.pixelScale();
 
     // Calculate the map scale that fits the bounds into the inner size in each dimension.
     glm::dvec2 metersPerPixel = dMeters / innerSize;
