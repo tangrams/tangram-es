@@ -7,6 +7,7 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreLocation/CoreLocation.h>
+#import <UIKit/UIKit.h>
 #import "TGTypes.h"
 
 #include "map.h"
@@ -47,6 +48,17 @@ NS_INLINE CLLocationCoordinate2D TGConvertCoreLngLatToCLLocationCoordinate2D(Tan
 
 NS_INLINE Tangram::LngLat TGConvertCLLocationCoordinate2DToCoreLngLat(CLLocationCoordinate2D coordinate) {
     return Tangram::LngLat(coordinate.longitude, coordinate.latitude);
+}
+
+NS_INLINE Tangram::EdgePadding TGConvertUIEdgeInsetsToCoreEdgePadding(UIEdgeInsets insets, float pixelScale) {
+    // Core library expects padding values in pixels, but UIEdgeInsets conventionally uses points.
+    // Convert to pixels using pixelScale. Note that the converted values are truncated to integers.
+    return Tangram::EdgePadding(insets.left * pixelScale, insets.top * pixelScale, insets.right * pixelScale, insets.bottom * pixelScale);
+}
+
+NS_INLINE UIEdgeInsets TGConvertCoreEdgePaddingToUIEdgeInsets(Tangram::EdgePadding padding, float pixelScale) {
+    float pointScale = 1.f / pixelScale;
+    return UIEdgeInsetsMake(padding.top * pointScale, padding.left * pointScale, padding.bottom * pointScale, padding.right * pointScale);
 }
 
 NSError* TGConvertCoreSceneErrorToNSError(const Tangram::SceneError *sceneError);
