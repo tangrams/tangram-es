@@ -54,6 +54,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_C_COMPILER_LAUNCHER=ccache
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DCMAKE_XCODE_ATTRIBUTE_ARCHS=x86_64
           -DTANGRAM_BUILD_TESTS=1
       - name: "Run build"
         run: cmake --build ./build
