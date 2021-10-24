@@ -63,7 +63,7 @@ jobs:
         run: ./tests/tests.out
         working-directory: ./build
       - name: "Package demo app"
-        run: tar -cvf macos-app.tar *.app
+        run: tar -cvf macos-app.tar *.app tests/tests.out
         working-directory: ./build
       - name: "Upload demo app"
         uses: actions/upload-artifact@v2
