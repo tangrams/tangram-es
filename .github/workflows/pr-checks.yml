@@ -62,9 +62,12 @@ jobs:
       - name: "Run Tests"
         run: ./tests/tests.out
         working-directory: ./build
+      - name: "Package demo app"
+        run: tar -cvf macos-app.tar *.app
+        working-directory: ./build
       - name: "Upload demo app"
         uses: actions/upload-artifact@v2
         with:
           name: macos-app
-          path: build/*.app
+          path: build/macos-app.tar
           retention-days: 60
