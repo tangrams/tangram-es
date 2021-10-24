@@ -175,6 +175,18 @@ void NATIVE_METHOD(getEnclosingCameraPosition)(JNIEnv* env, jobject obj,
     JniHelpers::cameraPositionToJava(env, cameraPositionOut, camera);
 }
 
+void NATIVE_METHOD(setPadding)(JNIEnv* env, jobject obj, jobject javaPadding) {
+    auto* map = androidMapFromJava(env, obj);
+    EdgePadding padding = JniHelpers::edgePaddingFromJava(env, javaPadding);
+    map->setPadding(padding);
+}
+
+void NATIVE_METHOD(getPadding)(JNIEnv *env, jobject obj, jobject javaPadding) {
+    auto* map = androidMapFromJava(env, obj);
+    EdgePadding padding = map->getPadding();
+    JniHelpers::edgePaddingToJava(env, javaPadding, padding);
+}
+
 void NATIVE_METHOD(flyTo)(JNIEnv* env, jobject obj, jdouble lon, jdouble lat,
                           jfloat zoom, jfloat duration, jfloat speed) {
     auto* map = androidMapFromJava(env, obj);

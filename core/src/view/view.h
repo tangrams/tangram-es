@@ -6,9 +6,10 @@
 #include "view/viewConstraint.h"
 
 #include "glm/mat4x4.hpp"
-#include "glm/vec4.hpp"
 #include "glm/vec3.hpp"
+#include "glm/vec4.hpp"
 #include <functional>
+#include <map.h>
 #include <memory>
 
 namespace Tangram {
@@ -197,6 +198,10 @@ public:
 
     float getHeight() const { return m_vpHeight; }
 
+    EdgePadding getPadding() const { return m_padding; }
+
+    void setPadding(EdgePadding padding);
+
     // Calculate the position on the ground plane (z = 0) under the given screen space coordinates,
     // replacing the input coordinates with world-space coordinates.
     // Returns the un-normalized distance 'into the screen' to the ground plane
@@ -272,6 +277,8 @@ protected:
     float m_maxZoom = 20.5f;
 
     CameraType m_type;
+
+    EdgePadding m_padding;
 
     bool m_dirtyMatrices;
     bool m_dirtyTiles;

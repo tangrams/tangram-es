@@ -163,7 +163,7 @@ public class CameraUpdateFactory {
      * @return The update
      */
     @NonNull
-    public static CameraUpdate newLngLatBounds(@NonNull LngLat sw, @NonNull LngLat ne, Rect padding) {
+    public static CameraUpdate newLngLatBounds(@NonNull LngLat sw, @NonNull LngLat ne, EdgePadding padding) {
         CameraUpdate update = new CameraUpdate();
         update.set = CameraUpdate.SET_BOUNDS;
         update.boundsLon1 = sw.longitude;

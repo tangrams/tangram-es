@@ -35,10 +35,12 @@ class NativeMap {
     native synchronized void getCameraPosition(CameraPosition cameraPositionOut);
     native synchronized void updateCameraPosition(int set, double lon, double lat, float zoom, float zoomBy,
                                                                 float rotation, float rotateBy, float tilt, float tiltBy,
-                                                                double b1lon, double b1lat, double b2lon, double b2lat, Rect padding,
+                                                                double b1lon, double b1lat, double b2lon, double b2lat, EdgePadding padding,
                                                                 float duration, int ease);
     native synchronized void flyTo(double lon, double lat, float zoom, float duration, float speed);
-    native synchronized void getEnclosingCameraPosition(LngLat lngLatSE, LngLat lngLatNW, Rect padding, CameraPosition cameraPositionOut);
+    native synchronized void getEnclosingCameraPosition(LngLat lngLatSE, LngLat lngLatNW, EdgePadding padding, CameraPosition cameraPositionOut);
+    native synchronized void setPadding(EdgePadding padding);
+    native synchronized void getPadding(EdgePadding padding);
     native synchronized void cancelCameraAnimation();
     native synchronized boolean screenPositionToLngLat(float x, float y, LngLat lngLatOut);
     native synchronized boolean lngLatToScreenPosition(double lng, double lat, PointF screenPositionOut, boolean clipToViewport);

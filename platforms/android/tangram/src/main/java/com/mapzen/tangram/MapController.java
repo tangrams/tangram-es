@@ -506,28 +506,55 @@ public class MapController {
 
     /**
      * Get the {@link CameraPosition} that that encloses the given bounds with at least the given amount of padding on each side.
-     * @param sw south-west coordinate
+     * @param sw southwest coordinate
      * @param ne northwest coordinate
-     * @param padding The minimum distance to keep between the bounds and the edges of the view
+     * @param padding The padding to keep between the bounds and the edges of the view, or null to use the current map padding.
      * @return The enclosing camera position
      */
     @NonNull
-    public CameraPosition getEnclosingCameraPosition(@NonNull LngLat sw, @NonNull LngLat ne, @NonNull Rect padding) {
+    public CameraPosition getEnclosingCameraPosition(@NonNull LngLat sw, @NonNull LngLat ne, EdgePadding padding) {
         return getEnclosingCameraPosition(sw, ne, padding, new CameraPosition());
     }
 
     /**
      * Get the {@link CameraPosition} that that encloses the given bounds with at least the given amount of padding on each side.
-     * @param sw south-west coordinate
+     * @param sw southwest coordinate
      * @param ne northwest coordinate
-     * @param padding The minimum distance to keep between the bounds and the edges of the view
+     * @param padding The padding to keep between the bounds and the edges of the view, or null to use the current map padding.
      * @param out CameraPosition to be reused as the output
      * @return The enclosing camera position
      */
     @NonNull
-    public CameraPosition getEnclosingCameraPosition(@NonNull LngLat sw, @NonNull LngLat ne, @NonNull Rect padding, @NonNull final CameraPosition out) {
+    public CameraPosition getEnclosingCameraPosition(@NonNull LngLat sw, @NonNull LngLat ne, EdgePadding padding, @NonNull final CameraPosition out) {
         nativeMap.getEnclosingCameraPosition(sw, ne, padding, out);
         return out;
+    }
+
+    /**
+     * Set the padding on the map view. The center position of the map view will be drawn at the center of the view
+     * area inside the padding.
+     * @param padding Padding values to set, or null to reset padding to zero.
+     */
+    public void setPadding(final EdgePadding padding) {
+        nativeMap.setPadding(padding);
+    }
+
+    /**
+     * Get the current padding on the map view.
+     * @return Current padding values
+     */
+    public EdgePadding getPadding() {
+        EdgePadding padding = new EdgePadding();
+        nativeMap.getPadding(padding);
+        return padding;
+    }
+
+    /**
+     * Get the current padding on the map view.
+     * @param out EdgePadding to be reused as the output
+     */
+    public void getPadding(@NonNull final EdgePadding out) {
+        nativeMap.getPadding(out);
     }
 
     /**

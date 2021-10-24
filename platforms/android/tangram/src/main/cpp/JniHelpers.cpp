@@ -19,10 +19,10 @@ static jfieldID lngLatLatitudeFID = nullptr;
 static jfieldID pointFxFID = nullptr;
 static jfieldID pointFyFID = nullptr;
 
-static jfieldID rectLeftFID = nullptr;
-static jfieldID rectTopFID = nullptr;
-static jfieldID rectRightFID = nullptr;
-static jfieldID rectBottomFID = nullptr;
+static jfieldID edgePaddingLeftFID = nullptr;
+static jfieldID edgePaddingTopFID = nullptr;
+static jfieldID edgePaddingRightFID = nullptr;
+static jfieldID edgePaddingBottomFID = nullptr;
 
 void JniHelpers::jniOnLoad(JavaVM* jvm, JNIEnv* jniEnv) {
     s_jvm = jvm;
@@ -42,11 +42,11 @@ void JniHelpers::jniOnLoad(JavaVM* jvm, JNIEnv* jniEnv) {
     pointFxFID = jniEnv->GetFieldID(pointFClass, "x", "F");
     pointFyFID = jniEnv->GetFieldID(pointFClass, "y", "F");
 
-    jclass rectClass = jniEnv->FindClass("android/graphics/Rect");
-    rectLeftFID = jniEnv->GetFieldID(rectClass, "left", "I");
-    rectTopFID = jniEnv->GetFieldID(rectClass, "top", "I");
-    rectRightFID = jniEnv->GetFieldID(rectClass, "right", "I");
-    rectBottomFID = jniEnv->GetFieldID(rectClass, "bottom", "I");
+    jclass rectClass = jniEnv->FindClass("com/mapzen/tangram/EdgePadding");
+    edgePaddingLeftFID = jniEnv->GetFieldID(rectClass, "left", "I");
+    edgePaddingTopFID = jniEnv->GetFieldID(rectClass, "top", "I");
+    edgePaddingRightFID = jniEnv->GetFieldID(rectClass, "right", "I");
+    edgePaddingBottomFID = jniEnv->GetFieldID(rectClass, "bottom", "I");
 }
 
 std::string JniHelpers::stringFromJavaString(JNIEnv* jniEnv, jstring javaString) {
@@ -103,15 +103,25 @@ LngLat JniHelpers::lngLatFromJava(JNIEnv* env, jobject javaLngLat) {
     return LngLat{ longitude, latitude };
 }
 
-EdgePadding JniHelpers::edgePaddingFromJava(JNIEnv* env, jobject javaRect) {
-    if (javaRect == nullptr) {
+EdgePadding JniHelpers::edgePaddingFromJava(JNIEnv* env, jobject javaEdgePadding) {
+    if (javaEdgePadding == nullptr) {
         return {};
     }
-    int left = env->GetIntField(javaRect, rectLeftFID);
-    int top = env->GetIntField(javaRect, rectTopFID);
-    int right = env->GetIntField(javaRect, rectRightFID);
-    int bottom = env->GetIntField(javaRect, rectBottomFID);
+    int left = env->GetIntField(javaEdgePadding, edgePaddingLeftFID);
+    int top = env->GetIntField(javaEdgePadding, edgePaddingTopFID);
+    int right = env->GetIntField(javaEdgePadding, edgePaddingRightFID);
+    int bottom = env->GetIntField(javaEdgePadding, edgePaddingBottomFID);
     return EdgePadding{ left, top, right, bottom };
+}
+
+void JniHelpers::edgePaddingToJava(JNIEnv* env, jobject javaEdgePadding, const EdgePadding& padding) {
+    if (javaEdgePadding == nullptr) {
+        return;
+    }
+    env->SetIntField(javaEdgePadding, edgePaddingLeftFID, padding.left);
+    env->SetIntField(javaEdgePadding, edgePaddingTopFID, padding.top);
+    env->SetIntField(javaEdgePadding, edgePaddingRightFID, padding.right);
+    env->SetIntField(javaEdgePadding, edgePaddingBottomFID, padding.bottom);
 }
 
 } // namespace Tangram

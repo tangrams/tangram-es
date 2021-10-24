@@ -25,7 +25,9 @@ public:
 
     static LngLat lngLatFromJava(JNIEnv* env, jobject javaLngLat);
 
-    static EdgePadding edgePaddingFromJava(JNIEnv* env, jobject javaRect);
+    static EdgePadding edgePaddingFromJava(JNIEnv* env, jobject javaEdgePadding);
+
+    static void edgePaddingToJava(JNIEnv* env, jobject javaEdgePadding, const EdgePadding& padding);
 
 protected:
 

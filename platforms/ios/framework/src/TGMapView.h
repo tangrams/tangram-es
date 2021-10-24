@@ -198,6 +198,11 @@ TG_EXPORT
 @property (nonatomic) TGCameraType cameraType;
 
 /**
+ The padding on the map view. The center position of the map view will be drawn at the center of the view area inside the padding.
+ */
+@property (nonatomic) UIEdgeInsets padding;
+
+/**
  Move the map camera to a new position with an easing animation.
 
  @param cameraPosition The new camera position
@@ -244,6 +249,13 @@ TG_EXPORT
 - (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition
                   withSpeed:(CGFloat)speed
                    callback:(nullable void (^)(BOOL canceled))callback;
+
+/**
+ Get a camera position that encloses the given bounds.
+
+ @param bounds The map bounds to enclose
+ */
+- (TGCameraPosition *)cameraThatFitsBounds:(TGCoordinateBounds)bounds;
 
 /**
  Get a camera position that encloses the given bounds with at least the given amount of padding on each side.

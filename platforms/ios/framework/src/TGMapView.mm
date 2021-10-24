@@ -902,14 +902,22 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     [self flyToCameraPosition:cameraPosition withDuration:-1 speed:speed callback:callback];
 }
 
+- (TGCameraPosition *)cameraThatFitsBounds:(TGCoordinateBounds)bounds
+{
+    if (!self.map) { return nil; }
+    Tangram::LngLat sw = TGConvertCLLocationCoordinate2DToCoreLngLat(bounds.sw);
+    Tangram::LngLat ne = TGConvertCLLocationCoordinate2DToCoreLngLat(bounds.ne);
+    Tangram::CameraPosition camera = self.map->getEnclosingCameraPosition(sw, ne);
+    return [[TGCameraPosition alloc] initWithCoreCamera:&camera];
+}
+
 - (TGCameraPosition *)cameraThatFitsBounds:(TGCoordinateBounds)bounds withPadding:(UIEdgeInsets)padding
 {
-    if (!self.map) {
-        return nil;
-    }
-    Tangram::LngLat sw(bounds.sw.longitude, bounds.sw.latitude);
-    Tangram::LngLat ne(bounds.ne.longitude, bounds.ne.latitude);
-    Tangram::EdgePadding pad(padding.left, padding.top, padding.right, padding.bottom);
+    if (!self.map) { return nil; }
+
+    Tangram::LngLat sw = TGConvertCLLocationCoordinate2DToCoreLngLat(bounds.sw);
+    Tangram::LngLat ne = TGConvertCLLocationCoordinate2DToCoreLngLat(bounds.ne);
+    Tangram::EdgePadding pad = TGConvertUIEdgeInsetsToCoreEdgePadding(padding, self.map->getPixelScale());
     Tangram::CameraPosition camera = self.map->getEnclosingCameraPosition(sw, ne, pad);
     return [[TGCameraPosition alloc] initWithCoreCamera:&camera];
 }
@@ -935,6 +943,22 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     if (!self.map) { return; }
 
     self.map->setCameraType(static_cast<int>(cameraType));
+}
+
+#pragma mark View Padding
+
+- (UIEdgeInsets)padding
+{
+    if (!self.map) { return UIEdgeInsetsZero; }
+
+    return TGConvertCoreEdgePaddingToUIEdgeInsets(self.map->getPadding(), self.map->getPixelScale());
+}
+
+- (void)setPadding:(UIEdgeInsets)padding
+{
+    if (!self.map) { return; }
+
+    self.map->setPadding(TGConvertUIEdgeInsetsToCoreEdgePadding(padding, self.map->getPixelScale()));
 }
 
 #pragma mark Gesture Recognizers

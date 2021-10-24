@@ -326,6 +326,13 @@ glm::dmat2 View::getBoundsRect() const {
 
 }
 
+void View::setPadding(EdgePadding padding) {
+    if (padding != m_padding) {
+        m_padding = padding;
+        m_dirtyMatrices = true;
+    }
+}
+
 double View::screenToGroundPlane(float& _screenX, float& _screenY) {
 
     if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
@@ -442,12 +449,19 @@ void View::updateMatrices() {
     float hw = 0.5 * m_width;
     float hh = 0.5 * m_height;
 
+    glm::vec2 viewportSize = { m_vpWidth, m_vpHeight };
+    glm::vec2 paddingOffset = { m_padding.right - m_padding.left, m_padding.top - m_padding.bottom };
+    glm::vec2 centerOffset = paddingOffset / viewportSize;
+
     // Generate projection matrix based on camera type
     switch (m_type) {
         case CameraType::perspective:
             far = 2. * m_pos.z / std::max(0., cos(m_pitch + 0.5 * fovy));
             far = std::min(far, maxTileDistance);
             m_proj = glm::perspective(fovy, m_aspect, near, far);
+            // Adjust projection center for edge padding.
+            m_proj[2][0] = centerOffset.x;
+            m_proj[2][1] = centerOffset.y;
             // Adjust for vanishing point.
             m_proj[2][0] -= m_vanishingPoint.x / getWidth();
             m_proj[2][1] -= m_vanishingPoint.y / getHeight();
@@ -457,6 +471,9 @@ void View::updateMatrices() {
             far = 2. * (m_pos.z + hh * std::abs(tan(m_pitch)));
             far = std::min(far, maxTileDistance);
             m_proj = glm::ortho(-hw, hw, -hh, hh, near, far);
+            // Adjust projection center for edge padding.
+            m_proj[3][0] -= centerOffset.x;
+            m_proj[3][1] -= centerOffset.y;
             break;
     }
 
