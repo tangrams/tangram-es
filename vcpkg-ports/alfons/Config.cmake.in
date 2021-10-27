@@ -1,0 +1,9 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(ICU REQUIRED COMPONENTS uc)
+find_dependency(freetype CONFIG REQUIRED)
+find_dependency(harfbuzz CONFIG REQUIRED)
+
+include("${CMAKE_CURRENT_LIST_DIR}/alfonsTargets.cmake")

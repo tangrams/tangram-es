@@ -1,0 +1,77 @@
+diff --git a/include/mapbox/geometry/feature.hpp b/include/mapbox/geometry/feature.hpp
+index 20d2ddf..6d63583 100644
+--- a/include/mapbox/geometry/feature.hpp
++++ b/include/mapbox/geometry/feature.hpp
+@@ -8,7 +8,6 @@
+ #include <string>
+ #include <vector>
+ #include <unordered_map>
+-#include <experimental/optional>
+ 
+ namespace mapbox {
+ namespace geometry {
+@@ -38,13 +37,14 @@ using value_base = mapbox::util::variant<null_value_t, bool, uint64_t, int64_t,
+ 
+ struct value : value_base
+ {
+-    using value_base::value_base;
++    template< typename T >
++    value(T&& val): value_base(val) {}
+ };
+ 
+ using property_map = std::unordered_map<std::string, value>;
+ 
+ // The same considerations and requirement for numeric types apply as for `value_base`.
+-using identifier = mapbox::util::variant<uint64_t, int64_t, double, std::string>;
++using identifier = mapbox::util::variant<null_value_t, uint64_t, int64_t, double, std::string>;
+ 
+ template <class T>
+ struct feature
+@@ -52,18 +52,21 @@ struct feature
+     using coordinate_type = T;
+     using geometry_type = mapbox::geometry::geometry<T>; // Fully qualified to avoid GCC -fpermissive error.
+ 
++    feature(geometry_type geometry)
++        : geometry(geometry) {}
++
++    feature(geometry_type geometry, property_map properties)
++        : geometry(geometry), properties(properties) {}
++
++    feature(geometry_type geometry, identifier id)
++        : geometry(geometry), id(id) {}
++
++    feature(geometry_type geometry, property_map properties, identifier id)
++        : geometry(geometry), properties(properties), id(id) {}
++
+     geometry_type geometry;
+-    property_map properties {};
+-    std::experimental::optional<identifier> id {};
+-
+-    // GCC 4.9 does not support C++14 aggregates with non-static data member
+-    // initializers.
+-    feature(geometry_type geometry_,
+-            property_map properties_ = property_map {},
+-            std::experimental::optional<identifier> id_ = std::experimental::optional<identifier> {})
+-        : geometry(std::move(geometry_)),
+-          properties(std::move(properties_)),
+-          id(std::move(id_)) {}
++    property_map properties;
++    identifier id;
+ };
+ 
+ template <class T>
+diff --git a/include/mapbox/geometry/geometry.hpp b/include/mapbox/geometry/geometry.hpp
+index a9d072b..c633e69 100644
+--- a/include/mapbox/geometry/geometry.hpp
++++ b/include/mapbox/geometry/geometry.hpp
+@@ -31,7 +31,9 @@ template <typename T>
+ struct geometry : geometry_base<T>
+ {
+     using coordinate_type = T;
+-    using geometry_base<T>::geometry_base;
++
++    template <typename U>
++    geometry(U&& val): geometry_base<T>(val) {}
+ 
+     /*
+      * The default constructor would create a point geometry with default-constructed coordinates;

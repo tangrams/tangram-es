@@ -1,0 +1,152 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index a85b37c..1c24544 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,36 +1,59 @@
+-cmake_minimum_required(VERSION 2.8.12)
+-
++cmake_minimum_required(VERSION 3.10)
++project(alfons VERSION 1.0.0)
+ if (APPLE)
+   option(HB_HAVE_CORETEXT "Enable CoreText shaper backend on macOS" ON)
+ endif ()
+ 
+-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/glm.cmake)
++set(CMAKE_DEBUG_POSTFIX "d")
++find_package(glm CONFIG REQUIRED)
+ 
+ if (NOT DEFINED ALFONS_DEPS_LIBRARIES)
+-
+-  include(FindPkgConfig)
+-  pkg_check_modules(ICU REQUIRED icu-uc)
+-  pkg_check_modules(FREETYPE REQUIRED freetype2)
+-  if (APPLE)
+-      pkg_check_modules(HARFBUZZ REQUIRED harfbuzz>=1.7.2)
+-  else()
+-      pkg_check_modules(HARFBUZZ REQUIRED harfbuzz)
+-  endif()
++  find_package(ICU REQUIRED COMPONENTS uc)
++  find_package(freetype CONFIG REQUIRED)
++  find_package(harfbuzz CONFIG REQUIRED)
+ 
+   set(ALFONS_DEPS_LIBRARIES
+-    ${ICU_LDFLAGS}
+-    ${FREETYPE_LDFLAGS}
+-    ${HARFBUZZ_LDFLAGS}
++    ICU::uc
++    glm::glm
++    freetype
++    harfbuzz::harfbuzz
+     CACHE INTERNAL "alfons-libs" FORCE)
+ 
+-  set(ALFONS_DEPS_INCLUDE_DIRS
+-    ${ICU_INCLUDE_DIRS}
+-    ${FREETYPE_INCLUDE_DIRS}
+-    ${HARFBUZZ_INCLUDE_DIRS}
+-    CACHE INTERNAL "alfons-includes" FORCE)
+-
+ endif()
+ 
+-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++1y")
+-
+ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src)
++
++
++install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/" TYPE INCLUDE FILES_MATCHING PATTERN  "*.h")
++
++install(TARGETS linebreak alfons
++    EXPORT alfonsTargets
++)
++
++install(EXPORT alfonsTargets
++    FILE alfonsTargets.cmake
++    DESTINATION lib/cmake/alfons
++)
++
++include(CMakePackageConfigHelpers)
++configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
++    ${CMAKE_CURRENT_BINARY_DIR}/alfonsConfig.cmake
++    INSTALL_DESTINATION lib/cmake/alfons
++)
++write_basic_package_version_file(
++    alfonsConfigVersion.cmake
++    VERSION ${PACKAGE_VERSION}
++    COMPATIBILITY AnyNewerVersion
++)
++
++install(EXPORT alfonsTargets
++    FILE alfonsTargets.cmake
++    NAMESPACE alfons::
++    DESTINATION lib/cmake/alfons
++)
++
++install(FILES
++    "${CMAKE_CURRENT_BINARY_DIR}/alfonsConfig.cmake"
++    "${CMAKE_CURRENT_BINARY_DIR}/alfonsConfigVersion.cmake"
++    DESTINATION lib/cmake/alfons
++)
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index a076b69..89962e2 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -2,14 +2,17 @@ if(POLICY CMP0054)
+   cmake_policy(SET CMP0054 NEW)
+ endif()
+ 
+-add_library (linebreak
++add_library (linebreak STATIC
+   linebreak/linebreak.c
+   linebreak/linebreakdata.c
+-  linebreak/linebreakdef.c)
++  linebreak/linebreakdef.c
++)
+ 
+-target_include_directories (linebreak
++target_include_directories(linebreak
+   PUBLIC
+-  ${CMAKE_CURRENT_SOURCE_DIR}/linebreak)
++  $<INSTALL_INTERFACE:include>
++  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/linebreak>
++)
+ 
+ set(ALFONS_SRC
+   alfons/alfons.cpp
+@@ -43,24 +46,22 @@ if (APPLE AND HB_HAVE_CORETEXT)
+   add_definitions(-DHAVE_CORETEXT)
+ endif()
+ 
+-add_library(alfons ${ALFONS_SRC})
++add_library(alfons STATIC ${ALFONS_SRC})
+ 
+ target_include_directories (alfons
+   PUBLIC
+-  ${CMAKE_CURRENT_SOURCE_DIR}
+-  ${ALFONS_DEPS_INCLUDE_DIRS}
+-  ${GLM_INCLUDE_DIR}
+-  ${CMAKE_CURRENT_SOURCE_DIR}/logger)
++  $<INSTALL_INTERFACE:include>
++  $<INSTALL_INTERFACE:include/logger>
++  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
++  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/logger>
++)
+ 
+ target_link_libraries (alfons
+-  LINK_PUBLIC
++  PUBLIC
+   linebreak
+   ${ALFONS_APPLE_LIBRARIES}
+-  ${ALFONS_DEPS_LIBRARIES})
+-
+-if (USE_OWN_GLM)
+-add_dependencies(alfons glm)
+-endif()
++  ${ALFONS_DEPS_LIBRARIES}
++)
+ 
+ ### check for undefined symbols
+ if(BUILD_SHARED_LIBS AND CMAKE_COMPILER_IS_GNUCXX)
+@@ -75,4 +76,3 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+     -wd4267
+     -wd4244)
+ endif()
+-

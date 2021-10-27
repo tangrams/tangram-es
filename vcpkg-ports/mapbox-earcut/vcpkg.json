@@ -1,0 +1,9 @@
+{
+  "name": "mapbox-earcut",
+  "version-semver": "0.3.2",
+  "description": "Fast, header-only polygon triangulation",
+  "homepage": "https://github.com/mapbox/earcut.hpp",
+  "dependencies": [
+    "mapbox-geometry"
+  ]
+}

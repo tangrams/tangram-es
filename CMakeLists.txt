@@ -1,5 +1,23 @@
 cmake_minimum_required(VERSION 3.10)
 
+option(USE_VCPKG "enable vcpkg dependency build" ON)
+# needs before first project() call
+set(VCPKG_OVERLAY_PORTS
+  "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/alfons"
+  "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-earcut"
+  "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-geojson-vt-cpp" 
+  "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-geojson-cpp"
+  "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-geometry"
+  "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/mapbox-variant"
+  "${CMAKE_CURRENT_LIST_DIR}/vcpkg-ports/glm"
+)
+if(USE_VCPKG AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake")
+endif()
+if (VCPKG_TARGET_ANDROID)
+  include("cmake/vcpkg_android.cmake")
+endif()
+
 project(tangram)
 
 # Options
@@ -24,11 +42,6 @@ message(STATUS "Use vcpkg: ${TANGRAM_USE_VCPKG}")
 
 message(STATUS "Build type configuration: ${CMAKE_BUILD_TYPE}")
 
-# Check that submodules are present.
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/core/deps/isect2d/README.md")
-  message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init'")
-  return()
-endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   add_definitions(-DDEBUG)

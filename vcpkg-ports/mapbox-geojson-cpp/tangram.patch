@@ -1,0 +1,24 @@
+diff --git a/include/mapbox/geojson_impl.hpp b/include/mapbox/geojson_impl.hpp
+index 995d0ef..6357e62 100644
+--- a/include/mapbox/geojson_impl.hpp
++++ b/include/mapbox/geojson_impl.hpp
+@@ -107,7 +107,7 @@ template <>
+ value convert<value>(const rapidjson_value &json) {
+     switch (json.GetType()) {
+     case rapidjson::kNullType:
+-        return nullptr;
++        return ::mapbox::geometry::null_value_t{};
+     case rapidjson::kFalseType:
+         return false;
+     case rapidjson::kTrueType:
+@@ -398,8 +398,8 @@ rapidjson_value convert<feature>(const feature& element, rapidjson_allocator& al
+     rapidjson_value result(rapidjson::kObjectType);
+     result.AddMember("type", "Feature", allocator);
+ 
+-    if (element.id) {
+-        result.AddMember("id", identifier::visit(*element.id, to_value { allocator }), allocator);
++    if (!element.id.is<null_value_t>()) {
++        result.AddMember("id", identifier::visit(element.id, to_value { allocator }), allocator);
+     }
+ 
+     result.AddMember("geometry", convert(element.geometry, allocator), allocator);

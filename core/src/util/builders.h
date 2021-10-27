@@ -3,7 +3,7 @@
 #include "data/tileData.h"
 
 #include "glm/vec3.hpp"
-#include "earcut.hpp"
+#include <mapbox/earcut.hpp>
 #include <functional>
 #include <vector>
 

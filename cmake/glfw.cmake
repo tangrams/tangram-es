@@ -8,7 +8,7 @@ else()
   set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs")
   set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
   set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
-  add_subdirectory(platforms/common/glfw)
+  find_package(glfw3 CONFIG REQUIRED)
   if(APPLE)
     # Turn off noisy warnings from clang on macOS.
     target_compile_options(glfw PRIVATE "-Wno-deprecated-declarations")

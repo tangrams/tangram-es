@@ -351,7 +351,8 @@ void Url::parse() {
         }
 
         // If a scheme is present, it must be followed by a ':'.
-        if (c == ':') {
+        // Check if 'scheme' is longer than 1 - could be a Windows disk drive
+        if (c == ':' && i - start > 1) {
             parts.scheme.start = start;
             parts.scheme.count = i - start;
 

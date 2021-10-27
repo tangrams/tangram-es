@@ -1,39 +1,64 @@
 {
-    "name": "tangram-es",
-    "version-string": "0.1.0",
-    "dependencies": [
-        {
-            "name":"curl",
-            "features":[
-                "ssl",
-                "http2"
-            ]
-        },
-        "glad",
-        "zlib",
-        "yaml-cpp",
-        "glfw3",
-        "benchmark",
-        {
-            "name": "harfbuzz",
-            "features": [
-                "icu"
-            ],
-            "platform": "!osx"
-        },
-        {
-            "name": "harfbuzz",
-            "features": [
-                "icu",
-                "coretext"
-            ],
-            "platform": "osx"
-        },
-        {
-            "name": "imgui",
-            "features": [
-                "docking-experimental"
-            ]
-        }
-    ]
+  "name": "tangram-es",
+  "version-string": "0.1.0",
+  "description": "",
+  "builtin-baseline": "59a3f35e7e5a3281e59863a4a0123c325899f8f9",
+  "dependencies": [
+    "alfons",
+    "benchmark",
+    {
+      "name": "curl",
+      "features": [
+        "http2",
+        "ssl"
+      ]
+    },
+    "double-conversion",
+    "duktape",
+    "freetype",
+    "glad",
+    {
+      "name": "glfw3",
+      "platform": "!android"
+    },
+    "glm",
+    {
+      "name": "harfbuzz",
+      "features": [
+        "graphite2",
+        "icu"
+      ]
+    },
+    "icu",
+    {
+      "name": "imgui",
+      "features": [
+        "docking-experimental",
+        "glfw-binding",
+        "opengl3-binding"
+      ]
+    },
+    "mapbox-earcut",
+    "mapbox-geojson-cpp",
+    "mapbox-geojson-vt-cpp",
+    "mapbox-geometry",
+    "mapbox-variant",
+    "miniz",
+    "rapidjson",
+    {
+      "name": "sqlitecpp",
+      "features": [
+        "sqlite"
+      ]
+    },
+    "stb",
+    "yaml-cpp"
+  ],
+  "overrides": [
+    {
+      "$comment": "pinpoint until a newer version as 2.11.0 is released. See https://gitlab.freedesktop.org/freetype/freetype/-/issues/1089",
+      "name": "freetype",
+      "version": "2.10.4"
+    }
+  ]
 }

@@ -1,11 +1,21 @@
 project(tangram-core)
 
-# Build core library dependencies.
+find_package(duktape CONFIG REQUIRED)
+find_package (SQLite3 REQUIRED)
+find_package(RapidJSON CONFIG REQUIRED)
+find_path(STB_INCLUDE_DIRS "stb.h")
+find_package(miniz CONFIG REQUIRED)
+find_package(yaml-cpp CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(double-conversion CONFIG REQUIRED)
+find_package(SQLiteCpp CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(alfons CONFIG REQUIRED)
 
-if (TANGRAM_USE_VCPKG)
-  find_package(yaml-cpp CONFIG REQUIRED)
-endif()
+find_path(MAPBOX_VARIANT_INCLUDE_DIRS "mapbox/optional.hpp")
+find_path(GEOJSON_VT_CPP_INCLUDE_DIRS "mapbox/geojsonvt.hpp")
+find_path(GEOJSON_CPP_INCLUDE_DIRS "mapbox/geojson.hpp")
+find_path(MAPBOX_EARCUT_INCLUDE_DIRS "mapbox/earcut.hpp")
 
 add_subdirectory(deps)
 
@@ -207,41 +217,37 @@ target_include_directories(tangram-core
   include/tangram
   # TODO: These headers shouldn't be public, but Platform classes use them.
   src
-  # TODO: This header shouldn't be public, but we use it in propertyItem.h
-  deps/variant/include
   PRIVATE
-  generated
-  deps
-  deps/earcut/include
-  deps/isect2d/include
-  deps/hash-library
-  deps/mapbox
-  deps/pbf
-  deps/rapidjson
-  deps/sdf
-  deps/SQLiteCpp
-  deps/stb
-  deps/miniz
-  deps/geojson-vt-cpp/geometry.hpp/include
-  deps/geojson-vt-cpp/geojson.hpp/include
-  deps/geojson-vt-cpp/include
-  deps/double-conversion/include
+    generated
+    deps/mapbox
+    ${MAPBOX_VARIANT_INCLUDE_DIRS}
+    ${GEOJSON_CPP_INCLUDE_DIRS}
+    ${GEOJSON_VT_CPP_INCLUDE_DIRS}
+    ${MAPBOX_EARCUT_INCLUDE_DIRS}
 )
 
 if (WIN32)
+  set(ZLIB_NAME ZLIB::ZLIB)
   target_compile_definitions(tangram-core PUBLIC _USE_MATH_DEFINES)
+else()
+  set(ZLIB_NAME z)
 endif()
 
 # Link core library dependencies.
-target_link_libraries(tangram-core
-  PRIVATE
-  glm
+target_link_libraries(tangram-core PRIVATE
+  sdf
+  pbf
+  isect2d
+  glm::glm
   css-color-parser-cpp
   yaml-cpp
-  alfons
-  double-conversion
-  miniz
-  ZLIB::ZLIB
+  alfons::alfons 
+  alfons::linebreak
+  hashlib
+  double-conversion::double-conversion
+  miniz::miniz
+  rapidjson
+  ${ZLIB_NAME}
 )
 
 # Add JavaScript implementation.
@@ -255,13 +261,13 @@ if(TANGRAM_JSCORE_ENABLED)
   target_compile_definitions(tangram-core PRIVATE TANGRAM_USE_JSCORE=1)
 else()
   target_sources(tangram-core PRIVATE src/js/DuktapeContext.cpp src/js/DuktapeContext.h)
-  target_link_libraries(tangram-core PRIVATE duktape)
+  target_link_libraries(tangram-core PRIVATE ${DUKTAPE_LIBRARY})
 endif()
 
 # Add MBTiles implementation.
 if(TANGRAM_MBTILES_DATASOURCE)
   target_sources(tangram-core PRIVATE src/data/mbtilesDataSource.cpp)
-  target_link_libraries(tangram-core PRIVATE SQLiteCpp sqlite3)
+  target_link_libraries(tangram-core PRIVATE SQLiteCpp SQLite::SQLite3)
   target_compile_definitions(tangram-core PRIVATE TANGRAM_MBTILES_DATASOURCE=1)
 endif()
 
