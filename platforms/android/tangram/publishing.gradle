@@ -54,29 +54,29 @@ afterEvaluate { project ->
       // Create a publication named 'maven'.
       maven(MavenPublication) {
         // Configure package information.
-        groupId = GROUP
-        artifactId = POM_ARTIFACT_ID
-        version = VERSION_NAME
+        groupId = project.group
+        artifactId = 'tangram'
+        version = project.version
         pom {
-          name = POM_NAME
-          description = POM_DESCRIPTION
-          url = POM_URL
+          name = 'Tangram ES'
+          description = 'Tangram Android SDK'
+          url = 'https://github.com/tangrams/tangram-es'
           licenses {
             license {
-              name = POM_LICENSE_NAME
-              url = POM_LICENSE_URL
-              distribution = POM_LICENSE_DIST
+              name = 'The MIT License (MIT)'
+              url = 'https://opensource.org/licenses/MIT'
+              distribution = 'repo'
             }
           }
           developers {
             developer {
-              name = POM_DEVELOPER_NAME
+              name = 'Mapzen'
             }
           }
           scm {
-            connection = POM_SCM_CONNECTION
-            developerConnection = POM_SCM_DEV_CONNECTION
-            url = POM_SCM_URL
+            connection = 'scm:git:https://github.com/tangrams/tangram-es.git'
+            developerConnection = 'scm:git:ssh://git@github.com/tangrams/tangram-es.git'
+            url = 'https://github.com/tangrams/tangram-es'
           }
         }
 
@@ -94,7 +94,7 @@ afterEvaluate { project ->
         name = "mavencentral"
         def releaseUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
         def snapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
-        url = VERSION_NAME.contains('SNAPSHOT') ? snapshotUrl : releaseUrl
+        url = project.version.contains('SNAPSHOT') ? snapshotUrl : releaseUrl
         credentials {
           username = project.findProperty('sonatypeUsername') ?: System.env.SONATYPE_USERNAME
           password = project.findProperty('sonatypePassword') ?: System.env.SONATYPE_PASSWORD

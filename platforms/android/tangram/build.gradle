@@ -1,9 +1,7 @@
 apply plugin: 'com.android.library'
 
-group = GROUP
-version = VERSION_NAME
-
-apply from: 'versioning.gradle'
+group = 'com.mapzen.tangram'
+version = '0.16.3-SNAPSHOT'
 
 android {
   compileSdkVersion 30
@@ -19,8 +17,6 @@ android {
   defaultConfig {
     minSdkVersion 16
     targetSdkVersion 30
-    versionCode buildVersionCode()
-    versionName VERSION_NAME
     consumerProguardFiles 'tangram-proguard-rules.txt'
     buildConfigField 'String', 'TAG', '"Tangram"'
     externalNativeBuild {

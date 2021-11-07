@@ -15,8 +15,6 @@ android {
     assets.srcDirs = ['../../../scenes']
   }
 
-  aaptOptions.ignoreAssetsPattern "!*.ttf"
-
   buildTypes {
     debug {
       debuggable true
@@ -25,6 +23,10 @@ android {
     release {
       minifyEnabled true
     }
+  }
+
+  androidResources {
+    ignoreAssetsPattern '!*.ttf'
   }
 
 }
