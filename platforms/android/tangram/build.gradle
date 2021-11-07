@@ -3,8 +3,6 @@ apply plugin: 'com.android.library'
 group = GROUP
 version = VERSION_NAME
 
-apply from: 'versioning.gradle'
-
 android {
   compileSdkVersion 30
 
