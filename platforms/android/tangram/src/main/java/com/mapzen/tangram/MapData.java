@@ -58,6 +58,15 @@ public class MapData {
     }
 
     /**
+     * Set the visibility of all the features in this {@code MapData}.
+     * @param visible If true, the features are drawn on the map. Otherwise they are hidden.
+     */
+    public void setVisible(boolean visible) {
+        checkPointer(pointer);
+        mapController.nativeMap.setClientDataVisible(pointer, visible);
+    }
+
+    /**
      * Get the name of this {@code MapData}.
      * @return The name.
      */

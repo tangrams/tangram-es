@@ -588,6 +588,11 @@ void NATIVE_METHOD(clearClientDataFeatures)(JNIEnv* env, jobject obj, jlong java
     source->clearFeatures();
 }
 
+void NATIVE_METHOD(setClientDataVisible)(JNIEnv* env, jobject obj, jlong javaSourcePtr, jboolean visible) {
+    auto* source = reinterpret_cast<ClientDataSource*>(javaSourcePtr);
+    source->setVisible(visible);
+}
+
 } // extern "C"
 
 } // namespace Tangram

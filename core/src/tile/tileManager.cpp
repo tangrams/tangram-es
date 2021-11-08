@@ -306,7 +306,7 @@ void TileManager::updateTileSets(const View& _view) {
 
     for (auto& tileSet : m_tileSets) {
         // check if tile set is active for zoom (zoom might be below min_zoom)
-        if (tileSet.source->isActiveForZoom(_view.getZoom())) {
+        if (tileSet.source->isActiveForZoom(_view.getZoom()) && tileSet.source->isVisible()) {
             updateTileSet(tileSet, _view.state());
         }
     }
@@ -599,9 +599,7 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
     _tileIt = _tileSet.tiles.erase(_tileIt);
 }
 
-bool TileManager::updateProxyTile(TileSet& _tileSet, TileEntry& _tile,
-                                  const TileID& _proxyTileId,
-                                  const ProxyID _proxyId) {
+bool TileManager::updateProxyTile(TileSet& _tileSet, TileEntry& _tile, const TileID& _proxyTileId, ProxyID _proxyId) {
 
     if (!_proxyTileId.isValid()) { return false; }
 

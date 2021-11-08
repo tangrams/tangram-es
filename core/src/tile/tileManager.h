@@ -53,9 +53,9 @@ public:
     /* Returns the set of currently visible tiles */
     const auto& getVisibleTiles() const { return m_tiles; }
 
-    bool hasTileSetChanged() { return m_tileSetChanged; }
+    bool hasTileSetChanged() const { return m_tileSetChanged; }
 
-    bool hasLoadingTiles() {
+    bool hasLoadingTiles() const {
         return m_tilesInProgress > 0;
     }
 
@@ -118,7 +118,7 @@ protected:
      * Checks and updates m_tileSet with proxy tiles for every new visible tile
      *  @_tile: Tile, the new visible tile for which proxies needs to be added
      */
-    bool updateProxyTile(TileSet& _tileSet, TileEntry& _tile, const TileID& _proxy, const ProxyID _proxyID);
+    bool updateProxyTile(TileSet& _tileSet, TileEntry& _tile, const TileID& _proxy, ProxyID _proxyID);
     void updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile);
 
     /*
