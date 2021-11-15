@@ -71,3 +71,29 @@ jobs:
           name: macos-app
           path: build/*.app
           retention-days: 60
+  build-ios:
+    name: "Build for iOS"
+    runs-on: macos-10.15
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: "Install dependencies"
+        run: brew install ccache
+      - name: "Cache ccache directory"
+        uses: actions/cache@v2
+        with:
+          path: ~/Library/Caches/ccache
+          key: ios-ccache-v1-${{ github.sha }}
+          restore-keys: ios-ccache-v1-
+      - name: "Reset ccache stats"
+        run: ccache --zero-stats
+      - name: "Build iOS simulator app with framework"
+        run: make ios-sim BUILD_TYPE=Debug CMAKE_OPTIONS="-DTANGRAM_XCODE_USE_CCACHE=1"
+      - name: "Build iOS simulator app with static library"
+        run: make ios-static-sim BUILD_TYPE=Debug CMAKE_OPTIONS="-DTANGRAM_XCODE_USE_CCACHE=1"
+      - name: "Build iOS Swift app"
+        run: make ios-swift-sim BUILD_TYPE=Debug CMAKE_OPTIONS="-DTANGRAM_XCODE_USE_CCACHE=1"
+      - name: "Print ccache stats"
+        run: ccache --show-stats
