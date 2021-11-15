@@ -67,6 +67,15 @@ public class MapData {
     }
 
     /**
+     * Get the current visibility of all the features in this {@code MapData}.
+     * @return If true, the features are currently drawn on the map. Otherwise, they are currently hidden.
+     */
+    public boolean getVisible() {
+        checkPointer(pointer);
+        return mapController.nativeMap.getClientDataVisible(pointer);
+    }
+
+    /**
      * Get the name of this {@code MapData}.
      * @return The name.
      */

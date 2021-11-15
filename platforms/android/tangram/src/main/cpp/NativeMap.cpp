@@ -593,6 +593,11 @@ void NATIVE_METHOD(setClientDataVisible)(JNIEnv* env, jobject obj, jlong javaSou
     source->setVisible(visible);
 }
 
+bool NATIVE_METHOD(getClientDataVisible)(JNIEnv* env, jobject obj, jlong javaSourcePtr) {
+    auto* source = reinterpret_cast<ClientDataSource*>(javaSourcePtr);
+    return source->isVisible();
+}
+
 } // extern "C"
 
 } // namespace Tangram
