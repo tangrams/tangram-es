@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 
 group = 'com.mapzen.tangram'
-version = '0.17.0'
+version = '0.17.1-SNAPSHOT'
 
 android {
   compileSdkVersion 30
