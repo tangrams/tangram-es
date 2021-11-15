@@ -140,6 +140,9 @@ public:
         m_generateGeometry = _generateGeometry;
     }
 
+    bool isVisible() const { return m_isVisible; }
+    void setVisible(bool visible) { m_isVisible = visible; }
+
     /* Avoid RTTI by adding a boolean check on the data source object */
     virtual bool isRaster() const { return false; }
 
@@ -152,6 +155,8 @@ protected:
     // This datasource is used to generate actual tile geometry
     // Is set true for any source assigned in a Scene Layer and when the layer is not disabled
     bool m_generateGeometry = false;
+
+    bool m_isVisible = true;
 
     // Name used to identify this source in the style sheet
     std::string m_name;

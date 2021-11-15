@@ -97,6 +97,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// The name of the data source.
 @property (readonly, nonatomic) NSString* name;
 
+/// Whether this map data is drawn on the map.
+@property (nonatomic) BOOL visible;
+
 NS_ASSUME_NONNULL_END
 
 /// The map view that created this map data.

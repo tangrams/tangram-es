@@ -83,6 +83,8 @@ class NativeMap {
     native synchronized void addClientDataGeoJson(long sourcePtr, String geoJson);
     native synchronized void generateClientDataTiles(long sourcePtr);
     native synchronized void clearClientDataFeatures(long sourcePtr);
+    native synchronized void setClientDataVisible(long sourcePtr, boolean visible);
+    native synchronized boolean getClientDataVisible(long sourcePtr);
 
     native synchronized void setDebugFlag(int flag, boolean on);
 

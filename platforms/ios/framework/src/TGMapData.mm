@@ -126,4 +126,14 @@ static inline void TGFeaturePropertiesConvertToCoreProperties(TGFeaturePropertie
     return removed;
 }
 
+- (BOOL)visible
+{
+    return dataSource->isVisible();
+}
+
+- (void)setVisible:(BOOL)visible
+{
+    dataSource->setVisible(visible);
+}
+
 @end
