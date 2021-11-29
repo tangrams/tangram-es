@@ -373,7 +373,7 @@ jboolean NATIVE_METHOD(markerSetBitmap)(JNIEnv* env, jobject obj, jlong markerID
     }
     int width = bitmapInfo.width;
     int height = bitmapInfo.height;
-    uint32_t* pixelOutput = new uint32_t[height * width];
+    auto* pixelOutput = new uint32_t[height * width];
     int i = 0;
     for (int row = 0; row < height; row++) {
         // Flips image upside-down
@@ -529,8 +529,8 @@ void NATIVE_METHOD(addClientDataFeature)(JNIEnv* env, jobject obj, jlong javaSou
     Properties properties;
 
     for (int i = 0; i < nProperties; ++i) {
-        jstring javaKey = (jstring) (env->GetObjectArrayElement(javaProperties, 2 * i));
-        jstring javaValue = (jstring) (env->GetObjectArrayElement(javaProperties, 2 * i + 1));
+        auto javaKey = (jstring) (env->GetObjectArrayElement(javaProperties, 2 * i));
+        auto javaValue = (jstring) (env->GetObjectArrayElement(javaProperties, 2 * i + 1));
         auto key = JniHelpers::stringFromJavaString(env, javaKey);
         auto value = JniHelpers::stringFromJavaString(env, javaValue);
         properties.set(key, value);
@@ -593,7 +593,7 @@ void NATIVE_METHOD(setClientDataVisible)(JNIEnv* env, jobject obj, jlong javaSou
     source->setVisible(visible);
 }
 
-bool NATIVE_METHOD(getClientDataVisible)(JNIEnv* env, jobject obj, jlong javaSourcePtr) {
+jboolean NATIVE_METHOD(getClientDataVisible)(JNIEnv* env, jobject obj, jlong javaSourcePtr) {
     auto* source = reinterpret_cast<ClientDataSource*>(javaSourcePtr);
     return source->isVisible();
 }

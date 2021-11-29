@@ -178,74 +178,56 @@ class FontConfig {
                 familyWeights.clear();
                 // Parse this family:
                 final String name = parser.getAttributeValue(null, "name");
-                //Unused : final String lang = parser.getAttributeValue(null, "lang");
 
-                // fallback fonts
-                if (name == null) {
-                    while (parser.next() != XmlPullParser.END_TAG) {
-                        if (parser.getEventType() != XmlPullParser.START_TAG) {
-                            continue;
-                        }
-                        try {
-                            final String tag = parser.getName();
-                            if ("font".equals(tag)) {
-                                String weightStr = parser.getAttributeValue(null, "weight");
-                                if (weightStr == null) {
-                                    weightStr = "400";
-                                } else {
-                                    familyWeights.add(weightStr);
-                                }
-
-                                final String filename = parser.nextText();
-
-                                // Don't use UI fonts
-                                if (filename.contains("UI-")) {
-                                    continue;
-                                }
-                                // Sorry - not yet supported
-                                if (filename.contains("Emoji")) {
-                                    continue;
-                                }
-
-                                addFallback(Integer.valueOf(weightStr), filename);
-                            } else {
-                                skip(parser);
-                            }
-                        } catch (final XmlPullParserException e) {
-                            Log.e("Tangram", "Error in font.xml parsing: " + e.getMessage());
-                        }
+                while (parser.next() != XmlPullParser.END_TAG) {
+                    if (parser.getEventType() != XmlPullParser.START_TAG) {
+                        continue;
                     }
-
-                } else {
-                    while (parser.next() != XmlPullParser.END_TAG) {
-                        if (parser.getEventType() != XmlPullParser.START_TAG) {
-                            continue;
-                        }
-                        final String tag = parser.getName();
-                        if ("font".equals(tag)) {
-                            String weightStr = parser.getAttributeValue(null, "weight");
-                            if (weightStr == null) {
-                                weightStr = "400";
-                            } else {
-                                familyWeights.add(weightStr);
-                            }
-
-                            String styleStr = parser.getAttributeValue(null, "style");
-                            if (styleStr == null) {
-                                styleStr = "normal";
-                            }
-
-                            final String filename = parser.nextText();
-                            final String key = name + "_" + weightStr + "_" + styleStr;
-                            fontDict.put(key, systemFontPath + filename);
-
-                            if ("sans-serif".equals(name) && "normal".equals(styleStr)) {
-                                addFallback(Integer.valueOf(weightStr), filename);
-                            }
-
+                    final String tag = parser.getName();
+                    if ("font".equals(tag)) {
+                        String weightStr = parser.getAttributeValue(null, "weight");
+                        if (weightStr == null) {
+                            weightStr = "400";
                         } else {
+                            familyWeights.add(weightStr);
+                        }
+
+                        String styleStr = parser.getAttributeValue(null, "style");
+                        if (styleStr == null) {
+                            styleStr = "normal";
+                        }
+
+                        parser.next();
+                        final String filename = parser.getText().trim();
+
+                        if (parser.next() == XmlPullParser.START_TAG) {
+                            // Variation axis values may be defined within the font tag.
+                            // Ignore these for now.
                             skip(parser);
                         }
+
+                        if (name != null) {
+                            final String key = name + "_" + weightStr + "_" + styleStr;
+                            fontDict.put(key, systemFontPath + filename);
+                        }
+
+                        // Fallback fonts
+                        if (name == null || ("sans-serif".equals(name) && "normal".equals(styleStr))) {
+
+                            // Don't use UI fonts
+                            if (filename.contains("UI-")) {
+                                continue;
+                            }
+                            // Sorry - not yet supported
+                            if (filename.contains("Emoji")) {
+                                continue;
+                            }
+
+                            addFallback(Integer.valueOf(weightStr), filename);
+                        }
+
+                    } else {
+                        skip(parser);
                     }
                 }
             } else if ("alias".equals(parser.getName())) {
