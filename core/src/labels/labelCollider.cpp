@@ -3,6 +3,7 @@
 #include "labels/curvedLabel.h"
 #include "labels/labelSet.h"
 #include "labels/obbBuffer.h"
+#include "util/geom.h"
 #include "view/view.h" // ViewState
 
 #include "glm/gtc/matrix_transform.hpp"
@@ -132,7 +133,10 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
 
     if (m_labels.empty()) { return; }
 
-    m_isect2d.resize({screenSize.x / 128, screenSize.y / 128}, screenSize);
+    // Limit isect2d splits to a maximum of 64 in each dimension to keep allocations reasonable.
+    glm::vec2 split{ min(screenSize.x / 128.f, 64.f), min(screenSize.y / 128.f, 64.f) };
+
+    m_isect2d.resize(split, screenSize);
 
     m_isect2d.intersect(m_aabbs);
 
