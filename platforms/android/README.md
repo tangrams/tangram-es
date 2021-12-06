@@ -23,7 +23,9 @@ dependencies {
 }
 ```
 
-That's it! If you want to build tangram-es for Android from scratch, continue reading.
+That's it! You can find examples of things you can do with tangram-es in the [tangram-android-demos repository](https://github.com/tangrams/tangram-android-demos).
+
+If you want to build tangram-es for Android from scratch, continue reading.
 
 ## Setup ##
 
