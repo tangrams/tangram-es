@@ -34,7 +34,7 @@ struct SceneLoader {
     static SceneError applyUpdates(Node& config, const std::vector<SceneUpdate>& updates);
 
     /// Global
-    static void applyGlobals(Node& config);
+    static void applyGlobals(const Node& source, Node& destination);
 
     /// Scene
     static void applyScene(const Node& sceneNode, Color& background, Stops& backgroundStops,
