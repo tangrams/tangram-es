@@ -364,6 +364,7 @@ bool MarkerManager::buildStyling(Marker& marker) {
     std::vector<StyleParam> params;
     try {
         YAML::Node node = YAML::Load(markerStyling.string);
+        SceneLoader::applyGlobals(m_scene.config(), node);
         params = SceneLoader::parseStyleParams(node, m_stops, m_functions);
     } catch (const YAML::Exception& e) {
         LOG("Invalid marker styling '%s', %s", markerStyling.string.c_str(), e.what());

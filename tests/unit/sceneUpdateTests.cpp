@@ -157,7 +157,7 @@ TEST_CASE("Apply and propogate repeated global value updates") {
     REQUIRE(loadConfig(sceneString, config));
     Node& root = config;
     // Apply initial globals.
-    SceneLoader::applyGlobals(config);
+    SceneLoader::applyGlobals(config, config);
     CHECK(root["seq"][1].Scalar() == "global_a_value");
     CHECK(root["map"]["b"].Scalar() == "global_b_value");
     // Add an update.

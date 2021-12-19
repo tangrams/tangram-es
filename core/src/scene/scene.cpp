@@ -122,7 +122,7 @@ bool Scene::load() {
 
     Importer::resolveSceneUrls(m_config, m_options.url);
 
-    SceneLoader::applyGlobals(m_config);
+    SceneLoader::applyGlobals(m_config, m_config);
     LOGTO("<<< applyGlobals");
 
     m_tileSources = SceneLoader::applySources(m_config, m_options, m_platform);

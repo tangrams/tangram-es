@@ -113,15 +113,15 @@ void createGlobalRefs(std::vector<std::pair<YamlPath, YamlPath>>& _globalRefs,
     }
 }
 
-void SceneLoader::applyGlobals(Node& _config) {
-    const Node& globals = _config["global"];
+void SceneLoader::applyGlobals(const Node& source, Node& destination) {
+    const Node& globals = source["global"];
 
     // Records the YAML Nodes for which global values have been swapped; keys are
     // nodes that referenced globals, values are nodes of globals themselves.
     std::vector<std::pair<YamlPath, YamlPath>> globalRefs;
 
     YamlPathBuffer path;
-    createGlobalRefs(globalRefs, _config, path);
+    createGlobalRefs(globalRefs, destination, path);
     if (!globalRefs.empty() && (!globals || !globals.IsMap())) {
         LOGW("Missing global references");
         return;
@@ -129,7 +129,7 @@ void SceneLoader::applyGlobals(Node& _config) {
 
     for (auto& globalRef : globalRefs) {
         Node target, global;
-        bool targetPathIsValid = globalRef.first.get(_config, target);
+        bool targetPathIsValid = globalRef.first.get(destination, target);
         bool globalPathIsValid = globalRef.second.get(globals, global);
         if (targetPathIsValid && globalPathIsValid && target.IsDefined() && global.IsDefined()) {
             target = global;
