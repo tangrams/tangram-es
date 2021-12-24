@@ -4,6 +4,8 @@ jobs:
   build-test-windows:
     name: "Build and Test on Windows"
     runs-on: windows-2019
+    env:
+      VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
     steps:
       - name: "Checkout Repository"
         uses: actions/checkout@v2
@@ -15,12 +17,13 @@ jobs:
           repository: microsoft/vcpkg
           ref: 2021.05.12
           path: vcpkg
-      - name: "Cache vcpkg binaries"
-        uses: actions/cache@v2
-        with:
-          path: ~\AppData\Local\vcpkg\archives
-          key: vcpkg-v2-${{ hashFiles('vcpkg.json') }}
-          restore-keys: vcpkg-v2-
+      - name: "Setup NuGet Credentials"
+        run: nuget sources add 
+          -source "https://nuget.pkg.github.com/tangrams/index.json"
+          -name GitHub
+          -username tangrams
+          -password ${{ secrets.GITHUB_TOKEN }}
+          -storepasswordincleartext 
       - name: "Configure CMake"
         run: cmake -S . -B .\build -G "Visual Studio 16 2019"
           -DCMAKE_TOOLCHAIN_FILE=".\vcpkg\scripts\buildsystems\vcpkg.cmake"
