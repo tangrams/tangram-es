@@ -18,8 +18,12 @@ jobs:
           ref: 2021.05.12
           path: vcpkg
       - name: "Setup NuGet Credentials"
-        run: nuget add source --username tangrams --password ${{ secrets.GITHUB_TOKEN }}
-          --store-password-in-clear-text --name GitHub "https://nuget.pkg.github.com/tangrams/index.json"
+        run: nuget sources add 
+          -source "https://nuget.pkg.github.com/tangrams/index.json"
+          -name GitHub
+          -username tangrams
+          -password ${{ secrets.GITHUB_TOKEN }}
+          -store-password-in-clear-text 
       - name: "Configure CMake"
         run: cmake -S . -B .\build -G "Visual Studio 16 2019"
           -DCMAKE_TOOLCHAIN_FILE=".\vcpkg\scripts\buildsystems\vcpkg.cmake"
