@@ -192,8 +192,8 @@ UrlClient::UrlClient(Options options) : m_options(options) {
 
     // Start the curl thread
     m_curlHandle = curl_multi_init();
-    m_curlRunning = true;
     m_curlWorker = std::make_unique<std::thread>(&UrlClient::curlLoop, this);
+    m_curlRunning = true;
 
     // Init at least one task to avoid checking whether m_tasks is empty in
     // startPendingRequests()
