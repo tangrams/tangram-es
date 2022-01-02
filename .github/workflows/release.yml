@@ -1,0 +1,37 @@
+name: "Release"
+on:
+  push:
+    tags: "[0-9]+.[0-9]+.[0-9]+"
+jobs:
+  build-deploy-ios:
+    name: "Build and Deploy iOS Release"
+    runs-on: macos-10.15
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: "Install dependencies"
+        run: sudo gem install jazzy --no-document --version 0.10.0
+      - name: "Build iOS XCFramework"
+        run: make ios-xcframework BUILD_TYPE=Release
+      - name: "Check bitcode"
+        run: source scripts/check_bitcode.sh build/ios/Release/TangramMap.xcframework/ios-arm64_armv7/TangramMap.framework/TangramMap arm64 armv7
+      - name: "Arrange pod contents"
+        run: |
+          mkdir build/pod
+          cp build/ios/Release/TangramMap.xcframework build/pod/TangramMap.xcframework
+          cp platforms/ios/framework/README.md build/pod/README.md
+          cp LICENSE build/pod/LICENSE
+      - name: "Upload pod"
+        uses: actions/upload-artifact@v2
+        with:
+          name: ios-pod
+          path: build/pod/
+      - name: "Build docs"
+        run: make ios-docs
+      - name: "Upload docs"
+        uses: actions/upload-artifact@v2
+        with:
+          name: ios-docs
+          path: build/ios-docs/
