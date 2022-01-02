@@ -21,7 +21,7 @@ jobs:
       - name: "Arrange pod contents"
         run: |
           mkdir build/pod
-          cp build/ios/Release/TangramMap.xcframework build/pod/TangramMap.xcframework
+          cp -r build/ios/Release/TangramMap.xcframework build/pod/TangramMap.xcframework
           cp platforms/ios/framework/README.md build/pod/README.md
           cp LICENSE build/pod/LICENSE
       - name: "Upload pod"
