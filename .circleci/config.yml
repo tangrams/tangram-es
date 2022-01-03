@@ -7,13 +7,6 @@ executors:
       GRADLE_OPTS: -Xmx2048m
       CCACHE_MAXSIZE: 400M
       # The CircleCI android-ndk images export ANDROID_NDK_HOME with the location of the pre-installed NDK (https://github.com/CircleCI-Public/circleci-dockerfiles/tree/master/android/images).
-  macos-executor:
-    macos:
-      xcode: "12.2.0"
-    environment: # Disable some unnecessary homebrew operations to save time.
-      HOMEBREW_NO_AUTO_UPDATE: 1
-      HOMEBREW_NO_INSTALL_CLEANUP: 1
-      CCACHE_MAXSIZE: 400M
 jobs:
   build-test-linux:
     docker:
@@ -101,102 +94,16 @@ jobs:
             - ~/.ccache
       - store_artifacts:
           path: platforms/android/tangram/build/outputs/aar/tangram-release.aar
-  build-ios:
-    executor: macos-executor
-    steps:
-      # Check out repository with submodules.
-      - checkout
-      - run: git submodule update --init
-      # Install dependencies.
-      - run: brew install cmake ccache
-      - restore_cache:
-          keys:
-            - ios-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-            - ios-ccache-v1-{{ .Branch }}
-            - ios-ccache-v1
-      - run: ccache --zero-stats
-      # Build test app variants. Use simulator target to bypass codesigning.
-      - run: make ios-sim BUILD_TYPE=Debug CMAKE_OPTIONS="-DTANGRAM_XCODE_USE_CCACHE=1"
-      - run: make ios-static-sim BUILD_TYPE=Debug CMAKE_OPTIONS="-DTANGRAM_XCODE_USE_CCACHE=1"
-      - run: make ios-swift-sim BUILD_TYPE=Debug CMAKE_OPTIONS="-DTANGRAM_XCODE_USE_CCACHE=1"
-      - run: ccache --show-stats
-      - save_cache:
-          key: ios-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-          paths:
-            - ~/Library/Caches/ccache
-  build-deploy-ios:
-    executor: macos-executor
-    steps:
-      # Check out repository with submodules.
-      - checkout
-      - run: git submodule update --init
-      # Install dependencies.
-      - run: sudo gem install jazzy --no-document --version 0.10.0
-      - run: brew install cmake ccache
-      - restore_cache:
-          keys:
-            - ios-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-            - ios-release-ccache-v1-{{ .Branch }}
-            - ios-release-ccache-v1
-      - run: ccache --zero-stats
-      # Build the framework and package it into pod.zip.
-      - run: make ios-xcframework BUILD_TYPE=Release CMAKE_OPTIONS="-DTANGRAM_XCODE_USE_CCACHE=1"
-      # Check that bitcode is included for required archs.
-      - run: source scripts/check_bitcode.sh build/ios/Release/TangramMap.xcframework/ios-arm64_armv7/TangramMap.framework/TangramMap arm64 armv7
-      # Build the docs and package them into docs.zip.
-      - run: make ios-docs
-      - run: cd build/ios-docs && zip -r ~/docs.zip .
-      - store_artifacts:
-          path: ~/docs.zip
-      # To produce the intended structure within the zip archive, we must cd to each file's location.
-      - run: cd build/ios/Release && zip -r ~/pod.zip TangramMap.xcframework
-      # Add the readme and license files.
-      - run: cd platforms/ios/framework && zip ~/pod.zip README.md
-      - run: zip ~/pod.zip LICENSE
-      - store_artifacts:
-          path: ~/pod.zip
-      - when:
-          condition: << pipeline.git.tag >>
-          steps:
-            # Upload and publish the Cocoapods archive to GitHub. The download URL on GitHub uses the file name, labels have no effect.
-            - run: brew install gh
-            - run: mv ~/pod.zip ~/tangram-ios-<< pipeline.git.tag >>.zip
-            - run: gh release create << pipeline.git.tag >> --draft ~/tangram-ios-<< pipeline.git.tag >>.zip
-      - run: ccache --show-stats
-      - save_cache:
-          key: ios-release-ccache-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-          paths:
-            - ~/Library/Caches/ccache
+          destination: tangram-android-${CIRCLE_SHA}.aar
 workflows:
   version: 2
   build-and-deploy:
     jobs:
-      # Run on all pushes
+      # Run on pushes to all branches
       - build-test-linux
-      # Run on pushes to all branches except main
-      - build-android:
-          filters:
-            branches:
-              ignore: main
-      - build-ios:
-          filters:
-            branches:
-              ignore: main
+      - build-android
       # Run on pushes to main
       - build-deploy-android:
           filters:
             branches:
               only: main
-      - build-deploy-ios:
-          filters:
-            branches:
-              only: main
-      # Run on tag pushes
-      - build-deploy-ios:
-          name: build-deploy-ios-tag
-          filters:
-            # For any tag of the form 1, 1.2.3, 1.4-beta2, etc. we will deploy a release build.
-            tags:
-              only: /[0-9]+(\.[0-9]+)*(-beta[0-9]*)?/
-            branches:
-              ignore: /.*/
