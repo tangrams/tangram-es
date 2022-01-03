@@ -14,6 +14,10 @@ jobs:
           submodules: true
       - name: "Install dependencies"
         run: sudo gem install jazzy --no-document --version 0.10.0
+      - name: "Set version variable"
+        run: |
+          TANGRAM_VERSION=$(if [[ ${{ github.ref_type }} == "tag" ]]; then echo ${{ github.ref_name }}; else echo ${{ github.sha }}; fi
+          echo "TANGRAM_VERSION=$TANGRAM_VERSION" >> $GITHUB_ENV
       - name: "Build iOS XCFramework"
         run: make ios-xcframework BUILD_TYPE=Release
       - name: "Check bitcode"
@@ -27,12 +31,12 @@ jobs:
       - name: "Upload pod"
         uses: actions/upload-artifact@v2
         with:
-          name: tangram-ios-${{ github.ref_name }}
+          name: tangram-ios-${{ env.TANGRAM_VERSION }}
           path: build/pod/
       - name: "Build docs"
         run: make ios-docs
       - name: "Upload docs"
         uses: actions/upload-artifact@v2
         with:
-          name: tangram-ios-docs-${{ github.ref_name }}
+          name: tangram-ios-docs-${{ env.TANGRAM_VERSION }}
           path: build/ios-docs/
