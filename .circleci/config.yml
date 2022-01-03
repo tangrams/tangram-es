@@ -99,13 +99,9 @@ workflows:
   version: 2
   build-and-deploy:
     jobs:
-      # Run on all pushes
+      # Run on pushes to all branches
       - build-test-linux
-      # Run on pushes to all branches except main
-      - build-android:
-          filters:
-            branches:
-              ignore: main
+      - build-android
       # Run on pushes to main
       - build-deploy-android:
           filters:
