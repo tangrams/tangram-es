@@ -94,6 +94,7 @@ jobs:
             - ~/.ccache
       - store_artifacts:
           path: platforms/android/tangram/build/outputs/aar/tangram-release.aar
+          destination: tangram-android-${CIRCLE_SHA}.aar
 workflows:
   version: 2
   build-and-deploy:
