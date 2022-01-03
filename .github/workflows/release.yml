@@ -17,7 +17,7 @@ jobs:
           TANGRAM_VERSION=$(if [[ ${{ github.ref_type }} == "tag" ]]; then echo ${{ github.ref_name }}; else echo ${{ github.sha }}; fi)
           echo "TANGRAM_VERSION=$TANGRAM_VERSION" >> $GITHUB_ENV
       - name: "Install Jazzy"
-        run: sudo gem install jazzy --no-document --version 0.10.0
+        run: sudo gem install jazzy --no-document --version 0.14.1
       - name: "Install ccache"
         run: brew install ccache
       - name: "Cache ccache directory"
