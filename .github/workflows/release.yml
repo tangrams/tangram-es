@@ -12,14 +12,26 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
-      - name: "Install dependencies"
-        run: sudo gem install jazzy --no-document --version 0.10.0
       - name: "Set version variable"
         run: |
           TANGRAM_VERSION=$(if [[ ${{ github.ref_type }} == "tag" ]]; then echo ${{ github.ref_name }}; else echo ${{ github.sha }}; fi
           echo "TANGRAM_VERSION=$TANGRAM_VERSION" >> $GITHUB_ENV
+      - name: "Install Jazzy"
+        run: sudo gem install jazzy --no-document --version 0.10.0
+      - name: "Install ccache"
+        run: brew install ccache
+      - name: "Cache ccache directory"
+        uses: actions/cache@v2
+        with:
+          path: ~/Library/Caches/ccache
+          key: ios-release-ccache-v1-${{ github.sha }}
+          restore-keys: ios-release-ccache-v1-
+      - name: "Reset ccache stats"
+        run: ccache --zero-stats
       - name: "Build iOS XCFramework"
-        run: make ios-xcframework BUILD_TYPE=Release
+        run: make ios-xcframework BUILD_TYPE=Release CMAKE_OPTIONS="-DTANGRAM_XCODE_USE_CCACHE=1"
+      - name: "Print ccache stats"
+        run: ccache --show-stats
       - name: "Check bitcode"
         run: source scripts/check_bitcode.sh build/ios/Release/TangramMap.xcframework/ios-arm64_armv7/TangramMap.framework/TangramMap arm64 armv7
       - name: "Arrange pod contents"
