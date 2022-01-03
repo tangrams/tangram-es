@@ -27,12 +27,12 @@ jobs:
       - name: "Upload pod"
         uses: actions/upload-artifact@v2
         with:
-          name: ios-pod
+          name: tangram-ios-${{ github.ref_name }}
           path: build/pod/
       - name: "Build docs"
         run: make ios-docs
       - name: "Upload docs"
         uses: actions/upload-artifact@v2
         with:
-          name: ios-docs
+          name: tangram-ios-docs-${{ github.ref_name }}
           path: build/ios-docs/
