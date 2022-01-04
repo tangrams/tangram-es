@@ -52,3 +52,32 @@ jobs:
         with:
           name: tangram-ios-docs-${{ env.TANGRAM_VERSION }}
           path: build/ios-docs/
+  build-deploy-android:
+    name: "Build and deploy Android Release"
+    runs-on: ubuntu-20.04
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: "Install ccache"
+        run: sudo apt-get update && sudo apt-get install -y ccache
+      - name: "Cache ccache directory"
+        uses: actions/cache@v2
+        with:
+          path: ~/.ccache
+          key: android-release-ccache-v1-${{ github.sha }}
+          restore-keys: android-release-ccache-v1-
+      - name: "Reset ccache stats"
+        run: ccache --zero-stats
+      - name: "Setup signing credentials"
+        run: echo "${{ secrets.SIGNING_SECRET_KEYRING_BASE64 }}" | base64 --decode > platforms/android/tangram/secring.gpg
+      - name: "Build Android AAR"
+        run: |
+          cd platforms/android && ./gradlew publish \
+          -Psigning.keyId="${{ secrets.SIGNING_KEY_ID }}" \
+          -Psigning.password="${{ secrets.SIGNING_KEY_PASSWORD }}" \
+          -Psigning.secretKeyRingFile=secring.gpg \
+          -Ptangram.ccache=true
+      - name: "Print ccache stats"
+        run: ccache --show-stats
