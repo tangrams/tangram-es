@@ -112,6 +112,7 @@ jobs:
         with:
           path: ~/.ccache
           key: android-ccache-v1-${{ github.sha }}
+          restore-keys: android-ccache-v1-
       - name: "Reset ccache stats"
         run: ccache --zero-stats
       - name: "Build Android demo app"
