@@ -97,3 +97,27 @@ jobs:
         run: make ios-swift-sim BUILD_TYPE=Debug CMAKE_OPTIONS="-DTANGRAM_XCODE_USE_CCACHE=1"
       - name: "Print ccache stats"
         run: ccache --show-stats
+  build-android:
+    name: "Build for Android"
+    runs-on: ubuntu-20.04
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: "Install ccache"
+        run: sudo apt-get update && sudo apt-get install -y ccache
+      - name: "Cache ccache directory"
+        uses: actions/cache@v2
+        with:
+          path: ~/.ccache
+          key: android-ccache-v1-${{ github.sha }}
+      - name: "Reset ccache stats"
+        run: ccache --zero-stats
+      - name: "Build Android demo app"
+        run: |
+          cd platforms/android && ./gradlew demo:assembleDebug \
+          -Ptangram.abis=arm64-v8a \
+          -Ptangram.ccache=true
+      - name: "Print ccache stats"
+        run: ccache --show-stats
