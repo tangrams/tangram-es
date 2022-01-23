@@ -7,7 +7,7 @@
 
 #define TANGRAM_VERSION_MAJOR 0
 #define TANGRAM_VERSION_MINOR 17
-#define TANGRAM_VERSION_PATCH 0
+#define TANGRAM_VERSION_PATCH 1
 
 #include "data/clientDataSource.h"
 #include "data/properties.h"
