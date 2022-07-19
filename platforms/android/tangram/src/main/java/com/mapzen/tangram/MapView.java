@@ -316,7 +316,9 @@ public class MapView extends FrameLayout {
      * You must call this method from the parent Activity/Fragment's corresponding method.
      */
     public void onLowMemory() {
-        mapController.onLowMemory();
+        if (mapController != null) {
+            mapController.onLowMemory();
+        }
     }
 
 }
