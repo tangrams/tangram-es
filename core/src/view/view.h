@@ -96,7 +96,7 @@ public:
     // Get the minimum zoom level.
     float getMinZoom() const { return m_minZoom; }
 
-    // Set the maximum zoom level. Clamped to <= 20.5.
+    // Set the maximum zoom level. Clamped to <= 25.0.
     void setMaxZoom(float maxZoom);
 
     // Get the maximum zoom level.
