@@ -699,11 +699,11 @@ void showMarkerGUI() {
                 double screenPosition[2];
                 map->lngLatToScreenPosition(last_marker.coordinates.longitude, last_marker.coordinates.latitude, &screenPosition[0], &screenPosition[1]);
                 float screenPositionFloat[2] = {static_cast<float>(screenPosition[0]), static_cast<float>(screenPosition[1])};
-                ImGui::InputFloat2("Last Marker Screen", screenPositionFloat, 5, ImGuiInputTextFlags_ReadOnly);
+                ImGui::InputFloat2("Last Marker Screen", screenPositionFloat, "%.5f", ImGuiInputTextFlags_ReadOnly);
                 double screenClipped[2];
                 map->lngLatToScreenPosition(last_marker.coordinates.longitude, last_marker.coordinates.latitude, &screenClipped[0], &screenClipped[1], true);
                 float screenClippedFloat[2] = {static_cast<float>(screenClipped[0]), static_cast<float>(screenClipped[1])};
-                ImGui::InputFloat2("Last Marker Clipped", screenClippedFloat, 5, ImGuiInputTextFlags_ReadOnly);
+                ImGui::InputFloat2("Last Marker Clipped", screenClippedFloat, "%.5f", ImGuiInputTextFlags_ReadOnly);
             }
         }
     }

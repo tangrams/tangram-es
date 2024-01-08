@@ -2,7 +2,7 @@ version: 2.1
 executors:
   android-executor:
     docker:
-      - image: circleci/android:api-30-ndk
+      - image: cimg/android:2023.12.1-ndk
     environment:
       GRADLE_OPTS: -Xmx2048m
       CCACHE_MAXSIZE: 400M
@@ -53,8 +53,6 @@ jobs:
             - android-ccache-v4-{{ .Branch }}
             - android-ccache-v4
       - run: ccache --zero-stats
-      # Tell gradle to use pre-installed NDK. This setting is deprecated, but android.ndkPath is ignored for some reason.
-      - run: echo "ndk.dir=$ANDROID_NDK_HOME" > platforms/android/local.properties
       - run: |
           cd platforms/android && ./gradlew demo:assembleDebug \
           -Ptangram.abis=arm64-v8a \
@@ -76,8 +74,6 @@ jobs:
             - android-release-ccache-v2-{{ .Branch }}
             - android-release-ccache-v2
       - run: ccache --zero-stats
-      # Tell gradle to use pre-installed NDK. This setting is deprecated, but android.ndkPath is ignored for some reason.
-      - run: echo "ndk.dir=$ANDROID_NDK_HOME" > platforms/android/local.properties
       # Configure publishing credentials.
       - run: echo "$SIGNING_SECRET_KEYRING_BASE64" | base64 --decode > platforms/android/tangram/secring.gpg
       # Build and upload snapshot.

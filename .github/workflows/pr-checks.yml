@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: microsoft/vcpkg
-          ref: 2021.05.12
+          ref: 2023.12.12
           path: vcpkg
       - name: "Setup NuGet Credentials"
         run: nuget sources add 
@@ -36,7 +36,7 @@ jobs:
         working-directory: .\build
   build-test-macos:
     name: "Build and Test on macOS"
-    runs-on: macos-10.15
+    runs-on: macos-12
     steps:
       - name: "Checkout Repository"
         uses: actions/checkout@v2
@@ -73,7 +73,7 @@ jobs:
           retention-days: 60
   build-ios:
     name: "Build for iOS"
-    runs-on: macos-10.15
+    runs-on: macos-12
     steps:
       - name: "Checkout Repository"
         uses: actions/checkout@v2

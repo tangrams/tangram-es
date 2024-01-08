@@ -28,12 +28,6 @@
                 "coretext"
             ],
             "platform": "osx"
-        },
-        {
-            "name": "imgui",
-            "features": [
-                "docking-experimental"
-            ]
         }
     ]
 }

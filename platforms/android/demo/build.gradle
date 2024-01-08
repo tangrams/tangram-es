@@ -29,6 +29,8 @@ android {
     ignoreAssetsPattern '!*.ttf'
   }
 
+  namespace 'com.mapzen.tangram.android'
+
 }
 
 dependencies {
