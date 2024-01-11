@@ -261,8 +261,8 @@ public:
     // Get the minimum zoom level for the view.
     float getMinZoom() const;
 
-    // Set the maximum zoom level for the view; values greater than 20.5 will be
-    // clamped to 20.5; values less than the current minimum zoom level will set
+    // Set the maximum zoom level for the view; values greater than 25.0 will be
+    // clamped to 25.0; values less than the current minimum zoom level will set
     // the minimum zoom to this value.
     void setMaxZoom(float _maxZoom);
 

@@ -604,7 +604,7 @@ public class MapController {
     /**
      * Set the maximum zoom level of the map view.
      *
-     * Values greater than the default maximum zoom will be clamped. Assigning a value less than the
+     * Values greater than 25.0 will be clamped. Assigning a value less than the
      * current minimum zoom will set the minimum zoom to this value.
      * @param maximumZoom The zoom level
      */

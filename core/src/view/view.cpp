@@ -161,7 +161,7 @@ void View::setMinZoom(float minZoom) {
 
 void View::setMaxZoom(float maxZoom) {
 
-    m_maxZoom = std::min(maxZoom, 20.5f);
+    m_maxZoom = std::min(maxZoom, 25.0f);
     m_minZoom = std::min(maxZoom, m_minZoom);
     // Set the current zoom again to validate it.
     setZoom(m_zoom);
