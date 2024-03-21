@@ -161,3 +161,8 @@ core/generated/*.h
 # CLion build directories
 /cmake-build-debug/
 /cmake-build-release/
+platforms/react-native/android/build
+platforms/react-native/android/.settings
+platforms/react-native/android/.gradle
+platforms/react-native/android/gradle
+platforms/react-native/dist

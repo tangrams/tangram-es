@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "declaration": true,
+        "outDir": "dist/lib",
+        "rootDir": "src",
+        "module": "es2015",
+        "target": "es2015",
+        "noImplicitAny": true,
+        "emitDecoratorMetadata": true,
+        "declarationDir": "dist/typings",
+        "experimentalDecorators": true,
+        "sourceMap": true,
+        "jsx": "react-native"
+    }
+    ,"exclude": [
+        "node_modules","dist","typings"
+    ]
+
+}
