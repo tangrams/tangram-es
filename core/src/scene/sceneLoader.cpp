@@ -41,7 +41,7 @@
 #include <vector>
 
 using YAML::Node;
-using YAML::NodeType;
+namespace NodeType = YAML::NodeType;
 using YAML::BadConversion;
 
 #define LOGNode(fmt, node, ...) LOGW(fmt ":\n'%s'\n", ## __VA_ARGS__, Dump(node).c_str())

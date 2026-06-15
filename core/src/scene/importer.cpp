@@ -12,7 +12,7 @@
 #include <condition_variable>
 
 using YAML::Node;
-using YAML::NodeType;
+namespace NodeType = YAML::NodeType;
 
 namespace Tangram {
 

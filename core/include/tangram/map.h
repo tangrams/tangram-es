@@ -93,6 +93,7 @@ struct CameraPosition {
     float zoom = 0;
     float rotation = 0;
     float tilt = 0;
+    float roll = 0;
 };
 
 struct EdgePadding {
@@ -126,6 +127,8 @@ struct CameraUpdate {
         set_tilt_by =     1 << 6,
         set_bounds =      1 << 7,
         set_camera =      1 << 8,
+        set_roll =        1 << 9,
+        set_roll_by =     1 << 10,
     };
     int set = 0;
 
@@ -136,6 +139,8 @@ struct CameraUpdate {
     float rotationBy = 0;
     float tilt = 0;
     float tiltBy = 0;
+    float roll = 0;
+    float rollBy = 0;
     std::array<LngLat,2> bounds;
     EdgePadding padding;
 };
@@ -282,6 +287,10 @@ public:
 
     // Get the tilt angle of the view in radians; 0 corresponds to straight down
     float getTilt();
+
+    void setRoll(float _radians);
+
+    float getRoll();
 
     // Set the padding on the map view. The center position of the map will be drawn at the center of the view area
     // inside the padding.

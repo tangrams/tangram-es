@@ -135,7 +135,7 @@ void InputHandler::handleRotateGesture(float _posX, float _posY, float _radians)
     glm::vec2 translation = offset - glm::rotate(offset, _radians);
     m_view.translate(translation.x, translation.y);
 
-    m_view.roll(_radians);
+    m_view.yaw(_radians);
 }
 
 void InputHandler::handleShoveGesture(float _distance) {

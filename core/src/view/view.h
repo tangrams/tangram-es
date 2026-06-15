@@ -132,6 +132,9 @@ public:
     // Set the roll angle of the view in radians. Default is 0.
     void setRoll(float _rad);
 
+    // Set the yaw angle of the view in radians. Default is 0.
+    void setYaw(float _rad);
+
     // Set the pitch angle of the view in radians. Default is 0.
     void setPitch(float _rad);
 
@@ -147,6 +150,9 @@ public:
     // Change the pitch angle by the given amount in radians.
     void pitch(float _drad);
 
+    // Change the yaw angle by the given amount in radians.
+    void yaw(float _drad);
+
     // Get the current zoom.
     float getZoom() const { return m_zoom; }
 
@@ -155,6 +161,9 @@ public:
 
     // Get the current roll angle in radians.
     float getRoll() const { return m_roll; }
+
+    // Get the current yaw angle in radians.
+    float getYaw() const { return m_yaw; }
 
     // Get the current pitch angle in radians.
     float getPitch() const { return m_pitch; }
@@ -259,6 +268,7 @@ protected:
     glm::mat3 m_invNormalMatrix;
 
     float m_roll = 0.f;
+    float m_yaw = 0.f;
     float m_pitch = 0.f;
 
     float m_zoom = 0.f;

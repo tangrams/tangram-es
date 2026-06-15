@@ -12,6 +12,56 @@
 
 namespace Tangram {
 
+namespace {
+
+double cross2d(const glm::dvec2& a, const glm::dvec2& b, const glm::dvec2& c) {
+    glm::dvec2 ab = b - a;
+    glm::dvec2 ac = c - a;
+    return ab.x * ac.y - ab.y * ac.x;
+}
+
+std::vector<glm::dvec2> convexHull(std::vector<glm::dvec2> points) {
+    if (points.size() <= 2) { return points; }
+
+    std::sort(points.begin(), points.end(), [](const glm::dvec2& lhs, const glm::dvec2& rhs) {
+        if (lhs.x == rhs.x) { return lhs.y < rhs.y; }
+        return lhs.x < rhs.x;
+    });
+
+    auto samePoint = [](const glm::dvec2& lhs, const glm::dvec2& rhs) {
+        return lhs.x == rhs.x && lhs.y == rhs.y;
+    };
+    points.erase(std::unique(points.begin(), points.end(), samePoint), points.end());
+
+    if (points.size() <= 2) { return points; }
+
+    std::vector<glm::dvec2> hull;
+    hull.reserve(points.size() * 2);
+
+    for (const auto& p : points) {
+        while (hull.size() >= 2 && cross2d(hull[hull.size() - 2], hull[hull.size() - 1], p) <= 0.0) {
+            hull.pop_back();
+        }
+        hull.push_back(p);
+    }
+
+    size_t lowerSize = hull.size();
+    for (int i = static_cast<int>(points.size()) - 2; i >= 0; --i) {
+        const auto& p = points[i];
+        while (hull.size() > lowerSize && cross2d(hull[hull.size() - 2], hull[hull.size() - 1], p) <= 0.0) {
+            hull.pop_back();
+        }
+        hull.push_back(p);
+    }
+
+    if (!hull.empty()) {
+        hull.pop_back();
+    }
+    return hull;
+}
+
+}
+
 double invLodFunc(double d) {
     return exp2(d) - 1.0;
 }
@@ -235,6 +285,14 @@ void View::setRoll(float _roll) {
 
 }
 
+void View::setYaw(float _yaw) {
+
+    m_yaw = glm::mod(_yaw, (float)TWO_PI);
+    m_dirtyMatrices = true;
+    m_dirtyTiles = true;
+
+}
+
 void View::setPitch(float _pitch) {
 
     m_pitch = _pitch;
@@ -264,6 +322,12 @@ void View::roll(float _droll) {
 void View::pitch(float _dpitch) {
 
     setPitch(m_pitch + _dpitch);
+
+}
+
+void View::yaw(float _dyaw) {
+
+    setYaw(m_yaw + _dyaw);
 
 }
 
@@ -436,9 +500,11 @@ void View::updateMatrices() {
     // set camera z to produce desired viewable area
     m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
 
-    m_eye = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 0.f, m_pos.z), m_pitch), m_roll);
+    m_eye = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 0.f, m_pos.z), m_pitch), m_yaw);
     glm::vec3 at = { 0.f, 0.f, 0.f };
-    glm::vec3 up = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 1.f, 0.f), m_pitch), m_roll);
+    glm::vec3 up = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 1.f, 0.f), m_pitch), m_yaw);
+    glm::vec3 forward = glm::normalize(at - m_eye);
+    up = glm::normalize(glm::rotate(up, m_roll, forward));
 
     // Generate view matrix
     m_view = glm::lookAt(m_eye, at, up);
@@ -653,14 +719,65 @@ void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
         }
     };
 
-    // Rasterize view trapezoid into tiles
-    Rasterize::scanTriangle(a, b, c, 0, maxTileIndex, s);
-    Rasterize::scanTriangle(c, d, a, 0, maxTileIndex, s);
+    // Sample the perimeter of the viewport conservatively. Four corners are not always enough
+    // when the camera has large tilt + roll because the ground footprint can bulge past the
+    // quadrilateral implied by corner rays alone.
+    std::array<glm::dvec2, 16> screenSamples = {{
+        {0.0,                            double(m_vpHeight)},        // left bottom
+        {double(m_vpWidth) * 0.25,       double(m_vpHeight)},        // bottom 1/4
+        {double(m_vpWidth) * 0.5,        double(m_vpHeight)},        // bottom center
+        {double(m_vpWidth) * 0.75,       double(m_vpHeight)},        // bottom 3/4
+        {double(m_vpWidth),              double(m_vpHeight)},        // right bottom
+        {double(m_vpWidth),              double(m_vpHeight) * 0.75}, // right 3/4
+        {double(m_vpWidth),              double(m_vpHeight) * 0.5},  // right center
+        {double(m_vpWidth),              double(m_vpHeight) * 0.25}, // right 1/4
+        {double(m_vpWidth),              0.0},                       // right top
+        {double(m_vpWidth) * 0.75,       0.0},                       // top 3/4
+        {double(m_vpWidth) * 0.5,        0.0},                       // top center
+        {double(m_vpWidth) * 0.25,       0.0},                       // top 1/4
+        {0.0,                            0.0},                       // left top
+        {0.0,                            double(m_vpHeight) * 0.25}, // left 1/4
+        {0.0,                            double(m_vpHeight) * 0.5},  // left center
+        {0.0,                            double(m_vpHeight) * 0.75}, // left 3/4
+    }};
 
-    // Rasterize the area bounded by the point under the view center and the two nearest corners
-    // of the view trapezoid. This is necessary to not cull any geometry with height in these tiles
-    // (which should remain visible, even though the base of the tile is not).
-    Rasterize::scanTriangle(a, b, e, 0, maxTileIndex, s);
+    std::vector<glm::dvec2> footprint;
+    footprint.reserve(screenSamples.size());
+    bool anyGroundIntersection = false;
+
+    for (auto sample : screenSamples) {
+        double sx = sample.x;
+        double sy = sample.y;
+        double t = screenToGroundPlaneInternal(sx, sy);
+        anyGroundIntersection = anyGroundIntersection || (t >= 0.0);
+
+        glm::dvec2 point = (glm::dvec2(sx + m_pos.x, sy + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
+        footprint.push_back(point);
+    }
+
+    if (!anyGroundIntersection) {
+        return;
+    }
+
+    std::vector<glm::dvec2> hull = convexHull(std::move(footprint));
+    if (hull.size() < 3) {
+        return;
+    }
+
+    // Rasterize the conservative footprint on the ground plane.
+    for (size_t i = 1; i + 1 < hull.size(); ++i) {
+        Rasterize::scanTriangle(hull[0], hull[i], hull[i + 1], 0, maxTileIndex, s);
+    }
+
+    // Also rasterize the fan between the point under the camera and every hull edge so
+    // we don't cull elevated geometry whose base lies just outside the ground footprint.
+    for (size_t i = 0; i < hull.size(); ++i) {
+        glm::dvec2 p0 = hull[i];
+        glm::dvec2 p1 = hull[(i + 1) % hull.size()];
+        glm::dvec2 eyePoint = e;
+        Rasterize::scanTriangle(p0, p1, eyePoint, 0, maxTileIndex, s);
+    }
+
 }
 
 }
